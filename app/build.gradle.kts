@@ -239,7 +239,12 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.compose)
-    implementation(libs.litert)
+    implementation(libs.litert) {
+        // LiteRT can fetch models through Google Play, which the app does not use: it ships its own model and will
+        // download the others from GitHub. Leaving that out keeps closed-source Play libraries out of the app.
+        exclude(group = "com.google.android.play")
+        exclude(group = "com.google.android.gms")
+    }
     implementation(libs.coil.compose)
     implementation(libs.androidx.exifinterface)
 
@@ -247,6 +252,7 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.datastore.preferences)
+    implementation(libs.work.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
 

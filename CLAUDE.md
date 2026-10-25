@@ -67,8 +67,11 @@ Model files are not committed. The build downloads each one once, checks it agai
 model's embedded labels match the committed labels file. Assets ending in `.tflite` stay uncompressed so the
 interpreter can map them. AIY Plants V1 takes 224 × 224 RGB bytes and gives 2,102 probabilities in 256ths, the last
 being "no plant here". Run models with LiteRT; do not add MediaPipe Tasks or ML Kit, because MediaPipe Tasks sends
-usage statistics to Google through `com.google.android.datatransport` and ML Kit is not open source. Check a new
-library's dependencies for telemetry before adding it.
+usage statistics to Google through `com.google.android.datatransport` and ML Kit is not open source. LiteRT itself
+depends on Google Play's model delivery (`com.google.android.play`, Play services), which the app does not use, so
+`app/build.gradle.kts` excludes those groups. Before adding a library, run
+`./gradlew :app:dependencies --configuration releaseRuntimeClasspath` and check every new artefact for telemetry and
+for a licence that is not open source.
 
 ## Knowledge base
 

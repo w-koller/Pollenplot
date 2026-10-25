@@ -20,4 +20,4 @@
   Pollen Rhythms, and photos with no plant in them are not kept.
 - Plants show their cut-out from a photo on the Plot, in lists and on their page.
 - The quick model, AIY Plants V1, runs on the phone with LiteRT and is checked against its published SHA-256 when the
-  app is built. Nothing is sent off the phone.
+  app is built. Nothing is sent off the phone, and the app contains no Google Play or Play services libraries.

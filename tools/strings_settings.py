@@ -28,6 +28,7 @@ STRINGS = {
     "licence_item_litert": "LiteRT",
     "licence_item_litert_notices": "Libraries included in LiteRT",
     "licence_item_coil": "Coil and Okio",
+    "licence_item_java_libraries": "Guava, Dagger, Accompanist and other Java libraries",
     "licence_gpl": "GNU General Public License, version 3",
     "licence_apache": "Apache License 2.0",
     "licence_notices": "Their licences and notices",

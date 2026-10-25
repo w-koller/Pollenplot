@@ -314,6 +314,7 @@
     <string name="licence_item_litert">LiteRT</string>
     <string name="licence_item_litert_notices">Libraries included in LiteRT</string>
     <string name="licence_item_coil">Coil and Okio</string>
+    <string name="licence_item_java_libraries">Guava, Dagger, Accompanist and other Java libraries</string>
     <string name="licence_gpl">GNU General Public License, version 3</string>
     <string name="licence_apache">Apache License 2.0</string>
     <string name="licence_notices">Their licences and notices</string>
