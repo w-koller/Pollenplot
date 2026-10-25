@@ -1,13 +1,23 @@
 package io.github.wkoller.pollenplot.data
 
 import androidx.room.withTransaction
+import io.github.wkoller.pollenplot.data.db.CandidateEntity
+import io.github.wkoller.pollenplot.data.db.DetectionEntity
+import io.github.wkoller.pollenplot.data.db.FloweringEntity
 import io.github.wkoller.pollenplot.data.db.LinkEntity
+import io.github.wkoller.pollenplot.data.db.PhotoEntity
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.db.SearchEntity
 import io.github.wkoller.pollenplot.data.db.SearchHit
 import io.github.wkoller.pollenplot.data.db.toDomain
 import io.github.wkoller.pollenplot.data.db.toEntity
+import io.github.wkoller.pollenplot.data.photos.StoredPhoto
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
+import io.github.wkoller.pollenplot.domain.id.BoxBp
+import io.github.wkoller.pollenplot.domain.id.Candidate
+import io.github.wkoller.pollenplot.domain.id.DetectionStatus
+import io.github.wkoller.pollenplot.domain.id.IdSource
+import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.garden.PlotLayout
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
@@ -27,6 +37,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -44,6 +55,9 @@ class GardenRepository(
     private val plants = db.plantDao()
     private val links = db.linkDao()
     private val search = db.searchDao()
+    private val photos = db.photoDao()
+    private val detections = db.detectionDao()
+    private val flowering = db.floweringDao()
     private val layoutLock = Mutex()
 
     val zoneList: Flow<List<Zone>> = zones.observeAll().map { list -> list.map { it.toDomain() } }
@@ -127,6 +141,98 @@ class GardenRepository(
         search.delete(id)
     }
 
+    /**
+     * Keeps a photo and the plants found in it. Each region becomes a detection that waits for review, with its
+     * suggestions in rank order.
+     */
+    suspend fun recordPhoto(
+        photo: StoredPhoto,
+        origin: PhotoOrigin,
+        takenAt: Instant,
+        drafts: List<DetectionDraft>,
+        latE7: Int? = null,
+        lonE7: Int? = null,
+    ): List<DetectionRecord> = db.withTransaction {
+        val time = now()
+        photos.insert(PhotoEntity(photo.id, photo.path, photo.width, photo.height, origin.name, takenAt.toEpochMilli(), time, latE7, lonE7))
+        drafts.map { draft ->
+            val id = UUID.randomUUID().toString()
+            detections.insert(
+                DetectionEntity(
+                    id, photo.id, draft.box.left, draft.box.top, draft.box.right, draft.box.bottom, draft.thumbnail, draft.flowering,
+                    DetectionStatus.NEEDS_REVIEW.name, null, time,
+                ),
+            )
+            detections.insertCandidates(
+                draft.candidates.mapIndexed { rank, c -> CandidateEntity(id, rank, c.label, c.speciesName, c.scoreBp, c.sources.joinToString(",") { it.name }) },
+            )
+            DetectionRecord(id, photo.id, draft.box, draft.thumbnail, draft.flowering, DetectionStatus.NEEDS_REVIEW, null, draft.candidates, takenAt)
+        }
+    }
+
+    suspend fun photo(id: String): StoredPhoto? = photos.get(id)?.let { StoredPhoto(it.id, it.path, it.width, it.height) }
+
+    suspend fun detection(id: String): DetectionRecord? = detections.get(id)?.let { record(it) }
+
+    /** The plants found in one photo, updated as each is reviewed. */
+    fun detectionsInPhoto(photoId: String): Flow<List<DetectionRecord>> =
+        detections.observeForPhoto(photoId).map { list -> list.map { record(it) } }
+
+    private suspend fun record(entity: DetectionEntity): DetectionRecord {
+        val takenAt = photos.get(entity.photoId)?.takenAt?.let(Instant::ofEpochMilli) ?: Instant.ofEpochMilli(entity.createdAt)
+        val candidates = detections.candidates(entity.id).map { c ->
+            Candidate(c.label, c.speciesName, c.scoreBp, c.sources.split(',').mapNotNull { name -> IdSource.entries.firstOrNull { it.name == name } }.toSet())
+        }
+        return DetectionRecord(
+            entity.id, entity.photoId, BoxBp(entity.leftBp, entity.topBp, entity.rightBp, entity.bottomBp), entity.thumbnail, entity.flowering,
+            DetectionStatus.entries.firstOrNull { it.name == entity.status } ?: DetectionStatus.NEEDS_REVIEW, entity.plantId, candidates, takenAt,
+        )
+    }
+
+    /** Makes a detection a new plant in the garden, with its cut-out as the plant's picture. */
+    suspend fun confirmDetection(
+        detectionId: String,
+        speciesName: String?,
+        customName: String?,
+        zoneId: String?,
+        quantity: Int = 1,
+        flowering: Boolean,
+    ): GardenPlant = db.withTransaction {
+        val detection = detection(detectionId) ?: error("No detection $detectionId")
+        val plant = GardenPlant(UUID.randomUUID().toString(), speciesName, customName?.trim()?.ifBlank { null }, zoneId, quantity, thumbnail = detection.thumbnail)
+        val time = now()
+        plants.upsert(plant.toEntity(time, time))
+        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plant.id)
+        if (flowering) recordFlowering(plant.id, detection)
+        index(plant)
+        plant
+    }
+
+    /** Adds a detection's photo to a plant already in the garden, instead of adding the plant twice. */
+    suspend fun attachDetection(detectionId: String, plantId: String, flowering: Boolean) = db.withTransaction {
+        val detection = detection(detectionId) ?: return@withTransaction
+        val plant = plants.get(plantId) ?: return@withTransaction
+        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plantId)
+        if (plant.thumbnail == null) plants.upsert(plant.copy(thumbnail = detection.thumbnail, updatedAt = now()))
+        if (flowering) recordFlowering(plantId, detection)
+    }
+
+    /** Marks a detection as not a plant. */
+    suspend fun rejectDetection(detectionId: String) = detections.setStatus(detectionId, DetectionStatus.REJECTED.name, null)
+
+    /** Puts a detection marked as not a plant back in review. */
+    suspend fun reopenDetection(detectionId: String) = db.withTransaction {
+        val entity = detections.get(detectionId) ?: return@withTransaction
+        if (entity.status == DetectionStatus.REJECTED.name) detections.setStatus(detectionId, DetectionStatus.NEEDS_REVIEW.name, null)
+    }
+
+    suspend fun floweringOf(plantId: String): List<LocalDate> = flowering.forPlant(plantId).map { LocalDate.ofEpochDay(it.observedOnEpochDay) }
+
+    private suspend fun recordFlowering(plantId: String, detection: DetectionRecord) {
+        val day = detection.takenAt.atZone(clock.zone).toLocalDate()
+        flowering.insert(FloweringEntity(UUID.randomUUID().toString(), plantId, day.toEpochDay(), detection.photoId, "PHOTO"))
+    }
+
     suspend fun link(link: Link) = links.upsert(
         LinkEntity(link.subjectId, link.predicate, link.objectId, link.provenance.name, link.confidenceBp, now()),
     )
@@ -181,3 +287,19 @@ class GardenRepository(
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }
 }
+
+/** One region of a photo, ready to store: where it is, its cut-out, whether it was in flower, and the suggestions. */
+data class DetectionDraft(val box: BoxBp, val thumbnail: String, val flowering: Boolean, val candidates: List<Candidate>)
+
+/** A stored detection with its suggestions, for review. */
+data class DetectionRecord(
+    val id: String,
+    val photoId: String,
+    val box: BoxBp,
+    val thumbnail: String,
+    val flowering: Boolean,
+    val status: DetectionStatus,
+    val plantId: String?,
+    val candidates: List<Candidate>,
+    val takenAt: Instant,
+)

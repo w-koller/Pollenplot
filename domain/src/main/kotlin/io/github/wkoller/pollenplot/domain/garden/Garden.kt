@@ -51,6 +51,8 @@ data class GardenPlant(
     val plantedOn: LocalDate? = null,
     val status: PlantStatus = PlantStatus.GROWING,
     val notes: String = "",
+    /** The plant's cut-out picture, as the app stores it, or null before it has one. */
+    val thumbnail: String? = null,
 ) {
     init {
         require(speciesName != null || !customName.isNullOrBlank()) { "A plant needs a species or a name" }

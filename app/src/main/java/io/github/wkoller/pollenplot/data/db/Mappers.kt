@@ -52,6 +52,7 @@ fun PlantEntity.toDomain() = GardenPlant(
     plantedOn = plantedOnEpochDay?.let(LocalDate::ofEpochDay),
     status = enumOrNull<PlantStatus>(status) ?: PlantStatus.GROWING,
     notes = notes,
+    thumbnail = thumbnail,
 )
 
 fun GardenPlant.toEntity(createdAt: Long, updatedAt: Long) = PlantEntity(
@@ -63,6 +64,7 @@ fun GardenPlant.toEntity(createdAt: Long, updatedAt: Long) = PlantEntity(
     plantedOnEpochDay = plantedOn?.toEpochDay(),
     status = status.name,
     notes = notes,
+    thumbnail = thumbnail,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )

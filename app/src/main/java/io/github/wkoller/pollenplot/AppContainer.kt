@@ -3,6 +3,10 @@ package io.github.wkoller.pollenplot
 import android.content.Context
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.PhotoAnalysis
+import io.github.wkoller.pollenplot.data.photos.PhotoStore
+import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
+import io.github.wkoller.pollenplot.ml.PlantIdentifier
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
@@ -16,8 +20,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.Clock
 
-/** Builds the app's shared objects once. Screens reach it through [PollenplotApp]. */
-class AppContainer(context: Context, database: PollenplotDatabase? = null) {
+/**
+ * Builds the app's shared objects once. Screens reach it through [PollenplotApp]. Tests pass an in-memory [database]
+ * and a fake [identifier] in place of the on-device models.
+ */
+class AppContainer(context: Context, database: PollenplotDatabase? = null, identifier: PlantIdentifier? = null) {
     val appContext: Context = context.applicationContext
     val clock: Clock = PhoneClock
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -31,6 +38,11 @@ class AppContainer(context: Context, database: PollenplotDatabase? = null) {
         gardenState = { settingsStore.settings.first().gardenState },
     )
     val views = GardenViews(garden, knowledge, settingsStore)
+    val photos = PhotoStore(appContext)
+
+    /** The models are loaded the first time a photo is identified, not when the app starts. */
+    val identifier: PlantIdentifier by lazy { identifier ?: FastPlantIdentifier(appContext) }
+    val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock)
 
     init {
         // The search text includes knowledge base facts and badges, so it is rebuilt when the app starts and whenever

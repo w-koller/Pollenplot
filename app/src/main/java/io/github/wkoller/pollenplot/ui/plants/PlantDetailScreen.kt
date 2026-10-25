@@ -157,7 +157,7 @@ fun PlantDetailScreen(
 @Composable
 private fun Header(view: PlantView) {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-        PlantAvatar(view.species?.form, 96.dp)
+        PlantAvatar(view.species?.form, 96.dp, thumbnail = view.plant.thumbnail)
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(view.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
             view.species?.let { species ->

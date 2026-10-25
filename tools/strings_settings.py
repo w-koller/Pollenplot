@@ -24,8 +24,13 @@ STRINGS = {
     "licence_item_jetpack": "Android Jetpack and Jetpack Compose",
     "licence_item_kotlin": "Kotlin and kotlinx libraries",
     "licence_item_material_symbols": "Material Symbols icons",
+    "licence_item_aiy_plants": "AIY Plants V1 model, by Google",
+    "licence_item_litert": "LiteRT",
+    "licence_item_litert_notices": "Libraries included in LiteRT",
+    "licence_item_coil": "Coil and Okio",
     "licence_gpl": "GNU General Public License, version 3",
     "licence_apache": "Apache License 2.0",
+    "licence_notices": "Their licences and notices",
     "licence_loading": "Loading the licence.",
     "licence_missing": "This licence could not be opened. Please try again.",
 }

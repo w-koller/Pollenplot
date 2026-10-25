@@ -261,7 +261,7 @@ private fun TileContent(view: ZoneView, widthDp: Float, heightDp: Float) {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 // A light disc keeps each plant visible on any tile colour.
                 view.plants.take(fit).forEach {
-                    PlantAvatar(it.species?.form, 30.dp, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, contentColor = MaterialTheme.colorScheme.onSurface)
+                    PlantAvatar(it.species?.form, 30.dp, thumbnail = it.plant.thumbnail, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, contentColor = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }

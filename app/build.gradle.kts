@@ -1,3 +1,9 @@
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
+import java.util.zip.ZipFile
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -32,6 +38,86 @@ abstract class CollectLicencesTask : DefaultTask() {
             }
         }
     }
+}
+
+/**
+ * Downloads a file once and checks it against its published SHA-256, so a third-party model can be used without
+ * committing it to the repository.
+ */
+abstract class VerifiedDownloadTask : DefaultTask() {
+    @get:Input abstract val url: Property<String>
+    @get:Input abstract val sha256: Property<String>
+    @get:OutputFile abstract val output: RegularFileProperty
+
+    @TaskAction
+    fun download() {
+        val target = output.get().asFile
+        // Editing the build script makes Gradle run this again, so a file that is already right is kept.
+        if (target.isFile && sha256Of(target) == sha256.get()) return
+        target.parentFile.mkdirs()
+        val partial = File(target.path + ".part")
+        URI(url.get()).toURL().openStream().use { input -> partial.outputStream().use { input.copyTo(it) } }
+        val actual = sha256Of(partial)
+        if (actual != sha256.get()) {
+            partial.delete()
+            throw GradleException("Checksum mismatch for ${url.get()}: expected ${sha256.get()}, got $actual")
+        }
+        Files.move(partial.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }
+
+    private fun sha256Of(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(1 shl 20)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                digest.update(buffer, 0, read)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+}
+
+/**
+ * Takes a model out of its downloaded .tar.gz and puts it among the app's assets. The labels inside the model must
+ * match the committed copy in assets/ml, which the tests read, so the two can never drift apart.
+ */
+abstract class ExtractModelTask : DefaultTask() {
+    @get:InputFile abstract val archive: RegularFileProperty
+    @get:Input abstract val entry: Property<String>
+    @get:Input abstract val target: Property<String>
+    @get:Input abstract val labelsEntry: Property<String>
+    @get:InputFile abstract val expectedLabels: RegularFileProperty
+    @get:OutputDirectory abstract val output: DirectoryProperty
+    @get:javax.inject.Inject abstract val archiveOperations: ArchiveOperations
+
+    @TaskAction
+    fun extract() {
+        val folder = output.get().asFile
+        folder.deleteRecursively()
+        val dest = File(folder, target.get()).apply { parentFile.mkdirs() }
+        var found = false
+        archiveOperations.tarTree(archiveOperations.gzip(archive.get().asFile)).visit {
+            if (!isDirectory && name == entry.get()) {
+                copyTo(dest)
+                found = true
+            }
+        }
+        if (!found) throw GradleException("${entry.get()} is not in ${archive.get().asFile.name}")
+        val embedded = ZipFile(dest).use { zip -> zip.getInputStream(zip.getEntry(labelsEntry.get())).readBytes().decodeToString() }
+        if (embedded != expectedLabels.get().asFile.readText()) {
+            throw GradleException("The labels in ${dest.name} differ from ${expectedLabels.get().asFile.name}")
+        }
+    }
+}
+
+// AIY Plants V1 (Apache License 2.0): the fast, bundled plant classifier. Kaggle serves it as a .tar.gz.
+val aiyPlantsArchive = layout.buildDirectory.file("third-party/aiy-plants-v1-3.tar.gz")
+val downloadAiyPlants = tasks.register<VerifiedDownloadTask>("downloadAiyPlants") {
+    url.set("https://www.kaggle.com/api/v1/models/google/aiy/tfLite/vision-classifier-plants-v1/3/download")
+    sha256.set("7d9a44818d6685c51ba4f4ae398efa692f70853b16c593e03425bed92a7a50e7")
+    output.set(aiyPlantsArchive)
 }
 
 // Release signing comes from environment variables so the keystore never lives in the repository.
@@ -88,6 +174,11 @@ android {
         buildConfig = true
     }
 
+    androidResources {
+        // Models are memory-mapped from the APK, which needs them stored uncompressed.
+        noCompress += "tflite"
+    }
+
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {
@@ -106,7 +197,9 @@ room {
 }
 
 // The archives whose licence and notice files are shown in About › Licences. Libraries join this list as they are added.
-val licenceArchives: Configuration = configurations.detachedConfiguration().apply { isTransitive = false }
+val licenceArchives: Configuration = configurations.detachedConfiguration(
+    dependencies.create("com.google.ai.edge.litert:litert:${libs.versions.litert.get()}@aar"),
+).apply { isTransitive = false }
 
 androidComponents {
     onVariants { variant ->
@@ -115,6 +208,14 @@ androidComponents {
             appLicence.set(rootProject.layout.projectDirectory.file("LICENSE"))
         }
         variant.sources.assets?.addGeneratedSourceDirectory(collectLicences, CollectLicencesTask::output)
+        val extractModels = tasks.register<ExtractModelTask>("extract${variant.name.replaceFirstChar { it.uppercase() }}Models") {
+            archive.set(downloadAiyPlants.flatMap { it.output })
+            entry.set("3.tflite")
+            target.set("ml/aiy_plants_v1.tflite")
+            labelsEntry.set("probability-labels-en.txt")
+            expectedLabels.set(layout.projectDirectory.file("src/main/assets/ml/aiy_plants_v1_labels.txt"))
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(extractModels, ExtractModelTask::output)
     }
 }
 
@@ -133,6 +234,14 @@ dependencies {
     // MaterialShapes are RoundedPolygons; material3 lists this library for run time only.
     implementation(libs.graphics.shapes)
     debugImplementation(libs.compose.ui.tooling)
+
+    implementation(libs.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.compose)
+    implementation(libs.litert)
+    implementation(libs.coil.compose)
+    implementation(libs.androidx.exifinterface)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

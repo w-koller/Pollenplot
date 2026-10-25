@@ -44,8 +44,82 @@ data class PlantEntity(
     val plantedOnEpochDay: Long?,
     val status: String,
     val notes: String,
+    /** The plant's cut-out picture, relative to the app's files folder. */
+    val thumbnail: String?,
     val createdAt: Long,
     val updatedAt: Long,
+)
+
+/** A photo the app has kept, downscaled into its own storage so records survive if the original is deleted. */
+@Entity(tableName = "photos")
+data class PhotoEntity(
+    @PrimaryKey val id: String,
+    /** Relative to the app's files folder. */
+    val path: String,
+    val width: Int,
+    val height: Int,
+    val origin: String,
+    val takenAt: Long,
+    val addedAt: Long,
+    val latE7: Int?,
+    val lonE7: Int?,
+)
+
+/**
+ * One part of a photo that seems to show a plant, with its cut-out and what the models suggested. It waits for review
+ * until the user confirms it as a plant in the garden or says it is not one.
+ */
+@Entity(
+    tableName = "detections",
+    foreignKeys = [
+        ForeignKey(entity = PhotoEntity::class, parentColumns = ["id"], childColumns = ["photoId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.SET_NULL),
+    ],
+    indices = [Index("photoId"), Index("plantId"), Index("status")],
+)
+data class DetectionEntity(
+    @PrimaryKey val id: String,
+    val photoId: String,
+    /** The region, in basis points of the photo's width and height. */
+    val leftBp: Int,
+    val topBp: Int,
+    val rightBp: Int,
+    val bottomBp: Int,
+    val thumbnail: String,
+    val flowering: Boolean,
+    val status: String,
+    val plantId: String?,
+    val createdAt: Long,
+)
+
+/** One suggestion for a detection, in rank order. */
+@Entity(
+    tableName = "candidates",
+    primaryKeys = ["detectionId", "rank"],
+    foreignKeys = [ForeignKey(entity = DetectionEntity::class, parentColumns = ["id"], childColumns = ["detectionId"], onDelete = ForeignKey.CASCADE)],
+)
+data class CandidateEntity(
+    val detectionId: String,
+    val rank: Int,
+    val label: String,
+    val speciesName: String?,
+    val scoreBp: Int,
+    /** The models that suggested it, by name, separated by commas. */
+    val sources: String,
+)
+
+/** A plant seen in flower on a date, from a photo or from the user. Pollen Rhythms compares these with the calendar. */
+@Entity(
+    tableName = "flowering",
+    foreignKeys = [ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("plantId")],
+)
+data class FloweringEntity(
+    @PrimaryKey val id: String,
+    val plantId: String,
+    val observedOnEpochDay: Long,
+    val photoId: String?,
+    val source: String,
 )
 
 /** A relation between two records that neither record holds itself, with where it came from. */

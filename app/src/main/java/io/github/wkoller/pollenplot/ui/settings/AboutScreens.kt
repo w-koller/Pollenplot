@@ -89,6 +89,10 @@ private val licences = listOf(
     LicenceItem(R.string.licence_item_jetpack, R.string.licence_apache, APACHE),
     LicenceItem(R.string.licence_item_kotlin, R.string.licence_apache, APACHE),
     LicenceItem(R.string.licence_item_material_symbols, R.string.licence_apache, APACHE),
+    LicenceItem(R.string.licence_item_aiy_plants, R.string.licence_apache, APACHE),
+    LicenceItem(R.string.licence_item_litert, R.string.licence_apache, "litert-LICENSE.txt"),
+    LicenceItem(R.string.licence_item_litert_notices, R.string.licence_notices, "litert-THIRD_PARTY_NOTICE.txt"),
+    LicenceItem(R.string.licence_item_coil, R.string.licence_apache, APACHE),
 )
 
 /** About › Licences: the software the app is built with, each with the licence it comes under. */
@@ -152,12 +156,14 @@ fun LicenceTextScreen(file: String, onBack: () -> Unit) {
 fun NotReadyScreen(action: AddAction, onBack: () -> Unit) {
     DetailScaffold(title = stringResource(R.string.not_ready_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
-            item {
-                Text(
-                    stringResource(action.notReady),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(16.dp),
-                )
+            action.notReady?.let { text ->
+                item {
+                    Text(
+                        stringResource(text),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
             }
         }
     }

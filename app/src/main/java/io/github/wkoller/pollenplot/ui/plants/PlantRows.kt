@@ -45,7 +45,7 @@ fun PlantRow(view: PlantView, onClick: () -> Unit, showZone: Boolean = true) {
     )
     ListItem(
         onClick = onClick,
-        leadingContent = { PlantAvatar(view.species?.form, 48.dp) },
+        leadingContent = { PlantAvatar(view.species?.form, 48.dp, thumbnail = view.plant.thumbnail) },
         supportingContent = if (details.isEmpty()) null else { { Text(details.joinToString(" · "), maxLines = 2, overflow = TextOverflow.Ellipsis) } },
         trailingContent = { RoleIcons(view.roles, max = 2, size = 24.dp) },
     ) {
@@ -90,7 +90,7 @@ fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier)
                 )
                 if (view.plants.isNotEmpty() || view.badges.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        view.plants.take(5).forEach { PlantAvatar(it.species?.form, 28.dp) }
+                        view.plants.take(5).forEach { PlantAvatar(it.species?.form, 28.dp, thumbnail = it.plant.thumbnail) }
                         if (view.badges.isNotEmpty()) {
                             Box(Modifier.padding(start = 8.dp)) {
                                 IconBadges(view.badges.map { BadgeItem(it.icon, stringResource(it.label), it.tone) }, size = 24.dp)

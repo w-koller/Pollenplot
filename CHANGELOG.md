@@ -14,3 +14,10 @@
   wildlife, forage for honey bees and native bees, flowering, size, safety and companions.
 - Search your garden, and every record stored with a UUID that the JSON-LD export uses as its identity.
 - Settings › Your garden: the state or territory, which decides what counts as a local native.
+- Identify with the camera: live suggestions while you point the phone at a plant, then every plant found in the
+  photo with its cut-out, the model's suggestions and how sure it is. Add each one to a zone, add the photo to a plant
+  you already have, mark it as not a plant, or search for the right plant. Flowers in the photo are recorded for
+  Pollen Rhythms, and photos with no plant in them are not kept.
+- Plants show their cut-out from a photo on the Plot, in lists and on their page.
+- The quick model, AIY Plants V1, runs on the phone with LiteRT and is checked against its published SHA-256 when the
+  app is built. Nothing is sent off the phone.

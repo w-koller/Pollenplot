@@ -47,6 +47,52 @@ interface PlantDao {
 }
 
 @Dao
+interface PhotoDao {
+    @Insert
+    suspend fun insert(photo: PhotoEntity)
+
+    @Query("SELECT * FROM photos WHERE id = :id")
+    suspend fun get(id: String): PhotoEntity?
+}
+
+@Dao
+interface DetectionDao {
+    @Insert
+    suspend fun insert(detection: DetectionEntity)
+
+    @Insert
+    suspend fun insertCandidates(candidates: List<CandidateEntity>)
+
+    @Query("SELECT * FROM detections WHERE id = :id")
+    suspend fun get(id: String): DetectionEntity?
+
+    @Query("SELECT * FROM candidates WHERE detectionId = :id ORDER BY rank")
+    suspend fun candidates(id: String): List<CandidateEntity>
+
+    @Query("SELECT * FROM detections WHERE status = :status ORDER BY createdAt")
+    fun observeWithStatus(status: String): Flow<List<DetectionEntity>>
+
+    /** A photo's detections, from the left of the photo to the right, so the review follows the photo. */
+    @Query("SELECT * FROM detections WHERE photoId = :photoId ORDER BY leftBp, topBp")
+    fun observeForPhoto(photoId: String): Flow<List<DetectionEntity>>
+
+    @Query("UPDATE detections SET status = :status, plantId = :plantId WHERE id = :id")
+    suspend fun setStatus(id: String, status: String, plantId: String?)
+}
+
+@Dao
+interface FloweringDao {
+    @Insert
+    suspend fun insert(observation: FloweringEntity)
+
+    @Query("SELECT * FROM flowering WHERE plantId = :plantId ORDER BY observedOnEpochDay")
+    suspend fun forPlant(plantId: String): List<FloweringEntity>
+
+    @Query("SELECT * FROM flowering ORDER BY observedOnEpochDay")
+    fun observeAll(): Flow<List<FloweringEntity>>
+}
+
+@Dao
 interface LinkDao {
     @Query("SELECT * FROM links")
     suspend fun all(): List<LinkEntity>

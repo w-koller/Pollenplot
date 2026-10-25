@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Identify with the camera. Photos are identified on the phone and are not sent anywhere. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Plants can still be added by name or from photos on phones without a camera. -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
         android:name=".PollenplotApp"
         android:allowBackup="true"

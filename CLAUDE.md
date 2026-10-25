@@ -21,8 +21,15 @@ export JAVA_HOME=~/.local/opt/jdk-17 ANDROID_HOME=~/Android/Sdk
 Screen tests save pictures to `app/build/screenshots/`. Look at them after UI changes: there are light, dark and
 wide-window versions, and `PlotScreenFlowTest` drives a demo yard (`DemoGarden`) through the Plot, zones, plants and
 search. Screens fed by Room flows use the classic `createComposeRule`, because the v2 rule's standard test dispatcher
-does not pick up database emissions while a test waits. Free disk space is short on this machine, so model exports and evaluations run in GitHub
-Actions, and the large models are never downloaded here.
+does not pick up database emissions while a test waits. Even so, a screen whose first data came only from a Room flow
+now and then stayed on its loading state under Robolectric (about one run in ten, more while Gradle was busy), so the
+Identify results are published by `IdentifyModel` as soon as the analysis returns, and the Room flow only brings later
+changes. Prefer that shape when a screen opens on data the app has just written. Robolectric also cannot load the native model interpreter, decode with `ImageDecoder` or settle a text field inside a
+dialog window, so screen tests use a fake `PlantIdentifier`, give Coil `imageDecoderEnabled(false)`, and searches open
+as full screens rather than in dialogs.
+
+Free disk space is short on this machine, so model exports and evaluations run in GitHub Actions, and the large models
+are never downloaded here.
 
 CI (`.github/workflows/android.yml`) runs the same tasks, checks that `strings.xml` matches `tools/strings_*.py`, and
 uploads the debug APK, reports and screenshots. It builds a signed release APK when the `KEYSTORE_BASE64`,
@@ -39,12 +46,29 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid and tidy placement) and `ZoneBadges`.
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `JsonLd`
     and `SearchText` (what the search index holds for each record).
-- `app/data`: `GardenRepository` (records, the search index and JSON-LD export), `GardenViews` (records joined
-  with the knowledge base for the screens), Room in `data/db`, the knowledge base loader in `data/kb` and DataStore
-  settings in `data/prefs`.
+  - `id/`: identification. `RegionPlanner` (the tiles each photo is classified in and how regions are chosen),
+    `CandidateFusion` (each model's suggestions combined, with the garden boost), `ThumbnailMath`, `FlowerHint` and
+    `Confidence`.
+- `app/data`: `GardenRepository` (records, detections, the search index and JSON-LD export), `GardenViews` (records
+  joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
+  review), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
+  DataStore settings in `data/prefs`.
+- `app/ml`: `PlantIdentifier` and `FastPlantIdentifier` (AIY Plants V1 through the LiteRT `Interpreter`), and bitmap
+  helpers. Tests pass a fake `PlantIdentifier` to `AppContainer` or `PhotoAnalysis`.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
-  `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search.
+  `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera,
+  the results and the review cards (`IdentifyModel` keeps its state across turns).
 - `AppContainer` builds the shared objects by hand. There is no dependency-injection library.
+
+## Models
+
+Model files are not committed. The build downloads each one once, checks it against its published SHA-256
+(`VerifiedDownloadTask`) and extracts it into the generated assets (`ExtractModelTask`), which also checks that the
+model's embedded labels match the committed labels file. Assets ending in `.tflite` stay uncompressed so the
+interpreter can map them. AIY Plants V1 takes 224 × 224 RGB bytes and gives 2,102 probabilities in 256ths, the last
+being "no plant here". Run models with LiteRT; do not add MediaPipe Tasks or ML Kit, because MediaPipe Tasks sends
+usage statistics to Google through `com.google.android.datatransport` and ML Kit is not open source. Check a new
+library's dependencies for telemetry before adding it.
 
 ## Knowledge base
 

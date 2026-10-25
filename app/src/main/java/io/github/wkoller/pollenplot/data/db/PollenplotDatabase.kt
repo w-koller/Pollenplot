@@ -10,13 +10,19 @@ import androidx.room.RoomDatabase
  * migration and a schema committed in app/schemas, and there is no destructive fallback.
  */
 @Database(
-    entities = [ZoneEntity::class, PlantEntity::class, LinkEntity::class, SearchEntity::class],
+    entities = [
+        ZoneEntity::class, PlantEntity::class, PhotoEntity::class, DetectionEntity::class, CandidateEntity::class,
+        FloweringEntity::class, LinkEntity::class, SearchEntity::class,
+    ],
     version = 1,
     exportSchema = true,
 )
 abstract class PollenplotDatabase : RoomDatabase() {
     abstract fun zoneDao(): ZoneDao
     abstract fun plantDao(): PlantDao
+    abstract fun photoDao(): PhotoDao
+    abstract fun detectionDao(): DetectionDao
+    abstract fun floweringDao(): FloweringDao
     abstract fun linkDao(): LinkDao
     abstract fun searchDao(): SearchDao
 

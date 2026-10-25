@@ -17,4 +17,7 @@ tasks.test {
     // KnowledgeBaseFilesTest reads the knowledge base the app ships, so it is checked on every test run.
     systemProperty("kb.dir", rootProject.layout.projectDirectory.dir("app/src/main/assets/kb").asFile.absolutePath)
     inputs.dir(rootProject.layout.projectDirectory.dir("app/src/main/assets/kb"))
+    // The fast classifier's labels, to check how many of them the knowledge base can name.
+    systemProperty("ml.dir", rootProject.layout.projectDirectory.dir("app/src/main/assets/ml").asFile.absolutePath)
+    inputs.dir(rootProject.layout.projectDirectory.dir("app/src/main/assets/ml"))
 }

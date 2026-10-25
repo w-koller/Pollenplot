@@ -2,14 +2,22 @@ package io.github.wkoller.pollenplot
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.wkoller.pollenplot.data.DetectionDraft
+import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
+import io.github.wkoller.pollenplot.data.photos.StoredPhoto
 import io.github.wkoller.pollenplot.domain.garden.PlotLayout
 import io.github.wkoller.pollenplot.domain.garden.ZoneBadge
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
+import io.github.wkoller.pollenplot.domain.id.BoxBp
+import io.github.wkoller.pollenplot.domain.id.Candidate
+import io.github.wkoller.pollenplot.domain.id.DetectionStatus
+import io.github.wkoller.pollenplot.domain.id.IdSource
+import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +38,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.Clock
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 @RunWith(AndroidJUnit4::class)
 class GardenRepositoryTest {
@@ -130,5 +140,83 @@ class GardenRepositoryTest {
         assertEquals("Citrus × limon", lemon["dwc:scientificName"]!!.jsonPrimitive.content)
         assertEquals("urn:uuid:${ids.citrus}", lemon["schema:containedInPlace"]!!.jsonObject["@id"]!!.jsonPrimitive.content)
         assertEquals(4 + 15, nodes.size)
+    }
+
+    private val aiy = setOf(IdSource.AIY_PLANTS)
+
+    /** A photo of a bottlebrush on the left and rosemary on the right, taken on 3 October 2026. */
+    private suspend fun recordBedPhoto(): List<DetectionRecord> {
+        val photo = StoredPhoto("photo-1", "photos/photo-1.jpg", 2_048, 1_536)
+        val takenAt = LocalDate.of(2026, 10, 3).atTime(9, 30).toInstant(ZoneOffset.UTC)
+        garden.recordPhoto(
+            photo,
+            PhotoOrigin.CAMERA,
+            takenAt,
+            listOf(
+                DetectionDraft(BoxBp(6_000, 0, 10_000, 6_000), "thumbs/rosemary.webp", false, listOf(Candidate("Rosmarinus officinalis", "Salvia rosmarinus", 6_450, aiy))),
+                DetectionDraft(
+                    BoxBp(0, 0, 6_000, 6_000),
+                    "thumbs/bottlebrush.webp",
+                    true,
+                    listOf(Candidate("Callistemon citrinus", "Melaleuca citrina", 7_400, aiy), Candidate("Hibiscus syriacus", null, 900, aiy)),
+                ),
+            ),
+        )
+        return garden.detectionsInPhoto(photo.id).first()
+    }
+
+    @Test
+    fun `plants found in a photo wait for review in the order they appear`() = runBlocking {
+        val found = recordBedPhoto()
+        assertEquals("From the left of the photo to the right", listOf("thumbs/bottlebrush.webp", "thumbs/rosemary.webp"), found.map { it.thumbnail })
+        assertTrue(found.all { it.status == DetectionStatus.NEEDS_REVIEW })
+        assertEquals(listOf("Callistemon citrinus", "Hibiscus syriacus"), found[0].candidates.map { it.label })
+        assertEquals(listOf("Melaleuca citrina", null), found[0].candidates.map { it.speciesName })
+        assertEquals(aiy, found[0].candidates[0].sources)
+        assertEquals(StoredPhoto("photo-1", "photos/photo-1.jpg", 2_048, 1_536), garden.photo("photo-1"))
+    }
+
+    @Test
+    fun `a confirmed plant gets the cut-out as its picture and a flowering record`() = runBlocking {
+        val zone = garden.addZone("Front Native Strip", ZoneKind.GARDEN_BED)
+        val bottlebrush = recordBedPhoto()[0]
+        val plant = garden.confirmDetection(bottlebrush.id, "Melaleuca citrina", null, zone.id, flowering = true)
+
+        assertEquals("thumbs/bottlebrush.webp", garden.plant(plant.id)!!.thumbnail)
+        assertEquals(zone.id, garden.plant(plant.id)!!.zoneId)
+        val stored = garden.detection(bottlebrush.id)!!
+        assertEquals(DetectionStatus.CONFIRMED, stored.status)
+        assertEquals(plant.id, stored.plantId)
+        assertEquals("The day the photo was taken", listOf(LocalDate.of(2026, 10, 3)), garden.floweringOf(plant.id))
+        assertTrue("The new plant can be searched for", garden.search("bottlebrush").any { it.recordId == plant.id })
+    }
+
+    @Test
+    fun `a photo added to a plant already in the garden does not replace its picture`() = runBlocking {
+        val found = recordBedPhoto()
+        val rosemary = garden.addPlant("Salvia rosmarinus", null, null)
+        garden.attachDetection(found[1].id, rosemary.id, flowering = false)
+        assertEquals("A plant without a picture takes the cut-out", "thumbs/rosemary.webp", garden.plant(rosemary.id)!!.thumbnail)
+        assertEquals(emptyList<LocalDate>(), garden.floweringOf(rosemary.id))
+        assertEquals(rosemary.id, garden.detection(found[1].id)!!.plantId)
+
+        garden.attachDetection(found[0].id, rosemary.id, flowering = true)
+        assertEquals("A plant keeps the picture it has", "thumbs/rosemary.webp", garden.plant(rosemary.id)!!.thumbnail)
+        assertEquals(listOf(LocalDate.of(2026, 10, 3)), garden.floweringOf(rosemary.id))
+        assertEquals("No second plant was added", 1, garden.plantList.first().size)
+    }
+
+    @Test
+    fun `a part of a photo marked as not a plant can be put back in review`() = runBlocking {
+        val found = recordBedPhoto()
+        garden.rejectDetection(found[0].id)
+        assertEquals(DetectionStatus.REJECTED, garden.detection(found[0].id)!!.status)
+        garden.reopenDetection(found[0].id)
+        assertEquals(DetectionStatus.NEEDS_REVIEW, garden.detection(found[0].id)!!.status)
+
+        val plant = garden.confirmDetection(found[1].id, "Salvia rosmarinus", null, null, flowering = false)
+        garden.reopenDetection(found[1].id)
+        assertEquals("Only a rejection can be undone this way", DetectionStatus.CONFIRMED, garden.detection(found[1].id)!!.status)
+        assertEquals(plant.id, garden.detection(found[1].id)!!.plantId)
     }
 }

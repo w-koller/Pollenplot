@@ -33,7 +33,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import io.github.wkoller.pollenplot.AppContainer
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
+import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
+import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
@@ -116,7 +120,11 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
                         views = container.views,
                         onOpenSettings = openSettings,
                         onAdd = { action ->
-                            if (action == AddAction.PLANT) navController.navigate(AddPlantRoute()) else navController.navigate(NotReadyRoute(action.name))
+                            when (action) {
+                                AddAction.IDENTIFY -> navController.navigate(IdentifyRoute)
+                                AddAction.PLANT -> navController.navigate(AddPlantRoute())
+                                else -> navController.navigate(NotReadyRoute(action.name))
+                            }
                         },
                         onOpenZone = { navController.navigate(ZoneRoute(it)) },
                         onEditZone = { navController.navigate(ZoneEditRoute(it)) },
@@ -177,6 +185,20 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
                         onOpenZone = { navController.navigate(ZoneRoute(it)) },
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
+                    )
+                }
+                composable<IdentifyRoute> {
+                    val model = viewModel {
+                        IdentifyModel(container.analysis, { container.identifier }, container.garden, container.knowledge, createSavedStateHandle())
+                    }
+                    IdentifyScreen(
+                        model = model,
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        settings = container.settingsStore,
+                        onBack = back,
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
                     )
                 }
                 composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
