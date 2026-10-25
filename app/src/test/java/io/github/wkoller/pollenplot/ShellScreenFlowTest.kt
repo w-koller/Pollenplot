@@ -51,7 +51,7 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("Identify with the camera").assertIsDisplayed()
         compose.onNodeWithText("Check a weed").assertIsDisplayed()
         shot("shell_plot_add_menu")
-        compose.onNodeWithText("Add a plant by name").performClick()
+        compose.onNodeWithText("Check a weed").performClick()
         compose.onNodeWithText("Not ready yet").assertIsDisplayed()
         shot("shell_not_ready")
         compose.onNodeWithContentDescription("Back").performClick()

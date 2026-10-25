@@ -24,6 +24,17 @@ import kotlinx.serialization.Serializable
 /** One licence file from assets/licences. */
 @Serializable data class LicenceTextRoute(val file: String)
 
+@Serializable data class ZoneRoute(val id: String)
+
+@Serializable data class ZoneEditRoute(val id: String)
+
+@Serializable data class PlantRoute(val id: String)
+
+/** Adds a plant, optionally into a zone or starting from a species chosen elsewhere, such as in search. */
+@Serializable data class AddPlantRoute(val zoneId: String? = null, val species: String? = null)
+
+@Serializable data object SearchRoute
+
 /** A part of the app that is not built yet, named by [AddAction]. */
 @Serializable data class NotReadyRoute(val action: String)
 

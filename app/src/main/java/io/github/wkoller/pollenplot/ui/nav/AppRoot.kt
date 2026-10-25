@@ -34,8 +34,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import io.github.wkoller.pollenplot.AppContainer
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
+import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
+import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
+import io.github.wkoller.pollenplot.ui.plot.ZoneDetailScreen
+import io.github.wkoller.pollenplot.ui.plot.ZoneEditorScreen
 import io.github.wkoller.pollenplot.ui.rhythms.RhythmsScreen
+import io.github.wkoller.pollenplot.ui.search.SearchScreen
 import io.github.wkoller.pollenplot.ui.settings.AboutScreen
 import io.github.wkoller.pollenplot.ui.settings.LicenceTextScreen
 import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
@@ -106,7 +111,73 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
                 val openSettings = { navController.navigate(SettingsRoute) }
                 val back: () -> Unit = { navController.popBackStack() }
                 composable<PlotRoute> {
-                    PlotScreen(onOpenSettings = openSettings, onAdd = { navController.navigate(NotReadyRoute(it.name)) })
+                    PlotScreen(
+                        garden = container.garden,
+                        views = container.views,
+                        onOpenSettings = openSettings,
+                        onAdd = { action ->
+                            if (action == AddAction.PLANT) navController.navigate(AddPlantRoute()) else navController.navigate(NotReadyRoute(action.name))
+                        },
+                        onOpenZone = { navController.navigate(ZoneRoute(it)) },
+                        onEditZone = { navController.navigate(ZoneEditRoute(it)) },
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onSearch = { navController.navigate(SearchRoute) },
+                    )
+                }
+                composable<ZoneRoute> { entry ->
+                    val id = entry.toRoute<ZoneRoute>().id
+                    ZoneDetailScreen(
+                        views = container.views,
+                        zoneId = id,
+                        onBack = back,
+                        onEdit = { navController.navigate(ZoneEditRoute(id)) },
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onAddPlant = { navController.navigate(AddPlantRoute(zoneId = id)) },
+                    )
+                }
+                composable<ZoneEditRoute> { entry ->
+                    ZoneEditorScreen(
+                        garden = container.garden,
+                        zoneId = entry.toRoute<ZoneEditRoute>().id,
+                        onBack = back,
+                        onRemoved = { navController.popBackStack(PlotRoute, inclusive = false) },
+                    )
+                }
+                composable<PlantRoute> { entry ->
+                    PlantDetailScreen(
+                        views = container.views,
+                        garden = container.garden,
+                        knowledge = container.knowledge,
+                        plantId = entry.toRoute<PlantRoute>().id,
+                        onBack = back,
+                    )
+                }
+                composable<AddPlantRoute> { entry ->
+                    val route = entry.toRoute<AddPlantRoute>()
+                    AddPlantScreen(
+                        knowledge = container.knowledge,
+                        garden = container.garden,
+                        views = container.views,
+                        settings = container.settingsStore,
+                        initialZoneId = route.zoneId,
+                        initialSpecies = route.species,
+                        onBack = back,
+                        onAdded = { plantId ->
+                            navController.navigate(PlantRoute(plantId)) { popUpTo<AddPlantRoute> { inclusive = true } }
+                        },
+                    )
+                }
+                composable<SearchRoute> {
+                    SearchScreen(
+                        garden = container.garden,
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        settings = container.settingsStore,
+                        onBack = back,
+                        onOpenZone = { navController.navigate(ZoneRoute(it)) },
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
+                    )
                 }
                 composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
                 composable<WildlifeRoute> { WildlifeScreen(onOpenSettings = openSettings) }

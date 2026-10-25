@@ -2,7 +2,22 @@ package io.github.wkoller.pollenplot.ui.settings
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
+import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.ui.plants.label
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -32,8 +47,18 @@ fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenAbout: () -> 
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
     val scope = rememberCoroutineScope()
     val update: ((Settings) -> Settings) -> Unit = { change -> scope.launch { store.update(change) } }
+    var choosingState by rememberSaveable { mutableStateOf(false) }
     DetailScaffold(title = stringResource(R.string.settings_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+            item { SectionHeading(stringResource(R.string.settings_garden)) }
+            item {
+                ListItem(
+                    onClick = { choosingState = true },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
+                    supportingContent = { Text(stringResource(settings.gardenState.label) + ". " + stringResource(R.string.settings_state_body)) },
+                ) { Text(stringResource(R.string.settings_state)) }
+            }
+            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_appearance)) }
             item {
                 Text(
@@ -72,6 +97,12 @@ fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenAbout: () -> 
             }
         }
     }
+    if (choosingState) {
+        StateDialog(current = settings.gardenState, onDismiss = { choosingState = false }) { state ->
+            choosingState = false
+            update { it.copy(gardenState = state) }
+        }
+    }
 }
 
 @Composable
@@ -90,3 +121,29 @@ private val ThemeChoice.label: Int
         ThemeChoice.LIGHT -> R.string.theme_light
         ThemeChoice.DARK -> R.string.theme_dark
     }
+
+/** Chooses the garden's state or territory, or none. */
+@Composable
+private fun StateDialog(current: AuState?, onDismiss: () -> Unit, onChoose: (AuState?) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_state)) },
+        text = {
+            LazyColumn(Modifier.selectableGroup()) {
+                items(listOf<AuState?>(null) + AuState.entries) { state ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .selectable(selected = state == current, onClick = { onChoose(state) }, role = Role.RadioButton)
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = state == current, onClick = null)
+                        Text(stringResource(state.label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}

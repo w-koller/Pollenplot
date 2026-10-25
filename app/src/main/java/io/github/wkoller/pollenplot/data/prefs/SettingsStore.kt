@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import io.github.wkoller.pollenplot.domain.plants.AuState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -17,6 +18,8 @@ data class Settings(
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     /** Use the colours of the phone's wallpaper instead of Pollenplot's leaf and pollen colours. */
     val wallpaperColours: Boolean = false,
+    /** The garden's state or territory, which decides what counts as a local native. */
+    val gardenState: AuState? = null,
 )
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
@@ -26,6 +29,7 @@ class SettingsStore(private val context: Context) {
     private object Keys {
         val theme = stringPreferencesKey("theme")
         val wallpaperColours = booleanPreferencesKey("wallpaper_colours")
+        val gardenState = stringPreferencesKey("garden_state")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { it.toSettings() }
@@ -41,11 +45,13 @@ class SettingsStore(private val context: Context) {
         return Settings(
             theme = this[Keys.theme]?.let { runCatching { ThemeChoice.valueOf(it) }.getOrNull() } ?: defaults.theme,
             wallpaperColours = this[Keys.wallpaperColours] ?: defaults.wallpaperColours,
+            gardenState = this[Keys.gardenState]?.let { name -> AuState.entries.firstOrNull { it.name == name } },
         )
     }
 
     private fun MutablePreferences.write(settings: Settings) {
         this[Keys.theme] = settings.theme.name
         this[Keys.wallpaperColours] = settings.wallpaperColours
+        if (settings.gardenState != null) this[Keys.gardenState] = settings.gardenState.name else remove(Keys.gardenState)
     }
 }

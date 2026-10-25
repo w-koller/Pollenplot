@@ -7,6 +7,12 @@ STRINGS = {
     # Common words and buttons
     "back": "Back",
     "settings": "Settings",
+    "cancel": "Cancel",
+
+    # Joining words for lists and month ranges, such as "March and April" and "September to November"
+    "list_and": "%1$s and %2$s",
+    "list_range": "%1$s to %2$s",
+    "list_all_year": "all year",
 
     # Tabs
     "tab_plot": "Plot",

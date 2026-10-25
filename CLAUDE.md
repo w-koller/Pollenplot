@@ -19,7 +19,9 @@ export JAVA_HOME=~/.local/opt/jdk-17 ANDROID_HOME=~/Android/Sdk
 ```
 
 Screen tests save pictures to `app/build/screenshots/`. Look at them after UI changes: there are light, dark and
-wide-window versions. Free disk space is short on this machine, so model exports and evaluations run in GitHub
+wide-window versions, and `PlotScreenFlowTest` drives a demo yard (`DemoGarden`) through the Plot, zones, plants and
+search. Screens fed by Room flows use the classic `createComposeRule`, because the v2 rule's standard test dispatcher
+does not pick up database emissions while a test waits. Free disk space is short on this machine, so model exports and evaluations run in GitHub
 Actions, and the large models are never downloaded here.
 
 CI (`.github/workflows/android.yml`) runs the same tasks, checks that `strings.xml` matches `tools/strings_*.py`, and
@@ -32,9 +34,28 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
 
 - `domain/`: every rule and calculation, with no Android code. Every rule change needs a test here.
   - `season/`: hemispheres, seasons and `MonthSet`.
-- `app/data`: Room records and DataStore settings (`data/prefs/SettingsStore`).
-- `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame.
+  - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (species, then
+    genus, then family), `EcoRoles` (the badges) and `Companions`.
+  - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid and tidy placement) and `ZoneBadges`.
+  - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `JsonLd`
+    and `SearchText` (what the search index holds for each record).
+- `app/data`: `GardenRepository` (records, the search index and JSON-LD export), `GardenViews` (records joined
+  with the knowledge base for the screens), Room in `data/db`, the knowledge base loader in `data/kb` and DataStore
+  settings in `data/prefs`.
+- `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
+  `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search.
 - `AppContainer` builds the shared objects by hand. There is no dependency-injection library.
+
+## Knowledge base
+
+The plant facts live in `app/src/main/assets/kb/` as JSON that people can read and edit: `species/*.json`,
+`genera.json`, `families.json`, `companions.json` and `meta.json` (bump its version when the content changes).
+Scores run from 0 to 3, sizes are in millimetres, months are written as "jan" to "dec" for the Southern Hemisphere,
+and forage is `honey [nectar, pollen]`, `stingless [nectar, pollen, resin]`, `solitary [nectar, pollen]`. Leave a
+fact out rather than guess it: the app says "Not recorded yet", and `CareResolver` fills gaps from the genus and family
+only where a fact holds for the whole group. Weed status comes from official sources for the user's area, so species
+records keep only the national Weeds of National Significance flag. `KnowledgeBaseFilesTest` in `:domain` checks
+the real files on every test run.
 
 ## Material 3 Expressive
 
@@ -53,6 +74,8 @@ through `ui/components/PollenShapes.kt` and other components, so an API change t
   migration and a schema committed in `app/schemas/`, and there is no destructive migration fallback. The read-only
   knowledge database is rebuilt from `app/src/main/assets/kb/` whenever its version changes.
 - Garden locations sent to online services (weather, ALA) are rounded to about 1 km. Photos never leave the phone.
+- Every write goes through `GardenRepository`, which also updates the FTS4 search index and links. Room supports
+  FTS4 but not FTS5, so the index uses FTS4; queries are reduced to letters and digits with a prefix star on each word.
 
 ## Copy
 
