@@ -1,0 +1,128 @@
+package io.github.wkoller.pollenplot.ui.nav
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import io.github.wkoller.pollenplot.AppContainer
+import io.github.wkoller.pollenplot.ui.bees.BeesScreen
+import io.github.wkoller.pollenplot.ui.plot.PlotScreen
+import io.github.wkoller.pollenplot.ui.rhythms.RhythmsScreen
+import io.github.wkoller.pollenplot.ui.settings.AboutScreen
+import io.github.wkoller.pollenplot.ui.settings.LicenceTextScreen
+import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
+import io.github.wkoller.pollenplot.ui.settings.NotReadyScreen
+import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
+import io.github.wkoller.pollenplot.ui.water.WaterScreen
+import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
+
+/** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
+private val WIDE_WINDOW = 600.dp
+
+/**
+ * The app's frame: the main tabs in a navigation bar (or a rail on wide screens) around one navigation host. The host
+ * always sits at the same place in the layout, so turning the phone keeps the screens the user has open.
+ */
+@Composable
+fun AppRoot(container: AppContainer, navController: NavHostController = rememberNavController()) {
+    val entry by navController.currentBackStackEntryAsState()
+    val destination = entry?.destination
+    val currentTab = TopLevelTab.entries.firstOrNull { tab -> destination?.hierarchy?.any { it.hasRoute(tab.route::class) } == true }
+    val showTabs = currentTab != null
+    val wide = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() } >= WIDE_WINDOW
+
+    fun openTab(tab: TopLevelTab) = navController.navigate(tab.route) {
+        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+
+    Row(Modifier.fillMaxSize()) {
+        if (wide && showTabs) {
+            WideNavigationRail {
+                TopLevelTab.entries.forEach { tab ->
+                    WideNavigationRailItem(
+                        selected = tab == currentTab,
+                        onClick = { openTab(tab) },
+                        icon = { Icon(painterResource(if (tab == currentTab) tab.selectedIcon else tab.icon), contentDescription = null) },
+                        label = { Text(stringResource(tab.label)) },
+                        railExpanded = false,
+                    )
+                }
+            }
+        }
+        Scaffold(
+            modifier = Modifier.weight(1f),
+            contentWindowInsets = WindowInsets(0),
+            bottomBar = {
+                if (!wide && showTabs) {
+                    ShortNavigationBar {
+                        TopLevelTab.entries.forEach { tab ->
+                            ShortNavigationBarItem(
+                                selected = tab == currentTab,
+                                onClick = { openTab(tab) },
+                                icon = { Icon(painterResource(if (tab == currentTab) tab.selectedIcon else tab.icon), contentDescription = null) },
+                                label = { Text(stringResource(tab.label)) },
+                            )
+                        }
+                    }
+                }
+            },
+        ) { padding ->
+            val railInsets = if (wide && showTabs) Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)) else Modifier
+            NavHost(
+                navController = navController,
+                startDestination = PlotRoute,
+                modifier = Modifier.padding(padding).consumeWindowInsets(padding).then(railInsets),
+            ) {
+                val openSettings = { navController.navigate(SettingsRoute) }
+                val back: () -> Unit = { navController.popBackStack() }
+                composable<PlotRoute> {
+                    PlotScreen(onOpenSettings = openSettings, onAdd = { navController.navigate(NotReadyRoute(it.name)) })
+                }
+                composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
+                composable<WildlifeRoute> { WildlifeScreen(onOpenSettings = openSettings) }
+                composable<BeesRoute> { BeesScreen(onOpenSettings = openSettings) }
+                composable<WaterRoute> { WaterScreen(onOpenSettings = openSettings) }
+                composable<SettingsRoute> {
+                    SettingsScreen(store = container.settingsStore, onBack = back, onOpenAbout = { navController.navigate(AboutRoute) })
+                }
+                composable<AboutRoute> { AboutScreen(onBack = back, onOpenLicences = { navController.navigate(LicencesRoute) }) }
+                composable<LicencesRoute> { LicencesScreen(onBack = back, onOpen = { navController.navigate(LicenceTextRoute(it)) }) }
+                composable<LicenceTextRoute> { LicenceTextScreen(file = it.toRoute<LicenceTextRoute>().file, onBack = back) }
+                composable<NotReadyRoute> {
+                    val action = AddAction.valueOf(it.toRoute<NotReadyRoute>().action)
+                    NotReadyScreen(action = action, onBack = back)
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,109 @@
+name: Android CI
+
+on:
+  push:
+    branches: ["**"]
+    # A tag such as v1.0.0 also publishes the signed APK as a GitHub Release.
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAS_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check that strings.xml was generated from tools/strings_*.py
+        run: |
+          python3 tools/gen_strings.py
+          git diff --exit-code app/src/main/res/values/strings.xml
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Test, lint and build the debug APK
+        run: ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --console=plain
+
+      - name: Upload test reports, lint reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            domain/build/reports/
+            app/build/reports/
+            app/build/screenshots/
+          if-no-files-found: ignore
+
+      - name: Upload the debug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: pollenplot-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Build the signed release APK
+        if: env.HAS_KEYSTORE == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          PP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          PP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          PP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          PP_KEYSTORE_PATH="$RUNNER_TEMP/release.jks" ./gradlew :app:assembleRelease --console=plain
+          rm "$RUNNER_TEMP/release.jks"
+
+      - name: Upload the release APK
+        if: env.HAS_KEYSTORE == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: pollenplot-release
+          path: app/build/outputs/apk/release/*.apk
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check that the tag matches the app's version
+        run: |
+          version=$(sed -n 's/^ *versionName = "\(.*\)"$/\1/p' app/build.gradle.kts)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "The tag $GITHUB_REF_NAME does not match versionName $version in app/build.gradle.kts."
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      # The build job made and signed the APK. Without the signing secrets there is nothing to publish, so this fails.
+      - name: Fetch the signed release APK
+        run: gh run download "$GITHUB_RUN_ID" --name pollenplot-release --dir apk
+
+      - name: Create the GitHub Release
+        run: |
+          apk="pollenplot-$VERSION.apk"
+          mv apk/*.apk "$apk"
+          sha256sum "$apk" > "$apk.sha256"
+          awk -v heading="## $VERSION" 'index($0, heading) == 1 { found = 1; next } /^## / { found = 0 } found' CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" "$apk" "$apk.sha256" --title "Pollenplot $VERSION" --notes-file notes.md
