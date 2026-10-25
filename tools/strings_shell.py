@@ -46,8 +46,6 @@ STRINGS = {
 
     # Parts of the app that are not built yet
     "not_ready_title": "Not ready yet",
-    "not_ready_photos": "Adding photos for identification is not ready yet. It is being built and will arrive in an "
-    "update.",
     "not_ready_weed": "Checking a weed against the weed lists for your area is not ready yet. It is being built and "
     "will arrive in an update.",
 }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c51635d6e84fd15e499d7024b9eff547",
+    "identityHash": "253f1c35e79224b23d25b80eb962d83a",
     "entities": [
       {
         "tableName": "zones",
@@ -524,6 +524,47 @@
         ]
       },
       {
+        "tableName": "scanned_media",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaId` INTEGER NOT NULL, `takenAt` INTEGER NOT NULL, `scannedAt` INTEGER NOT NULL, `outcome` TEXT NOT NULL, `photoId` TEXT, PRIMARY KEY(`mediaId`))",
+        "fields": [
+          {
+            "fieldPath": "mediaId",
+            "columnName": "mediaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "takenAt",
+            "columnName": "takenAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scannedAt",
+            "columnName": "scannedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "outcome",
+            "columnName": "outcome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "photoId",
+            "columnName": "photoId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "mediaId"
+          ]
+        }
+      },
+      {
         "tableName": "links",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`subjectId` TEXT NOT NULL, `predicate` TEXT NOT NULL, `objectId` TEXT NOT NULL, `provenance` TEXT NOT NULL, `confidenceBp` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`subjectId`, `predicate`, `objectId`))",
         "fields": [
@@ -638,7 +679,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c51635d6e84fd15e499d7024b9eff547')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '253f1c35e79224b23d25b80eb962d83a')"
     ]
   }
 }

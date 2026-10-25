@@ -47,18 +47,29 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `JsonLd`
     and `SearchText` (what the search index holds for each record).
   - `id/`: identification. `RegionPlanner` (the tiles each photo is classified in and how regions are chosen),
-    `CandidateFusion` (each model's suggestions combined, with the garden boost), `ThumbnailMath`, `FlowerHint` and
-    `Confidence`.
+    `CandidateFusion` (each model's suggestions combined, with the garden boost), `ThumbnailMath`, `FlowerHint`,
+    `Confidence` and `ZoneSuggestion` (the zone offered for a plant found in a photo).
 - `app/data`: `GardenRepository` (records, detections, the search index and JSON-LD export), `GardenViews` (records
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: `PlantIdentifier` and `FastPlantIdentifier` (AIY Plants V1 through the LiteRT `Interpreter`), and bitmap
-  helpers. Tests pass a fake `PlantIdentifier` to `AppContainer` or `PhotoAnalysis`.
+  helpers.
+- `app/scan`: the phone's gallery behind the `Gallery` interface (`MediaStoreGallery`), `PhotoScanner` (gallery and
+  added photos through the analysis, each gallery photo recorded in `scanned_media` so it is looked at once), and the
+  WorkManager jobs: `AddPhotosWorker`, `LibraryScanWorker` (stops after eight minutes and queues the rest),
+  `LibraryWatchWorker` (a content-URI trigger that re-arms itself) and `ScanScheduler`, which matches them to the
+  settings. `app/notify` holds the notification channels.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
-  `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera,
-  the results and the review cards (`IdentifyModel` keeps its state across turns).
-- `AppContainer` builds the shared objects by hand. There is no dependency-injection library.
+  `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
+  (`IdentifyModel` keeps its state across turns), and `ui/review` the review cards, `PhotoReviewScreen` (shared by
+  the Identify results and the Review queue) and `ReviewModel`.
+- `AppContainer` builds the shared objects by hand. There is no dependency-injection library. Workers reach it through
+  `PollenplotApp`. Tests that scan or review photos run with `@Config(application = TestApp::class)`, which gives the
+  container a `FakeGallery` and a `ScriptedIdentifier`; `TestPhotos` paints garden photos, and workers run through
+  `TestListenableWorkerBuilder` after `WorkManagerTestInitHelper.initializeTestWorkManager`.
+- `SettingsStore` makes its DataStore itself, and DataStore allows one store per file in a process, so tests use the
+  app's store (`app.container.settingsStore`) rather than making another.
 
 ## Models
 

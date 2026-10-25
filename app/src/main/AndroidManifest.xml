@@ -6,6 +6,13 @@
     <!-- Plants can still be added by name or from photos on phones without a camera. -->
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
+    <!-- Photo scanning, which the user turns on in Settings. Added photos come through the photo picker instead. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- To say when a scan has found plants. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".PollenplotApp"
         android:allowBackup="true"

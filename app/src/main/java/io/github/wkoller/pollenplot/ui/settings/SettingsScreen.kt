@@ -43,7 +43,7 @@ import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenAbout: () -> Unit) {
+fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenScanning: () -> Unit, onOpenAbout: () -> Unit) {
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
     val scope = rememberCoroutineScope()
     val update: ((Settings) -> Settings) -> Unit = { change -> scope.launch { store.update(change) } }
@@ -57,6 +57,15 @@ fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenAbout: () -> 
                     leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
                     supportingContent = { Text(stringResource(settings.gardenState.label) + ". " + stringResource(R.string.settings_state_body)) },
                 ) { Text(stringResource(R.string.settings_state)) }
+            }
+            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+            item { SectionHeading(stringResource(R.string.settings_photos)) }
+            item {
+                ListItem(
+                    onClick = onOpenScanning,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
+                    supportingContent = { Text(stringResource(if (settings.scanLibrary) R.string.settings_scanning_on else R.string.settings_scanning_off)) },
+                ) { Text(stringResource(R.string.settings_scanning)) }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_appearance)) }

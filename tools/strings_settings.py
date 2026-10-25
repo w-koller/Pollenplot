@@ -2,6 +2,10 @@
 STRINGS = {
     "settings_title": "Settings",
     "settings_appearance": "Appearance",
+    "settings_photos": "Photos",
+    "settings_scanning": "Photo scanning",
+    "settings_scanning_on": "On. Pollenplot looks for plants in new photos.",
+    "settings_scanning_off": "Off. Pollenplot looks only at photos you add or take in the app.",
     "settings_theme": "Theme",
     "theme_system": "Phone setting",
     "theme_light": "Light",

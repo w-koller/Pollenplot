@@ -1,4 +1,4 @@
-package io.github.wkoller.pollenplot.ui.identify
+package io.github.wkoller.pollenplot.ui.review
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize

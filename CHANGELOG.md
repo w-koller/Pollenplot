@@ -21,3 +21,11 @@
 - Plants show their cut-out from a photo on the Plot, in lists and on their page.
 - The quick model, AIY Plants V1, runs on the phone with LiteRT and is checked against its published SHA-256 when the
   app is built. Nothing is sent off the phone, and the app contains no Google Play or Play services libraries.
+- Add photos: choose photos with the system's photo picker, which needs no permission. Pollenplot looks for plants in
+  them in the background and shows how far it has got in the Review queue.
+- Photo scanning, off until you turn it on in Settings › Photo scanning: Pollenplot looks for plants in new photos in
+  the camera's album or the albums you tick, and in photos from up to a year before. It runs when the battery is not
+  low, carries on where it stopped, and tells you when it finds plants. With access to only some photos, it says how to
+  allow all of them.
+- The Review queue: plants found in photos wait here, with a count on the Plot and a notification that opens it. The
+  zone offered for each plant is where the photo's other plants went, or the zone you chose last.

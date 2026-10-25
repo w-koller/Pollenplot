@@ -122,6 +122,19 @@ data class FloweringEntity(
     val source: String,
 )
 
+/** A photo in the phone's gallery that a scan has looked at, so it is not looked at again. */
+@Entity(tableName = "scanned_media")
+data class ScannedMediaEntity(
+    /** The photo's ID in the phone's media store. */
+    @PrimaryKey val mediaId: Long,
+    val takenAt: Long,
+    val scannedAt: Long,
+    /** PLANTS, NO_PLANT or FAILED. */
+    val outcome: String,
+    /** The copy the app kept, when the photo showed plants. */
+    val photoId: String?,
+)
+
 /** A relation between two records that neither record holds itself, with where it came from. */
 @Entity(tableName = "links", primaryKeys = ["subjectId", "predicate", "objectId"], indices = [Index("objectId")])
 data class LinkEntity(

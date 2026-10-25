@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButtonMenu
@@ -36,7 +38,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -70,8 +74,10 @@ fun PlotScreen(
     onEditZone: (String) -> Unit,
     onOpenPlant: (String) -> Unit,
     onSearch: () -> Unit,
+    onReview: () -> Unit,
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
+    val waiting by garden.pendingReviewCount.collectAsStateWithLifecycle(initialValue = 0)
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = null)
     var listMode by rememberSaveable { mutableStateOf(false) }
     var editing by rememberSaveable { mutableStateOf(false) }
@@ -99,6 +105,16 @@ fun PlotScreen(
         compact = showCanvas,
         actions = {
             if (!editing) {
+                // Shown only while plants found in photos are waiting, with how many.
+                if (waiting > 0) {
+                    val description = pluralStringResource(R.plurals.review_waiting, waiting, waiting)
+                    IconButton(onClick = onReview, modifier = Modifier.semantics { contentDescription = description }) {
+                        // The number is in the button's description, so the badge is not read out twice.
+                        BadgedBox(badge = { Badge { Text(waiting.toString()) } }, modifier = Modifier.clearAndSetSemantics { }) {
+                            Icon(painterResource(R.drawable.ic_rate_review), contentDescription = null)
+                        }
+                    }
+                }
                 IconButton(onClick = onSearch) {
                     Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.search_title))
                 }

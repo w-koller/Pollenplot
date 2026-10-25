@@ -290,8 +290,43 @@
     <string name="state_wa">Western Australia</string>
     <string name="state_nt">Northern Territory</string>
     <string name="state_act">Australian Capital Territory</string>
+    <string name="review_title">Review</string>
+    <string name="review_taken">Taken on %1$s</string>
+    <string name="review_empty_title">Nothing to review.</string>
+    <string name="review_empty_body">Plants found in photos you add, or in new photos while scanning is on, wait here until you check them.</string>
+    <string name="review_adding_progress">Looking for plants in photo %1$d of %2$d.</string>
+    <string name="review_adding_waiting">Pollenplot will look for plants in the photos you added in a moment.</string>
+    <string name="scan_title">Photo scanning</string>
+    <string name="scan_intro">Pollenplot can look for plants in new photos in your gallery, in the background. Photos that show plants wait in the Review queue for you, and no photo leaves your phone.</string>
+    <string name="scan_switch">Look for plants in new photos</string>
+    <string name="scan_switch_body">Pollenplot checks new photos when the battery is not low, and tells you when it finds plants.</string>
+    <string name="scan_denied">Pollenplot cannot see your photos. Please allow photos in the app\'s settings to scan them.</string>
+    <string name="scan_partial">Pollenplot can see only the photos you chose, so it cannot find new ones. Please allow all photos to scan new photos as they are taken.</string>
+    <string name="scan_partial_allow">Allow all photos</string>
+    <string name="scan_notifications_off">Notifications are off, so Pollenplot cannot tell you when it finds plants. They still wait in the Review queue.</string>
+    <string name="scan_notifications_allow">Allow notifications</string>
+    <string name="scan_running">Pollenplot is looking for plants in your photos now.</string>
+    <string name="scan_idle">Pollenplot looks again whenever new photos arrive.</string>
+    <string name="scan_now">Look for plants now</string>
+    <string name="scan_albums">Albums</string>
+    <string name="scan_albums_body">Pollenplot scans the albums you tick. At first that is the camera\'s own album.</string>
+    <string name="scan_back">Older photos</string>
+    <string name="scan_back_body">When scanning is turned on, Pollenplot also looks at photos taken this long before.</string>
+    <string name="scan_back_choice">How far back</string>
+    <string name="scan_back_none">None</string>
+    <string name="scan_back_week">1 week</string>
+    <string name="scan_back_month">1 month</string>
+    <string name="scan_back_three_months">3 months</string>
+    <string name="scan_back_year">1 year</string>
+    <string name="notify_scans_channel">Plants found in photos</string>
+    <string name="notify_scans_channel_description">Tells you when Pollenplot finds plants in your photos.</string>
+    <string name="notify_none_body">Please try photos taken closer to the plants, in good light.</string>
     <string name="settings_title">Settings</string>
     <string name="settings_appearance">Appearance</string>
+    <string name="settings_photos">Photos</string>
+    <string name="settings_scanning">Photo scanning</string>
+    <string name="settings_scanning_on">On. Pollenplot looks for plants in new photos.</string>
+    <string name="settings_scanning_off">Off. Pollenplot looks only at photos you add or take in the app.</string>
     <string name="settings_theme">Theme</string>
     <string name="theme_system">Phone setting</string>
     <string name="theme_light">Light</string>
@@ -348,7 +383,6 @@
     <string name="water_empty_title">No watering lines have been set up yet.</string>
     <string name="water_empty_body">Once your zones and plants are in place, this page recommends when to water and how much, based on the weather and on what each plant needs.</string>
     <string name="not_ready_title">Not ready yet</string>
-    <string name="not_ready_photos">Adding photos for identification is not ready yet. It is being built and will arrive in an update.</string>
     <string name="not_ready_weed">Checking a weed against the weed lists for your area is not ready yet. It is being built and will arrive in an update.</string>
     <plurals name="identify_found">
         <item quantity="one">Pollenplot found %d plant in this photo.</item>
@@ -361,5 +395,25 @@
     <plurals name="role_more">
         <item quantity="one">%d more</item>
         <item quantity="other">%d more</item>
+    </plurals>
+    <plurals name="review_waiting">
+        <item quantity="one">%d plant is waiting for review.</item>
+        <item quantity="other">%d plants are waiting for review.</item>
+    </plurals>
+    <plurals name="scan_album_count">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+    <plurals name="notify_found_title">
+        <item quantity="one">Pollenplot found %d plant in your photos.</item>
+        <item quantity="other">Pollenplot found %d plants in your photos.</item>
+    </plurals>
+    <plurals name="notify_found_body">
+        <item quantity="one">Please review it to add it to your garden.</item>
+        <item quantity="other">Please review them to add them to your garden.</item>
+    </plurals>
+    <plurals name="notify_none_title">
+        <item quantity="one">No plant was found in the photo you added.</item>
+        <item quantity="other">No plants were found in the %d photos you added.</item>
     </plurals>
 </resources>

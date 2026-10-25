@@ -5,16 +5,18 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
+import io.github.wkoller.pollenplot.data.PhotoReview
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
+import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.ml.PlantIdentifier
+import io.github.wkoller.pollenplot.ui.review.DetectionActions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,9 +38,6 @@ sealed interface IdentifyStage {
     data object Failed : IdentifyStage
 }
 
-/** A photo with the plants found in it, for the results. */
-data class ResultPhoto(val path: String, val width: Int, val height: Int, val detections: List<DetectionRecord>)
-
 /**
  * The Identify screen's state: live suggestions while the camera is pointed at a plant, then the photo being looked at,
  * then the plants found in it. The results survive the phone being turned, and the app being closed in the background,
@@ -49,6 +48,7 @@ class IdentifyModel(
     private val identifier: () -> PlantIdentifier,
     private val garden: GardenRepository,
     private val knowledge: KnowledgeRepository,
+    settings: SettingsStore,
     private val saved: SavedStateHandle,
 ) : ViewModel() {
     private val _stage = MutableStateFlow(saved.get<String>(PHOTO_ID)?.let { IdentifyStage.Results(it) } ?: IdentifyStage.Camera)
@@ -69,10 +69,13 @@ class IdentifyModel(
     /** The photo being looked at, shown while the plants in it are found. */
     val captured: StateFlow<Bitmap?> = _captured.asStateFlow()
 
-    private val _results = MutableStateFlow<ResultPhoto?>(null)
+    private val _results = MutableStateFlow<PhotoReview?>(null)
 
     /** The photo being reviewed and the plants found in it, kept up to date as each one is decided. */
-    val results: StateFlow<ResultPhoto?> = _results.asStateFlow()
+    val results: StateFlow<PhotoReview?> = _results.asStateFlow()
+
+    /** What the review cards do. */
+    val actions = DetectionActions(garden, settings, viewModelScope)
 
     private var watching: Job? = null
 
@@ -139,7 +142,7 @@ class IdentifyModel(
                 saved[PHOTO_ID] = stored.id
                 // The plants found are shown at once, in the database's order, and the database keeps them up to date.
                 val detections = result.detections.sortedWith(compareBy({ it.box.left }, { it.box.top }))
-                _results.value = ResultPhoto(stored.path, stored.width, stored.height, detections)
+                _results.value = PhotoReview(stored, detections.first().takenAt, detections)
                 watch(stored.id)
                 IdentifyStage.Results(stored.id)
             }
@@ -168,26 +171,8 @@ class IdentifyModel(
     private fun watch(photoId: String) {
         watching?.cancel()
         watching = viewModelScope.launch {
-            garden.detectionsInPhoto(photoId).collect { detections ->
-                garden.photo(photoId)?.let { _results.value = ResultPhoto(it.path, it.width, it.height, detections) }
-            }
+            garden.photosForReview(listOf(photoId)).collect { reviews -> reviews.firstOrNull()?.let { _results.value = it } }
         }
-    }
-
-    fun add(detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?, flowering: Boolean) {
-        viewModelScope.launch { garden.confirmDetection(detection.id, speciesName, customName, zoneId, flowering = flowering) }
-    }
-
-    fun attach(detection: DetectionRecord, plantId: String, flowering: Boolean) {
-        viewModelScope.launch { garden.attachDetection(detection.id, plantId, flowering) }
-    }
-
-    fun reject(detection: DetectionRecord) {
-        viewModelScope.launch { garden.rejectDetection(detection.id) }
-    }
-
-    fun undoReject(detection: DetectionRecord) {
-        viewModelScope.launch { garden.reopenDetection(detection.id) }
     }
 
     private companion object {

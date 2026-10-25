@@ -6,7 +6,11 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Instant
 import java.time.Month
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -38,6 +42,10 @@ object UiFormat {
         value.setScale(places, RoundingMode.HALF_UP).stripTrailingZeros().let { if (it.scale() < 0) it.setScale(0) else it }.toPlainString()
 
     /** "a", "a and b", "a, b and c", using the words in [words]. */
+    /** A date written out, such as "3 October 2026", in the phone's time zone. */
+    fun longDate(instant: Instant, locale: Locale = Locale.getDefault(), zone: ZoneId = ZoneId.systemDefault()): String =
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).format(instant.atZone(zone))
+
     fun joinAnd(items: List<String>, words: ListWords = ListWords.ENGLISH): String = when (items.size) {
         0 -> ""
         1 -> items[0]

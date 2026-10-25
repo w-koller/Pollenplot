@@ -91,6 +91,9 @@ import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
+import io.github.wkoller.pollenplot.ui.review.PhotoReviewScreen
+import io.github.wkoller.pollenplot.ui.review.confidenceLabel
+import io.github.wkoller.pollenplot.ui.review.readable
 import kotlinx.coroutines.flow.map
 import java.io.File
 
@@ -112,7 +115,7 @@ fun IdentifyScreen(
     when (val current = stage) {
         IdentifyStage.Camera -> CameraGate(model, knowledge, onBack)
         IdentifyStage.Analysing -> Analysing(model)
-        is IdentifyStage.Results -> Results(model, current.photoId, views, knowledge, settings, onBack, onOpenPlant)
+        is IdentifyStage.Results -> Results(model, views, knowledge, settings, onBack, onOpenPlant)
         IdentifyStage.NoneFound -> Problem(
             title = stringResource(R.string.identify_none_title),
             body = stringResource(R.string.identify_none_body),
@@ -308,131 +311,39 @@ private fun Analysing(model: IdentifyModel) {
 @Composable
 private fun Results(
     model: IdentifyModel,
-    photoId: String,
     views: GardenViews,
     knowledge: KnowledgeRepository,
     settings: SettingsStore,
     onBack: () -> Unit,
     onOpenPlant: (String) -> Unit,
 ) {
-    // Collected without the lifecycle: under Robolectric, collectAsStateWithLifecycle now and then missed this flow's
-    // first value, and an idle database query costs nothing while the app is in the background.
     val result by model.results.collectAsStateWithLifecycle()
-    val kb by knowledge.knowledge.collectAsStateWithLifecycle()
-    val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
-    val plants by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
-    val state by remember { settings.settings.map { it.gardenState } }.collectAsStateWithLifecycle(initialValue = null)
-    // Plants in one photo usually grow together, so a zone chosen for one is offered for the others.
-    var photoZone by rememberSaveable(photoId) { mutableStateOf<String?>(null) }
-    var choices by rememberSaveable(photoId, stateSaver = ChoicesSaver) { mutableStateOf(emptyMap<String, ReviewChoice>()) }
-    var choosingFor by rememberSaveable(photoId) { mutableStateOf<String?>(null) }
-    val callbacks = remember(model) {
-        ReviewCallbacks(
-            onAdd = model::add,
-            onAttach = model::attach,
-            onReject = model::reject,
-            onUndoReject = model::undoReject,
-            onChooseAnother = { choosingFor = it.id },
-            onOpenPlant = onOpenPlant,
-        )
-    }
-
-    val searchingFor = choosingFor
-    val loadedKb = kb
-    if (searchingFor != null && loadedKb != null) {
-        BackHandler { choosingFor = null }
-        SpeciesSearch(loadedKb, state, onBack = { choosingFor = null }) { name ->
-            choices = choices + (searchingFor to ReviewChoice.Picked(name))
-            choosingFor = null
-        }
-        return
-    }
-
-    DetailScaffold(title = stringResource(R.string.identify_title), onBack = onBack) { padding ->
-        val loaded = result
-        if (loaded == null) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { PollenLoadingIndicator() }
-            return@DetailScaffold
-        }
-        val detections = loaded.detections
-        LazyColumn(
-            Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            item {
-                Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MarkedPhoto(loaded)
-                    Text(
-                        pluralStringResource(R.plurals.identify_found, detections.size, detections.size),
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.semantics { heading() },
-                    )
-                    Text(stringResource(R.string.identify_model_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            itemsIndexed(detections, key = { _, d -> d.id }) { i, detection ->
-                DetectionReviewCard(
-                    detection = detection,
-                    number = i + 1,
-                    total = detections.size,
-                    kb = kb,
-                    state = state,
-                    zones = zones,
-                    plants = plants,
-                    choice = choices[detection.id],
-                    onChoose = { choices = choices + (detection.id to it) },
-                    suggestedZoneId = photoZone,
-                    onZoneChosen = { photoZone = it },
-                    callbacks = callbacks,
-                    modifier = Modifier.readable(),
-                )
-            }
+    PhotoReviewScreen(
+        title = stringResource(R.string.identify_title),
+        reviews = result?.let(::listOf),
+        actions = model.actions,
+        views = views,
+        knowledge = knowledge,
+        settings = settings,
+        onBack = onBack,
+        onOpenPlant = onOpenPlant,
+        photoHeading = { review ->
+            Text(
+                pluralStringResource(R.plurals.identify_found, review.detections.size, review.detections.size),
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(stringResource(R.string.identify_model_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        },
+        bottom = {
             item {
                 Row(Modifier.readable(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(onClick = model::takeAnother) { Text(stringResource(R.string.identify_try_again)) }
                     Button(onClick = onBack) { Text(stringResource(R.string.review_done)) }
                 }
             }
-        }
-    }
-}
-
-/** Keeps each card's choice as text, so the choices survive the phone being turned. */
-private val ChoicesSaver = listSaver<Map<String, ReviewChoice>, String>(
-    save = { map -> map.flatMap { (id, choice) -> listOf(id, choice.save()) } },
-    restore = { list -> list.chunked(2).mapNotNull { (id, text) -> ReviewChoice.restore(text)?.let { id to it } }.toMap() },
-)
-
-/** Keeps content to a readable width on wide screens. */
-private fun Modifier.readable() = fillMaxWidth().wrapContentWidth().widthIn(max = 640.dp)
-
-/** The photo, with a numbered marker in the middle of each plant found, matching the numbers on the cards. */
-@Composable
-private fun MarkedPhoto(result: ResultPhoto) {
-    val context = LocalContext.current
-    val file = remember(result.path) { File(context.filesDir, result.path) }
-    val ratio = if (result.height > 0) result.width.toFloat() / result.height else 4f / 3f
-    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(ratio).clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
-        AsyncImage(model = file, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-        if (result.detections.size > 1) {
-            val marker = 32.dp
-            result.detections.forEachIndexed { i, detection ->
-                val x = maxWidth * ((detection.box.left + detection.box.right) / 2f / BoxBp.FULL) - marker / 2
-                val y = maxHeight * ((detection.box.top + detection.box.bottom) / 2f / BoxBp.FULL) - marker / 2
-                val number = (i + 1).toString()
-                // An outline keeps each number clear of the leaves behind it.
-                Box(
-                    Modifier.offset(x, y).size(marker).clip(CircleShape).background(MaterialTheme.colorScheme.primary)
-                        .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
-                        .clearAndSetSemantics { contentDescription = number },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(number, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimary)
-                }
-            }
-        }
-    }
+        },
+    )
 }
 
 /** No plant was found, or the photo could not be identified: what happened and what the user can do next. */

@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.nav
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -16,8 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
@@ -32,9 +38,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import androidx.work.WorkManager
 import io.github.wkoller.pollenplot.AppContainer
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.wkoller.pollenplot.MainActivity
+import io.github.wkoller.pollenplot.scan.AddPhotosWorker
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
@@ -43,12 +52,15 @@ import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneEditorScreen
+import io.github.wkoller.pollenplot.ui.review.ReviewModel
+import io.github.wkoller.pollenplot.ui.review.ReviewScreen
 import io.github.wkoller.pollenplot.ui.rhythms.RhythmsScreen
 import io.github.wkoller.pollenplot.ui.search.SearchScreen
 import io.github.wkoller.pollenplot.ui.settings.AboutScreen
 import io.github.wkoller.pollenplot.ui.settings.LicenceTextScreen
 import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
 import io.github.wkoller.pollenplot.ui.settings.NotReadyScreen
+import io.github.wkoller.pollenplot.ui.settings.ScanSettingsScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
 import io.github.wkoller.pollenplot.ui.water.WaterScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
@@ -56,12 +68,21 @@ import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
 /** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
 private val WIDE_WINDOW = 600.dp
 
+/** At most this many photos can be added at once, which keeps one batch to a few minutes of work. */
+private const val MAX_ADDED_PHOTOS = 30
+
 /**
  * The app's frame: the main tabs in a navigation bar (or a rail on wide screens) around one navigation host. The host
  * always sits at the same place in the layout, so turning the phone keeps the screens the user has open.
  */
 @Composable
-fun AppRoot(container: AppContainer, navController: NavHostController = rememberNavController()) {
+fun AppRoot(
+    container: AppContainer,
+    navController: NavHostController = rememberNavController(),
+    open: String? = null,
+    onOpened: () -> Unit = {},
+) {
+    val context = LocalContext.current
     val entry by navController.currentBackStackEntryAsState()
     val destination = entry?.destination
     val currentTab = TopLevelTab.entries.firstOrNull { tab -> destination?.hierarchy?.any { it.hasRoute(tab.route::class) } == true }
@@ -72,6 +93,28 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+
+    // Photos chosen in the system's photo picker need no permission. The app keeps read access while it looks at
+    // them in the background, then shows them in the Review queue as they are done.
+    val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_ADDED_PHOTOS)) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        uris.forEach { uri ->
+            runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        }
+        AddPhotosWorker.enqueue(context, uris)
+        navController.navigate(ReviewRoute) { launchSingleTop = true }
+    }
+    val addPhotos = { pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+
+    // A notification can ask for a screen, such as the Review queue after a scan. It opens once the navigation host
+    // has its first screen, because there is nowhere to navigate from before then.
+    val ready = entry != null
+    LaunchedEffect(open, ready) {
+        if (ready && open == MainActivity.OPEN_REVIEW) {
+            navController.navigate(ReviewRoute) { launchSingleTop = true }
+            onOpened()
+        }
     }
 
     Row(Modifier.fillMaxSize()) {
@@ -122,6 +165,7 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
                         onAdd = { action ->
                             when (action) {
                                 AddAction.IDENTIFY -> navController.navigate(IdentifyRoute)
+                                AddAction.PHOTOS -> addPhotos()
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                 else -> navController.navigate(NotReadyRoute(action.name))
                             }
@@ -130,6 +174,7 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
                         onEditZone = { navController.navigate(ZoneEditRoute(it)) },
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onSearch = { navController.navigate(SearchRoute) },
+                        onReview = { navController.navigate(ReviewRoute) },
                     )
                 }
                 composable<ZoneRoute> { entry ->
@@ -189,7 +234,7 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
                 }
                 composable<IdentifyRoute> {
                     val model = viewModel {
-                        IdentifyModel(container.analysis, { container.identifier }, container.garden, container.knowledge, createSavedStateHandle())
+                        IdentifyModel(container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore, createSavedStateHandle())
                     }
                     IdentifyScreen(
                         model = model,
@@ -201,12 +246,33 @@ fun AppRoot(container: AppContainer, navController: NavHostController = remember
                         onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
                     )
                 }
+                composable<ReviewRoute> {
+                    val model = viewModel { ReviewModel(container.garden, container.settingsStore, WorkManager.getInstance(container.appContext)) }
+                    ReviewScreen(
+                        model = model,
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        settings = container.settingsStore,
+                        onBack = back,
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onAddPhotos = addPhotos,
+                        onIdentify = { navController.navigate(IdentifyRoute) },
+                    )
+                }
                 composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
                 composable<WildlifeRoute> { WildlifeScreen(onOpenSettings = openSettings) }
                 composable<BeesRoute> { BeesScreen(onOpenSettings = openSettings) }
                 composable<WaterRoute> { WaterScreen(onOpenSettings = openSettings) }
                 composable<SettingsRoute> {
-                    SettingsScreen(store = container.settingsStore, onBack = back, onOpenAbout = { navController.navigate(AboutRoute) })
+                    SettingsScreen(
+                        store = container.settingsStore,
+                        onBack = back,
+                        onOpenScanning = { navController.navigate(ScanSettingsRoute) },
+                        onOpenAbout = { navController.navigate(AboutRoute) },
+                    )
+                }
+                composable<ScanSettingsRoute> {
+                    ScanSettingsScreen(container.settingsStore, container.gallery, container.notifications, container.clock, onBack = back)
                 }
                 composable<AboutRoute> { AboutScreen(onBack = back, onOpenLicences = { navController.navigate(LicencesRoute) }) }
                 composable<LicencesRoute> { LicencesScreen(onBack = back, onOpen = { navController.navigate(LicenceTextRoute(it)) }) }

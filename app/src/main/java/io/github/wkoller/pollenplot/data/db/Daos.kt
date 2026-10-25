@@ -53,6 +53,9 @@ interface PhotoDao {
 
     @Query("SELECT * FROM photos WHERE id = :id")
     suspend fun get(id: String): PhotoEntity?
+
+    @Query("SELECT * FROM photos WHERE id IN (:ids)")
+    suspend fun getAll(ids: List<String>): List<PhotoEntity>
 }
 
 @Dao
@@ -76,8 +79,30 @@ interface DetectionDao {
     @Query("SELECT * FROM detections WHERE photoId = :photoId ORDER BY leftBp, topBp")
     fun observeForPhoto(photoId: String): Flow<List<DetectionEntity>>
 
+    @Query("SELECT * FROM detections WHERE photoId IN (:photoIds) ORDER BY leftBp, topBp")
+    fun observeForPhotos(photoIds: List<String>): Flow<List<DetectionEntity>>
+
+    /** Photos with plants waiting for review, the most recently taken first. */
+    @Query(
+        "SELECT d.photoId FROM detections d JOIN photos p ON p.id = d.photoId WHERE d.status = 'NEEDS_REVIEW' " +
+            "GROUP BY d.photoId ORDER BY MAX(p.takenAt) DESC",
+    )
+    fun observePendingPhotoIds(): Flow<List<String>>
+
+    @Query("SELECT COUNT(*) FROM detections WHERE status = 'NEEDS_REVIEW'")
+    fun observePendingCount(): Flow<Int>
+
     @Query("UPDATE detections SET status = :status, plantId = :plantId WHERE id = :id")
     suspend fun setStatus(id: String, status: String, plantId: String?)
+}
+
+@Dao
+interface ScannedMediaDao {
+    @Upsert
+    suspend fun upsert(media: ScannedMediaEntity)
+
+    @Query("SELECT mediaId FROM scanned_media WHERE mediaId IN (:ids)")
+    suspend fun known(ids: List<Long>): List<Long>
 }
 
 @Dao

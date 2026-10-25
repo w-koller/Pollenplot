@@ -109,8 +109,8 @@ class GardenRepositoryTest {
     @Test
     fun `views give each zone its plants and badges`() = runBlocking {
         val ids = DemoGarden.seed(garden)
-        val settings = io.github.wkoller.pollenplot.data.prefs.SettingsStore(ApplicationProvider.getApplicationContext())
-        val views = GardenViews(garden, knowledge, settings)
+        // One settings store per process: the app's own, as DataStore refuses a second for the same file.
+        val views = GardenViews(garden, knowledge, ApplicationProvider.getApplicationContext<PollenplotApp>().container.settingsStore)
         val zones = views.zones.first { list -> list.isNotEmpty() && list.all { z -> z.plants.all { it.care != null } } }
         val citrus = zones.single { it.zone.id == ids.citrus }
         assertEquals(3, citrus.plants.size)

@@ -7,6 +7,10 @@ import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.PlantIdentifier
+import io.github.wkoller.pollenplot.notify.Notifications
+import io.github.wkoller.pollenplot.scan.Gallery
+import io.github.wkoller.pollenplot.scan.MediaStoreGallery
+import io.github.wkoller.pollenplot.scan.PhotoScanner
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
@@ -21,10 +25,15 @@ import kotlinx.coroutines.launch
 import java.time.Clock
 
 /**
- * Builds the app's shared objects once. Screens reach it through [PollenplotApp]. Tests pass an in-memory [database]
- * and a fake [identifier] in place of the on-device models.
+ * Builds the app's shared objects once. Screens and workers reach it through [PollenplotApp]. Tests pass an in-memory
+ * [database], a fake [identifier] in place of the on-device models and a [gallery] of their own photos.
  */
-class AppContainer(context: Context, database: PollenplotDatabase? = null, identifier: PlantIdentifier? = null) {
+class AppContainer(
+    context: Context,
+    database: PollenplotDatabase? = null,
+    identifier: PlantIdentifier? = null,
+    gallery: Gallery? = null,
+) {
     val appContext: Context = context.applicationContext
     val clock: Clock = PhoneClock
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -43,6 +52,9 @@ class AppContainer(context: Context, database: PollenplotDatabase? = null, ident
     /** The models are loaded the first time a photo is identified, not when the app starts. */
     val identifier: PlantIdentifier by lazy { identifier ?: FastPlantIdentifier(appContext) }
     val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock)
+    val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
+    val scanner = PhotoScanner(this.gallery, analysis, garden, clock)
+    val notifications = Notifications(appContext)
 
     init {
         // The search text includes knowledge base facts and badges, so it is rebuilt when the app starts and whenever

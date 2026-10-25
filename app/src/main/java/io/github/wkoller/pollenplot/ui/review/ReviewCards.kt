@@ -1,4 +1,4 @@
-package io.github.wkoller.pollenplot.ui.identify
+package io.github.wkoller.pollenplot.ui.review
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -101,7 +101,6 @@ fun DetectionReviewCard(
     choice: ReviewChoice?,
     onChoose: (ReviewChoice) -> Unit,
     suggestedZoneId: String?,
-    onZoneChosen: (String?) -> Unit,
     callbacks: ReviewCallbacks,
     modifier: Modifier = Modifier,
 ) {
@@ -115,7 +114,7 @@ fun DetectionReviewCard(
                 Text(stringResource(R.string.review_plant_number, number, total), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
             when (detection.status) {
-                DetectionStatus.NEEDS_REVIEW -> Undecided(detection, kb, state, zones, plants, choice, onChoose, suggestedZoneId, onZoneChosen, callbacks)
+                DetectionStatus.NEEDS_REVIEW -> Undecided(detection, kb, state, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
                 DetectionStatus.CONFIRMED -> {
                     val plant = plants.firstOrNull { it.plant.id == detection.plantId }
                     Header(detection.thumbnail, plant?.title ?: stringResource(R.string.review_added), plant?.scientificName)
@@ -171,7 +170,6 @@ private fun Undecided(
     savedChoice: ReviewChoice?,
     onChoose: (ReviewChoice) -> Unit,
     suggestedZoneId: String?,
-    onZoneChosen: (String?) -> Unit,
     callbacks: ReviewCallbacks,
 ) {
     var ownZone by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
@@ -239,7 +237,6 @@ private fun Undecided(
     ZoneChooser(zones, zoneId) {
         ownZone = it
         zoneChosen = true
-        onZoneChosen(it)
     }
     ListItem(
         checked = flowering,

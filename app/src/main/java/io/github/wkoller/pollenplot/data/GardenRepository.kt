@@ -7,6 +7,7 @@ import io.github.wkoller.pollenplot.data.db.FloweringEntity
 import io.github.wkoller.pollenplot.data.db.LinkEntity
 import io.github.wkoller.pollenplot.data.db.PhotoEntity
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
+import io.github.wkoller.pollenplot.data.db.ScannedMediaEntity
 import io.github.wkoller.pollenplot.data.db.SearchEntity
 import io.github.wkoller.pollenplot.data.db.SearchHit
 import io.github.wkoller.pollenplot.data.db.toDomain
@@ -33,6 +34,7 @@ import io.github.wkoller.pollenplot.domain.semantic.Link
 import io.github.wkoller.pollenplot.domain.semantic.SearchText
 import io.github.wkoller.pollenplot.domain.semantic.Triple
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -40,6 +42,9 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
+
+/** SQLite allows a limited number of arguments in one query, so long lists are looked up in parts. */
+private const val MAX_QUERY_ARGS = 500
 
 /**
  * Zones, plants and the links between records. Every write also updates the search index, so "Search your garden"
@@ -58,6 +63,7 @@ class GardenRepository(
     private val photos = db.photoDao()
     private val detections = db.detectionDao()
     private val flowering = db.floweringDao()
+    private val scanned = db.scannedMediaDao()
     private val layoutLock = Mutex()
 
     val zoneList: Flow<List<Zone>> = zones.observeAll().map { list -> list.map { it.toDomain() } }
@@ -171,6 +177,41 @@ class GardenRepository(
     }
 
     suspend fun photo(id: String): StoredPhoto? = photos.get(id)?.let { StoredPhoto(it.id, it.path, it.width, it.height) }
+
+    /** How many plants found in photos wait for review. */
+    val pendingReviewCount: Flow<Int> = detections.observePendingCount()
+
+    /** The photos with plants waiting for review, the most recently taken first. */
+    val pendingReviewPhotos: Flow<List<String>> = detections.observePendingPhotoIds()
+
+    /** These photos with every plant found in each, in the order given, updated as each plant is reviewed. */
+    fun photosForReview(photoIds: List<String>): Flow<List<PhotoReview>> =
+        if (photoIds.isEmpty()) {
+            flowOf(emptyList())
+        } else {
+            detections.observeForPhotos(photoIds).map { list ->
+                val byPhoto = list.groupBy { it.photoId }
+                val kept = photos.getAll(photoIds).associateBy { it.id }
+                photoIds.mapNotNull { id ->
+                    val photo = kept[id] ?: return@mapNotNull null
+                    PhotoReview(
+                        StoredPhoto(photo.id, photo.path, photo.width, photo.height),
+                        Instant.ofEpochMilli(photo.takenAt),
+                        byPhoto[id].orEmpty().map { record(it) },
+                    )
+                }
+            }
+        }
+
+    /** The gallery photos among [mediaIds] that no scan has looked at yet. */
+    suspend fun unscanned(mediaIds: List<Long>): List<Long> {
+        val known = mediaIds.chunked(MAX_QUERY_ARGS).flatMap { scanned.known(it) }.toSet()
+        return mediaIds.filterNot { it in known }
+    }
+
+    /** Remembers that a scan has looked at a gallery photo, and what it found. */
+    suspend fun recordScan(mediaId: Long, takenAt: Instant, outcome: ScanOutcome, photoId: String?) =
+        scanned.upsert(ScannedMediaEntity(mediaId, takenAt.toEpochMilli(), now(), outcome.name, photoId))
 
     suspend fun detection(id: String): DetectionRecord? = detections.get(id)?.let { record(it) }
 
@@ -287,6 +328,12 @@ class GardenRepository(
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }
 }
+
+/** What a scan found in a gallery photo. */
+enum class ScanOutcome { PLANTS, NO_PLANT, FAILED }
+
+/** A kept photo with every plant found in it, for review. */
+data class PhotoReview(val photo: StoredPhoto, val takenAt: Instant, val detections: List<DetectionRecord>)
 
 /** One region of a photo, ready to store: where it is, its cut-out, whether it was in flower, and the suggestions. */
 data class DetectionDraft(val box: BoxBp, val thumbnail: String, val flowering: Boolean, val candidates: List<Candidate>)

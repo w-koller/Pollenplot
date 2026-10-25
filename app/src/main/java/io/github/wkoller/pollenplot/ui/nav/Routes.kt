@@ -38,6 +38,12 @@ import kotlinx.serialization.Serializable
 /** Identify with the camera. */
 @Serializable data object IdentifyRoute
 
+/** Plants found in photos, waiting for review. */
+@Serializable data object ReviewRoute
+
+/** Settings › Photo scanning. */
+@Serializable data object ScanSettingsRoute
+
 /** A part of the app that is not built yet, named by [AddAction]. */
 @Serializable data class NotReadyRoute(val action: String)
 
@@ -58,7 +64,7 @@ enum class TopLevelTab(
 /** The choices in the Plot's add menu. [notReady] explains a choice that is not built yet. */
 enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int, @StringRes val notReady: Int?) {
     IDENTIFY(R.string.add_identify_camera, R.drawable.ic_photo_camera, null),
-    PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate, R.string.not_ready_photos),
+    PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate, null),
     WEED(R.string.add_check_weed, R.drawable.ic_grass, R.string.not_ready_weed),
     PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant, null),
 }
