@@ -106,7 +106,7 @@ private fun reportLine(agency: StateSource?, must: Boolean): String {
 
 /** A plant's weed card: its status where the garden is, what the rules ask, how to control it and where to read more. */
 @Composable
-fun WeedCard(status: WeedStatus, locality: Locality, scientificName: String, modifier: Modifier = Modifier) {
+fun WeedCard(status: WeedStatus, locality: Locality, scientificName: String, modifier: Modifier = Modifier, onCompare: (() -> Unit)? = null) {
     val headline = weedHeadline(status, locality) ?: return
     val uri = LocalUriHandler.current
     val weeds = locality.weeds
@@ -150,6 +150,7 @@ fun WeedCard(status: WeedStatus, locality: Locality, scientificName: String, mod
             }
             Text(stringResource(R.string.weed_disposal), style = MaterialTheme.typography.bodyLarge)
             Column {
+                onCompare?.let { compare -> LinkButton(R.drawable.ic_photo_library, stringResource(R.string.weed_compare), content) { compare() } }
                 val council = weeds.council
                 val entry = status.council
                 if (council != null && entry != null && council.format == WeedSources.BRISBANE_OPEN_DATA) {

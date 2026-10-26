@@ -472,6 +472,7 @@
     <string name="weed_lists_missing">The weed lists for your area haven\'t been downloaded yet.</string>
     <string name="weed_notice_report">Please report it.</string>
     <string name="plot_weeds_body">The weeds recorded near your garden, and your council\'s weed list.</string>
+    <string name="plot_weeds_near">Weeds near your garden</string>
     <string name="weeds_title">Weeds</string>
     <string name="weeds_updated">Weed information was last updated on %1$s.</string>
     <string name="weeds_never_updated">Weed information hasn\'t been downloaded yet.</string>
@@ -496,7 +497,35 @@
     <string name="weeds_identify_key">Weeds Australia\'s identification key</string>
     <string name="weeds_identify_key_body">Identify a weed by its features, such as its leaves and flowers.</string>
     <string name="weeds_council_site">%1$s\'s weed identification tool</string>
+    <string name="weed_compare">Compare with photos</string>
+    <string name="review_compare">Compare</string>
+    <string name="compare_title">Compare</string>
+    <string name="compare_yours">Your photo</string>
+    <string name="compare_recorded">Photos recorded in Australia</string>
+    <string name="compare_loading">Loading the photos.</string>
+    <string name="compare_failed">Pollenplot couldn\'t load the photos. Please check your connection and try again.</string>
+    <string name="compare_try_again">Try again</string>
+    <string name="compare_none">No photos of this plant under an open licence have been recorded in Australia yet.</string>
+    <string name="compare_credit">Photos from records on the Atlas of Living Australia, each credited to its photographer and source under its licence.</string>
+    <string name="compare_features">What to look for</string>
+    <string name="compare_features_source">From %1$s\'s weed list.</string>
+    <string name="compare_type">Type</string>
+    <string name="compare_leaves">Leaves</string>
+    <string name="compare_flowers">Flowers</string>
+    <string name="compare_flowering">Flowering</string>
+    <string name="compare_family">Family</string>
+    <string name="finder_title">Weed finder</string>
+    <string name="finder_body">Please choose what the plant looks like. The weeds on %1$s\'s list that match are shown below.</string>
+    <string name="finder_any">Any</string>
+    <string name="finder_flower_colour">Flower colour</string>
+    <string name="finder_leaf_form">Leaf form</string>
+    <string name="finder_leaf_arrangement">Leaf arrangement</string>
+    <string name="finder_clear">Clear choices</string>
+    <string name="finder_suggested">Suggested for your photo</string>
+    <string name="finder_unavailable">The Weed finder needs your council\'s weed list. Please set your garden\'s location in Settings.</string>
+    <string name="weeds_finder_body">Find a weed on %1$s\'s list by what it looks like.</string>
     <string name="identify_weed_title">Check a weed</string>
+    <string name="identify_weed_more">If none of the suggestions is right, you can look for the plant by what it looks like.</string>
     <string name="identify_weed_hint">Please point the camera at the plant you want to check.</string>
     <string name="about_sources">Data sources</string>
     <string name="about_sources_body">Where Pollenplot\'s weed lists, plant records and place names come from.</string>
@@ -543,6 +572,10 @@
     <plurals name="notify_none_title">
         <item quantity="one">No plant was found in the photo you added.</item>
         <item quantity="other">No plants were found in the %d photos you added.</item>
+    </plurals>
+    <plurals name="finder_count">
+        <item quantity="one">%1$d weed matches.</item>
+        <item quantity="other">%1$d weeds match.</item>
     </plurals>
     <plurals name="plot_weeds_found">
         <item quantity="one">%1$d plant in your garden is a weed where you live.</item>

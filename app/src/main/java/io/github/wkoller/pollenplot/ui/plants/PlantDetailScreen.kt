@@ -84,6 +84,7 @@ fun PlantDetailScreen(
     knowledge: KnowledgeRepository,
     plantId: String,
     onBack: () -> Unit,
+    onCompare: (speciesName: String) -> Unit = {},
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
     val all by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -113,7 +114,8 @@ fun PlantDetailScreen(
             item { Header(loaded) }
             if (loaded.roles.isNotEmpty()) item { RoleBadges(loaded.roles) }
             if (loaded.weed.isWeed) {
-                item { WeedCard(loaded.weed, locality, scientificName = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()) }
+                val name = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()
+                item { WeedCard(loaded.weed, locality, scientificName = name, onCompare = { onCompare(name) }) }
             }
             if (resolved == null) {
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }

@@ -73,6 +73,8 @@ data class NationalSources(
     val names: String,
     /** The council area and state at a point, with {lat} and {lon}. */
     val area: String,
+    /** Recent records of a species with photos, with {name}, for comparing with the user's photo. */
+    val photos: String,
 )
 
 /** Plant records near the garden: the search, with {lat}, {lon}, {radius} and {since}, its radius and how far back it looks. */

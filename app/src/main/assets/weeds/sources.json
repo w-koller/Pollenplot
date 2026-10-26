@@ -69,7 +69,8 @@
     "alert": "dr35447",
     "list": "https://lists-ws.ala.org.au/ws/speciesListItems/{uid}?max=1000",
     "names": "https://namematching-ws.ala.org.au/api/searchAllByClassification",
-    "area": "https://spatial.ala.org.au/ws/intersect/cl10923,cl22/{lat}/{lon}"
+    "area": "https://spatial.ala.org.au/ws/intersect/cl10923,cl22/{lat}/{lon}",
+    "photos": "https://biocache-ws.ala.org.au/ws/occurrences/search?q=taxon_name:%22{name}%22&fq=multimedia:Image&fq=country:Australia&pageSize=24&sort=first_loaded_date&dir=desc"
   },
   "nearby": {
     "url": "https://biocache-ws.ala.org.au/ws/occurrences/search?q=*:*&fq=kingdom:Plantae&fq=year:%5B{since}%20TO%20*%5D&lat={lat}&lon={lon}&radius={radius}&facets=species&flimit=-1&pageSize=0",

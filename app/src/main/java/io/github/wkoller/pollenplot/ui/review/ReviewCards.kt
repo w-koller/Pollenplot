@@ -81,6 +81,8 @@ class ReviewCallbacks(
     val onUndoReject: (DetectionRecord) -> Unit,
     val onChooseAnother: (DetectionRecord) -> Unit,
     val onOpenPlant: (String) -> Unit,
+    /** Compares the photo with photos of a species, for a suggestion that is a weed. */
+    val onCompare: ((detection: DetectionRecord, speciesName: String) -> Unit)? = null,
 )
 
 /**
@@ -205,7 +207,14 @@ private fun Undecided(
     }
     // The suggestion's weed status where the garden is, before it is added.
     val weed = chosenSpecies?.let(locality::weed) ?: chosenSpeciesName?.let(locality::weed)
-    if (weed != null && weed.isWeed) WeedNotice(weed, locality)
+    if (weed != null && weed.isWeed && chosenSpeciesName != null) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            WeedNotice(weed, locality, Modifier.weight(1f))
+            callbacks.onCompare?.let { compare ->
+                TextButton(onClick = { compare(detection, chosenSpecies?.name ?: chosenSpeciesName) }) { Text(stringResource(R.string.review_compare)) }
+            }
+        }
+    }
 
     if (shown.isNotEmpty() || choice is ReviewChoice.Picked) {
         Text(stringResource(R.string.review_suggestions), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })

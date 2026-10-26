@@ -162,7 +162,7 @@ fun PlotScreen(
     ) { padding ->
         when {
             loadedZones == null || loadedPlants == null -> Unit
-            !hasZones && loadedPlants.isEmpty() -> EmptyPlot(padding, onAddZone = { addingZone = true }, onAddPlant = { onAdd(AddAction.PLANT) })
+            !hasZones && loadedPlants.isEmpty() -> EmptyPlot(padding, onAddZone = { addingZone = true }, onAddPlant = { onAdd(AddAction.PLANT) }, onWeeds = onWeeds)
             showCanvas -> Box(Modifier.padding(padding).fillMaxSize()) {
                 PlotCanvas(
                     zones = loadedZones,
@@ -210,7 +210,7 @@ fun PlotScreen(
 }
 
 @Composable
-private fun EmptyPlot(padding: PaddingValues, onAddZone: () -> Unit, onAddPlant: () -> Unit) {
+private fun EmptyPlot(padding: PaddingValues, onAddZone: () -> Unit, onAddPlant: () -> Unit, onWeeds: () -> Unit) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
         item {
             EmptyState(
@@ -223,6 +223,7 @@ private fun EmptyPlot(padding: PaddingValues, onAddZone: () -> Unit, onAddPlant:
             Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Button(onClick = onAddZone) { Text(stringResource(R.string.plot_add_zone)) }
                 OutlinedButton(onClick = onAddPlant) { Text(stringResource(R.string.add_plant_by_name)) }
+                TextButton(onClick = onWeeds) { Text(stringResource(R.string.plot_weeds_near)) }
             }
         }
     }

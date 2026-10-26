@@ -73,6 +73,7 @@ STRINGS = {
     "weed_notice_report": "Please report it.",
 
     "plot_weeds_body": "The weeds recorded near your garden, and your council's weed list.",
+    "plot_weeds_near": "Weeds near your garden",
     "weeds_title": "Weeds",
     "weeds_updated": "Weed information was last updated on %1$s.",
     "weeds_never_updated": "Weed information hasn't been downloaded yet.",
@@ -101,7 +102,40 @@ STRINGS = {
     "weeds_identify_key_body": "Identify a weed by its features, such as its leaves and flowers.",
     "weeds_council_site": "%1$s's weed identification tool",
 
+    "weed_compare": "Compare with photos",
+    "review_compare": "Compare",
+
+    "compare_title": "Compare",
+    "compare_yours": "Your photo",
+    "compare_recorded": "Photos recorded in Australia",
+    "compare_loading": "Loading the photos.",
+    "compare_failed": "Pollenplot couldn't load the photos. Please check your connection and try again.",
+    "compare_try_again": "Try again",
+    "compare_none": "No photos of this plant under an open licence have been recorded in Australia yet.",
+    "compare_credit": "Photos from records on the Atlas of Living Australia, each credited to its photographer and "
+    "source under its licence.",
+    "compare_features": "What to look for",
+    "compare_features_source": "From %1$s's weed list.",
+    "compare_type": "Type",
+    "compare_leaves": "Leaves",
+    "compare_flowers": "Flowers",
+    "compare_flowering": "Flowering",
+    "compare_family": "Family",
+
+    "finder_title": "Weed finder",
+    "finder_body": "Please choose what the plant looks like. The weeds on %1$s's list that match are shown below.",
+    "finder_any": "Any",
+    "finder_flower_colour": "Flower colour",
+    "finder_leaf_form": "Leaf form",
+    "finder_leaf_arrangement": "Leaf arrangement",
+    "finder_clear": "Clear choices",
+    "finder_suggested": "Suggested for your photo",
+    "finder_unavailable": "The Weed finder needs your council's weed list. Please set your garden's location in "
+    "Settings.",
+    "weeds_finder_body": "Find a weed on %1$s's list by what it looks like.",
+
     "identify_weed_title": "Check a weed",
+    "identify_weed_more": "If none of the suggestions is right, you can look for the plant by what it looks like.",
     "identify_weed_hint": "Please point the camera at the plant you want to check.",
 
     "about_sources": "Data sources",
@@ -123,6 +157,10 @@ STRINGS = {
 }
 
 PLURALS = {
+    "finder_count": {
+        "one": "%1$d weed matches.",
+        "other": "%1$d weeds match.",
+    },
     "plot_weeds_found": {
         "one": "%1$d plant in your garden is a weed where you live.",
         "other": "%1$d plants in your garden are weeds where you live.",

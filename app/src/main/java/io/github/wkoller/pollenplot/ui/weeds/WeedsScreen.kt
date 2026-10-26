@@ -36,9 +36,7 @@ import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
-import io.github.wkoller.pollenplot.domain.weeds.BrisbaneWeeds
 import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
-import io.github.wkoller.pollenplot.domain.weeds.WeedSources
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
@@ -46,7 +44,6 @@ import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import io.github.wkoller.pollenplot.weeds.UpdateState
 import io.github.wkoller.pollenplot.weeds.WeedSyncWorker
-import java.net.URLEncoder
 
 /**
  * The weeds for the garden's area: the plants in the garden that are weeds there, the weeds recorded near it, and
@@ -61,6 +58,8 @@ fun WeedsScreen(
     onOpenPlant: (String) -> Unit,
     onCheckWeed: () -> Unit,
     onSetLocation: () -> Unit,
+    onCompare: (speciesName: String) -> Unit = {},
+    onOpenFinder: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val uri = LocalUriHandler.current
@@ -147,13 +146,7 @@ fun WeedsScreen(
                 }
                 items(weeds.nearbyWeeds, key = { "nearby-" + it.name }) { weed ->
                     NearbyWeedRow(weed, commonName = kb?.species(weed.name)?.common?.firstOrNull() ?: weed.status.listedCommon, locality = locality) {
-                        val council = weeds.council
-                        val entry = weed.status.council
-                        if (council != null && entry != null && council.format == WeedSources.BRISBANE_OPEN_DATA) {
-                            uri.openUri(BrisbaneWeeds.profileUrl(council.site, entry))
-                        } else {
-                            weeds.weedsAustralia?.let { uri.openUri(it.search.replace("{name}", URLEncoder.encode(weed.name, "UTF-8"))) }
-                        }
+                        onCompare(weed.name)
                     }
                 }
             }
@@ -166,6 +159,15 @@ fun WeedsScreen(
                         leadingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
                         supportingContent = { Text(stringResource(R.string.weeds_identify_key_body)) },
                     ) { Text(stringResource(R.string.weeds_identify_key)) }
+                }
+            }
+            weeds.council?.takeIf { weeds.councilWeeds.isNotEmpty() }?.let { council ->
+                item {
+                    ListItem(
+                        onClick = onOpenFinder,
+                        leadingContent = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+                        supportingContent = { Text(stringResource(R.string.weeds_finder_body, council.name)) },
+                    ) { Text(stringResource(R.string.finder_title)) }
                 }
             }
             weeds.council?.let { council ->
@@ -207,7 +209,7 @@ private fun NearbyWeedRow(weed: NearbyWeed, commonName: String?, locality: Local
                 Text(pluralStringResource(R.plurals.weeds_records, weed.records, weed.records), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        trailingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
+        trailingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
     ) {
         Text(commonName ?: weed.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontStyle = if (commonName == null) FontStyle.Italic else null, modifier = Modifier.fillMaxWidth())
     }

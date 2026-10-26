@@ -18,21 +18,26 @@ interface Web {
 
     /** The body of a POST request that sends [json]. */
     suspend fun post(url: String, json: String): String
+
+    /** The bytes of a file, such as a photo. */
+    suspend fun bytes(url: String): ByteArray
 }
 
 /** [Web] over the platform's HTTP client, which also unpacks compressed answers. */
 class HttpWeb : Web {
-    override suspend fun get(url: String): String = request(url, null)
+    override suspend fun get(url: String): String = request(url, null).decodeToString()
 
-    override suspend fun post(url: String, json: String): String = request(url, json)
+    override suspend fun post(url: String, json: String): String = request(url, json).decodeToString()
 
-    private suspend fun request(url: String, body: String?): String = withContext(Dispatchers.IO) {
+    override suspend fun bytes(url: String): ByteArray = request(url, null)
+
+    private suspend fun request(url: String, body: String?): ByteArray = withContext(Dispatchers.IO) {
         val connection = URI(url).toURL().openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = TIMEOUT_MS
             connection.readTimeout = TIMEOUT_MS
             connection.setRequestProperty("User-Agent", USER_AGENT)
-            connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("Accept", "application/json, image/*")
             if (body != null) {
                 connection.requestMethod = "POST"
                 connection.doOutput = true
@@ -51,7 +56,7 @@ class HttpWeb : Web {
                     out.write(buffer, 0, read)
                     if (out.size() > MAX_BYTES) throw IOException("The answer from ${connection.url.host} is too large")
                 }
-                out.toString(Charsets.UTF_8.name())
+                out.toByteArray()
             }
         } finally {
             connection.disconnect()

@@ -111,6 +111,8 @@ fun IdentifyScreen(
     onOpenPlant: (String) -> Unit,
     onAddByName: () -> Unit,
     checkingWeed: Boolean = false,
+    onCompare: (detectionId: String, speciesName: String) -> Unit = { _, _ -> },
+    onOpenFinder: ((detectionId: String?) -> Unit)? = null,
 ) {
     val stage by model.stage.collectAsStateWithLifecycle()
     // Checking a weed is the same identification; each suggestion's weed status shows on its card.
@@ -119,7 +121,7 @@ fun IdentifyScreen(
     when (val current = stage) {
         IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack)
         IdentifyStage.Analysing -> Analysing(model)
-        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant)
+        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed })
         IdentifyStage.NoneFound -> Problem(
             screenTitle = screenTitle,
             title = stringResource(R.string.identify_none_title),
@@ -323,9 +325,12 @@ private fun Results(
     title: String,
     onBack: () -> Unit,
     onOpenPlant: (String) -> Unit,
+    onCompare: (detectionId: String, speciesName: String) -> Unit,
+    onOpenFinder: ((detectionId: String?) -> Unit)?,
 ) {
     val result by model.results.collectAsStateWithLifecycle()
     PhotoReviewScreen(
+        onCompare = onCompare,
         title = title,
         reviews = result?.let(::listOf),
         actions = model.actions,
@@ -343,6 +348,15 @@ private fun Results(
             Text(stringResource(R.string.identify_model_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         },
         bottom = {
+            // Checking a weed: when no suggestion is right, the council's list can be searched by what the plant looks like.
+            if (onOpenFinder != null) {
+                item {
+                    Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.identify_weed_more), style = MaterialTheme.typography.bodyLarge)
+                        OutlinedButton(onClick = { onOpenFinder(result?.detections?.firstOrNull()?.id) }) { Text(stringResource(R.string.finder_title)) }
+                    }
+                }
+            }
             item {
                 Row(Modifier.readable(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(onClick = model::takeAnother) { Text(stringResource(R.string.identify_try_again)) }

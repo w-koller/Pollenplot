@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PlaceFinder
 import io.github.wkoller.pollenplot.web.Web
@@ -10,6 +14,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 /** The app with recorded web answers and a phone that is in Taringa, Brisbane, for tests of the Weed identifier. */
@@ -48,10 +53,24 @@ class RecordedWeb : Web {
             "data.brisbane.qld.gov.au" in url -> "brisbane_weeds.json"
             "speciesListItems/dr823" in url -> "ala_list_dr823.json"
             "speciesListItems/dr35447" in url -> "ala_list_dr35447.json"
+            "biocache-ws.ala.org.au" in url && "taxon_name" in url -> "ala_photos.json"
             "biocache-ws.ala.org.au" in url -> "ala_nearby.json"
             else -> throw IOException("No recorded answer for $url")
         }
         return checkNotNull(javaClass.getResource("/web/$file")) { file }.readText()
+    }
+
+    /** Photos are painted on the spot: a green square with a lighter leaf shape, a different shade for each address. */
+    override suspend fun bytes(url: String): ByteArray {
+        asked += url
+        if (offline) throw IOException("No connection")
+        if ("images.ala.org.au" !in url) throw IOException("No recorded answer for $url")
+        val shade = (url.hashCode() and 0x3F)
+        val bitmap = Bitmap.createBitmap(160, 160, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.rgb(40 + shade, 110 + shade, 50))
+        canvas.drawOval(30f, 50f, 130f, 110f, Paint().apply { color = Color.rgb(150, 200 + shade / 2, 90) })
+        return ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
     }
 
     /** Name matching: every name is accepted as it is, apart from the few the Atlas spells differently. */

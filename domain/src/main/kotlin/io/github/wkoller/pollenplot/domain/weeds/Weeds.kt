@@ -80,6 +80,8 @@ data class WeedNames(val species: Set<String>, val genera: Map<String, Set<Strin
 /** A weed on a council's list, with its legal status and the council's advice. */
 data class CouncilWeed(
     val names: WeedNames,
+    /** The botanical name as the council writes it, such as "Opuntia spp. other than O. stricta". */
+    val botanical: String,
     val common: String,
     val otherCommon: List<String>,
     /** Queensland Biosecurity Act 2014 restricted matter categories, such as 3. */
@@ -113,10 +115,12 @@ object BrisbaneWeeds {
     private fun weed(row: JsonObject): CouncilWeed? {
         fun text(key: String) = row.text(key)?.let(::decode)?.trim()?.trimEnd('.')?.takeIf { it.isNotEmpty() && it != "NIL" && it != "None" }
         fun list(key: String) = text(key)?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty()
-        val names = text("payload_fields_attributes_botanicalname")?.let(WeedNames::parse)?.takeUnless { it.isEmpty } ?: return null
+        val botanical = text("payload_fields_attributes_botanicalname") ?: return null
+        val names = WeedNames.parse(botanical).takeUnless { it.isEmpty } ?: return null
         val category = text("categories_name").orEmpty()
         return CouncilWeed(
             names = names,
+            botanical = botanical,
             common = text("payload_fields_attributes_primarycommonname") ?: return null,
             otherCommon = list("secondarycommonnames"),
             restricted = if ("Restricted Matter" in category) Regex("\\d").findAll(category.substringBefore("Restricted")).map { it.value.toInt() }.toList() else emptyList(),
@@ -259,7 +263,8 @@ object WeedResolver {
         )
     }
 
-    private fun levelOf(weed: CouncilWeed): WeedLevel = when {
+    /** How serious one council entry is, for an entry shown on its own, such as a whole genus in the Weed finder. */
+    fun levelOf(weed: CouncilWeed): WeedLevel = when {
         weed.prohibited -> WeedLevel.PROHIBITED
         weed.restricted.isNotEmpty() -> WeedLevel.RESTRICTED
         weed.councilPest -> WeedLevel.COUNCIL

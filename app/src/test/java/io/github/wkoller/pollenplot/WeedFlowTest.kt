@@ -107,6 +107,41 @@ class WeedFlowTest {
         compose.onNodeWithText("Brisbane City Council does not ask for a report.").assertExists()
         compose.onNodeWithText("You must not give it away, sell it or release it into the environment.").assertExists()
         compose.onNodeWithText("Recorded 280 times within 10 km", substring = true).assertExists()
+
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Compare with photos"))
+        compose.onNodeWithText("Compare with photos").performClick()
+        waitFor(hasText("Hejor1 · NatureMapr · CC-BY 3.0 (Au)"))
+        compose.onNodeWithText("Your photo").assertDoesNotExist()
+        shot("compare_lantana")
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("What to look for"))
+        compose.onNodeWithText("From Brisbane City Council's weed list.").assertExists()
+        shot("compare_lantana_features")
+        assertTrue("Only the plant's name is sent", app.web.asked.any { "taxon_name:%22Lantana%20camara%22" in it })
+    }
+
+    @Test
+    fun theWeedFinderNarrowsTheCouncilsList() {
+        runBlocking {
+            app.container.settingsStore.update { it.copy(gardenPlace = GardenPlace.at(-27.49, 152.98, "Taringa", "BRISBANE CITY"), gardenState = AuState.QLD) }
+            assertTrue(app.container.weedSync.update().complete)
+            app.container.weeds.data.first { it.councilWeeds.isNotEmpty() }
+        }
+        show()
+        compose.onNodeWithText("Weeds near your garden").performClick()
+        waitFor(hasText("Recorded near your garden"))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Weed finder"))
+        compose.onNodeWithText("Weed finder").performClick()
+        waitFor(hasText("13 weeds match."))
+        compose.onNodeWithText("Shrub").performClick()
+        compose.onNodeWithText("Yellow").performClick()
+        waitFor(hasText("3 weeds match."))
+        shot("weed_finder")
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Bitou bush"))
+        compose.onNodeWithText("Bitou bush").performClick()
+        waitFor(hasText("Chrysanthemoides monilifera ssp. Rotundata"))
+        // Brisbane lists it without a category, and it is a Weed of National Significance.
+        compose.onNodeWithText("Weed of National Significance").assertExists()
+        shot("compare_bitou_bush")
     }
 
     @Test

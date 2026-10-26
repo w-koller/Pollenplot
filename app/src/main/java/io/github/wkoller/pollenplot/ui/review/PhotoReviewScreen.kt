@@ -106,6 +106,7 @@ fun PhotoReviewScreen(
     photoHeading: @Composable (PhotoReview) -> Unit = {},
     bottom: LazyListScope.() -> Unit = {},
     empty: @Composable (PaddingValues) -> Unit = {},
+    onCompare: ((detectionId: String, speciesName: String) -> Unit)? = null,
 ) {
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -122,6 +123,7 @@ fun PhotoReviewScreen(
             onUndoReject = actions::undoReject,
             onChooseAnother = { choosingFor = it.id },
             onOpenPlant = onOpenPlant,
+            onCompare = onCompare?.let { compare -> { detection, species -> compare(detection.id, species) } },
         )
     }
 

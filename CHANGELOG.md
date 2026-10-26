@@ -44,5 +44,10 @@
 - The Weeds screen, from the Plot: the weeds in your garden and the weeds recorded near it on the Atlas of Living
   Australia, a Check a weed camera, and Weeds Australia's identification key. The lists are kept on the phone, so
   checking a plant works offline, and they are brought up to date once a month on Wi-Fi.
+- Compare: a plant beside recent photos of it recorded in Australia on the Atlas of Living Australia, each credited
+  to its photographer under its licence, with what the council's list says to look for. It opens from the Weed card,
+  from a suggestion that is a weed, and from the weeds recorded near the garden.
+- The Weed finder, for gardens in Brisbane: the council's weed list narrowed by type, flower colour and leaves, as the
+  council's own identification tool does. Opened from Check a weed, the photo's suggestions come first.
 - About › Data sources credits Brisbane City Council, the Atlas of Living Australia, Weeds Australia, Open-Meteo and
   each state and territory's weed agency.

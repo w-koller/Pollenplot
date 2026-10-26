@@ -66,6 +66,8 @@ import io.github.wkoller.pollenplot.ui.settings.ModelsScreen
 import io.github.wkoller.pollenplot.ui.settings.ScanSettingsScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
 import io.github.wkoller.pollenplot.ui.water.WaterScreen
+import io.github.wkoller.pollenplot.ui.weeds.CompareScreen
+import io.github.wkoller.pollenplot.ui.weeds.WeedFinderScreen
 import io.github.wkoller.pollenplot.ui.weeds.WeedsScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
 
@@ -202,12 +204,14 @@ fun AppRoot(
                     )
                 }
                 composable<PlantRoute> { entry ->
+                    val id = entry.toRoute<PlantRoute>().id
                     PlantDetailScreen(
                         views = container.views,
                         garden = container.garden,
                         knowledge = container.knowledge,
-                        plantId = entry.toRoute<PlantRoute>().id,
+                        plantId = id,
                         onBack = back,
+                        onCompare = { navController.navigate(CompareRoute(it, plantId = id)) },
                     )
                 }
                 composable<AddPlantRoute> { entry ->
@@ -249,6 +253,8 @@ fun AppRoot(
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
                         checkingWeed = entry.toRoute<IdentifyRoute>().checkingWeed,
+                        onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
+                        onOpenFinder = { navController.navigate(WeedFinderRoute(it)) },
                     )
                 }
                 composable<ReviewRoute> {
@@ -262,6 +268,7 @@ fun AppRoot(
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddPhotos = addPhotos,
                         onIdentify = { navController.navigate(IdentifyRoute()) },
+                        onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
                     )
                 }
                 composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
@@ -292,6 +299,33 @@ fun AppRoot(
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onCheckWeed = { navController.navigate(IdentifyRoute(checkingWeed = true)) },
                         onSetLocation = { navController.navigate(GardenLocationRoute) },
+                        onCompare = { navController.navigate(CompareRoute(it)) },
+                        onOpenFinder = { navController.navigate(WeedFinderRoute()) },
+                    )
+                }
+                composable<CompareRoute> { entry ->
+                    val route = entry.toRoute<CompareRoute>()
+                    CompareScreen(
+                        species = route.species,
+                        botanical = route.botanical,
+                        detectionId = route.detectionId,
+                        plantId = route.plantId,
+                        views = container.views,
+                        garden = container.garden,
+                        knowledge = container.knowledge,
+                        photos = container.weedPhotos,
+                        onBack = back,
+                        onOpenFinder = { navController.navigate(WeedFinderRoute(route.detectionId)) },
+                    )
+                }
+                composable<WeedFinderRoute> { entry ->
+                    val detectionId = entry.toRoute<WeedFinderRoute>().detectionId
+                    WeedFinderScreen(
+                        views = container.views,
+                        garden = container.garden,
+                        detectionId = detectionId,
+                        onBack = back,
+                        onOpen = { species, botanical -> navController.navigate(CompareRoute(species, botanical = botanical, detectionId = detectionId)) },
                     )
                 }
                 composable<ScanSettingsRoute> {

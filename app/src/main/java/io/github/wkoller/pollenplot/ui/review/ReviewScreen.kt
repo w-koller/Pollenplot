@@ -99,6 +99,7 @@ fun ReviewScreen(
     onOpenPlant: (String) -> Unit,
     onAddPhotos: () -> Unit,
     onIdentify: () -> Unit,
+    onCompare: (detectionId: String, speciesName: String) -> Unit = { _, _ -> },
 ) {
     val reviews by model.reviews.collectAsStateWithLifecycle()
     val adding by model.adding.collectAsStateWithLifecycle()
@@ -112,6 +113,7 @@ fun ReviewScreen(
         settings = settings,
         onBack = onBack,
         onOpenPlant = onOpenPlant,
+        onCompare = onCompare,
         top = {
             adding?.let { item(key = "adding") { AddingCard(it, Modifier.readable()) } }
         },

@@ -29,6 +29,7 @@ import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.web.HttpWeb
 import io.github.wkoller.pollenplot.web.Web
 import io.github.wkoller.pollenplot.weeds.WeedLibrary
+import io.github.wkoller.pollenplot.weeds.WeedPhotos
 import io.github.wkoller.pollenplot.weeds.WeedSync
 import io.github.wkoller.pollenplot.weeds.WeedSyncWorker
 import kotlinx.coroutines.CoroutineScope
@@ -85,6 +86,7 @@ class AppContainer(
     val places = PlaceFinder(this.web) { weeds.sources }
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock)
+    val weedPhotos = WeedPhotos(this.web) { weeds.sources }
     val photos = PhotoStore(appContext)
 
     val accurate = AccuratePack(appContext, scope)

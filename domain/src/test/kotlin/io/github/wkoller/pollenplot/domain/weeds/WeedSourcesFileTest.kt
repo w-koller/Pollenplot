@@ -38,7 +38,8 @@ class WeedSourcesFileTest {
         assertTrue("{lat}" in sources.national.area && "{lon}" in sources.national.area)
         listOf("{lat}", "{lon}", "{radius}", "{since}").forEach { assertTrue(it, it in sources.nearby.url) }
         assertTrue("{name}" in sources.weedsAustralia.search)
-        listOf(sources.national.list, sources.national.names, sources.national.area, sources.nearby.url, sources.weedsAustralia.identify)
+        assertTrue("{name}" in sources.national.photos)
+        listOf(sources.national.list, sources.national.names, sources.national.area, sources.national.photos, sources.nearby.url, sources.weedsAustralia.identify)
             .forEach { assertTrue(it, it.startsWith("https://")) }
     }
 }

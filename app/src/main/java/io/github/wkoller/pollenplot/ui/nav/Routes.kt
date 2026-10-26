@@ -56,6 +56,15 @@ import kotlinx.serialization.Serializable
 /** About › Data sources. */
 @Serializable data object DataSourcesRoute
 
+/**
+ * A plant compared with photos recorded in Australia: a suggestion for a photo ([detectionId]), a plant in the garden
+ * ([plantId]), or a council entry ([botanical]) from the Weed finder.
+ */
+@Serializable data class CompareRoute(val species: String, val botanical: String? = null, val detectionId: String? = null, val plantId: String? = null)
+
+/** Finds a weed on the council's list by what it looks like. From a photo, its suggestions come first. */
+@Serializable data class WeedFinderRoute(val detectionId: String? = null)
+
 /** The main tabs, in the order they appear in the navigation bar. */
 enum class TopLevelTab(
     val route: Any,

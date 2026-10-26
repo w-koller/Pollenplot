@@ -1,0 +1,139 @@
+{
+ "totalRecords": 7886,
+ "occurrences": [
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=909f1fee-6f59-4d1f-ae04-fd36574b850b",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=909f1fee-6f59-4d1f-ae04-fd36574b850b",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=909f1fee-6f59-4d1f-ae04-fd36574b850b",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=909f1fee-6f59-4d1f-ae04-fd36574b850b",
+   "license": "CC-BY 3.0 (Au)",
+   "dataResourceName": "NatureMapr",
+   "collector": [
+    "Hejor1"
+   ],
+   "recordedBy": [
+    "Hejor1"
+   ],
+   "uuid": "ae88a985-5e93-4bc0-bfd3-c4945fcf5c10"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=591abc82-73b8-4384-8d34-1a93d3ee8179",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=591abc82-73b8-4384-8d34-1a93d3ee8179",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=591abc82-73b8-4384-8d34-1a93d3ee8179",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=591abc82-73b8-4384-8d34-1a93d3ee8179",
+   "license": "CC-BY 3.0 (Au)",
+   "dataResourceName": "NatureMapr",
+   "collector": [
+    "lbradley"
+   ],
+   "recordedBy": [
+    "lbradley"
+   ],
+   "uuid": "e9a11c84-eec8-41c3-978c-36aad475ca70"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=225cccd0-5f49-45fa-a6cb-1dc09f55ae20",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=225cccd0-5f49-45fa-a6cb-1dc09f55ae20",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=225cccd0-5f49-45fa-a6cb-1dc09f55ae20",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=225cccd0-5f49-45fa-a6cb-1dc09f55ae20",
+   "license": "CC-BY 3.0 (Au)",
+   "dataResourceName": "NatureMapr",
+   "collector": [
+    "Hejor1"
+   ],
+   "recordedBy": [
+    "Hejor1"
+   ],
+   "uuid": "0a5ba3d1-e0e4-4954-98a0-25e3c73537ce"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=57e6a6ae-b200-434d-9c45-f72bf7156aff",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=57e6a6ae-b200-434d-9c45-f72bf7156aff",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=57e6a6ae-b200-434d-9c45-f72bf7156aff",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=57e6a6ae-b200-434d-9c45-f72bf7156aff",
+   "license": "CC-BY-NC 4.0 (Int)",
+   "dataResourceName": "iNaturalist Australia",
+   "collector": [
+    "Russell Cumming"
+   ],
+   "recordedBy": [
+    "Russell Cumming"
+   ],
+   "uuid": "4266935c-388d-47da-bfb7-2ac8a89f3185"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=4c99be9c-91cc-444f-98e5-7909ca4a4fb3",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=4c99be9c-91cc-444f-98e5-7909ca4a4fb3",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=4c99be9c-91cc-444f-98e5-7909ca4a4fb3",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=4c99be9c-91cc-444f-98e5-7909ca4a4fb3",
+   "license": "CC-BY-NC 4.0 (Int)",
+   "dataResourceName": "iNaturalist Australia",
+   "collector": [
+    "Michael Howard"
+   ],
+   "recordedBy": [
+    "Michael Howard"
+   ],
+   "uuid": "119ceab3-71f1-4280-90c8-0bec5e114bf3"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=1b2dd344-562d-4659-a629-8b3d00a5f392",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=1b2dd344-562d-4659-a629-8b3d00a5f392",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=1b2dd344-562d-4659-a629-8b3d00a5f392",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=1b2dd344-562d-4659-a629-8b3d00a5f392",
+   "license": "CC-BY-NC 4.0 (Int)",
+   "dataResourceName": "iNaturalist Australia",
+   "collector": [
+    "Jed Brown"
+   ],
+   "recordedBy": [
+    "Jed Brown"
+   ],
+   "uuid": "eaef6b63-53a7-451d-96f8-1c77df7835a0"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=f8b434c8-272d-4d09-a6cc-df2ade53cc34",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=f8b434c8-272d-4d09-a6cc-df2ade53cc34",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=f8b434c8-272d-4d09-a6cc-df2ade53cc34",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=f8b434c8-272d-4d09-a6cc-df2ade53cc34",
+   "license": "CC-BY-NC 4.0 (Int)",
+   "dataResourceName": "iNaturalist Australia",
+   "collector": [
+    "spotting-nature"
+   ],
+   "recordedBy": [
+    "spotting-nature"
+   ],
+   "uuid": "9dc8bd35-1983-4904-bf2e-9ae93dde4e29"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "imageUrl": "https://images.ala.org.au/image/proxyImage?imageId=2afc2ba8-d8f1-4587-bde3-c7a09d638bae",
+   "thumbnailUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=2afc2ba8-d8f1-4587-bde3-c7a09d638bae",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=2afc2ba8-d8f1-4587-bde3-c7a09d638bae",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=2afc2ba8-d8f1-4587-bde3-c7a09d638bae",
+   "license": "CC-BY-NC 4.0 (Int)",
+   "dataResourceName": "iNaturalist Australia",
+   "collector": [
+    "p_ingscot"
+   ],
+   "recordedBy": [
+    "p_ingscot"
+   ],
+   "uuid": "5e9b25eb-d8d5-4f94-9c9b-69f6a7ae64ba"
+  },
+  {
+   "scientificName": "Lantana camara",
+   "smallImageUrl": "https://images.ala.org.au/image/proxyImageThumbnail?imageId=no-licence",
+   "largeImageUrl": "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId=no-licence",
+   "dataResourceName": "Example"
+  }
+ ]
+}
