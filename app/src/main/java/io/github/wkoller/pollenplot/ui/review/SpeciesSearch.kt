@@ -24,19 +24,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
-import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
-import io.github.wkoller.pollenplot.domain.plants.EcoRoles
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.plants.SpeciesRow
 
 /** Searches the knowledge base for the right plant when none of the suggestions is right. */
 @Composable
-fun SpeciesSearch(kb: KnowledgeBase, state: AuState?, onBack: () -> Unit, onPick: (String) -> Unit) {
+fun SpeciesSearch(kb: KnowledgeBase, locality: Locality, onBack: () -> Unit, onPick: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
-    val results = remember(query, state) {
-        if (query.isBlank()) emptyList() else kb.search(query).map { it to EcoRoles.of(it, CareResolver.resolve(kb, it).care, state) }
+    val results = remember(query, locality) {
+        if (query.isBlank()) emptyList() else kb.search(query).map { it to locality.roles(it, CareResolver.resolve(kb, it).care) }
     }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }

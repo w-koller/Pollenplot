@@ -1,0 +1,371 @@
+[
+ {
+  "id": -6999805002862234036,
+  "dataResourceUid": "dr823",
+  "lsid": null,
+  "name": " Salix spp. except S.babylonica",
+  "scientificName": null,
+  "commonName": null,
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234035,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51742825",
+  "name": "Chrysanthemoides monilifera subsp. rotundata",
+  "scientificName": "Chrysanthemoides monilifera subsp. rotundata",
+  "commonName": "Bitou Bush",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234034,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51751895",
+  "name": "Opuntia",
+  "scientificName": "Opuntia",
+  "commonName": "Prickly Pear",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234033,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2903901",
+  "name": "Andropogon gayanus",
+  "scientificName": "Andropogon gayanus",
+  "commonName": "Gamba Grass",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234032,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2908730",
+  "name": "Asparagus africanus",
+  "scientificName": "Asparagus africanus",
+  "commonName": "Ornamental Asparagus",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234031,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51749236",
+  "name": "Anredera cordifolia",
+  "scientificName": "Anredera cordifolia",
+  "commonName": "Madeira Vine",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234030,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51448660",
+  "name": "Lantana camara",
+  "scientificName": "Lantana camara",
+  "commonName": "Lantana",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234029,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2912707",
+  "name": "Ulex europaeus",
+  "scientificName": "Ulex europaeus",
+  "commonName": "Gorse",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234028,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2900389",
+  "name": "Nassella trichotoma",
+  "scientificName": "Nassella trichotoma",
+  "commonName": "Serrated Tussock",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234027,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/name/apni/85694",
+  "name": "Rubus fruticosus aggregate",
+  "scientificName": "Rubus fruticosus",
+  "commonName": "Blackberry",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234026,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2903107",
+  "name": "Senecio madagascariensis",
+  "scientificName": "Senecio madagascariensis",
+  "commonName": "Fireweed",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234025,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2913231",
+  "name": "Chrysanthemoides monilifera subsp. monilifera",
+  "scientificName": "Chrysanthemoides monilifera subsp. monilifera",
+  "commonName": "Boneseed",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234024,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2919468",
+  "name": "Parthenium hysterophorus",
+  "scientificName": "Parthenium hysterophorus",
+  "commonName": "Parthenium",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234023,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2903865",
+  "name": "Asparagus declinatus",
+  "scientificName": "Asparagus declinatus",
+  "commonName": "Bridal Veil",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234022,
+  "dataResourceUid": "dr823",
+  "lsid": null,
+  "name": "Prosopis",
+  "scientificName": null,
+  "commonName": null,
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234021,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2890160",
+  "name": "Tamarix aphylla",
+  "scientificName": "Tamarix aphylla",
+  "commonName": "Athel Pine",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234020,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2891201",
+  "name": "Cabomba caroliniana",
+  "scientificName": "Cabomba caroliniana",
+  "commonName": "Cabomba",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234019,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2915654",
+  "name": "Asparagus scandens",
+  "scientificName": "Asparagus scandens",
+  "commonName": "Asparagus Fern",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234018,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2894705",
+  "name": "Nassella neesiana",
+  "scientificName": "Nassella neesiana",
+  "commonName": "Chilean Needle Grass",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234017,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51749297",
+  "name": "Dolichandra unguis-cati",
+  "scientificName": "Dolichandra unguis-cati",
+  "commonName": "Cat's Claw Creeper",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234016,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2910491",
+  "name": "Annona glabra",
+  "scientificName": "Annona glabra",
+  "commonName": "Pond Apple",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234015,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2906788",
+  "name": "Salvinia molesta",
+  "scientificName": "Salvinia x molesta",
+  "commonName": "Salvinia",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234014,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2899214",
+  "name": "Genista monspessulana",
+  "scientificName": "Genista monspessulana",
+  "commonName": "Montpellier Broom",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234013,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51445154",
+  "name": "Eichhornia crassipes",
+  "scientificName": "Pontederia crassipes",
+  "commonName": null,
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234012,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2897651",
+  "name": "Cytisus scoparius",
+  "scientificName": "Cytisus scoparius",
+  "commonName": "English Broom",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234011,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51737689",
+  "name": "Asparagus aethiopicus",
+  "scientificName": "Asparagus aethiopicus",
+  "commonName": "Asparagus Fern",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234010,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2899212",
+  "name": "Mimosa pigra",
+  "scientificName": "Mimosa pigra",
+  "commonName": "Giant Sensitive Plant",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234009,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51267054",
+  "name": "Asparagus plumosus",
+  "scientificName": "Asparagus plumosus",
+  "commonName": "Ferny Climbing Asparagus Fern",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234008,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51435598",
+  "name": "Jatropha gossypifolia",
+  "scientificName": "Jatropha gossypifolia",
+  "commonName": "Bellyache Bush",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234007,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51751874",
+  "name": "Cylindropuntia",
+  "scientificName": "Cylindropuntia",
+  "commonName": "Devil's Rope",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234006,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51432827",
+  "name": "Austrocylindropuntia",
+  "scientificName": "Austrocylindropuntia",
+  "commonName": "Cane Cactus",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234005,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51447682",
+  "name": "Lycium ferocissimum",
+  "scientificName": "Lycium ferocissimum",
+  "commonName": "African Boxthorn",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234004,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2895458",
+  "name": "Asparagus asparagoides",
+  "scientificName": "Asparagus asparagoides",
+  "commonName": "Bridal Creeper",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234003,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51429532",
+  "name": "Solanum elaeagnifolium",
+  "scientificName": "Solanum elaeagnifolium",
+  "commonName": "Silver-leaf Nightshade",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234002,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2892490",
+  "name": "Parkinsonia aculeata",
+  "scientificName": "Parkinsonia aculeata",
+  "commonName": "Jerusalem Thorn",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234001,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/7384761",
+  "name": "Vachellia nilotica",
+  "scientificName": "Vachellia nilotica",
+  "commonName": "Prickly Acacia",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862234000,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2906474",
+  "name": "Sagittaria platyphylla",
+  "scientificName": "Sagittaria platyphylla",
+  "commonName": "Arrowhead",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862233999,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2910909",
+  "name": "Genista linifolia",
+  "scientificName": "Genista linifolia",
+  "commonName": "Flax-leaf Broom",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862233998,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2904150",
+  "name": "Cryptostegia grandiflora",
+  "scientificName": "Cryptostegia grandiflora",
+  "commonName": "Rubber Vine",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862233997,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2890667",
+  "name": "Alternanthera philoxeroides",
+  "scientificName": "Alternanthera philoxeroides",
+  "commonName": "Alligator Weed",
+  "kvpValues": []
+ },
+ {
+  "id": -6999805002862233996,
+  "dataResourceUid": "dr823",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2895414",
+  "name": "Hymenachne amplexicaulis",
+  "scientificName": "Hymenachne amplexicaulis",
+  "commonName": "Hymenachne",
+  "kvpValues": []
+ }
+]

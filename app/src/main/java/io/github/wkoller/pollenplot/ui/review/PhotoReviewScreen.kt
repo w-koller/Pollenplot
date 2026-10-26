@@ -43,6 +43,7 @@ import coil3.compose.AsyncImage
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoReview
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
@@ -110,6 +111,7 @@ fun PhotoReviewScreen(
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
+    val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     var choices by rememberSaveable(stateSaver = ChoicesSaver) { mutableStateOf(emptyMap<String, ReviewChoice>()) }
     var choosingFor by rememberSaveable { mutableStateOf<String?>(null) }
     val callbacks = remember(actions) {
@@ -127,7 +129,7 @@ fun PhotoReviewScreen(
     val loadedKb = kb
     if (searchingFor != null && loadedKb != null) {
         BackHandler { choosingFor = null }
-        SpeciesSearch(loadedKb, current?.gardenState, onBack = { choosingFor = null }) { name ->
+        SpeciesSearch(loadedKb, locality, onBack = { choosingFor = null }) { name ->
             choices = choices + (searchingFor to ReviewChoice.Picked(name))
             choosingFor = null
         }
@@ -162,7 +164,7 @@ fun PhotoReviewScreen(
                             number = i + 1,
                             total = review.detections.size,
                             kb = kb,
-                            state = current?.gardenState,
+                            locality = locality,
                             zones = zones,
                             plants = plants,
                             choice = choices[detection.id],

@@ -20,6 +20,7 @@ import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -75,6 +76,7 @@ fun PlotScreen(
     onOpenPlant: (String) -> Unit,
     onSearch: () -> Unit,
     onReview: () -> Unit,
+    onWeeds: () -> Unit,
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
     val waiting by garden.pendingReviewCount.collectAsStateWithLifecycle(initialValue = 0)
@@ -91,6 +93,7 @@ fun PlotScreen(
     val hasZones = !loadedZones.isNullOrEmpty()
     val showCanvas = hasZones && !listMode
     val selectedZone = loadedZones?.firstOrNull { it.zone.id == selectedId }?.zone
+    val weeds = loadedPlants.orEmpty().count { it.isGrowing && it.weed.isWeed }
 
     fun finishEditing() {
         editing = false
@@ -112,6 +115,15 @@ fun PlotScreen(
                         // The number is in the button's description, so the badge is not read out twice.
                         BadgedBox(badge = { Badge { Text(waiting.toString()) } }, modifier = Modifier.clearAndSetSemantics { }) {
                             Icon(painterResource(R.drawable.ic_rate_review), contentDescription = null)
+                        }
+                    }
+                }
+                // Shown only while the garden has weeds in it, with how many.
+                if (weeds > 0) {
+                    val description = pluralStringResource(R.plurals.plot_weeds_found, weeds, weeds)
+                    IconButton(onClick = onWeeds, modifier = Modifier.semantics { contentDescription = description }) {
+                        BadgedBox(badge = { Badge { Text(weeds.toString()) } }, modifier = Modifier.clearAndSetSemantics { }) {
+                            Icon(painterResource(R.drawable.ic_grass), contentDescription = null)
                         }
                     }
                 }
@@ -170,7 +182,7 @@ fun PlotScreen(
                     }
                 }
             }
-            else -> PlotList(loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true })
+            else -> PlotList(loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds)
         }
     }
 
@@ -224,8 +236,10 @@ private fun PlotList(
     onOpenZone: (String) -> Unit,
     onOpenPlant: (String) -> Unit,
     onAddZone: () -> Unit,
+    onWeeds: () -> Unit,
 ) {
     val unzoned = plants.filter { it.plant.zoneId == null && it.isGrowing }
+    val weeds = plants.count { it.isGrowing && it.weed.isWeed }
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 96.dp),
@@ -245,6 +259,15 @@ private fun PlotList(
         if (unzoned.isNotEmpty()) {
             item { SectionHeading(stringResource(R.string.plot_unzoned)) }
             items(unzoned, key = { it.plant.id }) { view -> PlantRow(view, onClick = { onOpenPlant(view.plant.id) }) }
+        }
+        item {
+            ListItem(
+                onClick = onWeeds,
+                leadingContent = { Icon(painterResource(R.drawable.ic_grass), contentDescription = null) },
+                supportingContent = {
+                    Text(if (weeds > 0) pluralStringResource(R.plurals.plot_weeds_found, weeds, weeds) else stringResource(R.string.plot_weeds_body))
+                },
+            ) { Text(stringResource(R.string.weeds_title)) }
         }
     }
 }

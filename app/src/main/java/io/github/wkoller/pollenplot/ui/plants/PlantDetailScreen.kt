@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
@@ -70,6 +71,7 @@ import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.RoleBadges
 import io.github.wkoller.pollenplot.ui.listWords
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
+import io.github.wkoller.pollenplot.ui.weeds.WeedCard
 import kotlinx.coroutines.launch
 import java.time.Month
 import java.time.format.TextStyle
@@ -87,6 +89,7 @@ fun PlantDetailScreen(
     val all by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
+    val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     var editing by rememberSaveable { mutableStateOf(false) }
     var confirmRemove by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -109,6 +112,9 @@ fun PlantDetailScreen(
         ) {
             item { Header(loaded) }
             if (loaded.roles.isNotEmpty()) item { RoleBadges(loaded.roles) }
+            if (loaded.weed.isWeed) {
+                item { WeedCard(loaded.weed, locality, scientificName = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()) }
+            }
             if (resolved == null) {
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {

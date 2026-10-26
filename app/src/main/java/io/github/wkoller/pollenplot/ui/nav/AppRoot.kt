@@ -57,13 +57,16 @@ import io.github.wkoller.pollenplot.ui.review.ReviewScreen
 import io.github.wkoller.pollenplot.ui.rhythms.RhythmsScreen
 import io.github.wkoller.pollenplot.ui.search.SearchScreen
 import io.github.wkoller.pollenplot.ui.settings.AboutScreen
+import io.github.wkoller.pollenplot.ui.settings.DataSourcesScreen
+import io.github.wkoller.pollenplot.ui.settings.GardenLocationModel
+import io.github.wkoller.pollenplot.ui.settings.GardenLocationScreen
 import io.github.wkoller.pollenplot.ui.settings.LicenceTextScreen
 import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
 import io.github.wkoller.pollenplot.ui.settings.ModelsScreen
-import io.github.wkoller.pollenplot.ui.settings.NotReadyScreen
 import io.github.wkoller.pollenplot.ui.settings.ScanSettingsScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
 import io.github.wkoller.pollenplot.ui.water.WaterScreen
+import io.github.wkoller.pollenplot.ui.weeds.WeedsScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
 
 /** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
@@ -165,10 +168,10 @@ fun AppRoot(
                         onOpenSettings = openSettings,
                         onAdd = { action ->
                             when (action) {
-                                AddAction.IDENTIFY -> navController.navigate(IdentifyRoute)
+                                AddAction.IDENTIFY -> navController.navigate(IdentifyRoute())
                                 AddAction.PHOTOS -> addPhotos()
+                                AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
-                                else -> navController.navigate(NotReadyRoute(action.name))
                             }
                         },
                         onOpenZone = { navController.navigate(ZoneRoute(it)) },
@@ -176,6 +179,7 @@ fun AppRoot(
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onSearch = { navController.navigate(SearchRoute) },
                         onReview = { navController.navigate(ReviewRoute) },
+                        onWeeds = { navController.navigate(WeedsRoute) },
                     )
                 }
                 composable<ZoneRoute> { entry ->
@@ -212,7 +216,6 @@ fun AppRoot(
                         knowledge = container.knowledge,
                         garden = container.garden,
                         views = container.views,
-                        settings = container.settingsStore,
                         initialZoneId = route.zoneId,
                         initialSpecies = route.species,
                         onBack = back,
@@ -226,7 +229,6 @@ fun AppRoot(
                         garden = container.garden,
                         views = container.views,
                         knowledge = container.knowledge,
-                        settings = container.settingsStore,
                         meaning = container.meaning,
                         onBack = back,
                         onOpenZone = { navController.navigate(ZoneRoute(it)) },
@@ -234,7 +236,7 @@ fun AppRoot(
                         onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
                     )
                 }
-                composable<IdentifyRoute> {
+                composable<IdentifyRoute> { entry ->
                     val model = viewModel {
                         IdentifyModel(container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore, createSavedStateHandle())
                     }
@@ -246,6 +248,7 @@ fun AppRoot(
                         onBack = back,
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
+                        checkingWeed = entry.toRoute<IdentifyRoute>().checkingWeed,
                     )
                 }
                 composable<ReviewRoute> {
@@ -258,7 +261,7 @@ fun AppRoot(
                         onBack = back,
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddPhotos = addPhotos,
-                        onIdentify = { navController.navigate(IdentifyRoute) },
+                        onIdentify = { navController.navigate(IdentifyRoute()) },
                     )
                 }
                 composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
@@ -269,22 +272,41 @@ fun AppRoot(
                     SettingsScreen(
                         store = container.settingsStore,
                         onBack = back,
+                        onOpenLocation = { navController.navigate(GardenLocationRoute) },
                         onOpenScanning = { navController.navigate(ScanSettingsRoute) },
                         onOpenModels = { navController.navigate(ModelsRoute) },
                         onOpenAbout = { navController.navigate(AboutRoute) },
                     )
                 }
                 composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, onBack = back) }
+                composable<GardenLocationRoute> {
+                    val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
+                    GardenLocationScreen(model, container.settingsStore, onBack = back)
+                }
+                composable<WeedsRoute> {
+                    WeedsScreen(
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        settings = container.settingsStore,
+                        onBack = back,
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onCheckWeed = { navController.navigate(IdentifyRoute(checkingWeed = true)) },
+                        onSetLocation = { navController.navigate(GardenLocationRoute) },
+                    )
+                }
                 composable<ScanSettingsRoute> {
                     ScanSettingsScreen(container.settingsStore, container.gallery, container.notifications, container.clock, onBack = back)
                 }
-                composable<AboutRoute> { AboutScreen(onBack = back, onOpenLicences = { navController.navigate(LicencesRoute) }) }
+                composable<AboutRoute> {
+                    AboutScreen(
+                        onBack = back,
+                        onOpenLicences = { navController.navigate(LicencesRoute) },
+                        onOpenSources = { navController.navigate(DataSourcesRoute) },
+                    )
+                }
+                composable<DataSourcesRoute> { DataSourcesScreen(container.weeds.sources, onBack = back) }
                 composable<LicencesRoute> { LicencesScreen(onBack = back, onOpen = { navController.navigate(LicenceTextRoute(it)) }) }
                 composable<LicenceTextRoute> { LicenceTextScreen(file = it.toRoute<LicenceTextRoute>().file, onBack = back) }
-                composable<NotReadyRoute> {
-                    val action = AddAction.valueOf(it.toRoute<NotReadyRoute>().action)
-                    NotReadyScreen(action = action, onBack = back)
-                }
             }
         }
     }

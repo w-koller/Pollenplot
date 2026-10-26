@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -31,12 +32,13 @@ import io.github.wkoller.pollenplot.BuildConfig
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenShapes
-import io.github.wkoller.pollenplot.ui.nav.AddAction
+import io.github.wkoller.pollenplot.domain.weeds.WeedSources
+import io.github.wkoller.pollenplot.ui.plants.label
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit) {
+fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit, onOpenSources: () -> Unit) {
     DetailScaffold(title = stringResource(R.string.about_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
             item {
@@ -70,6 +72,59 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit) {
                 ) {
                     Text(stringResource(R.string.about_licences))
                 }
+            }
+            item {
+                ListItem(
+                    onClick = onOpenSources,
+                    supportingContent = { Text(stringResource(R.string.about_sources_body)) },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
+                ) {
+                    Text(stringResource(R.string.about_sources))
+                }
+            }
+        }
+    }
+}
+
+/** A source of information the app uses, what it gives the app and its licence, and the website it links to. */
+private data class SourceItem(@StringRes val name: Int, @StringRes val body: Int, val url: String)
+
+/** About › Data sources: where the weed lists, plant records and place names come from, with their credits. */
+@Composable
+fun DataSourcesScreen(sources: WeedSources, onBack: () -> Unit) {
+    val uri = LocalUriHandler.current
+    val items = listOfNotNull(
+        sources.councils.firstOrNull { it.id == "brisbane" }?.let { SourceItem(R.string.source_brisbane, R.string.source_brisbane_body, it.site) },
+        SourceItem(R.string.source_ala, R.string.source_ala_body, "https://www.ala.org.au/"),
+        SourceItem(R.string.source_weeds_australia, R.string.source_weeds_australia_body, "https://weeds.org.au/"),
+        SourceItem(R.string.source_open_meteo, R.string.source_open_meteo_body, "https://open-meteo.com/"),
+    )
+    DetailScaffold(title = stringResource(R.string.sources_title), onBack = onBack) { padding ->
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+            item {
+                Text(stringResource(R.string.sources_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
+            }
+            items(items) { item ->
+                ListItem(
+                    onClick = { uri.openUri(item.url) },
+                    supportingContent = { Text(stringResource(item.body)) },
+                    trailingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
+                ) { Text(stringResource(item.name)) }
+            }
+            item { SectionHeading(stringResource(R.string.source_states)) }
+            item {
+                Text(
+                    stringResource(R.string.source_states_body),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
+            items(sources.states) { state ->
+                ListItem(
+                    onClick = { uri.openUri(state.url) },
+                    supportingContent = { Text(stringResource(state.state.label)) },
+                    trailingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
+                ) { Text(state.agency) }
             }
         }
     }
@@ -149,24 +204,6 @@ fun LicenceTextScreen(file: String, onBack: () -> Unit) {
                 loaded.isEmpty() -> item { Text(stringResource(R.string.licence_missing), modifier = Modifier.padding(16.dp)) }
                 else -> items(loaded) { paragraph ->
                     Text(paragraph, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
-                }
-            }
-        }
-    }
-}
-
-/** Shown for a choice in the add menu whose feature is not built yet. */
-@Composable
-fun NotReadyScreen(action: AddAction, onBack: () -> Unit) {
-    DetailScaffold(title = stringResource(R.string.not_ready_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
-            action.notReady?.let { text ->
-                item {
-                    Text(
-                        stringResource(text),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(16.dp),
-                    )
                 }
             }
         }

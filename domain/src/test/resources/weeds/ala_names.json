@@ -1,0 +1,163 @@
+[
+ {
+  "success": true,
+  "scientificName": "Sphagneticola trilobata",
+  "scientificNameAuthorship": "(L.) Pruski",
+  "taxonConceptID": "https://id.biodiversity.org.au/node/apni/2901501",
+  "rank": "species",
+  "rankID": 7000,
+  "lft": 487560,
+  "rgt": 487560,
+  "matchType": "exactMatch",
+  "nameType": "SCIENTIFIC",
+  "synonymType": "OBJECTIVE_SYNONYM",
+  "kingdom": "Plantae",
+  "kingdomID": "https://id.biodiversity.org.au/taxon/apni/51795632",
+  "phylum": "Charophyta",
+  "phylumID": "https://id.biodiversity.org.au/taxon/apni/51795631",
+  "classs": "Equisetopsida",
+  "classID": "https://id.biodiversity.org.au/taxon/apni/51795630",
+  "order": "Asterales",
+  "orderID": "https://id.biodiversity.org.au/taxon/apni/51778256",
+  "family": "Asteraceae",
+  "familyID": "https://id.biodiversity.org.au/taxon/apni/51774774",
+  "genus": "Sphagneticola",
+  "genusID": "https://id.biodiversity.org.au/node/apni/2897020",
+  "species": "Sphagneticola trilobata",
+  "speciesID": "https://id.biodiversity.org.au/node/apni/2901501",
+  "vernacularName": "Sphagneticola",
+  "speciesGroup": [
+   "Plants",
+   "Flowering plants",
+   "Dicots"
+  ],
+  "speciesSubgroup": [
+   "Dicots"
+  ],
+  "issues": [
+   "noIssue"
+  ]
+ },
+ {
+  "success": true,
+  "scientificName": "Lantana camara",
+  "scientificNameAuthorship": "L.",
+  "taxonConceptID": "https://id.biodiversity.org.au/taxon/apni/51448660",
+  "rank": "species",
+  "rankID": 7000,
+  "lft": 493358,
+  "rgt": 493358,
+  "matchType": "exactMatch",
+  "nameType": "SCIENTIFIC",
+  "kingdom": "Plantae",
+  "kingdomID": "https://id.biodiversity.org.au/taxon/apni/51795632",
+  "phylum": "Charophyta",
+  "phylumID": "https://id.biodiversity.org.au/taxon/apni/51795631",
+  "classs": "Equisetopsida",
+  "classID": "https://id.biodiversity.org.au/taxon/apni/51795630",
+  "order": "Lamiales",
+  "orderID": "https://id.biodiversity.org.au/taxon/apni/51786442",
+  "family": "Verbenaceae",
+  "familyID": "https://id.biodiversity.org.au/taxon/apni/51448662",
+  "genus": "Lantana",
+  "genusID": "https://id.biodiversity.org.au/taxon/apni/51448661",
+  "species": "Lantana camara",
+  "speciesID": "https://id.biodiversity.org.au/taxon/apni/51448660",
+  "vernacularName": "Lantana",
+  "speciesGroup": [
+   "Plants",
+   "Flowering plants",
+   "Dicots"
+  ],
+  "speciesSubgroup": [
+   "Dicots"
+  ],
+  "issues": [
+   "noIssue"
+  ]
+ },
+ {
+  "success": true,
+  "scientificName": "Opuntia stricta",
+  "scientificNameAuthorship": "(Haw.) Haw.",
+  "taxonConceptID": "https://id.biodiversity.org.au/node/apni/2920789",
+  "rank": "species",
+  "rankID": 7000,
+  "lft": 501184,
+  "rgt": 501184,
+  "matchType": "exactMatch",
+  "nameType": "SCIENTIFIC",
+  "kingdom": "Plantae",
+  "kingdomID": "https://id.biodiversity.org.au/taxon/apni/51795632",
+  "phylum": "Charophyta",
+  "phylumID": "https://id.biodiversity.org.au/taxon/apni/51795631",
+  "classs": "Equisetopsida",
+  "classID": "https://id.biodiversity.org.au/taxon/apni/51795630",
+  "order": "Caryophyllales",
+  "orderID": "https://id.biodiversity.org.au/taxon/apni/51788504",
+  "family": "Cactaceae",
+  "familyID": "https://id.biodiversity.org.au/taxon/apni/51751875",
+  "genus": "Opuntia",
+  "genusID": "https://id.biodiversity.org.au/taxon/apni/51751895",
+  "species": "Opuntia stricta",
+  "speciesID": "https://id.biodiversity.org.au/node/apni/2920789",
+  "vernacularName": "Spiny Pest Pear",
+  "speciesGroup": [
+   "Plants",
+   "Flowering plants",
+   "Dicots"
+  ],
+  "speciesSubgroup": [
+   "Dicots"
+  ],
+  "issues": [
+   "noIssue"
+  ]
+ },
+ {
+  "success": false,
+  "nameType": "SCIENTIFIC",
+  "issues": [
+   "noIssue"
+  ]
+ },
+ {
+  "success": true,
+  "scientificName": "Pontederia crassipes",
+  "scientificNameAuthorship": "Mart.",
+  "taxonConceptID": "https://id.biodiversity.org.au/taxon/apni/51445154",
+  "rank": "species",
+  "rankID": 7000,
+  "lft": 541094,
+  "rgt": 541094,
+  "matchType": "exactMatch",
+  "nameType": "SCIENTIFIC",
+  "synonymType": "OBJECTIVE_SYNONYM",
+  "kingdom": "Plantae",
+  "kingdomID": "https://id.biodiversity.org.au/taxon/apni/51795632",
+  "phylum": "Charophyta",
+  "phylumID": "https://id.biodiversity.org.au/taxon/apni/51795631",
+  "classs": "Equisetopsida",
+  "classID": "https://id.biodiversity.org.au/taxon/apni/51795630",
+  "order": "Commelinales",
+  "orderID": "https://id.biodiversity.org.au/taxon/apni/51773620",
+  "family": "Pontederiaceae",
+  "familyID": "https://id.biodiversity.org.au/taxon/apni/51445133",
+  "genus": "Pontederia",
+  "genusID": "https://id.biodiversity.org.au/taxon/apni/51445138",
+  "species": "Pontederia crassipes",
+  "speciesID": "https://id.biodiversity.org.au/taxon/apni/51445154",
+  "speciesGroup": [
+   "Plants",
+   "Flowering plants",
+   "Monocots"
+  ],
+  "speciesSubgroup": [
+   "Monocots",
+   "Dicots"
+  ],
+  "issues": [
+   "noIssue"
+  ]
+ }
+]

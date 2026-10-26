@@ -51,16 +51,16 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.DetectionRecord
+import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.Confidence
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
-import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
-import io.github.wkoller.pollenplot.domain.plants.EcoRoles
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.Species
+import io.github.wkoller.pollenplot.ui.weeds.WeedNotice
 import io.github.wkoller.pollenplot.ui.components.Badge
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
@@ -95,7 +95,7 @@ fun DetectionReviewCard(
     number: Int,
     total: Int,
     kb: KnowledgeBase?,
-    state: AuState?,
+    locality: Locality,
     zones: List<ZoneView>,
     plants: List<PlantView>,
     choice: ReviewChoice?,
@@ -114,7 +114,7 @@ fun DetectionReviewCard(
                 Text(stringResource(R.string.review_plant_number, number, total), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
             when (detection.status) {
-                DetectionStatus.NEEDS_REVIEW -> Undecided(detection, kb, state, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
+                DetectionStatus.NEEDS_REVIEW -> Undecided(detection, kb, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
                 DetectionStatus.CONFIRMED -> {
                     val plant = plants.firstOrNull { it.plant.id == detection.plantId }
                     Header(detection.thumbnail, plant?.title ?: stringResource(R.string.review_added), plant?.scientificName)
@@ -164,7 +164,7 @@ sealed interface ReviewChoice {
 private fun Undecided(
     detection: DetectionRecord,
     kb: KnowledgeBase?,
-    state: AuState?,
+    locality: Locality,
     zones: List<ZoneView>,
     plants: List<PlantView>,
     savedChoice: ReviewChoice?,
@@ -198,11 +198,14 @@ private fun Undecided(
     ) {
         if (chosenCandidate != null) ConfidenceBadge(chosenCandidate.scoreBp)
         if (chosenSpecies != null && kb != null) {
-            RoleIcons(EcoRoles.of(chosenSpecies, CareResolver.resolve(kb, chosenSpecies).care, state), max = 4, size = 24.dp)
+            RoleIcons(locality.roles(chosenSpecies, CareResolver.resolve(kb, chosenSpecies).care), max = 4, size = 24.dp)
         } else if (chosenCandidate != null) {
             Text(stringResource(R.string.review_not_in_kb), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+    // The suggestion's weed status where the garden is, before it is added.
+    val weed = chosenSpecies?.let(locality::weed) ?: chosenSpeciesName?.let(locality::weed)
+    if (weed != null && weed.isWeed) WeedNotice(weed, locality)
 
     if (shown.isNotEmpty() || choice is ReviewChoice.Picked) {
         Text(stringResource(R.string.review_suggestions), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })

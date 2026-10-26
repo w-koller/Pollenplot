@@ -13,7 +13,8 @@
 - Plants by name, each with eco-role badges and a page of requirements: light, water, soil and feeding, compost,
   wildlife, forage for honey bees and native bees, flowering, size, safety and companions.
 - Search your garden, and every record stored with a UUID that the JSON-LD export uses as its identity.
-- Settings › Your garden: the state or territory, which decides what counts as a local native.
+- Settings › Your garden: the state or territory, which decides what counts as a local native and whose weed rules
+  apply.
 - Identify with the camera: live suggestions while you point the phone at a plant, then every plant found in the
   photo with its cut-out, the model's suggestions and how sure it is. Add each one to a zone, add the photo to a plant
   you already have, mark it as not a plant, or search for the right plant. Flowers in the photo are recorded for
@@ -33,3 +34,15 @@
   what you typed, such as lantana for "poisonous to dogs". The text model runs on the phone with ONNX Runtime and is
   checked against its published SHA-256 before use.
 - Search finds other forms of a word, so "weeds" finds a weed.
+- Settings › Garden location: search for your suburb or postcode, or use the phone's approximate location. Pollenplot
+  rounds the location to about 1 km before it sends it anywhere, and finds your council area and state from it.
+- The Weed identifier: each plant's weed status where you live, from your council's weed list (Brisbane City Council
+  for now), the Weeds of National Significance and the National Alert List for Environmental Weeds. A plant that is a
+  weed has a Weed card with its legal status, what the rules ask of you, whom to report it to, how often it has been
+  recorded within 10 km, the council's control methods and links to the council, Weeds Australia and your state's
+  weed agency. Suggestions on review cards carry a weed warning before you add them.
+- The Weeds screen, from the Plot: the weeds in your garden and the weeds recorded near it on the Atlas of Living
+  Australia, a Check a weed camera, and Weeds Australia's identification key. The lists are kept on the phone, so
+  checking a plant works offline, and they are brought up to date once a month on Wi-Fi.
+- About › Data sources credits Brisbane City Council, the Atlas of Living Australia, Weeds Australia, Open-Meteo and
+  each state and territory's weed agency.

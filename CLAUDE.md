@@ -73,12 +73,26 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), and `ui/review` the review cards, `PhotoReviewScreen` (shared by
   the Identify results and the Review queue) and `ReviewModel`.
+- `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a
+  point through the Atlas of Living Australia) and `PhoneLocation` (approximate location from the phone's own location
+  service). `app/web` holds `Web`, the small HTTP client the app's few web requests go through.
+- `app/weeds`: `WeedLibrary` (the weed lists and nearby records kept in `filesDir/weeds`, read for the garden's place
+  and state as `WeedData`), `WeedSync` (brings them up to date; a source that cannot be reached keeps its last good
+  copy) and `WeedSyncWorker` (monthly on Wi-Fi, and at once when the garden moves). Which sources apply where is in
+  `app/src/main/assets/weeds/sources.json`, checked by `WeedSourcesFileTest`. The rules that combine them are in
+  `domain/weeds` (`WeedResolver`, `WeedNames`, `BrisbaneWeeds`, `AlaLists`, `NearbyRecords`, `AlaNames`) and the
+  place parsing in `domain/place`. `GardenViews.locality` pairs the garden's state with its `WeedData`; badges, plant
+  views and the search index take their weed risk from it.
 - `AppContainer` builds the shared objects by hand. There is no dependency-injection library. Workers reach it through
   `PollenplotApp`. Tests that scan or review photos run with `@Config(application = TestApp::class)`, which gives the
   container a `FakeGallery` and a `ScriptedIdentifier`; `TestPhotos` paints garden photos, and workers run through
   `TestListenableWorkerBuilder` after `WorkManagerTestInitHelper.initializeTestWorkManager`.
 - `MeaningTestApp` gives the container a `ConceptEmbedder` in place of the text model, whose runtime cannot load on
   the JVM.
+- `WeedTestApp` gives the container a `RecordedWeb`, which answers from responses recorded from Open-Meteo, the Atlas
+  of Living Australia and Brisbane City Council in `app/src/test/resources/web`, and a `FixedLocation` in Taringa.
+  Tests never reach the real services. WorkManager is not set up when a Robolectric app starts, so the container's
+  schedules wait for a test to set it up, and an update the test needs is run directly with `weedSync.update()`.
 - `SettingsStore` makes its DataStore itself, and DataStore allows one store per file in a process, so tests use the
   app's store (`app.container.settingsStore`) rather than making another.
 

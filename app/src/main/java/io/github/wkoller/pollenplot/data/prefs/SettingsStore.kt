@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
+import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -23,8 +24,10 @@ data class Settings(
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     /** Use the colours of the phone's wallpaper instead of Pollenplot's leaf and pollen colours. */
     val wallpaperColours: Boolean = false,
-    /** The garden's state or territory, which decides what counts as a local native. */
+    /** The garden's state or territory, which decides what counts as a local native and whose weed rules apply. */
     val gardenState: AuState? = null,
+    /** Where the garden is, rounded to about 1 km, for the council's weed list and plants recorded nearby. */
+    val gardenPlace: GardenPlace? = null,
     /** Look for plants in new photos in the phone's gallery. */
     val scanLibrary: Boolean = false,
     /** The albums to scan, by their MediaStore bucket IDs. Null means the camera's own album. */
@@ -52,6 +55,10 @@ class SettingsStore(context: Context) {
         val theme = stringPreferencesKey("theme")
         val wallpaperColours = booleanPreferencesKey("wallpaper_colours")
         val gardenState = stringPreferencesKey("garden_state")
+        val gardenLatE7 = intPreferencesKey("garden_lat_e7")
+        val gardenLonE7 = intPreferencesKey("garden_lon_e7")
+        val gardenPlaceName = stringPreferencesKey("garden_place_name")
+        val gardenCouncil = stringPreferencesKey("garden_council")
         val scanLibrary = booleanPreferencesKey("scan_library")
         val scanAlbums = stringSetPreferencesKey("scan_albums")
         val scanBackDays = intPreferencesKey("scan_back_days")
@@ -73,6 +80,9 @@ class SettingsStore(context: Context) {
             theme = this[Keys.theme]?.let { runCatching { ThemeChoice.valueOf(it) }.getOrNull() } ?: defaults.theme,
             wallpaperColours = this[Keys.wallpaperColours] ?: defaults.wallpaperColours,
             gardenState = this[Keys.gardenState]?.let { name -> AuState.entries.firstOrNull { it.name == name } },
+            gardenPlace = this[Keys.gardenLatE7]?.let { lat ->
+                this[Keys.gardenLonE7]?.let { lon -> GardenPlace(lat, lon, this[Keys.gardenPlaceName], this[Keys.gardenCouncil]) }
+            },
             scanLibrary = this[Keys.scanLibrary] ?: defaults.scanLibrary,
             scanAlbums = this[Keys.scanAlbums],
             scanBackDays = this[Keys.scanBackDays] ?: defaults.scanBackDays,
@@ -85,6 +95,10 @@ class SettingsStore(context: Context) {
         this[Keys.theme] = settings.theme.name
         this[Keys.wallpaperColours] = settings.wallpaperColours
         setOrRemove(Keys.gardenState, settings.gardenState?.name)
+        setOrRemove(Keys.gardenLatE7, settings.gardenPlace?.latE7)
+        setOrRemove(Keys.gardenLonE7, settings.gardenPlace?.lonE7)
+        setOrRemove(Keys.gardenPlaceName, settings.gardenPlace?.name)
+        setOrRemove(Keys.gardenCouncil, settings.gardenPlace?.council)
         this[Keys.scanLibrary] = settings.scanLibrary
         setOrRemove(Keys.scanAlbums, settings.scanAlbums)
         this[Keys.scanBackDays] = settings.scanBackDays

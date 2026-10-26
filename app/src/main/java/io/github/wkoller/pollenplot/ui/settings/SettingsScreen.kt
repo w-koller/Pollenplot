@@ -43,20 +43,35 @@ import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenScanning: () -> Unit, onOpenModels: () -> Unit, onOpenAbout: () -> Unit) {
+fun SettingsScreen(
+    store: SettingsStore,
+    onBack: () -> Unit,
+    onOpenLocation: () -> Unit,
+    onOpenScanning: () -> Unit,
+    onOpenModels: () -> Unit,
+    onOpenAbout: () -> Unit,
+) {
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
     val scope = rememberCoroutineScope()
     val update: ((Settings) -> Settings) -> Unit = { change -> scope.launch { store.update(change) } }
-    var choosingState by rememberSaveable { mutableStateOf(false) }
     DetailScaffold(title = stringResource(R.string.settings_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
             item { SectionHeading(stringResource(R.string.settings_garden)) }
             item {
+                val place = settings.gardenPlace
                 ListItem(
-                    onClick = { choosingState = true },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
-                    supportingContent = { Text(stringResource(settings.gardenState.label) + ". " + stringResource(R.string.settings_state_body)) },
-                ) { Text(stringResource(R.string.settings_state)) }
+                    onClick = onOpenLocation,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_location_on), contentDescription = null) },
+                    supportingContent = {
+                        Text(
+                            when {
+                                place != null -> listOfNotNull(placeTitle(place), settings.gardenState?.let { stringResource(it.label) }).joinToString(" · ")
+                                settings.gardenState != null -> stringResource(R.string.settings_location_state_only, stringResource(settings.gardenState.label))
+                                else -> stringResource(R.string.settings_location_not_set)
+                            },
+                        )
+                    },
+                ) { Text(stringResource(R.string.settings_location)) }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_photos)) }
@@ -113,12 +128,6 @@ fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenScanning: () 
             }
         }
     }
-    if (choosingState) {
-        StateDialog(current = settings.gardenState, onDismiss = { choosingState = false }) { state ->
-            choosingState = false
-            update { it.copy(gardenState = state) }
-        }
-    }
 }
 
 @Composable
@@ -140,7 +149,7 @@ private val ThemeChoice.label: Int
 
 /** Chooses the garden's state or territory, or none. */
 @Composable
-private fun StateDialog(current: AuState?, onDismiss: () -> Unit, onChoose: (AuState?) -> Unit) {
+internal fun StateDialog(current: AuState?, onDismiss: () -> Unit, onChoose: (AuState?) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_state)) },

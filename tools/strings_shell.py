@@ -43,9 +43,4 @@ STRINGS = {
     "water_empty_title": "No watering lines have been set up yet.",
     "water_empty_body": "Once your zones and plants are in place, this page recommends when to water and how much, "
     "based on the weather and on what each plant needs.",
-
-    # Parts of the app that are not built yet
-    "not_ready_title": "Not ready yet",
-    "not_ready_weed": "Checking a weed against the weed lists for your area is not ready yet. It is being built and "
-    "will arrive in an update.",
 }

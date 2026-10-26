@@ -110,13 +110,18 @@ fun IdentifyScreen(
     onBack: () -> Unit,
     onOpenPlant: (String) -> Unit,
     onAddByName: () -> Unit,
+    checkingWeed: Boolean = false,
 ) {
     val stage by model.stage.collectAsStateWithLifecycle()
+    // Checking a weed is the same identification; each suggestion's weed status shows on its card.
+    val screenTitle = stringResource(if (checkingWeed) R.string.identify_weed_title else R.string.identify_title)
+    val hint = stringResource(if (checkingWeed) R.string.identify_weed_hint else R.string.identify_point)
     when (val current = stage) {
-        IdentifyStage.Camera -> CameraGate(model, knowledge, onBack)
+        IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack)
         IdentifyStage.Analysing -> Analysing(model)
-        is IdentifyStage.Results -> Results(model, views, knowledge, settings, onBack, onOpenPlant)
+        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant)
         IdentifyStage.NoneFound -> Problem(
+            screenTitle = screenTitle,
             title = stringResource(R.string.identify_none_title),
             body = stringResource(R.string.identify_none_body),
             onBack = onBack,
@@ -124,6 +129,7 @@ fun IdentifyScreen(
             onAddByName = onAddByName,
         )
         IdentifyStage.Failed -> Problem(
+            screenTitle = screenTitle,
             title = stringResource(R.string.identify_failed_title),
             body = stringResource(R.string.identify_failed),
             onBack = onBack,
@@ -137,7 +143,7 @@ private fun hasCamera(context: Context) = ContextCompat.checkSelfPermission(cont
 
 /** Asks for the camera the first time, explains why if the user says no, and shows the viewfinder once allowed. */
 @Composable
-private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, onBack: () -> Unit) {
+private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, title: String, hint: String, onBack: () -> Unit) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     var granted by remember { mutableStateOf(hasCamera(context)) }
@@ -161,9 +167,9 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, onB
     }
 
     if (granted) {
-        Viewfinder(model, knowledge, onBack)
+        Viewfinder(model, knowledge, hint, onBack)
     } else {
-        DetailScaffold(title = stringResource(R.string.identify_title), onBack = onBack) { padding ->
+        DetailScaffold(title = title, onBack = onBack) { padding ->
             Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally) {
                 EmptyState(R.drawable.ic_photo_camera, stringResource(R.string.identify_permission_title), stringResource(R.string.identify_permission_body))
                 if (canAskAgain) {
@@ -184,7 +190,7 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, onB
 /** The camera, full screen, with the live suggestions and the button that takes the photo. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, onBack: () -> Unit) {
+private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hint: String, onBack: () -> Unit) {
     val live by model.live.collectAsStateWithLifecycle()
     val capturing by model.capturing.collectAsStateWithLifecycle()
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
@@ -216,7 +222,7 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, onB
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            LiveSuggestions(live, kb)
+            LiveSuggestions(live, kb, hint)
             MediumExtendedFloatingActionButton(
                 text = { Text(stringResource(if (capturing) R.string.identify_capturing else R.string.identify_capture)) },
                 icon = {
@@ -234,11 +240,11 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, onB
 
 /** Up to three suggestions for what the camera sees, or a request to point it at a plant. */
 @Composable
-private fun LiveSuggestions(live: List<Candidate>, kb: KnowledgeBase?) {
+private fun LiveSuggestions(live: List<Candidate>, kb: KnowledgeBase?, hint: String) {
     val pill = Modifier.clip(CircleShape)
     if (live.isEmpty()) {
         Surface(color = Color.Black.copy(alpha = 0.6f), contentColor = Color.White, modifier = pill) {
-            Text(stringResource(R.string.identify_point), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+            Text(hint, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
         }
         return
     }
@@ -314,12 +320,13 @@ private fun Results(
     views: GardenViews,
     knowledge: KnowledgeRepository,
     settings: SettingsStore,
+    title: String,
     onBack: () -> Unit,
     onOpenPlant: (String) -> Unit,
 ) {
     val result by model.results.collectAsStateWithLifecycle()
     PhotoReviewScreen(
-        title = stringResource(R.string.identify_title),
+        title = title,
         reviews = result?.let(::listOf),
         actions = model.actions,
         views = views,
@@ -348,8 +355,8 @@ private fun Results(
 
 /** No plant was found, or the photo could not be identified: what happened and what the user can do next. */
 @Composable
-private fun Problem(title: String, body: String, onBack: () -> Unit, onTryAgain: () -> Unit, onAddByName: () -> Unit) {
-    DetailScaffold(title = stringResource(R.string.identify_title), onBack = onBack) { padding ->
+private fun Problem(screenTitle: String, title: String, body: String, onBack: () -> Unit, onTryAgain: () -> Unit, onAddByName: () -> Unit) {
+    DetailScaffold(title = screenTitle, onBack = onBack) { padding ->
         Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             EmptyState(R.drawable.ic_potted_plant, title, body)
             Button(onClick = onTryAgain) { Text(stringResource(R.string.identify_try_again)) }

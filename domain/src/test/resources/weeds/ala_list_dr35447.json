@@ -1,0 +1,200 @@
+[
+ {
+  "id": -7855475942917460705,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2906266",
+  "name": "https://id.biodiversity.org.au/node/apni/2906266",
+  "scientificName": "Cenchrus setaceus",
+  "commonName": "Fountain Grass",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460704,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2890160",
+  "name": "https://id.biodiversity.org.au/node/apni/2890160",
+  "scientificName": "Tamarix aphylla",
+  "commonName": "Athel Pine",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460703,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2909781",
+  "name": "https://id.biodiversity.org.au/node/apni/2909781",
+  "scientificName": "Spartium junceum",
+  "commonName": "Spanish Broom",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460702,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/7231684",
+  "name": "https://id.biodiversity.org.au/node/apni/7231684",
+  "scientificName": "Genista",
+  "commonName": "Broom",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460701,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2891201",
+  "name": "https://id.biodiversity.org.au/node/apni/2891201",
+  "scientificName": "Cabomba caroliniana",
+  "commonName": "Cabomba",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460700,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2894705",
+  "name": "https://id.biodiversity.org.au/node/apni/2894705",
+  "scientificName": "Nassella neesiana",
+  "commonName": "Chilean Needle Grass",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460699,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2903901",
+  "name": "https://id.biodiversity.org.au/node/apni/2903901",
+  "scientificName": "Andropogon gayanus",
+  "commonName": "Gamba Grass",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460698,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2900976",
+  "name": "https://id.biodiversity.org.au/node/apni/2900976",
+  "scientificName": "Equisetum",
+  "commonName": "Horsetail",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460697,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51269882",
+  "name": "https://id.biodiversity.org.au/taxon/apni/51269882",
+  "scientificName": "Cylindropuntia pallida",
+  "commonName": "White-spined Hudson Pear",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460696,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2920108",
+  "name": "https://id.biodiversity.org.au/node/apni/2920108",
+  "scientificName": "Vachellia karroo",
+  "commonName": "Karoo Acacia",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460695,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51771094",
+  "name": "https://id.biodiversity.org.au/taxon/apni/51771094",
+  "scientificName": "Prosopis",
+  "commonName": "Mesquites",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460694,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2912711",
+  "name": "https://id.biodiversity.org.au/node/apni/2912711",
+  "scientificName": "Miconia calvescens",
+  "commonName": "Miconia",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460693,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2919468",
+  "name": "https://id.biodiversity.org.au/node/apni/2919468",
+  "scientificName": "Parthenium hysterophorus",
+  "commonName": "Parthenium",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460692,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2896560",
+  "name": "https://id.biodiversity.org.au/node/apni/2896560",
+  "scientificName": "Leucanthemum vulgare",
+  "commonName": "Ox-eye Daisy",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460691,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2904150",
+  "name": "https://id.biodiversity.org.au/node/apni/2904150",
+  "scientificName": "Cryptostegia grandiflora",
+  "commonName": "Rubber Vine",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460690,
+  "dataResourceUid": "dr35447",
+  "lsid": "NZOR-6-87108",
+  "name": "NZOR-6-87108",
+  "scientificName": "Salvinia molesta",
+  "commonName": null,
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460689,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2900389",
+  "name": "https://id.biodiversity.org.au/node/apni/2900389",
+  "scientificName": "Nassella trichotoma",
+  "commonName": "Serrated Tussock",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460688,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2910579",
+  "name": "https://id.biodiversity.org.au/node/apni/2910579",
+  "scientificName": "Chromolaena odorata",
+  "commonName": "Siam Weed",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460687,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/taxon/apni/51773815",
+  "name": "https://id.biodiversity.org.au/taxon/apni/51773815",
+  "scientificName": "Limnobium laevigatum",
+  "commonName": "Amazon Frogbit",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460686,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2900096",
+  "name": "https://id.biodiversity.org.au/node/apni/2900096",
+  "scientificName": "Cenchrus longispinus",
+  "commonName": "Spiny Burr-grass",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460685,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/2889728",
+  "name": "https://id.biodiversity.org.au/node/apni/2889728",
+  "scientificName": "Ipomoea aquatica",
+  "commonName": "Kang Kong",
+  "kvpValues": []
+ },
+ {
+  "id": -7855475942917460684,
+  "dataResourceUid": "dr35447",
+  "lsid": "https://id.biodiversity.org.au/node/apni/8905801",
+  "name": "https://id.biodiversity.org.au/node/apni/8905801",
+  "scientificName": "Salix",
+  "commonName": "Willows",
+  "kvpValues": []
+ }
+]

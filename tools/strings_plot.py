@@ -83,7 +83,6 @@ STRINGS = {
     # Settings › Your garden
     "settings_garden": "Your garden",
     "settings_state": "State or territory",
-    "settings_state_body": "Pollenplot uses it to show which plants are native to your area.",
     "state_not_set": "Not set",
     "state_qld": "Queensland",
     "state_nsw": "New South Wales",

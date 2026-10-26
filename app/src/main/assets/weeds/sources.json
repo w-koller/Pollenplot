@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "councils": [
+    {
+      "id": "brisbane",
+      "name": "Brisbane City Council",
+      "lga": "BRISBANE CITY",
+      "state": "QLD",
+      "format": "brisbane-open-data",
+      "data": "https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-weeds/exports/json",
+      "site": "https://weeds.brisbane.qld.gov.au/",
+      "licence": "CC BY 4.0",
+      "phone": "07 3403 8888"
+    }
+  ],
+  "states": [
+    {
+      "state": "QLD",
+      "agency": "Biosecurity Queensland",
+      "url": "https://www.business.qld.gov.au/industries/farms-fishing-forestry/agriculture/biosecurity/plants/invasive",
+      "phone": "13 25 23"
+    },
+    {
+      "state": "NSW",
+      "agency": "NSW Department of Primary Industries",
+      "url": "https://weeds.dpi.nsw.gov.au/",
+      "phone": "1800 680 244"
+    },
+    {
+      "state": "VIC",
+      "agency": "Agriculture Victoria",
+      "url": "https://agriculture.vic.gov.au/biosecurity/weeds",
+      "phone": "136 186"
+    },
+    {
+      "state": "SA",
+      "agency": "Primary Industries and Regions SA and the landscape boards",
+      "url": "https://pir.sa.gov.au/crops-and-plants/weeds-and-plant-pests/managing-weeds"
+    },
+    {
+      "state": "WA",
+      "agency": "Department of Primary Industries and Regional Development",
+      "url": "https://www.dpird.wa.gov.au/businesses/pests-weeds-and-diseases/plant/",
+      "phone": "08 9368 3080",
+      "email": "padis@dpird.wa.gov.au"
+    },
+    {
+      "state": "TAS",
+      "agency": "Department of Natural Resources and Environment Tasmania",
+      "url": "https://nre.tas.gov.au/invasive-species/weeds",
+      "phone": "1300 368 550"
+    },
+    {
+      "state": "NT",
+      "agency": "Weed Management Branch, Northern Territory Government",
+      "url": "https://nt.gov.au/environment/weeds",
+      "phone": "08 8999 4567",
+      "email": "weedinfo@nt.gov.au"
+    },
+    {
+      "state": "ACT",
+      "agency": "ACT Biosecurity",
+      "url": "https://www.act.gov.au/environment/animals-and-plants/plants/reporting-and-controlling-invasive-plants",
+      "email": "ACTBiosecurity@act.gov.au"
+    }
+  ],
+  "national": {
+    "wons": "dr823",
+    "alert": "dr35447",
+    "list": "https://lists-ws.ala.org.au/ws/speciesListItems/{uid}?max=1000",
+    "names": "https://namematching-ws.ala.org.au/api/searchAllByClassification",
+    "area": "https://spatial.ala.org.au/ws/intersect/cl10923,cl22/{lat}/{lon}"
+  },
+  "nearby": {
+    "url": "https://biocache-ws.ala.org.au/ws/occurrences/search?q=*:*&fq=kingdom:Plantae&fq=year:%5B{since}%20TO%20*%5D&lat={lat}&lon={lon}&radius={radius}&facets=species&flimit=-1&pageSize=0",
+    "radiusKm": 10,
+    "years": 10
+  },
+  "weedsAustralia": {
+    "search": "https://weeds.org.au/?s={name}",
+    "identify": "https://weeds.org.au/identify/"
+  }
+}

@@ -30,13 +30,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.data.db.SearchHit
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
-import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
-import io.github.wkoller.pollenplot.domain.plants.EcoRoles
 import io.github.wkoller.pollenplot.domain.semantic.SearchKind
 import io.github.wkoller.pollenplot.search.MeaningSearch
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
@@ -55,7 +54,6 @@ fun SearchScreen(
     garden: GardenRepository,
     views: GardenViews,
     knowledge: KnowledgeRepository,
-    settings: SettingsStore,
     meaning: MeaningSearch,
     onBack: () -> Unit,
     onOpenZone: (String) -> Unit,
@@ -69,12 +67,12 @@ fun SearchScreen(
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
-    val state by remember { settings.settings.map { it.gardenState } }.collectAsStateWithLifecycle(initialValue = null)
+    val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     val loadedKb = kb
-    val species = remember(query, loadedKb, state) {
-        if (loadedKb == null || query.isBlank()) emptyList() else loadedKb.search(query, limit = 8).map { it to EcoRoles.of(it, CareResolver.resolve(loadedKb, it).care, state) }
+    val species = remember(query, loadedKb, locality) {
+        if (loadedKb == null || query.isBlank()) emptyList() else loadedKb.search(query, limit = 8).map { it to locality.roles(it, CareResolver.resolve(loadedKb, it).care) }
     }
 
     DetailScaffold(title = stringResource(R.string.search_title), onBack = onBack) { padding ->

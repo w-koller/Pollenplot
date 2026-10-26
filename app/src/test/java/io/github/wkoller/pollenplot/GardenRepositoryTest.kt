@@ -6,6 +6,9 @@ import io.github.wkoller.pollenplot.data.DetectionDraft
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.Locality
+import io.github.wkoller.pollenplot.weeds.WeedData
+import kotlinx.coroutines.flow.flowOf
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.photos.StoredPhoto
@@ -53,7 +56,7 @@ class GardenRepositoryTest {
         val context = ApplicationProvider.getApplicationContext<PollenplotApp>()
         db = PollenplotDatabase.inMemory(context)
         knowledge = KnowledgeRepository(context, CoroutineScope(Dispatchers.IO))
-        garden = GardenRepository(db, Clock.systemUTC(), { knowledge.await() }, { state })
+        garden = GardenRepository(db, Clock.systemUTC(), { knowledge.await() }, { Locality(state, WeedData.EMPTY) })
     }
 
     @After
@@ -110,7 +113,7 @@ class GardenRepositoryTest {
     fun `views give each zone its plants and badges`() = runBlocking {
         val ids = DemoGarden.seed(garden)
         // One settings store per process: the app's own, as DataStore refuses a second for the same file.
-        val views = GardenViews(garden, knowledge, ApplicationProvider.getApplicationContext<PollenplotApp>().container.settingsStore)
+        val views = GardenViews(garden, knowledge, ApplicationProvider.getApplicationContext<PollenplotApp>().container.settingsStore, flowOf(WeedData.EMPTY))
         val zones = views.zones.first { list -> list.isNotEmpty() && list.all { z -> z.plants.all { it.care != null } } }
         val citrus = zones.single { it.zone.id == ids.citrus }
         assertEquals(3, citrus.plants.size)

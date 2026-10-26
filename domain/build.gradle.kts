@@ -20,4 +20,7 @@ tasks.test {
     // The fast classifier's labels, to check how many of them the knowledge base can name.
     systemProperty("ml.dir", rootProject.layout.projectDirectory.dir("app/src/main/assets/ml").asFile.absolutePath)
     inputs.dir(rootProject.layout.projectDirectory.dir("app/src/main/assets/ml"))
+    // The weed sources the app ships, so a mistake in them fails the build.
+    systemProperty("weeds.dir", rootProject.layout.projectDirectory.dir("app/src/main/assets/weeds").asFile.absolutePath)
+    inputs.dir(rootProject.layout.projectDirectory.dir("app/src/main/assets/weeds"))
 }

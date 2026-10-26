@@ -24,10 +24,8 @@ import io.github.wkoller.pollenplot.domain.garden.PlotLayout
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
-import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
-import io.github.wkoller.pollenplot.domain.plants.EcoRoles
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.semantic.GardenGraph
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
@@ -58,7 +56,8 @@ class GardenRepository(
     private val db: PollenplotDatabase,
     private val clock: Clock,
     private val knowledge: suspend () -> KnowledgeBase,
-    private val gardenState: suspend () -> AuState?,
+    /** The garden's state and weed lists, which some badges in the search index depend on. */
+    private val locality: suspend () -> Locality,
 ) {
     private val zones = db.zoneDao()
     private val plants = db.plantDao()
@@ -337,7 +336,7 @@ class GardenRepository(
         return ids.mapNotNull { byId[it] }
     }
 
-    /** Rebuilds the whole search index, for example after the knowledge base or the garden's state changes. */
+    /** Rebuilds the whole search index, for example after the knowledge base, the garden's state or its weed lists change. */
     suspend fun reindexAll() = db.withTransaction {
         search.clear()
         zones.all().forEach { index(it.toDomain()) }
@@ -348,7 +347,7 @@ class GardenRepository(
     suspend fun rolesOf(plant: GardenPlant): List<EcoRole> {
         val kb = knowledge()
         val species = plant.speciesName?.let(kb::species) ?: return emptyList()
-        return EcoRoles.of(species, CareResolver.resolve(kb, species).care, gardenState())
+        return locality().roles(species, CareResolver.resolve(kb, species).care)
     }
 
     /** Every record as JSON-LD, using Darwin Core, schema.org and Pollenplot's own terms. */

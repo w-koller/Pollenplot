@@ -35,8 +35,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SearchRoute
 
-/** Identify with the camera. */
-@Serializable data object IdentifyRoute
+/** Identify with the camera, or check whether a plant is a weed. */
+@Serializable data class IdentifyRoute(val checkingWeed: Boolean = false)
 
 /** Plants found in photos, waiting for review. */
 @Serializable data object ReviewRoute
@@ -47,8 +47,14 @@ import kotlinx.serialization.Serializable
 /** Settings › Models. */
 @Serializable data object ModelsRoute
 
-/** A part of the app that is not built yet, named by [AddAction]. */
-@Serializable data class NotReadyRoute(val action: String)
+/** Settings › Garden location. */
+@Serializable data object GardenLocationRoute
+
+/** The weeds in the garden and near it. */
+@Serializable data object WeedsRoute
+
+/** About › Data sources. */
+@Serializable data object DataSourcesRoute
 
 /** The main tabs, in the order they appear in the navigation bar. */
 enum class TopLevelTab(
@@ -64,10 +70,10 @@ enum class TopLevelTab(
     WATER(WaterRoute, R.string.tab_water, R.drawable.ic_water_drop, R.drawable.ic_water_drop_filled),
 }
 
-/** The choices in the Plot's add menu. [notReady] explains a choice that is not built yet. */
-enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int, @StringRes val notReady: Int?) {
-    IDENTIFY(R.string.add_identify_camera, R.drawable.ic_photo_camera, null),
-    PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate, null),
-    WEED(R.string.add_check_weed, R.drawable.ic_grass, R.string.not_ready_weed),
-    PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant, null),
+/** The choices in the Plot's add menu. */
+enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
+    IDENTIFY(R.string.add_identify_camera, R.drawable.ic_photo_camera),
+    PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate),
+    WEED(R.string.add_check_weed, R.drawable.ic_grass),
+    PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant),
 }

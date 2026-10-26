@@ -41,11 +41,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
-import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
-import io.github.wkoller.pollenplot.domain.plants.EcoRoles
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import kotlinx.coroutines.flow.map
@@ -60,7 +59,6 @@ fun AddPlantScreen(
     knowledge: KnowledgeRepository,
     garden: GardenRepository,
     views: GardenViews,
-    settings: SettingsStore,
     initialZoneId: String?,
     initialSpecies: String?,
     onBack: () -> Unit,
@@ -68,7 +66,7 @@ fun AddPlantScreen(
 ) {
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
-    val state by remember { settings.settings.map { it.gardenState } }.collectAsStateWithLifecycle(initialValue = null)
+    val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     var query by rememberSaveable { mutableStateOf("") }
     var chosenSpecies by rememberSaveable { mutableStateOf(initialSpecies) }
     var customName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -77,8 +75,8 @@ fun AddPlantScreen(
     LaunchedEffect(Unit) { if (initialSpecies == null) runCatching { focus.requestFocus() } }
 
     val loadedKb = kb
-    val results = remember(query, loadedKb, state) {
-        if (loadedKb == null) emptyList() else loadedKb.search(query).map { it to EcoRoles.of(it, CareResolver.resolve(loadedKb, it).care, state) }
+    val results = remember(query, loadedKb, locality) {
+        if (loadedKb == null) emptyList() else loadedKb.search(query).map { it to locality.roles(it, CareResolver.resolve(loadedKb, it).care) }
     }
 
     DetailScaffold(title = stringResource(R.string.add_plant_title), onBack = onBack) { padding ->
