@@ -4,6 +4,8 @@ import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.Species
+import io.github.wkoller.pollenplot.domain.wildlife.Animal
+import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import java.math.BigDecimal
 
 /** Where a link between two records came from: the user, an AI model, or an official source. */
@@ -62,6 +64,26 @@ object GardenGraph {
             .text(iri, Vocab.DWC + "occurrenceRemarks", plant.notes)
         roles.forEach { builder.iri(iri, Vocab.PP + "ecoRole", Vocab.PP + roleName(it)) }
         return builder.build()
+    }
+
+    /** A sighting as a Darwin Core Occurrence of the animal, in its zone, with the plant it was on as an association. */
+    fun sighting(sighting: Sighting, animal: Animal?): List<Triple> {
+        val iri = Vocab.recordIri(sighting.id)
+        return GraphBuilder()
+            .type(iri, Vocab.DWC + "Occurrence")
+            .type(iri, Vocab.PP + "Sighting")
+            .text(iri, Vocab.DWC + "basisOfRecord", if (sighting.photoId != null) "MachineObservation" else "HumanObservation")
+            .text(iri, Vocab.DWC + "occurrenceID", iri)
+            .text(iri, Vocab.DWC + "scientificName", animal?.name ?: sighting.speciesName ?: sighting.label)
+            .text(iri, Vocab.DWC + "family", animal?.family)
+            .text(iri, Vocab.DWC + "vernacularName", animal?.common?.firstOrNull())
+            .integer(iri, Vocab.DWC + "individualCount", sighting.count.toLong())
+            .text(iri, Vocab.DWC + "behavior", sighting.behaviour?.name?.lowercase())
+            .text(iri, Vocab.DWC + "eventDate", sighting.seenAt.toString())
+            .iri(iri, Vocab.DWC + "locationID", sighting.zoneId?.let(Vocab::recordIri))
+            .iri(iri, Vocab.PP + "seenOn", sighting.plantId?.let(Vocab::recordIri))
+            .text(iri, Vocab.DWC + "occurrenceRemarks", sighting.notes)
+            .build()
     }
 
     fun link(link: Link): List<Triple> {

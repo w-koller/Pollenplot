@@ -4,8 +4,10 @@ import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.Species
+import io.github.wkoller.pollenplot.domain.wildlife.Animal
+import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 
-enum class SearchKind { ZONE, PLANT }
+enum class SearchKind { ZONE, PLANT, SIGHTING }
 
 /**
  * A record as the search index holds it: the record's key, its kind, the title shown in results and the words it
@@ -40,6 +42,22 @@ object SearchText {
             zoneName?.let { "in $it" },
             roles.joinToString(", ") { words(it.name) }.ifBlank { null },
             plant.notes.ifBlank { null },
+        ).joinToString(". "),
+    )
+
+    /** A sighting, found by the animal's names, its group, what it was doing and where. */
+    fun sighting(sighting: Sighting, animal: Animal?, zoneName: String?, plantTitle: String?): SearchDoc = SearchDoc(
+        id = sighting.id,
+        kind = SearchKind.SIGHTING,
+        title = animal?.displayName ?: sighting.label,
+        body = listOfNotNull(
+            animal?.common?.joinToString(", ")?.ifBlank { null },
+            animal?.let { "${it.name}, family ${it.family}" } ?: sighting.label.takeIf { it != sighting.speciesName },
+            words(sighting.group.name),
+            sighting.behaviour?.let { words(it.name) },
+            plantTitle?.let { "on $it" },
+            zoneName?.let { "in $it" },
+            sighting.notes.ifBlank { null },
         ).joinToString(". "),
     )
 

@@ -9,6 +9,10 @@ import io.github.wkoller.pollenplot.domain.plants.Soil
 import io.github.wkoller.pollenplot.domain.plants.Sun
 import io.github.wkoller.pollenplot.domain.semantic.Link
 import io.github.wkoller.pollenplot.domain.semantic.Provenance
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.domain.wildlife.Sighting
+import java.time.Instant
 import java.time.LocalDate
 
 /** Reads a stored enum name, falling back to [default] if a later version wrote a value this one does not know. */
@@ -65,6 +69,38 @@ fun GardenPlant.toEntity(createdAt: Long, updatedAt: Long) = PlantEntity(
     status = status.name,
     notes = notes,
     thumbnail = thumbnail,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+fun SightingEntity.toDomain() = Sighting(
+    id = id,
+    speciesName = speciesName,
+    label = label,
+    group = enumOrNull<LifeGroup>(lifeGroup) ?: LifeGroup.OTHER,
+    zoneId = zoneId,
+    plantId = plantId,
+    behaviour = enumOrNull<Behaviour>(behaviour),
+    count = count,
+    photoId = photoId,
+    thumbnail = thumbnail,
+    seenAt = Instant.ofEpochMilli(seenAt),
+    notes = notes,
+)
+
+fun Sighting.toEntity(createdAt: Long, updatedAt: Long) = SightingEntity(
+    id = id,
+    speciesName = speciesName,
+    label = label,
+    lifeGroup = group.name,
+    zoneId = zoneId,
+    plantId = plantId,
+    behaviour = behaviour?.name,
+    count = count,
+    photoId = photoId,
+    thumbnail = thumbnail,
+    seenAt = seenAt.toEpochMilli(),
+    notes = notes,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )

@@ -67,16 +67,47 @@ data class PhotoEntity(
 )
 
 /**
- * One part of a photo that seems to show a plant, with its cut-out and what the models suggested. It waits for review
- * until the user confirms it as a plant in the garden or says it is not one.
+ * An animal or fungus seen in the garden. [plantId] is the plant it was on, and [lifeGroup] its group, such as BIRD.
+ */
+@Entity(
+    tableName = "sightings",
+    foreignKeys = [
+        ForeignKey(entity = ZoneEntity::class, parentColumns = ["id"], childColumns = ["zoneId"], onDelete = ForeignKey.SET_NULL),
+        ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.SET_NULL),
+        ForeignKey(entity = PhotoEntity::class, parentColumns = ["id"], childColumns = ["photoId"], onDelete = ForeignKey.SET_NULL),
+    ],
+    indices = [Index("zoneId"), Index("plantId"), Index("photoId"), Index("speciesName"), Index("seenAt")],
+)
+data class SightingEntity(
+    @PrimaryKey val id: String,
+    val speciesName: String?,
+    val label: String,
+    val lifeGroup: String,
+    val zoneId: String?,
+    val plantId: String?,
+    val behaviour: String?,
+    val count: Int,
+    val photoId: String?,
+    /** Relative to the app's files folder. */
+    val thumbnail: String?,
+    val seenAt: Long,
+    val notes: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+/**
+ * One part of a photo that seems to show a plant or an animal, with its cut-out and what the models suggested. It
+ * waits for review until the user confirms it, as a plant in the garden or a sighting, or says it is neither.
  */
 @Entity(
     tableName = "detections",
     foreignKeys = [
         ForeignKey(entity = PhotoEntity::class, parentColumns = ["id"], childColumns = ["photoId"], onDelete = ForeignKey.CASCADE),
         ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.SET_NULL),
+        ForeignKey(entity = SightingEntity::class, parentColumns = ["id"], childColumns = ["sightingId"], onDelete = ForeignKey.SET_NULL),
     ],
-    indices = [Index("photoId"), Index("plantId"), Index("status")],
+    indices = [Index("photoId"), Index("plantId"), Index("sightingId"), Index("status")],
 )
 data class DetectionEntity(
     @PrimaryKey val id: String,
@@ -91,6 +122,10 @@ data class DetectionEntity(
     val status: String,
     val plantId: String?,
     val createdAt: Long,
+    /** What it seems to show, such as PLANT or BIRD. */
+    val lifeGroup: String = "PLANT",
+    /** The sighting it became, for an animal. */
+    val sightingId: String? = null,
 )
 
 /** One suggestion for a detection, in rank order. */
@@ -149,8 +184,10 @@ data class LinkEntity(
     val createdAt: Long,
 )
 
-/** The full-text search index: one row per record, rebuilt whenever the record or anything it mentions changes. */
-/** The search index. The Porter stemmer lets "weeds" find "weed" and "flowering" find "flowers". */
+/**
+ * The full-text search index: one row per record, rebuilt whenever the record or anything it mentions changes. The
+ * Porter stemmer lets "weeds" find "weed" and "flowering" find "flowers".
+ */
 @Fts4(notIndexed = ["recordId", "kind"], tokenizer = FtsOptions.TOKENIZER_PORTER)
 @Entity(tableName = "search")
 data class SearchEntity(

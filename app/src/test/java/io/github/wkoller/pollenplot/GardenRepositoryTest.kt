@@ -23,6 +23,8 @@ import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -56,7 +58,7 @@ class GardenRepositoryTest {
         val context = ApplicationProvider.getApplicationContext<PollenplotApp>()
         db = PollenplotDatabase.inMemory(context)
         knowledge = KnowledgeRepository(context, CoroutineScope(Dispatchers.IO))
-        garden = GardenRepository(db, Clock.systemUTC(), { knowledge.await() }, { Locality(state, WeedData.EMPTY) })
+        garden = GardenRepository(db, Clock.systemUTC(), { knowledge.await() }, { Locality(state, WeedData.EMPTY) }, { knowledge.awaitFauna() })
     }
 
     @After
@@ -207,6 +209,39 @@ class GardenRepositoryTest {
         assertEquals("A plant keeps the picture it has", "thumbs/rosemary.webp", garden.plant(rosemary.id)!!.thumbnail)
         assertEquals(listOf(LocalDate.of(2026, 10, 3)), garden.floweringOf(rosemary.id))
         assertEquals("No second plant was added", 1, garden.plantList.first().size)
+    }
+
+    @Test
+    fun `an animal in a photo becomes a sighting on the plant it was on`() = runBlocking {
+        val zone = garden.addZone("Hive Corner", ZoneKind.HIVE_CORNER)
+        val rosemary = garden.addPlant("Salvia rosmarinus", null, zone.id)
+        val photo = StoredPhoto("photo-2", "photos/photo-2.jpg", 2_048, 1_536)
+        val takenAt = LocalDate.of(2026, 11, 2).atTime(10, 0).toInstant(ZoneOffset.UTC)
+        val bee = Candidate("Amegilla cingulata", null, 7_000, setOf(IdSource.BIOCAP))
+        garden.recordPhoto(photo, PhotoOrigin.CAMERA, takenAt, listOf(DetectionDraft(BoxBp(2_000, 2_000, 5_000, 5_000), "thumbs/bee.webp", false, listOf(bee), LifeGroup.INSECT)))
+        val found = garden.detectionsInPhoto(photo.id).first().single()
+        assertEquals(LifeGroup.INSECT, found.group)
+
+        val sighting = garden.confirmSighting(found.id, "Amegilla cingulata", "Amegilla cingulata", LifeGroup.INSECT, zone.id, rosemary.id, Behaviour.POLLINATING)
+        val stored = garden.detection(found.id)!!
+        assertEquals(DetectionStatus.CONFIRMED, stored.status)
+        assertEquals(sighting.id, stored.sightingId)
+        assertNull(stored.plantId)
+        assertEquals("When the photo was taken", takenAt, garden.sighting(sighting.id)!!.seenAt)
+        assertEquals("thumbs/bee.webp", garden.sighting(sighting.id)!!.thumbnail)
+        assertEquals(listOf(sighting.id), garden.sightingList.first().map { it.id })
+
+        assertTrue("Found by its common name", garden.search("blue-banded bee").any { it.recordId == sighting.id && it.title == "Blue-banded bee" })
+        assertTrue("Found by what it was doing and where", garden.search("pollinating rosemary").any { it.recordId == sighting.id })
+        val nodes = Json.parseToJsonElement(garden.exportJsonLd()).jsonObject["@graph"]!!.jsonArray.map { it.jsonObject }
+        val node = nodes.single { it["@id"]!!.jsonPrimitive.content == "urn:uuid:${sighting.id}" }
+        assertEquals("Amegilla cingulata", node["dwc:scientificName"]!!.jsonPrimitive.content)
+        assertEquals("pollinating", node["dwc:behavior"]!!.jsonPrimitive.content)
+
+        garden.deletePlant(rosemary.id)
+        assertNull("The sighting stays when the plant goes", garden.sighting(sighting.id)!!.plantId)
+        garden.deleteSighting(sighting.id)
+        assertTrue(garden.search("blue-banded").none { it.recordId == sighting.id })
     }
 
     @Test

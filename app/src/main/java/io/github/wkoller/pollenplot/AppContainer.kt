@@ -81,6 +81,7 @@ class AppContainer(
         clock = clock,
         knowledge = { knowledge.await() },
         locality = { Locality(settingsStore.settings.first().gardenState, weeds.data.value) },
+        fauna = { knowledge.awaitFauna() },
     )
     val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
     val places = PlaceFinder(this.web) { weeds.sources }

@@ -27,6 +27,10 @@ import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import io.github.wkoller.pollenplot.domain.semantic.GardenGraph
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.domain.semantic.Link
@@ -58,6 +62,8 @@ class GardenRepository(
     private val knowledge: suspend () -> KnowledgeBase,
     /** The garden's state and weed lists, which some badges in the search index depend on. */
     private val locality: suspend () -> Locality,
+    /** The animal knowledge base, for sightings in the search index and the export. */
+    private val fauna: suspend () -> FaunaBase = { FaunaBase(emptyList()) },
 ) {
     private val zones = db.zoneDao()
     private val plants = db.plantDao()
@@ -68,6 +74,7 @@ class GardenRepository(
     private val flowering = db.floweringDao()
     private val scanned = db.scannedMediaDao()
     private val embeddings = db.embeddingDao()
+    private val sightings = db.sightingDao()
     private val layoutLock = Mutex()
 
     val zoneList: Flow<List<Zone>> = zones.observeAll().map { list -> list.map { it.toDomain() } }
@@ -170,13 +177,13 @@ class GardenRepository(
             detections.insert(
                 DetectionEntity(
                     id, photo.id, draft.box.left, draft.box.top, draft.box.right, draft.box.bottom, draft.thumbnail, draft.flowering,
-                    DetectionStatus.NEEDS_REVIEW.name, null, time,
+                    DetectionStatus.NEEDS_REVIEW.name, null, time, draft.group.name,
                 ),
             )
             detections.insertCandidates(
                 draft.candidates.mapIndexed { rank, c -> CandidateEntity(id, rank, c.label, c.speciesName, c.scoreBp, c.sources.joinToString(",") { it.name }) },
             )
-            DetectionRecord(id, photo.id, draft.box, draft.thumbnail, draft.flowering, DetectionStatus.NEEDS_REVIEW, null, draft.candidates, takenAt)
+            DetectionRecord(id, photo.id, draft.box, draft.thumbnail, draft.flowering, DetectionStatus.NEEDS_REVIEW, null, draft.candidates, takenAt, draft.group)
         }
     }
 
@@ -247,6 +254,7 @@ class GardenRepository(
         return DetectionRecord(
             entity.id, entity.photoId, BoxBp(entity.leftBp, entity.topBp, entity.rightBp, entity.bottomBp), entity.thumbnail, entity.flowering,
             DetectionStatus.entries.firstOrNull { it.name == entity.status } ?: DetectionStatus.NEEDS_REVIEW, entity.plantId, candidates, takenAt,
+            LifeGroup.of(entity.lifeGroup) ?: LifeGroup.PLANT, entity.sightingId,
         )
     }
 
@@ -263,7 +271,7 @@ class GardenRepository(
         val plant = GardenPlant(UUID.randomUUID().toString(), speciesName, customName?.trim()?.ifBlank { null }, zoneId, quantity, thumbnail = detection.thumbnail)
         val time = now()
         plants.upsert(plant.toEntity(time, time))
-        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plant.id)
+        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plant.id, null)
         if (flowering) recordFlowering(plant.id, detection)
         index(plant)
         plant
@@ -273,18 +281,73 @@ class GardenRepository(
     suspend fun attachDetection(detectionId: String, plantId: String, flowering: Boolean) = db.withTransaction {
         val detection = detection(detectionId) ?: return@withTransaction
         val plant = plants.get(plantId) ?: return@withTransaction
-        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plantId)
+        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plantId, null)
         if (plant.thumbnail == null) plants.upsert(plant.copy(thumbnail = detection.thumbnail, updatedAt = now()))
         if (flowering) recordFlowering(plantId, detection)
     }
 
     /** Marks a detection as not a plant. */
-    suspend fun rejectDetection(detectionId: String) = detections.setStatus(detectionId, DetectionStatus.REJECTED.name, null)
+    suspend fun rejectDetection(detectionId: String) = detections.setStatus(detectionId, DetectionStatus.REJECTED.name, null, null)
 
     /** Puts a detection marked as not a plant back in review. */
     suspend fun reopenDetection(detectionId: String) = db.withTransaction {
         val entity = detections.get(detectionId) ?: return@withTransaction
-        if (entity.status == DetectionStatus.REJECTED.name) detections.setStatus(detectionId, DetectionStatus.NEEDS_REVIEW.name, null)
+        if (entity.status == DetectionStatus.REJECTED.name) detections.setStatus(detectionId, DetectionStatus.NEEDS_REVIEW.name, null, null)
+    }
+
+    /** Every sighting, the most recent first. */
+    val sightingList: Flow<List<Sighting>> = sightings.observeAll().map { list -> list.map { it.toDomain() } }
+
+    suspend fun sighting(id: String): Sighting? = sightings.get(id)?.toDomain()
+
+    /** Records an animal or fungus seen in the garden. */
+    suspend fun addSighting(sighting: Sighting) = db.withTransaction {
+        val time = now()
+        sightings.upsert(sighting.toEntity(time, time))
+        index(sighting)
+    }
+
+    suspend fun updateSighting(sighting: Sighting) = db.withTransaction {
+        val existing = sightings.get(sighting.id) ?: return@withTransaction
+        sightings.upsert(sighting.toEntity(existing.createdAt, now()))
+        index(sighting)
+    }
+
+    suspend fun deleteSighting(id: String) = db.withTransaction {
+        sightings.delete(id)
+        links.deleteFor(id)
+        search.delete(id)
+    }
+
+    /** Makes a detection a sighting, with the photo, its cut-out and when the photo was taken. */
+    suspend fun confirmSighting(
+        detectionId: String,
+        speciesName: String?,
+        label: String,
+        group: LifeGroup,
+        zoneId: String?,
+        plantId: String?,
+        behaviour: Behaviour?,
+        count: Int = 1,
+    ): Sighting = db.withTransaction {
+        val detection = detection(detectionId) ?: error("No detection $detectionId")
+        val sighting = Sighting(
+            id = UUID.randomUUID().toString(),
+            speciesName = speciesName,
+            label = label,
+            group = group,
+            zoneId = zoneId,
+            plantId = plantId,
+            behaviour = behaviour,
+            count = count,
+            photoId = detection.photoId,
+            thumbnail = detection.thumbnail,
+            seenAt = detection.takenAt,
+            notes = "",
+        )
+        addSighting(sighting)
+        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, null, sighting.id)
+        sighting
     }
 
     suspend fun floweringOf(plantId: String): List<LocalDate> = flowering.forPlant(plantId).map { LocalDate.ofEpochDay(it.observedOnEpochDay) }
@@ -341,6 +404,7 @@ class GardenRepository(
         search.clear()
         zones.all().forEach { index(it.toDomain()) }
         plants.all().forEach { index(it.toDomain()) }
+        sightings.all().forEach { index(it.toDomain()) }
     }
 
     /** The eco-roles of a plant in this garden. */
@@ -359,12 +423,27 @@ class GardenRepository(
             val plant = entity.toDomain()
             triples += GardenGraph.plant(plant, plant.speciesName?.let(kb::species), rolesOf(plant))
         }
+        val animals = fauna()
+        sightings.all().forEach { entity ->
+            val sighting = entity.toDomain()
+            triples += GardenGraph.sighting(sighting, (sighting.speciesName ?: sighting.label).let(animals::animal))
+        }
         links.all().forEach { triples += GardenGraph.link(it.toDomain()) }
         return JsonLd.document(triples).toString()
     }
 
     private suspend fun index(zone: Zone) {
         val doc = SearchText.zone(zone)
+        search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
+    }
+
+    private suspend fun index(sighting: Sighting) {
+        val animal = (sighting.speciesName ?: sighting.label).let(fauna()::animal)
+        val zoneName = sighting.zoneId?.let { zones.get(it)?.name }
+        val plantTitle = sighting.plantId?.let { plants.get(it) }?.let { plant ->
+            plant.customName ?: plant.speciesName?.let { knowledge().species(it)?.displayName ?: it }
+        }
+        val doc = SearchText.sighting(sighting, animal, zoneName, plantTitle)
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }
 
@@ -397,8 +476,17 @@ enum class ScanOutcome { PLANTS, NO_PLANT, FAILED }
 /** A kept photo with every plant found in it, for review. */
 data class PhotoReview(val photo: StoredPhoto, val takenAt: Instant, val detections: List<DetectionRecord>)
 
-/** One region of a photo, ready to store: where it is, its cut-out, whether it was in flower, and the suggestions. */
-data class DetectionDraft(val box: BoxBp, val thumbnail: String, val flowering: Boolean, val candidates: List<Candidate>)
+/**
+ * One region of a photo, ready to store: where it is, its cut-out, whether it was in flower, the suggestions, and
+ * what it seems to show.
+ */
+data class DetectionDraft(
+    val box: BoxBp,
+    val thumbnail: String,
+    val flowering: Boolean,
+    val candidates: List<Candidate>,
+    val group: LifeGroup = LifeGroup.PLANT,
+)
 
 /** A stored detection with its suggestions, for review. */
 data class DetectionRecord(
@@ -411,4 +499,7 @@ data class DetectionRecord(
     val plantId: String?,
     val candidates: List<Candidate>,
     val takenAt: Instant,
+    /** What it seems to show: a plant, or an animal or fungus to record as a sighting. */
+    val group: LifeGroup = LifeGroup.PLANT,
+    val sightingId: String? = null,
 )

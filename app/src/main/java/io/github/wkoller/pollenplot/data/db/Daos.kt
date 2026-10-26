@@ -106,8 +106,27 @@ interface DetectionDao {
     @Query("UPDATE detections SET createdAt = createdAt WHERE id = :id")
     suspend fun touch(id: String)
 
-    @Query("UPDATE detections SET status = :status, plantId = :plantId WHERE id = :id")
-    suspend fun setStatus(id: String, status: String, plantId: String?)
+    @Query("UPDATE detections SET status = :status, plantId = :plantId, sightingId = :sightingId WHERE id = :id")
+    suspend fun setStatus(id: String, status: String, plantId: String?, sightingId: String?)
+}
+
+@Dao
+interface SightingDao {
+    @Upsert
+    suspend fun upsert(sighting: SightingEntity)
+
+    @Query("SELECT * FROM sightings WHERE id = :id")
+    suspend fun get(id: String): SightingEntity?
+
+    @Query("SELECT * FROM sightings")
+    suspend fun all(): List<SightingEntity>
+
+    /** Every sighting, the most recent first. */
+    @Query("SELECT * FROM sightings ORDER BY seenAt DESC")
+    fun observeAll(): Flow<List<SightingEntity>>
+
+    @Query("DELETE FROM sightings WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao
