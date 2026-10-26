@@ -99,9 +99,9 @@ class AppContainer(
     private val fast by lazy { FastPlantIdentifier(appContext) }
     private val quickIdentifier: PlantIdentifier by lazy { testIdentifier ?: fast }
     val identifier: PlantIdentifier by lazy { testIdentifier ?: AccuratePlantIdentifier(fast) { accurate.open() } }
-    val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock)
+    val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock, ::recordsNearby)
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
-    val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock), analysis, garden, clock)
+    val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby), analysis, garden, clock)
     val notifications = Notifications(appContext)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
 
@@ -131,6 +131,9 @@ class AppContainer(
                 .collect { MeaningIndexWorker.enqueue(appContext) }
         }
     }
+
+    /** How many times a plant has been recorded near the garden, as the last weed update found. */
+    fun recordsNearby(name: String): Int = weeds.data.value.recordsNearby(name)
 
     /**
      * The names whose accepted spelling the weed update looks up: the garden's plants, the knowledge base with its

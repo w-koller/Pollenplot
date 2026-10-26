@@ -48,7 +48,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `JsonLd`
     and `SearchText` (what the search index holds for each record).
   - `id/`: identification. `RegionPlanner` (the tiles each photo is classified in and how regions are chosen),
-    `CandidateFusion` (each model's suggestions combined, with the garden boost), `ThumbnailMath`, `FlowerHint`,
+    `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
+  plants recorded near it), `ThumbnailMath`, `FlowerHint`,
     `Confidence` and `ZoneSuggestion` (the zone offered for a plant found in a photo).
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
@@ -71,14 +72,16 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   settings. `app/notify` holds the notification channels.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
-  (`IdentifyModel` keeps its state across turns), and `ui/review` the review cards, `PhotoReviewScreen` (shared by
+  (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
+  finder, and `ui/review` the review cards, `PhotoReviewScreen` (shared by
   the Identify results and the Review queue) and `ReviewModel`.
 - `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a
   point through the Atlas of Living Australia) and `PhoneLocation` (approximate location from the phone's own location
   service). `app/web` holds `Web`, the small HTTP client the app's few web requests go through.
 - `app/weeds`: `WeedLibrary` (the weed lists and nearby records kept in `filesDir/weeds`, read for the garden's place
   and state as `WeedData`), `WeedSync` (brings them up to date; a source that cannot be reached keeps its last good
-  copy) and `WeedSyncWorker` (monthly on Wi-Fi, and at once when the garden moves). Which sources apply where is in
+  copy), `WeedSyncWorker` (monthly on Wi-Fi, and at once when the garden moves) and `WeedPhotos` (photos of a plant
+  recorded in Australia, fetched when the user compares, kept only in memory). Which sources apply where is in
   `app/src/main/assets/weeds/sources.json`, checked by `WeedSourcesFileTest`. The rules that combine them are in
   `domain/weeds` (`WeedResolver`, `WeedNames`, `BrisbaneWeeds`, `AlaLists`, `NearbyRecords`, `AlaNames`) and the
   place parsing in `domain/place`. `GardenViews.locality` pairs the garden's state with its `WeedData`; badges, plant
@@ -97,6 +100,11 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   app's store (`app.container.settingsStore`) rather than making another.
 
 ## Models
+
+BioCAP's input is prepared by `Bitmaps.squarePixels`: the square around the plant, halved while it is at least twice
+224 across, then scaled to 224 (`smoothScale`). `tools/models/export_biocap.py` prepares its evaluation photos the
+same way (`phone_square`), so a change to one needs the same change to the other. The pack's evaluation measures each
+step from BioCAP as published to the 8-bit model the phone runs, and ships the 8-bit form that names its photos best.
 
 Model files are not committed. The build downloads each one once, checks it against its published SHA-256
 (`VerifiedDownloadTask` in `buildSrc`) and extracts it into the generated assets (`ExtractModelTask`), which also

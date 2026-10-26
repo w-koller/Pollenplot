@@ -242,7 +242,7 @@ fun AppRoot(
                 }
                 composable<IdentifyRoute> { entry ->
                     val model = viewModel {
-                        IdentifyModel(container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore, createSavedStateHandle())
+                        IdentifyModel(container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore, createSavedStateHandle(), container::recordsNearby)
                     }
                     IdentifyScreen(
                         model = model,

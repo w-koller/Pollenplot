@@ -62,6 +62,19 @@ class CandidateFusionTest {
     }
 
     @Test
+    fun `a species recorded near the garden is boosted less than one growing in it`() {
+        val results = mapOf(IdSource.BIOCAP to listOf(LabelScore("Grevillea banksii", 4_000), LabelScore("Grevillea robusta", 3_500)))
+        val nearby = { name: String -> if (name == "Grevillea robusta") 12 else 1 }
+        val fused = CandidateFusion.fuse(results, kb, emptySet(), nearby = nearby)
+        assertEquals("Recorded nearby, robusta overtakes banksii", "Grevillea robusta", fused[0].speciesName ?: fused[0].label)
+        assertEquals(4_200, fused[0].scoreBp)
+        assertEquals("One record is not enough", 4_000, fused[1].scoreBp)
+        val both = CandidateFusion.fuse(results, kb, setOf("Grevillea robusta"), nearby = nearby)
+        assertEquals(6_300, both[0].scoreBp)
+        assertEquals(3_500, CandidateFusion.withoutBoost(both[0], setOf("Grevillea robusta"), nearby))
+    }
+
+    @Test
     fun `a stored score loses the garden boost so it is not boosted twice`() {
         val boosted = Candidate("Rosmarinus officinalis", "Salvia rosmarinus", 6_450, setOf(IdSource.AIY_PLANTS))
         assertEquals(4_300, CandidateFusion.withoutBoost(boosted, garden = setOf("Salvia rosmarinus")))

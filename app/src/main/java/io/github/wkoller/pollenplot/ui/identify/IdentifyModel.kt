@@ -50,6 +50,8 @@ class IdentifyModel(
     private val knowledge: KnowledgeRepository,
     settings: SettingsStore,
     private val saved: SavedStateHandle,
+    /** How many times a plant has been recorded near the garden, for the boost such plants get. */
+    private val nearby: (String) -> Int = { 0 },
 ) : ViewModel() {
     private val _stage = MutableStateFlow(saved.get<String>(PHOTO_ID)?.let { IdentifyStage.Results(it) } ?: IdentifyStage.Camera)
     val stage: StateFlow<IdentifyStage> = _stage.asStateFlow()
@@ -103,7 +105,7 @@ class IdentifyModel(
             val growing = gardenSpecies ?: garden.plantList.first()
                 .filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
                 .also { gardenSpecies = it }
-            CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to result.labels), knowledge.knowledge.value, growing)
+            CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to result.labels), knowledge.knowledge.value, growing, nearby = nearby)
                 .filter { it.scoreBp >= LIVE_MIN_SCORE_BP }
                 .take(LIVE_COUNT)
         }

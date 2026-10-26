@@ -180,6 +180,10 @@ class WeedFlowTest {
         assertEquals(WeedLevel.RESTRICTED, synced.status(listOf("Lantana camara")).level)
         assertEquals("Found under the name the Atlas accepts", "sphagneticola trilobata", synced.accepted["wedelia trilobata"])
         assertFalse(synced.lastUpdateFailed)
+        // Records near the garden boost identification, under either name.
+        assertEquals(280, app.container.recordsNearby("Lantana camara"))
+        assertEquals(206, app.container.recordsNearby("Wedelia trilobata"))
+        assertEquals(0, app.container.recordsNearby("Grevillea banksii"))
 
         app.web.offline = true
         val kept = runBlocking {

@@ -12,6 +12,7 @@ import io.github.wkoller.pollenplot.domain.weeds.NationalWeeds
 import io.github.wkoller.pollenplot.domain.weeds.NearbyRecords
 import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
 import io.github.wkoller.pollenplot.domain.weeds.StateSource
+import io.github.wkoller.pollenplot.domain.weeds.WeedNames
 import io.github.wkoller.pollenplot.domain.weeds.WeedResolver
 import io.github.wkoller.pollenplot.domain.weeds.WeedSources
 import io.github.wkoller.pollenplot.domain.weeds.WeedStatus
@@ -59,6 +60,13 @@ data class WeedData(
 ) {
     /** The status of the plant known by [names], its accepted name and synonyms. */
     fun status(names: Collection<String>): WeedStatus = WeedResolver.resolve(names, councilWeeds, national, nearby, accepted)
+
+    /** How many times a plant has been recorded near the garden, under its own name or the one the Atlas accepts. */
+    fun recordsNearby(name: String): Int {
+        val records = nearby ?: return 0
+        val binomial = WeedNames.binomial(name)
+        return records.of(listOfNotNull(binomial, accepted[binomial]))
+    }
 
     /** Whether any list has been downloaded, so a plant that is on none of them can be said not to be a weed. */
     val hasLists: Boolean get() = councilWeeds.isNotEmpty() || national.wons.isNotEmpty()

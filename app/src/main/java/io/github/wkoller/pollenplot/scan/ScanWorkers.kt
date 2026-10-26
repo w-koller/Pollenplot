@@ -181,11 +181,11 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
                 container.garden.photo(detection.photoId)?.let { BitmapFactory.decodeFile(container.photos.file(it.path).path) }
             } ?: continue
             val quick = detection.candidates.filter { IdSource.AIY_PLANTS in it.sources }
-                .map { LabelScore(it.label, CandidateFusion.withoutBoost(it, growing)) }
+                .map { LabelScore(it.label, CandidateFusion.withoutBoost(it, growing, container::recordsNearby)) }
             val accurate = withContext(Dispatchers.Default) { models.labels(photo, detection.box) }
             container.garden.replaceCandidates(
                 detection.id,
-                CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to quick, IdSource.BIOCAP to accurate), kb, growing),
+                CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to quick, IdSource.BIOCAP to accurate), kb, growing, nearby = container::recordsNearby),
             )
         }
 
