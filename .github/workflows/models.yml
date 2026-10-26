@@ -1,0 +1,60 @@
+name: Model pack
+
+# Builds the accurate identification pack from BioCAP and, when asked, publishes it as a release the app downloads.
+# The export needs PyTorch and a few gigabytes of disk, so it runs here rather than on a development machine.
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the pack as a release (biocap-pack-N, N from tools/models/export_biocap.py)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  biocap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyTorch for the CPU and the export tools
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3"
+          # ONNX Runtime matches the app's version, so the quantised model uses operators the app's runtime has.
+          pip install "open_clip_torch>=2.26" "onnx>=1.16" "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
+          pip freeze > pip-freeze.txt
+
+      - name: Export BioCAP and build the pack
+        run: python tools/models/export_biocap.py --out build/biocap
+
+      - name: Upload the pack, its evaluation and the test references
+        uses: actions/upload-artifact@v7
+        with:
+          name: biocap-pack
+          path: |
+            build/biocap/biocap-pack-*.zip
+            build/biocap/biocap-pack-*.zip.sha256
+            build/biocap/manifest.json
+            build/biocap/evaluation.md
+            build/biocap/reference.json
+            pip-freeze.txt
+
+      - name: Publish the pack as a release
+        if: inputs.publish
+        run: |
+          version=$(sed -n 's/^PACK_VERSION = \([0-9]*\)$/\1/p' tools/models/export_biocap.py)
+          # Not marked as the latest release, which stays the newest app version.
+          gh release create "biocap-pack-$version" \
+            "build/biocap/biocap-pack-$version.zip" "build/biocap/biocap-pack-$version.zip.sha256" \
+            --title "BioCAP model pack $version" --notes-file build/biocap/evaluation.md --latest=false
