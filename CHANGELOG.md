@@ -47,6 +47,8 @@
 - Compare: a plant beside recent photos of it recorded in Australia on the Atlas of Living Australia, each credited
   to its photographer under its licence, with what the council's list says to look for. It opens from the Weed card,
   from a suggestion that is a weed, and from the weeds recorded near the garden.
+- A Weeds near you notification when a weed the law restricts, or a national list names, is newly recorded near the
+  garden. Tapping it opens the Weeds screen.
 - Identification gives plants recorded near the garden a small boost, smaller than the one for plants already in it.
 - The Weed finder, for gardens in Brisbane: the council's weed list narrowed by type, flower colour and leaves, as the
   council's own identification tool does. Opened from Check a weed, the photo's suggestions come first.

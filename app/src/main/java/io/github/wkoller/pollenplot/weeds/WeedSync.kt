@@ -17,6 +17,8 @@ import io.github.wkoller.pollenplot.PollenplotApp
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.weeds.AlaLists
 import io.github.wkoller.pollenplot.domain.weeds.AlaNames
+import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
+import io.github.wkoller.pollenplot.domain.weeds.WeedLevel
 import io.github.wkoller.pollenplot.domain.weeds.NearbyRecords
 import io.github.wkoller.pollenplot.domain.weeds.WeedNames
 import io.github.wkoller.pollenplot.place.PlaceFinder
@@ -51,6 +53,8 @@ class WeedSync(
     private val settings: SettingsStore,
     private val namesToMatch: suspend () -> Collection<String>,
     private val clock: Clock,
+    /** Told about serious weeds recorded near the garden since the last update, to let the user know. */
+    private val onNewWeedsNearby: (List<NearbyWeed>) -> Unit = {},
 ) {
     private val lock = Mutex()
 
@@ -88,6 +92,12 @@ class WeedSync(
         }
 
         var nearby = previous.nearby
+        // The weeds already known near this place, to tell which are new. The first records for a place are not news.
+        val known = if (place != null && previous.nearby?.let { it.lat == place.latText && it.lon == place.lonText } == true) {
+            library.current().nearbyWeeds.map { it.name }.toSet()
+        } else {
+            null
+        }
         if (place != null) {
             val since = Year.now(clock).value - sources.nearby.years
             val query = NearbyQuery(place.latText, place.lonText, sources.nearby.radiusKm, since)
@@ -108,6 +118,10 @@ class WeedSync(
             ),
         )
         library.reload()
+        if (known != null) {
+            val fresh = library.current().nearbyWeeds.filter { it.status.level in NEWSWORTHY && it.name !in known }
+            if (fresh.isNotEmpty()) onNewWeedsNearby(fresh)
+        }
         UpdateOutcome(failed)
     }
 
@@ -148,6 +162,9 @@ class WeedSync(
     private companion object {
         const val TAG = "WeedSync"
         const val NAMES_PER_REQUEST = 100
+
+        /** Weeds the law restricts or the nation lists; a weed only on a council's own list is not worth a notification. */
+        val NEWSWORTHY = setOf(WeedLevel.PROHIBITED, WeedLevel.RESTRICTED, WeedLevel.NATIONAL)
     }
 }
 

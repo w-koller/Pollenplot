@@ -1,6 +1,8 @@
 package io.github.wkoller.pollenplot
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationManager
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -205,6 +207,26 @@ class WeedFlowTest {
         waitFor(hasText("The last update couldn't reach every source. Pollenplot will try again."))
         compose.onNodeWithText("Update now").assertIsDisplayed()
         shot("weeds_offline")
+    }
+
+    @Test
+    fun aWeedNewlyRecordedNearbyIsNotified() {
+        shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        val notifications = shadowOf(app.getSystemService(NotificationManager::class.java))
+        runBlocking {
+            app.container.settingsStore.update { it.copy(gardenPlace = GardenPlace.at(-27.49, 152.98, "Taringa", "BRISBANE CITY"), gardenState = AuState.QLD) }
+            assertTrue(app.container.weedSync.update().complete)
+        }
+        assertTrue("The first records for a place are not news", notifications.allNotifications.isEmpty())
+
+        app.web.nearbyFile = "ala_nearby_later.json"
+        runBlocking { assertTrue(app.container.weedSync.update().complete) }
+        val posted = notifications.allNotifications.single()
+        assertEquals("A weed has been recorded near your garden.", posted.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        assertEquals("Siam Weed. If you see it in your yard, please take a photo to check it.", posted.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+
+        runBlocking { assertTrue(app.container.weedSync.update().complete) }
+        assertEquals("A weed already known is not news again", 1, notifications.allNotifications.size)
     }
 
     @Test

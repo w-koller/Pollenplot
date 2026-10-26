@@ -85,7 +85,7 @@ class AppContainer(
     val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
     val places = PlaceFinder(this.web) { weeds.sources }
     val location: LocationSource = location ?: PhoneLocation(appContext)
-    val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock)
+    val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
     val weedPhotos = WeedPhotos(this.web) { weeds.sources }
     val photos = PhotoStore(appContext)
 

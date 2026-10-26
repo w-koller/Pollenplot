@@ -117,8 +117,13 @@ fun AppRoot(
     // has its first screen, because there is nowhere to navigate from before then.
     val ready = entry != null
     LaunchedEffect(open, ready) {
-        if (ready && open == MainActivity.OPEN_REVIEW) {
-            navController.navigate(ReviewRoute) { launchSingleTop = true }
+        val route: Any? = when (open) {
+            MainActivity.OPEN_REVIEW -> ReviewRoute
+            MainActivity.OPEN_WEEDS -> WeedsRoute
+            else -> null
+        }
+        if (ready && route != null) {
+            navController.navigate(route) { launchSingleTop = true }
             onOpened()
         }
     }

@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -93,7 +94,7 @@ internal data class NearbyQuery(val lat: String, val lon: String, val radiusKm: 
  * The weed lists and nearby records kept on the phone, so the Weed identifier works without a connection. [WeedSync]
  * writes the files; this reads them for the garden's place and state, again whenever either changes or after an update.
  */
-class WeedLibrary(private val directory: File, readSources: () -> String, settings: SettingsStore, scope: CoroutineScope) {
+class WeedLibrary(private val directory: File, readSources: () -> String, private val settings: SettingsStore, scope: CoroutineScope) {
     /** Which sources apply where, from the app's assets. */
     val sources: WeedSources by lazy { WeedSources.parse(readSources()) }
 
@@ -110,6 +111,12 @@ class WeedLibrary(private val directory: File, readSources: () -> String, settin
 
     /** Reads the files again, after an update has written them. */
     fun reload() = reloads.update { it + 1 }
+
+    /** What the files hold now for the garden's place and state, read straight away rather than when [data] catches up. */
+    suspend fun current(): WeedData = withContext(Dispatchers.IO) {
+        val now = settings.current()
+        load(now.gardenPlace, now.gardenState)
+    }
 
     internal fun councilFile(id: String) = File(directory, "council-$id.json")
 

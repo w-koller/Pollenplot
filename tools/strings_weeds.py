@@ -134,6 +134,10 @@ STRINGS = {
     "Settings.",
     "weeds_finder_body": "Find a weed on %1$s's list by what it looks like.",
 
+    "notify_weeds_channel": "Weeds near you",
+    "notify_weeds_channel_description": "Tells you when a weed is newly recorded near your garden.",
+    "notify_weeds_body": "%1$s. If you see it in your yard, please take a photo to check it.",
+
     "identify_weed_title": "Check a weed",
     "identify_weed_more": "If none of the suggestions is right, you can look for the plant by what it looks like.",
     "identify_weed_hint": "Please point the camera at the plant you want to check.",
@@ -157,6 +161,10 @@ STRINGS = {
 }
 
 PLURALS = {
+    "notify_weeds_title": {
+        "one": "A weed has been recorded near your garden.",
+        "other": "%1$d weeds have been recorded near your garden.",
+    },
     "finder_count": {
         "one": "%1$d weed matches.",
         "other": "%1$d weeds match.",

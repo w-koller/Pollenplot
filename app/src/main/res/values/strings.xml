@@ -524,6 +524,9 @@
     <string name="finder_suggested">Suggested for your photo</string>
     <string name="finder_unavailable">The Weed finder needs your council\'s weed list. Please set your garden\'s location in Settings.</string>
     <string name="weeds_finder_body">Find a weed on %1$s\'s list by what it looks like.</string>
+    <string name="notify_weeds_channel">Weeds near you</string>
+    <string name="notify_weeds_channel_description">Tells you when a weed is newly recorded near your garden.</string>
+    <string name="notify_weeds_body">%1$s. If you see it in your yard, please take a photo to check it.</string>
     <string name="identify_weed_title">Check a weed</string>
     <string name="identify_weed_more">If none of the suggestions is right, you can look for the plant by what it looks like.</string>
     <string name="identify_weed_hint">Please point the camera at the plant you want to check.</string>
@@ -572,6 +575,10 @@
     <plurals name="notify_none_title">
         <item quantity="one">No plant was found in the photo you added.</item>
         <item quantity="other">No plants were found in the %d photos you added.</item>
+    </plurals>
+    <plurals name="notify_weeds_title">
+        <item quantity="one">A weed has been recorded near your garden.</item>
+        <item quantity="other">%1$d weeds have been recorded near your garden.</item>
     </plurals>
     <plurals name="finder_count">
         <item quantity="one">%1$d weed matches.</item>

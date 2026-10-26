@@ -46,5 +46,6 @@ class MainActivity : ComponentActivity() {
         /** Names a screen to open, for notifications. */
         const val EXTRA_OPEN = "open"
         const val OPEN_REVIEW = "review"
+        const val OPEN_WEEDS = "weeds"
     }
 }

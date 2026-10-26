@@ -44,6 +44,9 @@ class RecordedWeb : Web {
     /** Fails every request, as a phone without a connection does. */
     var offline = false
 
+    /** The recorded plant records near the garden; a later answer adds a weed recorded since. */
+    var nearbyFile = "ala_nearby.json"
+
     override suspend fun get(url: String): String {
         asked += url
         if (offline) throw IOException("No connection")
@@ -54,7 +57,7 @@ class RecordedWeb : Web {
             "speciesListItems/dr823" in url -> "ala_list_dr823.json"
             "speciesListItems/dr35447" in url -> "ala_list_dr35447.json"
             "biocache-ws.ala.org.au" in url && "taxon_name" in url -> "ala_photos.json"
-            "biocache-ws.ala.org.au" in url -> "ala_nearby.json"
+            "biocache-ws.ala.org.au" in url -> nearbyFile
             else -> throw IOException("No recorded answer for $url")
         }
         return checkNotNull(javaClass.getResource("/web/$file")) { file }.readText()

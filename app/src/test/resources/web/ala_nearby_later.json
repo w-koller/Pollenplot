@@ -1,0 +1,124 @@
+{
+ "pageSize": 0,
+ "startIndex": 0,
+ "totalRecords": 61671,
+ "sort": "score",
+ "dir": "asc",
+ "status": "OK",
+ "facetResults": [
+  {
+   "fieldName": "species",
+   "fieldResult": [
+    {
+     "label": "Chromolaena odorata",
+     "i18nCode": "species.Chromolaena odorata",
+     "count": 2,
+     "fq": "species:\"Chromolaena odorata\""
+    },
+    {
+     "label": "Eucalyptus tereticornis",
+     "i18nCode": "species.Eucalyptus tereticornis",
+     "count": 561,
+     "fq": "species:\"Eucalyptus tereticornis\""
+    },
+    {
+     "label": "Parsonsia straminea",
+     "i18nCode": "species.Parsonsia straminea",
+     "count": 552,
+     "fq": "species:\"Parsonsia straminea\""
+    },
+    {
+     "label": "Ochna serrulata",
+     "i18nCode": "species.Ochna serrulata",
+     "count": 458,
+     "fq": "species:\"Ochna serrulata\""
+    },
+    {
+     "label": "Lantana camara",
+     "i18nCode": "species.Lantana camara",
+     "count": 280,
+     "fq": "species:\"Lantana camara\""
+    },
+    {
+     "label": "Sphagneticola trilobata",
+     "i18nCode": "species.Sphagneticola trilobata",
+     "count": 206,
+     "fq": "species:\"Sphagneticola trilobata\""
+    },
+    {
+     "label": "Grevillea robusta",
+     "i18nCode": "species.Grevillea robusta",
+     "count": 148,
+     "fq": "species:\"Grevillea robusta\""
+    },
+    {
+     "label": "Asparagus aethiopicus",
+     "i18nCode": "species.Asparagus aethiopicus",
+     "count": 88,
+     "fq": "species:\"Asparagus aethiopicus\""
+    },
+    {
+     "label": "Cinnamomum camphora",
+     "i18nCode": "species.Cinnamomum camphora",
+     "count": 73,
+     "fq": "species:\"Cinnamomum camphora\""
+    },
+    {
+     "label": "Opuntia tomentosa",
+     "i18nCode": "species.Opuntia tomentosa",
+     "count": 24,
+     "fq": "species:\"Opuntia tomentosa\""
+    },
+    {
+     "label": "Opuntia stricta",
+     "i18nCode": "species.Opuntia stricta",
+     "count": 14,
+     "fq": "species:\"Opuntia stricta\""
+    },
+    {
+     "label": "Dyschoriste depressa",
+     "i18nCode": "species.Dyschoriste depressa",
+     "count": 1,
+     "fq": "species:\"Dyschoriste depressa\""
+    },
+    {
+     "label": "Not supplied",
+     "i18nCode": "species.novalue",
+     "count": 9204,
+     "fq": "-species:*"
+    }
+   ]
+  }
+ ],
+ "query": "?q=*%3A*&fq=kingdom%3APlantae&fq=year%3A%5B2016%20TO%20*%5D&lat=-27.5&lon=152.97&radius=10.0",
+ "urlParameters": "?q=*%3A*&fq=kingdom%3APlantae&fq=year%3A%5B2016%20TO%20*%5D&lat=-27.5&lon=152.97&radius=10.0",
+ "queryTitle": "[all records] - within 10 km of point(-27.5, 152.97)",
+ "activeFacetMap": {
+  "year": {
+   "name": "year",
+   "displayName": "Year:[2016 TO *] - within 10 km of point(-27.5, 152.97)",
+   "value": "[2016 TO *]"
+  },
+  "kingdom": {
+   "name": "kingdom",
+   "displayName": "Kingdom:Plantae - within 10 km of point(-27.5, 152.97)",
+   "value": "Plantae"
+  }
+ },
+ "activeFacetObj": {
+  "year": [
+   {
+    "name": "year",
+    "displayName": "Year:[2016 TO *] - within 10 km of point(-27.5, 152.97)",
+    "value": "year:[2016 TO *]"
+   }
+  ],
+  "kingdom": [
+   {
+    "name": "kingdom",
+    "displayName": "Kingdom:Plantae - within 10 km of point(-27.5, 152.97)",
+    "value": "kingdom:Plantae"
+   }
+  ]
+ }
+}
