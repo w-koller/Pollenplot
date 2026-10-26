@@ -25,7 +25,7 @@ Version 1 will include:
 
 ```bash
 export JAVA_HOME=/path/to/jdk-17 ANDROID_HOME=/path/to/android-sdk
-./gradlew :domain:test :app:testDebugUnitTest :app:assembleDebug
+./gradlew :domain:test :ml:test :app:testDebugUnitTest :app:assembleDebug
 ```
 
 The debug APK is written to `app/build/outputs/apk/debug/`. Signed release APKs are published as GitHub Releases.
@@ -33,4 +33,4 @@ The debug APK is written to `app/build/outputs/apk/debug/`. Signed release APKs 
 ## Licence
 
 Pollenplot is released under the GNU General Public License, version 3. The models and data it uses keep their own
-licences, which are listed in the app under About › Licences.
+licences, which are listed in the app under About › Licences and About › Data sources.
