@@ -98,6 +98,8 @@ fun DataSourcesScreen(sources: WeedSources, onBack: () -> Unit) {
         SourceItem(R.string.source_ala, R.string.source_ala_body, "https://www.ala.org.au/"),
         SourceItem(R.string.source_weeds_australia, R.string.source_weeds_australia_body, "https://weeds.org.au/"),
         SourceItem(R.string.source_open_meteo, R.string.source_open_meteo_body, "https://open-meteo.com/"),
+        SourceItem(R.string.source_inaturalist, R.string.source_inaturalist_body, "https://www.inaturalist.org/"),
+        SourceItem(R.string.source_gbif, R.string.source_gbif_body, "https://doi.org/10.15468/39omei"),
     )
     DetailScaffold(title = stringResource(R.string.sources_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
@@ -152,6 +154,7 @@ private val licences = listOf(
     LicenceItem(R.string.licence_item_onnxruntime, R.string.licence_mit, "onnxruntime-LICENSE.txt"),
     LicenceItem(R.string.licence_item_onnxruntime_notices, R.string.licence_notices, "onnxruntime-THIRD_PARTY_NOTICE.txt"),
     LicenceItem(R.string.licence_item_bge, R.string.licence_mit, "bge-small-en-v1.5-LICENSE.txt"),
+    LicenceItem(R.string.licence_item_biocap, R.string.licence_mit, "biocap-LICENSE.txt"),
 )
 
 /** About › Licences: the software the app is built with, each with the licence it comes under. */

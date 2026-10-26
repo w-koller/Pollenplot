@@ -143,7 +143,8 @@ STRINGS = {
     "identify_weed_hint": "Please point the camera at the plant you want to check.",
 
     "about_sources": "Data sources",
-    "about_sources_body": "Where Pollenplot's weed lists, plant records and place names come from.",
+    "about_sources_body": "Where Pollenplot's weed lists, plant records, place names and the plants the accurate "
+    "pack can name come from.",
     "sources_title": "Data sources",
     "sources_body": "Pollenplot uses the information below. Please choose an item to open its website.",
     "source_brisbane": "Brisbane City Council weed list",
@@ -156,6 +157,11 @@ STRINGS = {
     "Solutions.",
     "source_open_meteo": "Open-Meteo",
     "source_open_meteo_body": "Place search, using GeoNames data, under CC BY 4.0.",
+    "source_inaturalist": "iNaturalist",
+    "source_inaturalist_body": "The plants most often recorded in Australia, and their common names, for the accurate "
+    "pack's list of plants.",
+    "source_gbif": "GBIF Backbone Taxonomy",
+    "source_gbif_body": "The classification of each plant in the accurate pack's list, under CC BY 4.0.",
     "source_states": "State and territory weed agencies",
     "source_states_body": "Weed rules and how to report a weed in each state and territory.",
 }
@@ -176,6 +182,10 @@ PLURALS = {
     "weed_nearby_records": {
         "one": "Recorded once within %2$d km of your garden since %3$d.",
         "other": "Recorded %1$d times within %2$d km of your garden since %3$d.",
+    },
+    "weeds_nearby_show_all": {
+        "one": "Show the %1$d weed",
+        "other": "Show all %1$d weeds",
     },
     "weeds_records": {
         "one": "%1$d record",

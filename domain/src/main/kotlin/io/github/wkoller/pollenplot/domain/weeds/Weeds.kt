@@ -17,7 +17,10 @@ data class WeedNames(val species: Set<String>, val genera: Map<String, Set<Strin
     val isEmpty: Boolean get() = species.isEmpty() && genera.isEmpty()
 
     /** Whether any of [names] is one of these plants. Names are compared by their first two words, in lower case. */
-    fun matches(names: Collection<String>): Boolean = names.map(::binomial).any { name ->
+    fun matches(names: Collection<String>): Boolean = matchesBinomials(names.map(::binomial))
+
+    /** Whether any of [binomials], already in the form [binomial] gives, is one of these plants. */
+    fun matchesBinomials(binomials: Collection<String>): Boolean = binomials.any { name ->
         name in species || genera[name.substringBefore(' ')]?.let { except -> ' ' in name && name !in except } == true
     }
 
@@ -246,9 +249,9 @@ object WeedResolver {
     ): WeedStatus {
         val binomials = names.map(WeedNames::binomial).toSet().let { it + it.mapNotNull(accepted::get) }
         // A species can be on the list twice, such as under a whole genus and under its own name; the most serious counts.
-        val entry = council.filter { it.names.matches(binomials) }.minByOrNull { levelOf(it).ordinal }
-        val wons = national.wons.firstOrNull { it.names.matches(binomials) }
-        val alert = national.alert.firstOrNull { it.names.matches(binomials) }
+        val entry = council.filter { it.names.matchesBinomials(binomials) }.minByOrNull { levelOf(it).ordinal }
+        val wons = national.wons.firstOrNull { it.names.matchesBinomials(binomials) }
+        val alert = national.alert.firstOrNull { it.names.matchesBinomials(binomials) }
         val level = listOfNotNull(
             entry?.let(::levelOf),
             if (wons != null || alert != null) WeedLevel.NATIONAL else null,

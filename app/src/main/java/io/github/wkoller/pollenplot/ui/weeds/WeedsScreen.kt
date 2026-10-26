@@ -15,9 +15,13 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +73,8 @@ fun WeedsScreen(
     val update by remember { WeedSyncWorker.state(context) }.collectAsStateWithLifecycle(initialValue = UpdateState.IDLE)
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val weeds = locality.weeds
+    // A suburb can have hundreds of weeds recorded nearby; the most serious come first, and the rest on request.
+    var showAllNearby by rememberSaveable { mutableStateOf(false) }
     val growingWeeds = plants.filter { it.isGrowing && it.weed.isWeed }.sortedBy { it.weed.level.ordinal }
 
     DetailScaffold(title = stringResource(R.string.weeds_title), onBack = onBack) { padding ->
@@ -144,9 +150,17 @@ fun WeedsScreen(
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
-                items(weeds.nearbyWeeds, key = { "nearby-" + it.name }) { weed ->
+                val nearbyShown = if (showAllNearby) weeds.nearbyWeeds else weeds.nearbyWeeds.take(NEARBY_SHOWN)
+                items(nearbyShown, key = { "nearby-" + it.name }) { weed ->
                     NearbyWeedRow(weed, commonName = kb?.species(weed.name)?.common?.firstOrNull() ?: weed.status.listedCommon, locality = locality) {
                         onCompare(weed.name)
+                    }
+                }
+                if (nearbyShown.size < weeds.nearbyWeeds.size) {
+                    item {
+                        TextButton(onClick = { showAllNearby = true }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                            Text(pluralStringResource(R.plurals.weeds_nearby_show_all, weeds.nearbyWeeds.size, weeds.nearbyWeeds.size))
+                        }
                     }
                 }
             }
@@ -197,6 +211,9 @@ fun WeedsScreen(
         }
     }
 }
+
+/** How many of the weeds recorded nearby are listed before the user asks for the rest. */
+private const val NEARBY_SHOWN = 20
 
 @Composable
 private fun NearbyWeedRow(weed: NearbyWeed, commonName: String?, locality: Locality, onClick: () -> Unit) {

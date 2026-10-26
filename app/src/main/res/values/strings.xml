@@ -378,6 +378,7 @@
     <string name="licence_item_onnxruntime">ONNX Runtime</string>
     <string name="licence_item_onnxruntime_notices">Libraries included in ONNX Runtime</string>
     <string name="licence_item_bge">bge-small-en-v1.5 text model, by BAAI (downloaded for search by meaning)</string>
+    <string name="licence_item_biocap">BioCAP model, by the Imageomics Institute (downloaded for accurate identification)</string>
     <string name="licence_gpl">GNU General Public License, version 3</string>
     <string name="licence_apache">Apache License 2.0</string>
     <string name="licence_mit">MIT License</string>
@@ -531,7 +532,7 @@
     <string name="identify_weed_more">If none of the suggestions is right, you can look for the plant by what it looks like.</string>
     <string name="identify_weed_hint">Please point the camera at the plant you want to check.</string>
     <string name="about_sources">Data sources</string>
-    <string name="about_sources_body">Where Pollenplot\'s weed lists, plant records and place names come from.</string>
+    <string name="about_sources_body">Where Pollenplot\'s weed lists, plant records, place names and the plants the accurate pack can name come from.</string>
     <string name="sources_title">Data sources</string>
     <string name="sources_body">Pollenplot uses the information below. Please choose an item to open its website.</string>
     <string name="source_brisbane">Brisbane City Council weed list</string>
@@ -542,6 +543,10 @@
     <string name="source_weeds_australia_body">Weed profiles and the identification key, by the Centre for Invasive Species Solutions.</string>
     <string name="source_open_meteo">Open-Meteo</string>
     <string name="source_open_meteo_body">Place search, using GeoNames data, under CC BY 4.0.</string>
+    <string name="source_inaturalist">iNaturalist</string>
+    <string name="source_inaturalist_body">The plants most often recorded in Australia, and their common names, for the accurate pack\'s list of plants.</string>
+    <string name="source_gbif">GBIF Backbone Taxonomy</string>
+    <string name="source_gbif_body">The classification of each plant in the accurate pack\'s list, under CC BY 4.0.</string>
     <string name="source_states">State and territory weed agencies</string>
     <string name="source_states_body">Weed rules and how to report a weed in each state and territory.</string>
     <plurals name="identify_found">
@@ -591,6 +596,10 @@
     <plurals name="weed_nearby_records">
         <item quantity="one">Recorded once within %2$d km of your garden since %3$d.</item>
         <item quantity="other">Recorded %1$d times within %2$d km of your garden since %3$d.</item>
+    </plurals>
+    <plurals name="weeds_nearby_show_all">
+        <item quantity="one">Show the %1$d weed</item>
+        <item quantity="other">Show all %1$d weeds</item>
     </plurals>
     <plurals name="weeds_records">
         <item quantity="one">%1$d record</item>
