@@ -94,6 +94,9 @@ private val licences = listOf(
     LicenceItem(R.string.licence_item_litert_notices, R.string.licence_notices, "litert-THIRD_PARTY_NOTICE.txt"),
     LicenceItem(R.string.licence_item_coil, R.string.licence_apache, APACHE),
     LicenceItem(R.string.licence_item_java_libraries, R.string.licence_apache, APACHE),
+    LicenceItem(R.string.licence_item_onnxruntime, R.string.licence_mit, "onnxruntime-LICENSE.txt"),
+    LicenceItem(R.string.licence_item_onnxruntime_notices, R.string.licence_notices, "onnxruntime-THIRD_PARTY_NOTICE.txt"),
+    LicenceItem(R.string.licence_item_bge, R.string.licence_mit, "bge-small-en-v1.5-LICENSE.txt"),
 )
 
 /** About › Licences: the software the app is built with, each with the licence it comes under. */

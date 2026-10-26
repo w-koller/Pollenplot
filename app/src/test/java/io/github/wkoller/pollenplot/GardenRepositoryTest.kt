@@ -219,4 +219,40 @@ class GardenRepositoryTest {
         assertEquals("Only a rejection can be undone this way", DetectionStatus.CONFIRMED, garden.detection(found[1].id)!!.status)
         assertEquals(plant.id, garden.detection(found[1].id)!!.plantId)
     }
+
+    @Test
+    fun `meaning is worked out again only for records whose text changed`() = runBlocking {
+        val ids = DemoGarden.seed(garden)
+        val model = "test-model"
+        val first = garden.textsToEmbed(model)
+        assertEquals("Every zone and plant needs its meaning at first", 4 + 15, first.size)
+        first.forEachIndexed { i, (id, text) -> garden.saveMeaning(id, model, text, unit(i)) }
+        assertEquals(emptyList<Pair<String, String>>(), garden.textsToEmbed(model))
+
+        val lemon = garden.plant(ids.lemon)!!
+        garden.updatePlant(lemon.copy(notes = "Fruits twice a year"))
+        assertEquals(listOf(ids.lemon), garden.textsToEmbed(model).map { it.first })
+
+        garden.deletePlant(ids.grevillea)
+        garden.pruneMeanings(model)
+        assertTrue(ids.grevillea !in garden.meaningScores(model, unit(0)).keys)
+        assertTrue("Another model's vectors are dropped", garden.meaningScores("other-model", unit(0)).isEmpty())
+    }
+
+    @Test
+    fun `meaning scores are the similarity of each record to the query`() = runBlocking {
+        val zone = garden.addZone("Front Native Strip", ZoneKind.GARDEN_BED)
+        garden.saveMeaning(zone.id, "m", "text", floatArrayOf(0.6f, 0.8f))
+        assertEquals(1f, garden.meaningScores("m", floatArrayOf(0.6f, 0.8f))[zone.id]!!, 1e-6f)
+        assertEquals(listOf("Front Native Strip"), garden.searchHits(listOf(zone.id, "missing")).map { it.title })
+    }
+
+    @Test
+    fun `search finds plural and other forms of a word`() = runBlocking {
+        DemoGarden.seed(garden)
+        assertTrue("Lantana is a weed risk", garden.search("weeds").any { it.title == "Lantana" })
+    }
+
+    /** A vector with 1 in place [i], so each record's vector differs. */
+    private fun unit(i: Int) = FloatArray(32).also { it[i % 32] = 1f }
 }

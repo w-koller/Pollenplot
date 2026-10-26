@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- To download the optional models, and later weed lists and the weather. Photos never leave the phone. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Identify with the camera. Photos are identified on the phone and are not sent anywhere. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Plants can still be added by name or from photos on phones without a camera. -->

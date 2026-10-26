@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Pollenplot"
-include(":domain", ":app")
+include(":domain", ":ml", ":app")

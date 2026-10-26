@@ -29,3 +29,7 @@
   allow all of them.
 - The Review queue: plants found in photos wait here, with a count on the Plot and a notification that opens it. The
   zone offered for each plant is where the photo's other plants went, or the zone you chose last.
+- Search by meaning, an optional 34 MB download in Settings › Models: search also offers plants and zones related to
+  what you typed, such as lantana for "poisonous to dogs". The text model runs on the phone with ONNX Runtime and is
+  checked against its published SHA-256 before use.
+- Search finds other forms of a word, so "weeds" finds a weed.

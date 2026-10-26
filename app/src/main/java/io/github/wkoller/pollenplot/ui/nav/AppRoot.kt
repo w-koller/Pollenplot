@@ -59,6 +59,7 @@ import io.github.wkoller.pollenplot.ui.search.SearchScreen
 import io.github.wkoller.pollenplot.ui.settings.AboutScreen
 import io.github.wkoller.pollenplot.ui.settings.LicenceTextScreen
 import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
+import io.github.wkoller.pollenplot.ui.settings.ModelsScreen
 import io.github.wkoller.pollenplot.ui.settings.NotReadyScreen
 import io.github.wkoller.pollenplot.ui.settings.ScanSettingsScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
@@ -226,6 +227,7 @@ fun AppRoot(
                         views = container.views,
                         knowledge = container.knowledge,
                         settings = container.settingsStore,
+                        meaning = container.meaning,
                         onBack = back,
                         onOpenZone = { navController.navigate(ZoneRoute(it)) },
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
@@ -268,9 +270,11 @@ fun AppRoot(
                         store = container.settingsStore,
                         onBack = back,
                         onOpenScanning = { navController.navigate(ScanSettingsRoute) },
+                        onOpenModels = { navController.navigate(ModelsRoute) },
                         onOpenAbout = { navController.navigate(AboutRoute) },
                     )
                 }
+                composable<ModelsRoute> { ModelsScreen(container.meaning, onBack = back) }
                 composable<ScanSettingsRoute> {
                     ScanSettingsScreen(container.settingsStore, container.gallery, container.notifications, container.clock, onBack = back)
                 }

@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [
         ZoneEntity::class, PlantEntity::class, PhotoEntity::class, DetectionEntity::class, CandidateEntity::class,
-        FloweringEntity::class, ScannedMediaEntity::class, LinkEntity::class, SearchEntity::class,
+        FloweringEntity::class, ScannedMediaEntity::class, LinkEntity::class, SearchEntity::class, EmbeddingEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -24,6 +24,7 @@ abstract class PollenplotDatabase : RoomDatabase() {
     abstract fun detectionDao(): DetectionDao
     abstract fun floweringDao(): FloweringDao
     abstract fun scannedMediaDao(): ScannedMediaDao
+    abstract fun embeddingDao(): EmbeddingDao
     abstract fun linkDao(): LinkDao
     abstract fun searchDao(): SearchDao
 

@@ -14,6 +14,7 @@ the models and background work can only be checked on a phone over `adb`.
 ```bash
 export JAVA_HOME=~/.local/opt/jdk-17 ANDROID_HOME=~/Android/Sdk
 ./gradlew :domain:test                  # pure-Kotlin rules, fast
+./gradlew :ml:test                      # the text model's tokenizer and embedder, run for real on the JVM
 ./gradlew :app:testDebugUnitTest        # Robolectric: screens, storage and workers
 ./gradlew :app:lintDebug :app:assembleDebug
 ```
@@ -49,12 +50,20 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `id/`: identification. `RegionPlanner` (the tiles each photo is classified in and how regions are chosen),
     `CandidateFusion` (each model's suggestions combined, with the garden boost), `ThumbnailMath`, `FlowerHint`,
     `Confidence` and `ZoneSuggestion` (the zone offered for a plant found in a photo).
+- `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
+  `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
+  Android runtime matches; the app brings the Android one. `TextEmbedderTest` compares tokens and vectors with
+  `ml/src/test/resources/bge_reference.json`, made with Hugging Face's tokenizers and ONNX Runtime in Python.
 - `app/data`: `GardenRepository` (records, detections, the search index and JSON-LD export), `GardenViews` (records
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: `PlantIdentifier` and `FastPlantIdentifier` (AIY Plants V1 through the LiteRT `Interpreter`), and bitmap
   helpers.
+- `app/search`: `MeaningSearch` (the optional text model, its download and the vectors it makes for each record, kept
+  in the `embeddings` table and refreshed by `MeaningIndexWorker` after edits). Meaning matches come after keyword
+  matches, at most three and only above `MeaningMatch.MIN_SCORE`, because this small model scores unrelated text
+  about 0.5. `app/download` holds `VerifiedDownload`, the download manager with a SHA-256 check.
 - `app/scan`: the phone's gallery behind the `Gallery` interface (`MediaStoreGallery`), `PhotoScanner` (gallery and
   added photos through the analysis, each gallery photo recorded in `scanned_media` so it is looked at once), and the
   WorkManager jobs: `AddPhotosWorker`, `LibraryScanWorker` (stops after eight minutes and queues the rest),
@@ -68,17 +77,21 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   `PollenplotApp`. Tests that scan or review photos run with `@Config(application = TestApp::class)`, which gives the
   container a `FakeGallery` and a `ScriptedIdentifier`; `TestPhotos` paints garden photos, and workers run through
   `TestListenableWorkerBuilder` after `WorkManagerTestInitHelper.initializeTestWorkManager`.
+- `MeaningTestApp` gives the container a `ConceptEmbedder` in place of the text model, whose runtime cannot load on
+  the JVM.
 - `SettingsStore` makes its DataStore itself, and DataStore allows one store per file in a process, so tests use the
   app's store (`app.container.settingsStore`) rather than making another.
 
 ## Models
 
 Model files are not committed. The build downloads each one once, checks it against its published SHA-256
-(`VerifiedDownloadTask`) and extracts it into the generated assets (`ExtractModelTask`), which also checks that the
-model's embedded labels match the committed labels file. Assets ending in `.tflite` stay uncompressed so the
+(`VerifiedDownloadTask` in `buildSrc`) and extracts it into the generated assets (`ExtractModelTask`), which also
+checks that the model's embedded labels match the committed labels file. Models the user downloads in the app are
+pinned in `gradle.properties` (URL at a fixed revision, SHA-256 and size) and reach the app through `BuildConfig`. Assets ending in `.tflite` stay uncompressed so the
 interpreter can map them. AIY Plants V1 takes 224 × 224 RGB bytes and gives 2,102 probabilities in 256ths, the last
 being "no plant here". Run models with LiteRT; do not add MediaPipe Tasks or ML Kit, because MediaPipe Tasks sends
-usage statistics to Google through `com.google.android.datatransport` and ML Kit is not open source. LiteRT itself
+usage statistics to Google through `com.google.android.datatransport` and ML Kit is not open source. Text models run with ONNX Runtime (MIT, no telemetry on Android), which BioCAP will use too; its arm64 library adds
+about 34 MB to the app. LiteRT itself
 depends on Google Play's model delivery (`com.google.android.play`, Play services), which the app does not use, so
 `app/build.gradle.kts` excludes those groups. Before adding a library, run
 `./gradlew :app:dependencies --configuration releaseRuntimeClasspath` and check every new artefact for telemetry and

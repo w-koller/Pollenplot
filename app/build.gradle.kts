@@ -1,7 +1,3 @@
-import java.net.URI
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import java.security.MessageDigest
 import java.util.zip.ZipFile
 
 plugins {
@@ -37,45 +33,6 @@ abstract class CollectLicencesTask : DefaultTask() {
                 if (!isDirectory && atTop && name in wanted) copyTo(File(folder, "$library-${name.removeSuffix(".txt")}.txt"))
             }
         }
-    }
-}
-
-/**
- * Downloads a file once and checks it against its published SHA-256, so a third-party model can be used without
- * committing it to the repository.
- */
-abstract class VerifiedDownloadTask : DefaultTask() {
-    @get:Input abstract val url: Property<String>
-    @get:Input abstract val sha256: Property<String>
-    @get:OutputFile abstract val output: RegularFileProperty
-
-    @TaskAction
-    fun download() {
-        val target = output.get().asFile
-        // Editing the build script makes Gradle run this again, so a file that is already right is kept.
-        if (target.isFile && sha256Of(target) == sha256.get()) return
-        target.parentFile.mkdirs()
-        val partial = File(target.path + ".part")
-        URI(url.get()).toURL().openStream().use { input -> partial.outputStream().use { input.copyTo(it) } }
-        val actual = sha256Of(partial)
-        if (actual != sha256.get()) {
-            partial.delete()
-            throw GradleException("Checksum mismatch for ${url.get()}: expected ${sha256.get()}, got $actual")
-        }
-        Files.move(partial.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
-    }
-
-    private fun sha256Of(file: File): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        file.inputStream().use { input ->
-            val buffer = ByteArray(1 shl 20)
-            while (true) {
-                val read = input.read(buffer)
-                if (read < 0) break
-                digest.update(buffer, 0, read)
-            }
-        }
-        return digest.digest().joinToString("") { "%02x".format(it) }
     }
 }
 
@@ -134,6 +91,10 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // The optional text model for search by meaning, pinned in gradle.properties with its SHA-256.
+        buildConfigField("String", "BGE_URL", "\"${providers.gradleProperty("pollenplot.bge.url").get()}\"")
+        buildConfigField("String", "BGE_SHA256", "\"${providers.gradleProperty("pollenplot.bge.sha256").get()}\"")
+        buildConfigField("long", "BGE_BYTES", "${providers.gradleProperty("pollenplot.bge.bytes").get()}L")
     }
 
     signingConfigs {
@@ -239,6 +200,8 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.compose)
+    implementation(project(":ml"))
+    implementation(libs.onnxruntime.android)
     implementation(libs.litert) {
         // LiteRT can fetch models through Google Play, which the app does not use: it ships its own model and will
         // download the others from GitHub. Leaving that out keeps closed-source Play libraries out of the app.

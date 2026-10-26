@@ -44,6 +44,9 @@ import kotlinx.serialization.Serializable
 /** Settings › Photo scanning. */
 @Serializable data object ScanSettingsRoute
 
+/** Settings › Models. */
+@Serializable data object ModelsRoute
+
 /** A part of the app that is not built yet, named by [AddAction]. */
 @Serializable data class NotReadyRoute(val action: String)
 

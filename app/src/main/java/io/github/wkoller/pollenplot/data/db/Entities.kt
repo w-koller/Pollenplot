@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Fts4
+import androidx.room.FtsOptions
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -147,7 +148,8 @@ data class LinkEntity(
 )
 
 /** The full-text search index: one row per record, rebuilt whenever the record or anything it mentions changes. */
-@Fts4(notIndexed = ["recordId", "kind"])
+/** The search index. The Porter stemmer lets "weeds" find "weed" and "flowering" find "flowers". */
+@Fts4(notIndexed = ["recordId", "kind"], tokenizer = FtsOptions.TOKENIZER_PORTER)
 @Entity(tableName = "search")
 data class SearchEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "rowid") val rowId: Int = 0,
@@ -158,3 +160,21 @@ data class SearchEntity(
 )
 
 data class SearchHit(val recordId: String, val kind: String, val title: String, val body: String)
+
+/**
+ * A record's meaning as a vector from the on-phone text model, for search by meaning. [textHash] is the hash of the
+ * text it was made from, so the vector is made again only when the record's text changes.
+ */
+@Entity(tableName = "embeddings")
+data class EmbeddingEntity(
+    @PrimaryKey val recordId: String,
+    val model: String,
+    val textHash: Int,
+    /** Little-endian 32-bit floats. */
+    val vector: ByteArray,
+) {
+    override fun equals(other: Any?) = other is EmbeddingEntity && recordId == other.recordId && model == other.model &&
+        textHash == other.textHash && vector.contentEquals(other.vector)
+
+    override fun hashCode() = recordId.hashCode()
+}

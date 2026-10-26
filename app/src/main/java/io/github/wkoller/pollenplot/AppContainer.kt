@@ -7,17 +7,25 @@ import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.PlantIdentifier
+import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.MediaStoreGallery
 import io.github.wkoller.pollenplot.scan.PhotoScanner
+import io.github.wkoller.pollenplot.search.MeaningIndexWorker
+import io.github.wkoller.pollenplot.search.MeaningSearch
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
+import io.github.wkoller.pollenplot.download.DownloadState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -26,13 +34,14 @@ import java.time.Clock
 
 /**
  * Builds the app's shared objects once. Screens and workers reach it through [PollenplotApp]. Tests pass an in-memory
- * [database], a fake [identifier] in place of the on-device models and a [gallery] of their own photos.
+ * [database], a fake [identifier] and [embedder] in place of the on-device models and a [gallery] of their own photos.
  */
 class AppContainer(
     context: Context,
     database: PollenplotDatabase? = null,
     identifier: PlantIdentifier? = null,
     gallery: Gallery? = null,
+    embedder: Embedder? = null,
 ) {
     val appContext: Context = context.applicationContext
     val clock: Clock = PhoneClock
@@ -55,6 +64,7 @@ class AppContainer(
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
     val scanner = PhotoScanner(this.gallery, analysis, garden, clock)
     val notifications = Notifications(appContext)
+    val meaning = MeaningSearch(appContext, garden, scope, embedder)
 
     init {
         // The search text includes knowledge base facts and badges, so it is rebuilt when the app starts and whenever
@@ -64,5 +74,17 @@ class AppContainer(
             garden.reindexAll()
             settingsStore.settings.map { it.gardenState }.distinctUntilChanged().drop(1).collect { garden.reindexAll() }
         }
+        // Once the text model is on the phone, new and changed records get their meaning worked out in the background.
+        scope.launch {
+            @OptIn(FlowPreview::class)
+            combine(garden.searchChanges.debounce(INDEX_DELAY_MS), meaning.state) { _, state -> state }
+                .filter { it == DownloadState.Complete }
+                .collect { MeaningIndexWorker.enqueue(appContext) }
+        }
+    }
+
+    private companion object {
+        /** Edits come in bursts, such as a whole zone's plants at once, so the meaning waits for a quiet moment. */
+        const val INDEX_DELAY_MS = 5_000L
     }
 }

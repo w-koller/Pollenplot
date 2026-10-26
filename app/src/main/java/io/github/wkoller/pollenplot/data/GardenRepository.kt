@@ -3,6 +3,7 @@ package io.github.wkoller.pollenplot.data
 import androidx.room.withTransaction
 import io.github.wkoller.pollenplot.data.db.CandidateEntity
 import io.github.wkoller.pollenplot.data.db.DetectionEntity
+import io.github.wkoller.pollenplot.data.db.EmbeddingEntity
 import io.github.wkoller.pollenplot.data.db.FloweringEntity
 import io.github.wkoller.pollenplot.data.db.LinkEntity
 import io.github.wkoller.pollenplot.data.db.PhotoEntity
@@ -31,6 +32,7 @@ import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.semantic.GardenGraph
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.domain.semantic.Link
+import io.github.wkoller.pollenplot.domain.semantic.MeaningMatch
 import io.github.wkoller.pollenplot.domain.semantic.SearchText
 import io.github.wkoller.pollenplot.domain.semantic.Triple
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +40,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -64,6 +68,7 @@ class GardenRepository(
     private val detections = db.detectionDao()
     private val flowering = db.floweringDao()
     private val scanned = db.scannedMediaDao()
+    private val embeddings = db.embeddingDao()
     private val layoutLock = Mutex()
 
     val zoneList: Flow<List<Zone>> = zones.observeAll().map { list -> list.map { it.toDomain() } }
@@ -288,6 +293,34 @@ class GardenRepository(
         return search.search(words.joinToString(" ") { "$it*" }, limit)
     }
 
+    /** Emits whenever the search index changes, so the meaning of changed records can be worked out again. */
+    val searchChanges: Flow<Int> = search.observeChanges()
+
+    /** The records whose meaning [model] has not worked out yet, or whose text has changed since, with their text. */
+    suspend fun textsToEmbed(model: String): List<Pair<String, String>> {
+        val known = embeddings.all(model).associate { it.recordId to it.textHash }
+        return search.all().map { it.recordId to meaningText(it) }.filter { (id, text) -> known[id] != text.hashCode() }
+    }
+
+    suspend fun saveMeaning(recordId: String, model: String, text: String, vector: FloatArray) =
+        embeddings.upsert(EmbeddingEntity(recordId, model, text.hashCode(), vector.toBytes()))
+
+    /** Drops the meaning of records that are gone and of any other model. */
+    suspend fun pruneMeanings(model: String) = embeddings.prune(model)
+
+    suspend fun clearMeanings() = embeddings.clear()
+
+    /** How close each record is to [query] in meaning, from 0 for unrelated to 1 for the same. */
+    suspend fun meaningScores(model: String, query: FloatArray): Map<String, Float> =
+        embeddings.all(model).associate { it.recordId to MeaningMatch.similarity(query, it.vector.toFloats()) }
+
+    /** The search entries for [ids], in the order given. */
+    suspend fun searchHits(ids: List<String>): List<SearchHit> {
+        if (ids.isEmpty()) return emptyList()
+        val byId = search.byIds(ids).associateBy { it.recordId }
+        return ids.mapNotNull { byId[it] }
+    }
+
     /** Rebuilds the whole search index, for example after the knowledge base or the garden's state changes. */
     suspend fun reindexAll() = db.withTransaction {
         search.clear()
@@ -327,6 +360,20 @@ class GardenRepository(
         val doc = SearchText.plant(plant, species, zoneName, rolesOf(plant))
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }
+}
+
+/** The text a record's meaning is worked out from: its title, then what the search index holds for it. */
+internal fun meaningText(hit: SearchHit) = "${hit.title}. ${hit.body}"
+
+private fun FloatArray.toBytes(): ByteArray {
+    val buffer = ByteBuffer.allocate(size * Float.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN)
+    forEach(buffer::putFloat)
+    return buffer.array()
+}
+
+private fun ByteArray.toFloats(): FloatArray {
+    val buffer = ByteBuffer.wrap(this).order(ByteOrder.LITTLE_ENDIAN)
+    return FloatArray(size / Float.SIZE_BYTES) { buffer.getFloat() }
 }
 
 /** What a scan found in a gallery photo. */

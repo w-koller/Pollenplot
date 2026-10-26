@@ -13,6 +13,7 @@ import io.github.wkoller.pollenplot.domain.id.TileResult
 import io.github.wkoller.pollenplot.ml.FoundRegion
 import io.github.wkoller.pollenplot.ml.Identification
 import io.github.wkoller.pollenplot.ml.PlantIdentifier
+import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.scan.Album
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.GalleryAccess
@@ -31,6 +32,37 @@ class TestApp : PollenplotApp() {
     val identifier = ScriptedIdentifier()
 
     override fun createContainer(): AppContainer = AppContainer(this, identifier = identifier, gallery = gallery)
+}
+
+/** The app with a stand-in for the text model, for tests of search by meaning. */
+class MeaningTestApp : PollenplotApp() {
+    override fun createContainer(): AppContainer = AppContainer(this, embedder = ConceptEmbedder())
+}
+
+/**
+ * Stands in for the text model: each vector has one place for each idea, found by its words, so "poisonous" and
+ * "toxic" mean the same. Text with none of the ideas gets a place of its own and matches nothing.
+ */
+class ConceptEmbedder : Embedder {
+    private val concepts = listOf(
+        setOf("toxic", "poison", "poisonous"),
+        setOf("edible", "fruit", "eat"),
+        setOf("bird", "birds"),
+        setOf("frog", "frogs"),
+        setOf("bee", "bees", "pollinator"),
+    )
+
+    override fun embedPassage(text: String) = vector(text)
+
+    override fun embedQuery(text: String) = vector(text)
+
+    private fun vector(text: String): FloatArray {
+        val words = text.lowercase().split(Regex("[^a-z]+")).toSet()
+        val vector = FloatArray(concepts.size + 1) { i -> if (i < concepts.size && concepts[i].any { it in words }) 1f else 0f }
+        if (vector.all { it == 0f }) vector[concepts.size] = 1f
+        val length = kotlin.math.sqrt(vector.sumOf { (it * it).toDouble() }).toFloat()
+        return FloatArray(vector.size) { vector[it] / length }
+    }
 }
 
 /** Stands in for the on-device models: it finds whatever [regionsFor] says each photo shows. */

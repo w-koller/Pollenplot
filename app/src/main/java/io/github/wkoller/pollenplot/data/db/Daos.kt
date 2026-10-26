@@ -149,4 +149,30 @@ interface SearchDao {
     /** [match] is an FTS4 query such as `lemon* tree*`. */
     @Query("SELECT recordId, kind, title, body FROM search WHERE search MATCH :match LIMIT :limit")
     suspend fun search(match: String, limit: Int): List<SearchHit>
+
+    @Query("SELECT recordId, kind, title, body FROM search")
+    suspend fun all(): List<SearchHit>
+
+    @Query("SELECT recordId, kind, title, body FROM search WHERE recordId IN (:ids)")
+    suspend fun byIds(ids: List<String>): List<SearchHit>
+
+    /** Emits whenever the index changes, so the meaning of changed records can be worked out again. */
+    @Query("SELECT COUNT(*) FROM search")
+    fun observeChanges(): Flow<Int>
+}
+
+@Dao
+interface EmbeddingDao {
+    @Query("SELECT * FROM embeddings WHERE model = :model")
+    suspend fun all(model: String): List<EmbeddingEntity>
+
+    @Upsert
+    suspend fun upsert(embedding: EmbeddingEntity)
+
+    /** Removes vectors for records that are gone, and those from another model. */
+    @Query("DELETE FROM embeddings WHERE model != :model OR recordId NOT IN (SELECT recordId FROM search)")
+    suspend fun prune(model: String)
+
+    @Query("DELETE FROM embeddings")
+    suspend fun clear()
 }

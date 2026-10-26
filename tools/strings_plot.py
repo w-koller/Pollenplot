@@ -78,7 +78,7 @@ STRINGS = {
     "search_hint": "Please type a plant, a zone or anything you have noted.",
     "search_in_garden": "In your garden",
     "search_could_add": "Plants you could add",
-    "search_none": "Nothing in your garden matches “%1$s”.",
+    "search_none": "No plant or zone in your garden has the words “%1$s”.",
 
     # Settings › Your garden
     "settings_garden": "Your garden",

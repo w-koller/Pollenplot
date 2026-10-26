@@ -37,7 +37,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
 
       - name: Test, lint and build the debug APK
-        run: ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --console=plain
+        run: ./gradlew :domain:test :ml:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --console=plain
 
       - name: Upload test reports, lint reports and screenshots
         if: always()
@@ -46,6 +46,7 @@ jobs:
           name: reports
           path: |
             domain/build/reports/
+            ml/build/reports/
             app/build/reports/
             app/build/screenshots/
           if-no-files-found: ignore

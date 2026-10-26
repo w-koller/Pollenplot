@@ -43,7 +43,7 @@ import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenScanning: () -> Unit, onOpenAbout: () -> Unit) {
+fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenScanning: () -> Unit, onOpenModels: () -> Unit, onOpenAbout: () -> Unit) {
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
     val scope = rememberCoroutineScope()
     val update: ((Settings) -> Settings) -> Unit = { change -> scope.launch { store.update(change) } }
@@ -66,6 +66,13 @@ fun SettingsScreen(store: SettingsStore, onBack: () -> Unit, onOpenScanning: () 
                     leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
                     supportingContent = { Text(stringResource(if (settings.scanLibrary) R.string.settings_scanning_on else R.string.settings_scanning_off)) },
                 ) { Text(stringResource(R.string.settings_scanning)) }
+            }
+            item {
+                ListItem(
+                    onClick = onOpenModels,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_models_body)) },
+                ) { Text(stringResource(R.string.models_title)) }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_appearance)) }
