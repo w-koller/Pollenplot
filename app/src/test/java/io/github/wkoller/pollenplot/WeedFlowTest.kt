@@ -27,6 +27,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
 import io.github.wkoller.pollenplot.data.prefs.Settings
+import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.weeds.WeedLevel
@@ -144,6 +145,24 @@ class WeedFlowTest {
         // Brisbane lists it without a category, and it is a Weed of National Significance.
         compose.onNodeWithText("Weed of National Significance").assertExists()
         shot("compare_bitou_bush")
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h780dp-xxhdpi", fontScale = 1.3f)
+    fun weedScreensInTheDarkWithLargeText() {
+        seed()
+        runBlocking {
+            app.container.settingsStore.update { it.copy(gardenPlace = GardenPlace.at(-27.49, 152.98, "Taringa", "BRISBANE CITY"), gardenState = AuState.QLD) }
+            assertTrue(app.container.weedSync.update().complete)
+        }
+        show(Settings(theme = ThemeChoice.DARK))
+        waitFor(hasContentDescription("1 plant in your garden is a weed where you live."))
+        compose.onNodeWithContentDescription("1 plant in your garden is a weed where you live.").performClick()
+        waitFor(hasText("Lantana"))
+        shot("weeds_dark_large")
+        compose.onAllNodesWithText("Lantana").onFirst().performClick()
+        waitFor(hasText("Restricted invasive plant (category 3) in Queensland"))
+        shot("plant_lantana_weed_dark_large")
     }
 
     @Test
