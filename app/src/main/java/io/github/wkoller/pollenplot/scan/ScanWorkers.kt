@@ -1,6 +1,8 @@
 package io.github.wkoller.pollenplot.scan
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.SystemClock
 import android.provider.MediaStore
@@ -17,11 +19,18 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import io.github.wkoller.pollenplot.PollenplotApp
+import io.github.wkoller.pollenplot.domain.garden.PlantStatus
+import io.github.wkoller.pollenplot.domain.id.CandidateFusion
+import io.github.wkoller.pollenplot.domain.id.IdSource
+import io.github.wkoller.pollenplot.domain.id.LabelScore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.withContext
 
 /** Looks for plants in the photos the user added, one at a time, and says what it found. */
 class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
@@ -82,6 +91,8 @@ class LibraryScanWorker(context: Context, params: WorkerParameters) : CoroutineW
         }
         container.notifications.showScanResult(tally)
         if (more) ScanScheduler.scanNow(applicationContext)
+        // The accurate pass follows while the phone charges, for new photos with plants and those without.
+        if (container.accurate.ready && tally.photos > 0) AccurateScanWorker.enqueue(applicationContext)
         return Result.success()
     }
 
@@ -140,5 +151,78 @@ object ScanScheduler {
             .build()
         val request = OneTimeWorkRequestBuilder<LibraryWatchWorker>().setConstraints(constraints).build()
         WorkManager.getInstance(context).enqueueUniqueWork(WATCH, policy, request)
+    }
+}
+
+/**
+ * The accurate pass, while the phone charges: BioCAP's suggestions for plants waiting for review, and a second look at
+ * gallery photos the quick model saw no plant in, where Australian natives usually end up. Like the gallery scan, a
+ * run stops after about eight minutes and the next one carries on.
+ */
+class AccurateScanWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        val container = (applicationContext as PollenplotApp).container
+        val models = container.accurate.open() ?: return Result.success()
+        val started = SystemClock.elapsedRealtime()
+        fun outOfTime() = SystemClock.elapsedRealtime() - started > RUN_BUDGET_MS
+        var more = false
+
+        // Plants waiting for review get BioCAP's suggestions alongside the quick model's.
+        val kb = container.knowledge.await()
+        val growing = container.garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+        val photos = mutableMapOf<String, Bitmap?>()
+        for (detection in container.garden.pendingWithout(IdSource.BIOCAP)) {
+            if (isStopped) return Result.success()
+            if (outOfTime()) {
+                more = true
+                break
+            }
+            val photo = photos.getOrPut(detection.photoId) {
+                container.garden.photo(detection.photoId)?.let { BitmapFactory.decodeFile(container.photos.file(it.path).path) }
+            } ?: continue
+            val quick = detection.candidates.filter { IdSource.AIY_PLANTS in it.sources }
+                .map { LabelScore(it.label, CandidateFusion.withoutBoost(it, growing)) }
+            val accurate = withContext(Dispatchers.Default) { models.labels(photo, detection.box) }
+            container.garden.replaceCandidates(
+                detection.id,
+                CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to quick, IdSource.BIOCAP to accurate), kb, growing),
+            )
+        }
+
+        // Gallery photos the quick model saw no plant in get a second look.
+        var tally = ScanTally()
+        val settings = container.settingsStore.current()
+        if (!more && settings.scanLibrary && container.gallery.access() != GalleryAccess.NONE) {
+            for ((mediaId, takenAt) in container.garden.mediaToRecheck(BATCH)) {
+                if (isStopped) return Result.success()
+                if (outOfTime()) {
+                    more = true
+                    break
+                }
+                tally = tally.withPhoto(container.scanner.recheckLibraryPhoto(mediaId, takenAt))
+            }
+        }
+        container.notifications.showScanResult(tally)
+        if (more) enqueue(applicationContext)
+        return Result.success()
+    }
+
+    companion object {
+        private const val NAME = "accurate-scan"
+        private const val DAILY = "accurate-scan-daily"
+        private const val BATCH = 500
+        private val RUN_BUDGET_MS = TimeUnit.MINUTES.toMillis(8)
+        private val charging = Constraints.Builder().setRequiresCharging(true).setRequiresBatteryNotLow(true).build()
+
+        /** Runs the accurate pass the next time the phone charges, and every day after. */
+        fun enqueue(context: Context) {
+            val work = WorkManager.getInstance(context)
+            work.enqueueUniqueWork(NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, OneTimeWorkRequestBuilder<AccurateScanWorker>().setConstraints(charging).build())
+            work.enqueueUniquePeriodicWork(
+                DAILY,
+                ExistingPeriodicWorkPolicy.KEEP,
+                PeriodicWorkRequestBuilder<AccurateScanWorker>(1, TimeUnit.DAYS).setConstraints(charging).build(),
+            )
+        }
     }
 }

@@ -29,6 +29,9 @@ class FoundRegion(val box: BoxBp, val labels: Map<IdSource, List<LabelScore>>, v
 /** What the identifier found in a photo. */
 class Identification(val showsPlant: Boolean, val regions: List<FoundRegion>)
 
+/** What the quick model saw in a photo: every tile's scores, and the regions it was sure of. */
+class QuickScan(val tiles: List<TileResult>, val regions: List<FoundRegion>, val showsPlant: Boolean)
+
 /** Identifies the plants in photos and camera frames. The app uses the on-device models; tests use a fake. */
 interface PlantIdentifier {
     suspend fun identify(photo: Bitmap): Identification
@@ -47,18 +50,19 @@ class FastPlantIdentifier(context: Context) : PlantIdentifier {
     private val classifier by lazy { AiyPlantClassifier(context) }
     private val lock = Mutex()
 
-    override suspend fun identify(photo: Bitmap): Identification = withContext(Dispatchers.Default) {
+    override suspend fun identify(photo: Bitmap): Identification = scan(photo).let { Identification(it.showsPlant, it.regions) }
+
+    /** The quick model's look at every tile of [photo], which the accurate pass builds on. */
+    suspend fun scan(photo: Bitmap): QuickScan = withContext(Dispatchers.Default) {
         lock.withLock {
             // The model looks at 224 × 224 pixels, so a smaller copy loses nothing and is quicker to cut into tiles.
             val image = Bitmaps.scaleDown(photo, WORKING_SIDE)
             val results = RegionPlanner.tiles().map { classifier.classify(image, it) }
             val regions = RegionPlanner.select(results)
-            Identification(
+            QuickScan(
+                tiles = results,
+                regions = regions.map { region -> region(photo, region.box, mapOf(IdSource.AIY_PLANTS to region.labels)) },
                 showsPlant = RegionPlanner.showsPlant(results, regions),
-                regions = regions.map { region ->
-                    val crop = Bitmaps.squareCrop(photo, region.box, THUMB_SIDE)
-                    FoundRegion(region.box, mapOf(IdSource.AIY_PLANTS to region.labels), crop, FlowerHint.likely(Bitmaps.colourStats(crop)))
-                },
             )
         }
     }
@@ -69,12 +73,18 @@ class FastPlantIdentifier(context: Context) : PlantIdentifier {
 
     override fun close() = classifier.close()
 
-    private companion object {
-        const val WORKING_SIDE = 1_024
-        const val THUMB_SIDE = 512
+    companion object {
+        private const val WORKING_SIDE = 1_024
+        private const val THUMB_SIDE = 512
+
+        /** A region of [photo] with its cut-out and flowering hint. */
+        fun region(photo: Bitmap, box: BoxBp, labels: Map<IdSource, List<LabelScore>>): FoundRegion {
+            val crop = Bitmaps.squareCrop(photo, box, THUMB_SIDE)
+            return FoundRegion(box, labels, crop, FlowerHint.likely(Bitmaps.colourStats(crop)))
+        }
 
         /** The middle of the frame, where the user points the camera. */
-        val CENTRE = BoxBp(1_500, 1_500, 8_500, 8_500)
+        private val CENTRE = BoxBp(1_500, 1_500, 8_500, 8_500)
     }
 }
 

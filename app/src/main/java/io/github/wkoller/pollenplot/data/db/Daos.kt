@@ -92,6 +92,20 @@ interface DetectionDao {
     @Query("SELECT COUNT(*) FROM detections WHERE status = 'NEEDS_REVIEW'")
     fun observePendingCount(): Flow<Int>
 
+    /** Plants waiting for review that [source] has not suggested names for. */
+    @Query(
+        "SELECT * FROM detections d WHERE d.status = 'NEEDS_REVIEW' AND NOT EXISTS " +
+            "(SELECT 1 FROM candidates c WHERE c.detectionId = d.id AND c.sources LIKE '%' || :source || '%') ORDER BY d.createdAt DESC",
+    )
+    suspend fun pendingWithout(source: String): List<DetectionEntity>
+
+    @Query("DELETE FROM candidates WHERE detectionId = :id")
+    suspend fun deleteCandidates(id: String)
+
+    /** Marks a detection as changed, so screens that show it read its suggestions again. */
+    @Query("UPDATE detections SET createdAt = createdAt WHERE id = :id")
+    suspend fun touch(id: String)
+
     @Query("UPDATE detections SET status = :status, plantId = :plantId WHERE id = :id")
     suspend fun setStatus(id: String, status: String, plantId: String?)
 }
@@ -103,6 +117,10 @@ interface ScannedMediaDao {
 
     @Query("SELECT mediaId FROM scanned_media WHERE mediaId IN (:ids)")
     suspend fun known(ids: List<Long>): List<Long>
+
+    /** Gallery photos the quick model saw no plant in and the accurate pack has not looked at, the newest first. */
+    @Query("SELECT * FROM scanned_media WHERE outcome = 'NO_PLANT' AND accurate = 0 ORDER BY takenAt DESC LIMIT :limit")
+    suspend fun toRecheck(limit: Int): List<ScannedMediaEntity>
 }
 
 @Dao

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.scan
 
+import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
 import io.github.wkoller.pollenplot.data.GardenRepository
@@ -8,6 +9,7 @@ import io.github.wkoller.pollenplot.data.ScanOutcome
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import java.time.Clock
+import java.time.Instant
 
 /** What a scan of some photos found. */
 data class ScanTally(val photos: Int = 0, val photosWithPlants: Int = 0, val plants: Int = 0, val unreadable: Int = 0) {
@@ -24,6 +26,9 @@ data class ScanTally(val photos: Int = 0, val photosWithPlants: Int = 0, val pla
  */
 class PhotoScanner(
     private val gallery: Gallery,
+    /** The quick model alone, for background scans of the gallery; the accurate pass follows while charging. */
+    private val quick: PhotoAnalysis,
+    /** BioCAP too when its pack is on the phone, for photos the user added and the accurate pass. */
     private val analysis: PhotoAnalysis,
     private val garden: GardenRepository,
     private val clock: Clock,
@@ -35,9 +40,26 @@ class PhotoScanner(
             garden.recordScan(photo.id, photo.takenAt, ScanOutcome.FAILED, null)
             return null
         }
-        val result = analysis.analyse(bitmap, PhotoOrigin.LIBRARY, photo.takenAt)
+        val result = quick.analyse(bitmap, PhotoOrigin.LIBRARY, photo.takenAt)
         val outcome = if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS
         garden.recordScan(photo.id, photo.takenAt, outcome, result.photo?.id)
+        return result.detections.size
+    }
+
+    /**
+     * Looks again at a gallery photo the quick model saw no plant in, now that the accurate pack is on the phone, and
+     * returns how many plants it showed, or null if it could not be read.
+     */
+    suspend fun recheckLibraryPhoto(mediaId: Long, takenAt: Instant): Int? {
+        val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId)
+        val bitmap = gallery.load(uri, PhotoStore.MAX_SIDE)
+        if (bitmap == null) {
+            garden.recordScan(mediaId, takenAt, ScanOutcome.FAILED, null, accurate = true)
+            return null
+        }
+        val result = analysis.analyse(bitmap, PhotoOrigin.LIBRARY, takenAt)
+        val outcome = if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS
+        garden.recordScan(mediaId, takenAt, outcome, result.photo?.id, accurate = true)
         return result.detections.size
     }
 

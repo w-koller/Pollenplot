@@ -35,6 +35,13 @@ object Bitmaps {
         return scaleDown(crop, side)
     }
 
+    /** The square around [box], scaled to [side] x [side], as ARGB pixels row by row, for BioCAP. */
+    fun squarePixels(bitmap: Bitmap, box: BoxBp, side: Int): IntArray {
+        val rect = ThumbnailMath.squareAround(box, bitmap.width, bitmap.height)
+        val square = Bitmap.createBitmap(bitmap, rect.left, rect.top, rect.size, rect.size).scale(side, side)
+        return IntArray(side * side).also { square.getPixels(it, 0, side, 0, 0, side, side) }
+    }
+
     /** Samples a grid of pixels and counts the vivid, non-green ones, for the flowering hint. */
     fun colourStats(bitmap: Bitmap, grid: Int = 48): FlowerHint.ColourStats {
         val hsv = FloatArray(3)

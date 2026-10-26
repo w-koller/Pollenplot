@@ -5,10 +5,14 @@ import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
+import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.AccuratePlantIdentifier
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
+import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.PlantIdentifier
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.notify.Notifications
+import io.github.wkoller.pollenplot.scan.AccurateScanWorker
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.MediaStoreGallery
 import io.github.wkoller.pollenplot.scan.PhotoScanner
@@ -58,11 +62,19 @@ class AppContainer(
     val views = GardenViews(garden, knowledge, settingsStore)
     val photos = PhotoStore(appContext)
 
-    /** The models are loaded the first time a photo is identified, not when the app starts. */
-    val identifier: PlantIdentifier by lazy { identifier ?: FastPlantIdentifier(appContext) }
+    val accurate = AccuratePack(appContext, scope)
+
+    /**
+     * The models are loaded the first time a photo is identified, not when the app starts. With the accurate pack on
+     * the phone, BioCAP names what the quick model finds and looks again where it was unsure.
+     */
+    private val testIdentifier = identifier
+    private val fast by lazy { FastPlantIdentifier(appContext) }
+    private val quickIdentifier: PlantIdentifier by lazy { testIdentifier ?: fast }
+    val identifier: PlantIdentifier by lazy { testIdentifier ?: AccuratePlantIdentifier(fast) { accurate.open() } }
     val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock)
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
-    val scanner = PhotoScanner(this.gallery, analysis, garden, clock)
+    val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock), analysis, garden, clock)
     val notifications = Notifications(appContext)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
 
@@ -73,6 +85,10 @@ class AppContainer(
             knowledge.await()
             garden.reindexAll()
             settingsStore.settings.map { it.gardenState }.distinctUntilChanged().drop(1).collect { garden.reindexAll() }
+        }
+        // Once the accurate pack is on the phone, the plants waiting for review and the gallery get its second look.
+        scope.launch {
+            accurate.state.filter { it == PackState.Ready }.collect { AccurateScanWorker.enqueue(appContext) }
         }
         // Once the text model is on the phone, new and changed records get their meaning worked out in the background.
         scope.launch {

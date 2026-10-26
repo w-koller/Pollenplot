@@ -134,6 +134,8 @@ data class ScannedMediaEntity(
     val outcome: String,
     /** The copy the app kept, when the photo showed plants. */
     val photoId: String?,
+    /** Whether the accurate pack has looked at it too, which matters most for photos the quick model saw no plant in. */
+    val accurate: Boolean = false,
 )
 
 /** A relation between two records that neither record holds itself, with where it came from. */

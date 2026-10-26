@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.download.DownloadState
+import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.search.MeaningSearch
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenProgressBar
@@ -39,9 +41,10 @@ import kotlinx.coroutines.launch
 
 /** Settings › Models: the models the app can download, how big they are, and whether they are on the phone. */
 @Composable
-fun ModelsScreen(meaning: MeaningSearch, onBack: () -> Unit) {
+fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, onBack: () -> Unit) {
     val context = LocalContext.current
     val state by meaning.state.collectAsStateWithLifecycle()
+    val pack by accurate.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     DetailScaffold(title = stringResource(R.string.models_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -58,9 +61,10 @@ fun ModelsScreen(meaning: MeaningSearch, onBack: () -> Unit) {
                     title = stringResource(R.string.models_meaning),
                     body = stringResource(R.string.models_meaning_body, Formatter.formatShortFileSize(context, meaning.download.sizeBytes)),
                 ) {
-                    MeaningState(
+                    DownloadControls(
                         state = state,
                         totalBytes = meaning.download.sizeBytes,
+                        ready = R.string.models_meaning_ready,
                         onDownload = { meaning.download.start() },
                         onUseMobileData = { meaning.download.restartWithMobileData() },
                         onCancel = { meaning.download.cancel() },
@@ -69,19 +73,53 @@ fun ModelsScreen(meaning: MeaningSearch, onBack: () -> Unit) {
                 }
             }
             item {
-                ModelCard(icon = R.drawable.ic_local_florist, title = stringResource(R.string.models_accurate), body = stringResource(R.string.models_accurate_body)) {
-                    Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val current = pack
+                ModelCard(
+                    icon = R.drawable.ic_local_florist,
+                    title = stringResource(R.string.models_accurate),
+                    body = if (accurate.available) {
+                        stringResource(R.string.models_accurate_body, Formatter.formatShortFileSize(context, accurate.download.sizeBytes))
+                    } else {
+                        stringResource(R.string.models_accurate_body_short)
+                    },
+                ) {
+                    val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                    when (current) {
+                        PackState.NotAvailable -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        PackState.Unpacking -> {
+                            Text(stringResource(R.string.models_unpacking), style = MaterialTheme.typography.bodyMedium, modifier = status)
+                            PollenProgressBar(null, Modifier.fillMaxWidth())
+                        }
+                        PackState.Ready -> {
+                            Text(stringResource(R.string.models_accurate_ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
+                            OutlinedButton(onClick = { scope.launch { accurate.delete() } }) { Text(stringResource(R.string.models_delete)) }
+                        }
+                        PackState.Damaged -> {
+                            Text(stringResource(R.string.models_damaged), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = status)
+                            Button(onClick = { accurate.download.start() }) { Text(stringResource(R.string.models_try_again)) }
+                        }
+                        is PackState.Fetching -> DownloadControls(
+                            state = current.download,
+                            totalBytes = accurate.download.sizeBytes,
+                            ready = R.string.models_unpacking,
+                            onDownload = { accurate.download.start() },
+                            onUseMobileData = { accurate.download.restartWithMobileData() },
+                            onCancel = { accurate.download.cancel() },
+                            onDelete = { scope.launch { accurate.delete() } },
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-/** What the download is doing, as a sentence, with the buttons that make sense now. */
+/** What the download is doing, as a sentence, with the buttons that make sense now. [ready] says it is done. */
 @Composable
-private fun MeaningState(
+private fun DownloadControls(
     state: DownloadState,
     totalBytes: Long,
+    ready: Int,
     onDownload: () -> Unit,
     onUseMobileData: () -> Unit,
     onCancel: () -> Unit,
@@ -113,7 +151,7 @@ private fun MeaningState(
             PollenProgressBar(null, Modifier.fillMaxWidth())
         }
         DownloadState.Complete -> {
-            Text(stringResource(R.string.models_meaning_ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
+            Text(stringResource(ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
             OutlinedButton(onClick = onDelete) { Text(stringResource(R.string.models_delete)) }
         }
         is DownloadState.Failed -> {

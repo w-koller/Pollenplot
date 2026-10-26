@@ -28,6 +28,17 @@ object CandidateFusion {
     /** A species already in the garden has its score multiplied by this, in basis points of 1. */
     const val GARDEN_BOOST_BP = 15_000
 
+    /**
+     * A stored suggestion's score as its models gave it, without the garden boost, so it can be fused again with
+     * another model's suggestions.
+     */
+    fun withoutBoost(candidate: Candidate, garden: Set<String>): Int =
+        if (candidate.speciesName != null && candidate.speciesName in garden) {
+            (candidate.scoreBp.toLong() * BoxBp.FULL / GARDEN_BOOST_BP).toInt()
+        } else {
+            candidate.scoreBp
+        }
+
     fun fuse(
         results: Map<IdSource, List<LabelScore>>,
         kb: KnowledgeBase?,

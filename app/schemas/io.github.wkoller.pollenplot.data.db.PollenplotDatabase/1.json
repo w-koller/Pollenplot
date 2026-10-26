@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "bee3b9110763c45f9b70dd6b4a8c6174",
+    "identityHash": "b14f07b00920d8b61a8a83ec3d3300cf",
     "entities": [
       {
         "tableName": "zones",
@@ -525,7 +525,7 @@
       },
       {
         "tableName": "scanned_media",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaId` INTEGER NOT NULL, `takenAt` INTEGER NOT NULL, `scannedAt` INTEGER NOT NULL, `outcome` TEXT NOT NULL, `photoId` TEXT, PRIMARY KEY(`mediaId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaId` INTEGER NOT NULL, `takenAt` INTEGER NOT NULL, `scannedAt` INTEGER NOT NULL, `outcome` TEXT NOT NULL, `photoId` TEXT, `accurate` INTEGER NOT NULL, PRIMARY KEY(`mediaId`))",
         "fields": [
           {
             "fieldPath": "mediaId",
@@ -555,6 +555,12 @@
             "fieldPath": "photoId",
             "columnName": "photoId",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "accurate",
+            "columnName": "accurate",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -715,7 +721,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bee3b9110763c45f9b70dd6b4a8c6174')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b14f07b00920d8b61a8a83ec3d3300cf')"
     ]
   }
 }

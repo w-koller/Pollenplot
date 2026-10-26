@@ -274,7 +274,7 @@ fun AppRoot(
                         onOpenAbout = { navController.navigate(AboutRoute) },
                     )
                 }
-                composable<ModelsRoute> { ModelsScreen(container.meaning, onBack = back) }
+                composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, onBack = back) }
                 composable<ScanSettingsRoute> {
                     ScanSettingsScreen(container.settingsStore, container.gallery, container.notifications, container.clock, onBack = back)
                 }

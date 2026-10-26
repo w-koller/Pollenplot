@@ -215,8 +215,24 @@ class GardenRepository(
     }
 
     /** Remembers that a scan has looked at a gallery photo, and what it found. */
-    suspend fun recordScan(mediaId: Long, takenAt: Instant, outcome: ScanOutcome, photoId: String?) =
-        scanned.upsert(ScannedMediaEntity(mediaId, takenAt.toEpochMilli(), now(), outcome.name, photoId))
+    suspend fun recordScan(mediaId: Long, takenAt: Instant, outcome: ScanOutcome, photoId: String?, accurate: Boolean = false) =
+        scanned.upsert(ScannedMediaEntity(mediaId, takenAt.toEpochMilli(), now(), outcome.name, photoId, accurate))
+
+    /** Gallery photos the quick model saw no plant in, for the accurate pack to look at again, the newest first. */
+    suspend fun mediaToRecheck(limit: Int): List<Pair<Long, Instant>> =
+        scanned.toRecheck(limit).map { it.mediaId to Instant.ofEpochMilli(it.takenAt) }
+
+    /** Plants waiting for review that [source] has not suggested names for yet. */
+    suspend fun pendingWithout(source: IdSource): List<DetectionRecord> = detections.pendingWithout(source.name).map { record(it) }
+
+    /** Gives a plant waiting for review a new list of suggestions, best first. */
+    suspend fun replaceCandidates(detectionId: String, candidates: List<Candidate>) = db.withTransaction {
+        detections.deleteCandidates(detectionId)
+        detections.insertCandidates(
+            candidates.mapIndexed { rank, c -> CandidateEntity(detectionId, rank, c.label, c.speciesName, c.scoreBp, c.sources.joinToString(",") { it.name }) },
+        )
+        detections.touch(detectionId)
+    }
 
     suspend fun detection(id: String): DetectionRecord? = detections.get(id)?.let { record(it) }
 

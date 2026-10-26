@@ -60,4 +60,11 @@ class CandidateFusionTest {
         assertTrue("Expected at least 40 knowledge base species among the labels, found ${named.size}", named.size >= 40)
         assertTrue("Melaleuca citrina" in named && "Salvia rosmarinus" in named)
     }
+
+    @Test
+    fun `a stored score loses the garden boost so it is not boosted twice`() {
+        val boosted = Candidate("Rosmarinus officinalis", "Salvia rosmarinus", 6_450, setOf(IdSource.AIY_PLANTS))
+        assertEquals(4_300, CandidateFusion.withoutBoost(boosted, garden = setOf("Salvia rosmarinus")))
+        assertEquals(6_450, CandidateFusion.withoutBoost(boosted, garden = emptySet()))
+    }
 }

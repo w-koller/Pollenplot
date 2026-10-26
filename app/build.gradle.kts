@@ -95,6 +95,11 @@ android {
         buildConfigField("String", "BGE_URL", "\"${providers.gradleProperty("pollenplot.bge.url").get()}\"")
         buildConfigField("String", "BGE_SHA256", "\"${providers.gradleProperty("pollenplot.bge.sha256").get()}\"")
         buildConfigField("long", "BGE_BYTES", "${providers.gradleProperty("pollenplot.bge.bytes").get()}L")
+        // The accurate identification pack, also pinned in gradle.properties.
+        buildConfigField("int", "BIOCAP_PACK", providers.gradleProperty("pollenplot.biocap.pack").get())
+        buildConfigField("String", "BIOCAP_URL", "\"${providers.gradleProperty("pollenplot.biocap.url").get()}\"")
+        buildConfigField("String", "BIOCAP_SHA256", "\"${providers.gradleProperty("pollenplot.biocap.sha256").get()}\"")
+        buildConfigField("long", "BIOCAP_BYTES", "${providers.gradleProperty("pollenplot.biocap.bytes").get()}L")
     }
 
     signingConfigs {
