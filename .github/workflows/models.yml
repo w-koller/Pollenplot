@@ -34,7 +34,8 @@ jobs:
           # fails to load its operators.
           pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
           # ONNX Runtime matches the app's version, so the quantised model uses operators the app's runtime has.
-          pip install "open_clip_torch>=2.26" "onnx>=1.16" "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
+          # onnx_ir is what ONNX Runtime's weight-only quantiser is built on.
+          pip install "open_clip_torch>=2.26" "onnx>=1.16" onnx_ir "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
           pip freeze > pip-freeze.txt
 
       - name: Export BioCAP and build the pack

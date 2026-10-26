@@ -104,7 +104,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
 BioCAP's input is prepared by `Bitmaps.squarePixels`: the square around the plant, halved while it is at least twice
 224 across, then scaled to 224 (`smoothScale`). `tools/models/export_biocap.py` prepares its evaluation photos the
 same way (`phone_square`), so a change to one needs the same change to the other. The pack's evaluation measures each
-step from BioCAP as published to the 8-bit model the phone runs, and ships the 8-bit form that names its photos best.
+step from BioCAP as published to the model the phone runs, and ships the smallest form within half a point of the
+full model. Weights-only 8-bit (`MatMulNBits`, a contrib operator in the full ONNX Runtime the app uses) keeps
+BioCAP's accuracy; 8-bit activations lose about seven points of top-1 on transformers.
 
 Model files are not committed. The build downloads each one once, checks it against its published SHA-256
 (`VerifiedDownloadTask` in `buildSrc`) and extracts it into the generated assets (`ExtractModelTask`), which also

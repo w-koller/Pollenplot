@@ -1,8 +1,9 @@
 """Builds the accurate identification pack from BioCAP (imageomics/biocap, MIT).
 
 The pack holds:
-- biocap-visual.onnx: BioCAP's image encoder made 8-bit, which turns a 224 x 224 photo into a unit vector. Each way
-  of making it 8-bit that ONNX Runtime offers is tried, and the one that names the evaluation photos best is kept.
+- biocap-visual.onnx: BioCAP's image encoder, made smaller, which turns a 224 x 224 photo into a unit vector. Each way
+  ONNX Runtime offers is tried on the evaluation photos, and the smallest that names them about as well as the full
+  model is kept.
 - species.f16: one unit vector for each species in tools/models/species_index.tsv, from BioCAP's text encoder, as
   little-endian 16-bit floats, one row of 512 per species, in the order of species.tsv.
 - species.tsv: that index, so the app can name what a vector matches.
@@ -33,12 +34,8 @@ import open_clip
 import torch
 from huggingface_hub import hf_hub_download
 from onnxruntime.quantization import QuantType, quantize_dynamic
+from onnxruntime.quantization.matmul_nbits_quantizer import MatMulNBitsQuantizer  # Needs onnx_ir.
 from PIL import Image
-
-try:
-    from onnxruntime.quantization.matmul_nbits_quantizer import MatMulNBitsQuantizer
-except ImportError:  # Older ONNX Runtime releases have no weight-only quantisation.
-    MatMulNBitsQuantizer = None
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 INDEX = os.path.join(ROOT, "tools", "models", "species_index.tsv")
@@ -97,22 +94,21 @@ def phone_square(image):
 
 
 def quantised_variants(fp32_path, out):
-    """The 8-bit forms of the image encoder to choose from, each about a quarter of the full model's size: weights and
-    activations in 8 bits with one scale per tensor or per channel, and weights alone in 8 bits, in blocks."""
+    """The smaller forms of the image encoder to choose from: weights and activations in 8 bits with one scale per
+    tensor or per channel, about a quarter of the full model's size, and weights alone in 8 or 4 bits, in blocks of
+    128, with activations kept as floats. Transformers have a few activations far larger than the rest, which 8-bit
+    activations cannot hold without losing the small ones; weights alone keep the model much closer to the original."""
     variants = {}
-    for name, per_channel in (("8-bit, one scale per tensor", False), ("8-bit, one scale per channel", True)):
+    for name, per_channel in (("Weights and activations 8-bit, one scale per tensor", False), ("Weights and activations 8-bit, one scale per channel", True)):
         path = os.path.join(out, f"visual-dynamic-{'channel' if per_channel else 'tensor'}.onnx")
         quantize_dynamic(fp32_path, path, weight_type=QuantType.QInt8, op_types_to_quantize=["MatMul", "Gemm"], per_channel=per_channel)
         variants[name] = path
-    if MatMulNBitsQuantizer is not None:
-        path = os.path.join(out, "visual-weights.onnx")
-        try:
-            quantizer = MatMulNBitsQuantizer(onnx.load(fp32_path), block_size=128, is_symmetric=True, bits=8)
-            quantizer.process()
-            quantizer.model.save_model_to_file(path, use_external_data_format=False)
-            variants["8-bit weights, in blocks of 128"] = path
-        except Exception as error:  # Not every release quantises weights to 8 bits.
-            print(f"  8-bit weights only: {error}")
+    for bits in (8, 4):
+        path = os.path.join(out, f"visual-weights-{bits}.onnx")
+        quantizer = MatMulNBitsQuantizer(onnx.load(fp32_path), bits=bits, block_size=128, is_symmetric=True)
+        quantizer.process()
+        quantizer.model.save_model_to_file(path, use_external_data_format=False)
+        variants[f"Weights {bits}-bit, in blocks of 128"] = path
     return variants
 
 
@@ -248,7 +244,13 @@ def main():
         measured[name]["cosine_to_onnx_mean"] = round(float(np.mean(cosines[name])), 4) if cosines[name] else None
         measured[name]["cosine_to_onnx_min"] = round(float(np.min(cosines[name])), 4) if cosines[name] else None
         measured[name]["bytes"] = os.path.getsize(variants[name])
-    chosen = max(sessions, key=lambda name: (measured[name]["top1"], measured[name]["top5"], -measured[name]["bytes"]))
+    # The smallest form within half a point of the full model, top 1 and top 5; failing that, the most accurate.
+    full = measured[steps[2]]
+    close = [name for name in sessions if full["top1"] - measured[name]["top1"] <= 0.005 and full["top5"] - measured[name]["top5"] <= 0.005]
+    if close:
+        chosen = min(close, key=lambda name: measured[name]["bytes"])
+    else:
+        chosen = max(sessions, key=lambda name: (measured[name]["top1"], measured[name]["top5"], -measured[name]["bytes"]))
     shutil.copyfile(variants[chosen], os.path.join(args.out, "biocap-visual.onnx"))
     phone = sessions[chosen]
     results = {"photos": len(photos), "steps": measured, "shipped": chosen}
