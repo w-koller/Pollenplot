@@ -370,7 +370,7 @@
     <string name="licence_item_jetpack">Android Jetpack and Jetpack Compose</string>
     <string name="licence_item_kotlin">Kotlin and kotlinx libraries</string>
     <string name="licence_item_material_symbols">Material Symbols icons</string>
-    <string name="licence_item_aiy_plants">AIY Plants V1 model, by Google</string>
+    <string name="licence_item_aiy_plants">AIY Plants, Birds and Insects V1 models, by Google</string>
     <string name="licence_item_litert">LiteRT</string>
     <string name="licence_item_litert_notices">Libraries included in LiteRT</string>
     <string name="licence_item_coil">Coil and Okio</string>

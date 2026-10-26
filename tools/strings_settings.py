@@ -28,7 +28,7 @@ STRINGS = {
     "licence_item_jetpack": "Android Jetpack and Jetpack Compose",
     "licence_item_kotlin": "Kotlin and kotlinx libraries",
     "licence_item_material_symbols": "Material Symbols icons",
-    "licence_item_aiy_plants": "AIY Plants V1 model, by Google",
+    "licence_item_aiy_plants": "AIY Plants, Birds and Insects V1 models, by Google",
     "licence_item_litert": "LiteRT",
     "licence_item_litert_notices": "Libraries included in LiteRT",
     "licence_item_coil": "Coil and Okio",

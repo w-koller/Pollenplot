@@ -77,6 +77,18 @@ val downloadAiyPlants = tasks.register<VerifiedDownloadTask>("downloadAiyPlants"
     output.set(aiyPlantsArchive)
 }
 
+// AIY Birds V1 and AIY Insects V1 (Apache License 2.0), from the same family: the fast classifiers for birds and insects.
+val downloadAiyBirds = tasks.register<VerifiedDownloadTask>("downloadAiyBirds") {
+    url.set("https://www.kaggle.com/api/v1/models/google/aiy/tfLite/vision-classifier-birds-v1/3/download")
+    sha256.set("3cf0221fc2ac346a2e077661b0122c512af819feb0d787dd5691b2b752107a60")
+    output.set(layout.buildDirectory.file("third-party/aiy-birds-v1-3.tar.gz"))
+}
+val downloadAiyInsects = tasks.register<VerifiedDownloadTask>("downloadAiyInsects") {
+    url.set("https://www.kaggle.com/api/v1/models/google/aiy/tfLite/vision-classifier-insects-v1/3/download")
+    sha256.set("808b3f5b3a1ded14c63fea0a7bb6e3fbf548d395e4882645fb45804d4c289074")
+    output.set(layout.buildDirectory.file("third-party/aiy-insects-v1-3.tar.gz"))
+}
+
 // Release signing comes from environment variables so the keystore never lives in the repository.
 val releaseKeystore: String? = System.getenv("PP_KEYSTORE_PATH")
 
@@ -174,14 +186,17 @@ androidComponents {
             appLicence.set(rootProject.layout.projectDirectory.file("LICENSE"))
         }
         variant.sources.assets?.addGeneratedSourceDirectory(collectLicences, CollectLicencesTask::output)
-        val extractModels = tasks.register<ExtractModelTask>("extract${variant.name.replaceFirstChar { it.uppercase() }}Models") {
-            archive.set(downloadAiyPlants.flatMap { it.output })
-            entry.set("3.tflite")
-            target.set("ml/aiy_plants_v1.tflite")
-            labelsEntry.set("probability-labels-en.txt")
-            expectedLabels.set(layout.projectDirectory.file("src/main/assets/ml/aiy_plants_v1_labels.txt"))
+        val models = mapOf("plants" to downloadAiyPlants, "birds" to downloadAiyBirds, "insects" to downloadAiyInsects)
+        models.forEach { (kind, download) ->
+            val extract = tasks.register<ExtractModelTask>("extract${variant.name.replaceFirstChar { it.uppercase() }}Aiy${kind.replaceFirstChar { it.uppercase() }}") {
+                archive.set(download.flatMap { it.output })
+                entry.set("3.tflite")
+                target.set("ml/aiy_${kind}_v1.tflite")
+                labelsEntry.set("probability-labels-en.txt")
+                expectedLabels.set(layout.projectDirectory.file("src/main/assets/ml/aiy_${kind}_v1_labels.txt"))
+            }
+            variant.sources.assets?.addGeneratedSourceDirectory(extract, ExtractModelTask::output)
         }
-        variant.sources.assets?.addGeneratedSourceDirectory(extractModels, ExtractModelTask::output)
     }
 }
 
