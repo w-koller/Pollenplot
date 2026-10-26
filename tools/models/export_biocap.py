@@ -144,6 +144,8 @@ def main():
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
     torch.set_grad_enabled(False)
+    # Without gradients, attention takes a fused fast path that has no ONNX form; the ordinary path exports.
+    torch.backends.mha.set_fastpath_enabled(False)
 
     model, preprocess, tokenizer = load_model()
     rows = list(csv.DictReader(open(INDEX), delimiter="\t"))
