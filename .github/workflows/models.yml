@@ -30,7 +30,9 @@ jobs:
 
       - name: Install PyTorch for the CPU and the export tools
         run: |
-          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3"
+          # torchvision comes from the same index as torch: a torchvision from PyPI is built for another torch and
+          # fails to load its operators.
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
           # ONNX Runtime matches the app's version, so the quantised model uses operators the app's runtime has.
           pip install "open_clip_torch>=2.26" "onnx>=1.16" "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
           pip freeze > pip-freeze.txt
