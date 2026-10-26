@@ -1,7 +1,8 @@
 """Builds the accurate identification pack from BioCAP (imageomics/biocap, MIT).
 
 The pack holds:
-- biocap-visual.onnx: BioCAP's image encoder, quantised to 8 bits, which turns a 224 x 224 photo into a unit vector.
+- biocap-visual.onnx: BioCAP's image encoder made 8-bit, which turns a 224 x 224 photo into a unit vector. Each way
+  of making it 8-bit that ONNX Runtime offers is tried, and the one that names the evaluation photos best is kept.
 - species.f16: one unit vector for each species in tools/models/species_index.tsv, from BioCAP's text encoder, as
   little-endian 16-bit floats, one row of 512 per species, in the order of species.tsv.
 - species.tsv: that index, so the app can name what a vector matches.
@@ -19,6 +20,7 @@ import io
 import json
 import os
 import random
+import shutil
 import time
 import urllib.parse
 import urllib.request
@@ -32,6 +34,11 @@ import torch
 from huggingface_hub import hf_hub_download
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
+
+try:
+    from onnxruntime.quantization.matmul_nbits_quantizer import MatMulNBitsQuantizer
+except ImportError:  # Older ONNX Runtime releases have no weight-only quantisation.
+    MatMulNBitsQuantizer = None
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 INDEX = os.path.join(ROOT, "tools", "models", "species_index.tsv")
@@ -76,14 +83,37 @@ def pixels_of(image):
     return array.transpose(2, 0, 1)[None, ...]
 
 
-def centre_crop(image, resample):
-    """The phone's preparation: the shorter side scaled to 224, then the middle 224 x 224."""
-    width, height = image.size
-    scale = SIZE / min(width, height)
-    resized = image.convert("RGB").resize((max(SIZE, round(width * scale)), max(SIZE, round(height * scale))), resample)
-    left = (resized.width - SIZE) // 2
-    top = (resized.height - SIZE) // 2
-    return resized.crop((left, top, left + SIZE, top + SIZE))
+def phone_square(image):
+    """The phone's preparation (Bitmaps.squarePixels and smoothScale in the app): the middle square, halved while it
+    is at least twice 224 across, which averages each 2 x 2 block, then scaled to 224 x 224 with bilinear filtering."""
+    image = image.convert("RGB")
+    side = min(image.size)
+    left = (image.width - side) // 2
+    top = (image.height - side) // 2
+    square = image.crop((left, top, left + side, top + side))
+    while square.width >= SIZE * 2:
+        square = square.resize((square.width // 2, square.height // 2), Image.BOX)
+    return square if square.size == (SIZE, SIZE) else square.resize((SIZE, SIZE), Image.BILINEAR)
+
+
+def quantised_variants(fp32_path, out):
+    """The 8-bit forms of the image encoder to choose from, each about a quarter of the full model's size: weights and
+    activations in 8 bits with one scale per tensor or per channel, and weights alone in 8 bits, in blocks."""
+    variants = {}
+    for name, per_channel in (("8-bit, one scale per tensor", False), ("8-bit, one scale per channel", True)):
+        path = os.path.join(out, f"visual-dynamic-{'channel' if per_channel else 'tensor'}.onnx")
+        quantize_dynamic(fp32_path, path, weight_type=QuantType.QInt8, op_types_to_quantize=["MatMul", "Gemm"], per_channel=per_channel)
+        variants[name] = path
+    if MatMulNBitsQuantizer is not None:
+        path = os.path.join(out, "visual-weights.onnx")
+        try:
+            quantizer = MatMulNBitsQuantizer(onnx.load(fp32_path), block_size=128, is_symmetric=True, bits=8)
+            quantizer.process()
+            quantizer.model.save_model_to_file(path, use_external_data_format=False)
+            variants["8-bit weights, in blocks of 128"] = path
+        except Exception as error:  # Not every release quantises weights to 8 bits.
+            print(f"  8-bit weights only: {error}")
+    return variants
 
 
 def sha256(path):
@@ -151,7 +181,7 @@ def main():
     rows = list(csv.DictReader(open(INDEX), delimiter="\t"))
     print(f"{len(rows)} species in the index")
 
-    # The image encoder, exported, then quantised to 8 bits for the phone.
+    # The image encoder, exported, then made 8-bit in each way ONNX Runtime offers.
     fp32_path = os.path.join(args.out, "biocap-visual-fp32.onnx")
     visual = Visual(model)
     torch.onnx.export(
@@ -160,15 +190,26 @@ def main():
         dynamo=False,
     )
     onnx.checker.check_model(fp32_path)
-    int8_path = os.path.join(args.out, "biocap-visual.onnx")
-    quantize_dynamic(fp32_path, int8_path, weight_type=QuantType.QInt8, op_types_to_quantize=["MatMul", "Gemm"])
     options = ort.SessionOptions()
     options.log_severity_level = 3
     fp32 = ort.InferenceSession(fp32_path, options, providers=["CPUExecutionProvider"])
-    int8 = ort.InferenceSession(int8_path, options, providers=["CPUExecutionProvider"])
+    variants = {}
+    sessions = {}
+    for name, path in quantised_variants(fp32_path, args.out).items():
+        try:
+            sessions[name] = ort.InferenceSession(path, options, providers=["CPUExecutionProvider"])
+            sessions[name].run(None, {"pixels": np.zeros((1, 3, SIZE, SIZE), dtype=np.float32)})
+            variants[name] = path
+        except Exception as error:
+            sessions.pop(name, None)
+            print(f"  {name} does not run: {error}")
+    assert sessions, "No 8-bit form of the image encoder runs"
 
     def embed(session, image):
         return session.run(None, {"pixels": pixels_of(image)})[0][0]
+
+    def embed_torch(pixels):
+        return torch.nn.functional.normalize(model.encode_image(torch.from_numpy(pixels)), dim=-1).numpy()[0]
 
     # The species' text vectors, in the index's order.
     texts = [prompt(row["taxonomy"], row["common"]) for row in rows]
@@ -181,26 +222,36 @@ def main():
     species.astype("<f2").tofile(species_path)
     species16 = species.astype(np.float16).astype(np.float32)
 
-    # Evaluation: the PyTorch model with BioCAP's own preparation, then the 8-bit model as the phone prepares photos.
+    # Evaluation, one step at a time from BioCAP as published to what the phone runs: the phone's preparation of the
+    # photo, the export to ONNX, then each 8-bit form. The 8-bit form that names the photos best is the one shipped.
     photos = evaluation_photos(rows, args.eval_species, args.eval_photos, seed=PACK_VERSION)
-    results = {"photos": len(photos)}
-    counts = {key: 0 for key in ("torch_top1", "torch_top5", "int8_top1", "int8_top5", "agree_top1")}
-    cosines = []
+    steps = ["PyTorch, BioCAP's preparation", "PyTorch, the phone's preparation", "ONNX, the phone's preparation"] + list(sessions)
+    hits = {step: [0, 0] for step in steps}
+    cosines = {name: [] for name in sessions}
     for truth, image in photos:
-        reference = torch.nn.functional.normalize(model.encode_image(preprocess(image)[None, ...]), dim=-1).numpy()[0]
-        phone = embed(int8, centre_crop(image, Image.BILINEAR))
-        torch_rank = np.argsort(-(species @ reference))[:5]
-        int8_rank = np.argsort(-(species16 @ phone))[:5]
-        counts["torch_top1"] += int(torch_rank[0] == truth)
-        counts["torch_top5"] += int(truth in torch_rank)
-        counts["int8_top1"] += int(int8_rank[0] == truth)
-        counts["int8_top5"] += int(truth in int8_rank)
-        counts["agree_top1"] += int(int8_rank[0] == torch_rank[0])
-        cosines.append(float(reference @ phone))
-    for key, value in counts.items():
-        results[key] = round(value / max(1, len(photos)), 4)
-    results["cosine_mean"] = round(float(np.mean(cosines)), 4) if cosines else None
-    results["cosine_min"] = round(float(np.min(cosines)), 4) if cosines else None
+        pixels = pixels_of(phone_square(image))
+        vectors = {
+            steps[0]: torch.nn.functional.normalize(model.encode_image(preprocess(image)[None, ...]), dim=-1).numpy()[0],
+            steps[1]: embed_torch(pixels),
+            steps[2]: fp32.run(None, {"pixels": pixels})[0][0],
+        }
+        for name, session in sessions.items():
+            vectors[name] = session.run(None, {"pixels": pixels})[0][0]
+            cosines[name].append(float(vectors[name] @ vectors[steps[2]]))
+        for step, vector in vectors.items():
+            ranking = np.argsort(-(species16 @ vector))[:5]
+            hits[step][0] += int(ranking[0] == truth)
+            hits[step][1] += int(truth in ranking)
+    count = max(1, len(photos))
+    measured = {step: {"top1": round(top1 / count, 4), "top5": round(top5 / count, 4)} for step, (top1, top5) in hits.items()}
+    for name in sessions:
+        measured[name]["cosine_to_onnx_mean"] = round(float(np.mean(cosines[name])), 4) if cosines[name] else None
+        measured[name]["cosine_to_onnx_min"] = round(float(np.min(cosines[name])), 4) if cosines[name] else None
+        measured[name]["bytes"] = os.path.getsize(variants[name])
+    chosen = max(sessions, key=lambda name: (measured[name]["top1"], measured[name]["top5"], -measured[name]["bytes"]))
+    shutil.copyfile(variants[chosen], os.path.join(args.out, "biocap-visual.onnx"))
+    phone = sessions[chosen]
+    results = {"photos": len(photos), "steps": measured, "shipped": chosen}
     print(json.dumps(results, indent=1))
 
     # Reference vectors for the app's tests: 224 x 224 images, so only the model run and normalisation are compared.
@@ -209,7 +260,7 @@ def main():
         if name.endswith(".png"):
             image = Image.open(os.path.join(FIXTURES, name)).convert("RGB")
             assert image.size == (SIZE, SIZE), f"{name} must be {SIZE} x {SIZE}"
-            vector = embed(int8, image)
+            vector = embed(phone, image)
             best = int(np.argmax(species16 @ vector))
             references.append({"file": name, "vector": [round(float(x), 6) for x in vector], "best": rows[best]["name"]})
     with open(os.path.join(args.out, "reference.json"), "w") as f:
@@ -230,7 +281,7 @@ def main():
         "image_size": SIZE,
         "mean": MEAN,
         "std": STD,
-        "preparation": "shorter side scaled to 224 with bilinear filtering, then the middle 224 x 224",
+        "preparation": "the middle square, halved while at least 448 across, then scaled to 224 x 224 with bilinear filtering",
         "input": "pixels, float32, [batch, 3, 224, 224]",
         "output": "embedding, float32, [batch, 512], unit length",
         "embedding_dim": int(species.shape[1]),
@@ -252,12 +303,14 @@ def main():
         f.write(f"{sha256(pack)}  {os.path.basename(pack)}\n")
     with open(os.path.join(args.out, "evaluation.md"), "w") as f:
         f.write(f"BioCAP pack {PACK_VERSION}: {len(rows)} species, model {REPO}@{REVISION[:7]}.\n\n")
-        f.write(f"Evaluated on {results['photos']} iNaturalist research-grade photos from Australia.\n\n")
-        f.write("| | Top 1 | Top 5 |\n|---|---|---|\n")
-        f.write(f"| PyTorch, BioCAP's preparation | {results['torch_top1']:.1%} | {results['torch_top5']:.1%} |\n")
-        f.write(f"| 8-bit ONNX, the phone's preparation | {results['int8_top1']:.1%} | {results['int8_top5']:.1%} |\n\n")
-        f.write(f"The two agree on the best match for {results['agree_top1']:.1%} of photos; their vectors have a mean ")
-        f.write(f"cosine similarity of {results['cosine_mean']} (lowest {results['cosine_min']}).\n")
+        f.write(f"Evaluated on {results['photos']} iNaturalist research-grade photos from Australia, each step from BioCAP ")
+        f.write("as published to the model the phone runs.\n\n")
+        f.write("| | Top 1 | Top 5 | Cosine to ONNX (mean, lowest) | Size |\n|---|---|---|---|---|\n")
+        for step, value in measured.items():
+            cosine = f"{value['cosine_to_onnx_mean']}, {value['cosine_to_onnx_min']}" if "bytes" in value else ""
+            size = f"{value['bytes'] / 1e6:.0f} MB" if "bytes" in value else ""
+            f.write(f"| {step} | {value['top1']:.1%} | {value['top5']:.1%} | {cosine} | {size} |\n")
+        f.write(f"\nThe pack holds {chosen}.\n")
     print(f"Wrote {pack}")
 
 

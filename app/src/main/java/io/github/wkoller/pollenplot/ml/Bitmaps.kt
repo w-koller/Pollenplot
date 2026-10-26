@@ -38,8 +38,20 @@ object Bitmaps {
     /** The square around [box], scaled to [side] x [side], as ARGB pixels row by row, for BioCAP. */
     fun squarePixels(bitmap: Bitmap, box: BoxBp, side: Int): IntArray {
         val rect = ThumbnailMath.squareAround(box, bitmap.width, bitmap.height)
-        val square = Bitmap.createBitmap(bitmap, rect.left, rect.top, rect.size, rect.size).scale(side, side)
+        val square = smoothScale(Bitmap.createBitmap(bitmap, rect.left, rect.top, rect.size, rect.size), side, side)
         return IntArray(side * side).also { square.getPixels(it, 0, side, 0, 0, side, side) }
+    }
+
+    /**
+     * [bitmap] scaled to [width] x [height] without skipping detail. Android's filtered scaling blends only the four
+     * nearest pixels, so a large reduction misses most of the photo; halving first averages each 2 x 2 block, which
+     * matches the smooth resizing BioCAP's photos had in training. tools/models/export_biocap.py prepares photos the
+     * same way when it evaluates the pack.
+     */
+    fun smoothScale(bitmap: Bitmap, width: Int, height: Int): Bitmap {
+        var current = bitmap
+        while (current.width >= width * 2 && current.height >= height * 2) current = current.scale(current.width / 2, current.height / 2)
+        return if (current.width == width && current.height == height) current else current.scale(width, height)
     }
 
     /** Samples a grid of pixels and counts the vivid, non-green ones, for the flowering hint. */
