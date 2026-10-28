@@ -6,6 +6,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ApplicationProvider
@@ -78,7 +80,6 @@ class HoneyFlowTest {
         show()
         compose.onNodeWithText("Bees").performClick()
         waitFor(hasText("You have no honey bee hives yet."))
-        compose.onNodeWithText("Open the registration page").assertExists()
         compose.onAllNodesWithText("Add a hive").onFirst().performClick()
 
         compose.onNodeWithText("Name").performTextInput("Hive 1")
@@ -97,7 +98,7 @@ class HoneyFlowTest {
         compose.onNodeWithText("Queen seen").performClick()
         compose.onNodeWithText("Solid").performClick()
         compose.onNodeWithText("Sunken or perforated cappings").performScrollTo().performClick()
-        waitFor(hasText("notifiable in most of Australia", substring = true))
+        waitFor(hasText("American foulbrood must be reported in every state and territory", substring = true))
         shot("hive_inspection_foulbrood")
         compose.onNodeWithText("Save").performScrollTo().performClick()
 
@@ -129,9 +130,11 @@ class HoneyFlowTest {
         shot("bees_honey")
 
         // Where Varroa is established, mites are checked monthly instead.
+        scrollTo("Varroa mite is established where my hives are")
         compose.onNodeWithText("Varroa mite is established where my hives are").performClick()
-        waitFor(hasText("Due by 27 November 2026"))
-        assertTrue(runBlocking { app.container.settingsStore.settings.first().varroaEstablished })
+        compose.waitUntil(10_000) { runBlocking { app.container.settingsStore.current().varroaEstablished } }
+        scrollTo("Open the registration page")
+        scrollTo("Due by 27 November 2026")
     }
 
     @Test
@@ -194,16 +197,46 @@ class HoneyFlowTest {
         compose.onNodeWithText("Bees").performClick()
         waitFor(hasText("Due by 8 November 2026"))
         // Reminders are on unless turned off, and Android has not been asked to allow notifications yet.
-        compose.onNodeWithText("Notifications are off", substring = true).assertExists()
+        scrollTo("Notifications are off", substring = true)
         compose.onNodeWithText("Allow notifications").assertExists()
 
+        scrollTo("Every week")
         compose.onNodeWithText("Every week").performClick()
-        waitFor(hasText("Due by 1 November 2026"))
-        assertEquals(7, runBlocking { app.container.settingsStore.current().inspectEveryDays })
+        compose.waitUntil(10_000) { runBlocking { app.container.settingsStore.current().inspectEveryDays } == 7 }
+        scrollTo("Due by 1 November 2026")
 
+        scrollTo("Remind me when a hive check is due")
         compose.onNodeWithText("Remind me when a hive check is due").performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Allow notifications").fetchSemanticsNodes().isEmpty() }
         assertEquals(false, runBlocking { app.container.settingsStore.current().hiveReminders })
+    }
+
+    @Test
+    @Config(qualifiers = "en-rAU-w411dp-h3400dp-xhdpi")
+    fun theGuideExplainsAMiteCheck() {
+        show()
+        compose.onNodeWithText("Bees").performClick()
+        waitFor(hasText("Checking for Varroa mite"))
+        compose.onNodeWithText("Brood diseases").assertExists()
+        compose.onNodeWithText("Checking for Varroa mite").performClick()
+        waitFor(hasText("How often"))
+        compose.onNodeWithText("Collect half a cup of bees, about 300", substring = true).assertExists()
+        compose.onNodeWithText("Bee 123 form", substring = true).assertExists()
+        compose.onNodeWithText("These facts were last checked against their sources on 29 October 2026.").assertExists()
+        compose.onNodeWithText("Check hives for varroa mite, Business Queensland").assertExists()
+        shot("guide_varroa")
+    }
+
+    @Test
+    @Config(qualifiers = "en-rAU-w411dp-h3400dp-xhdpi")
+    fun aGuidePageInTheDark() {
+        show(Settings(theme = ThemeChoice.DARK))
+        compose.onNodeWithText("Bees").performClick()
+        waitFor(hasText("Brood diseases"))
+        compose.onNodeWithText("Brood diseases").performClick()
+        waitFor(hasText("American foulbrood"))
+        compose.onNodeWithText("AFB must be reported in every state and territory", substring = true).assertExists()
+        shot("guide_brood_dark")
     }
 
     @Test
@@ -224,6 +257,11 @@ class HoneyFlowTest {
                 Surface { AppRoot(app.container) }
             }
         }
+    }
+
+    /** Scrolls the screen's list until a row with [text] is shown. */
+    private fun scrollTo(text: String, substring: Boolean = false) {
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText(text, substring = substring))
     }
 
     private fun waitFor(matcher: SemanticsMatcher) {

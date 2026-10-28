@@ -107,6 +107,10 @@
 - A notification on the morning a hive check falls due, on its own Hive tasks channel, opens the Bees tab. Each check
   is told about once, and again only when it next falls due. The reminders can be turned off in the honey bee section.
 - An inspection that notes sunken or perforated cappings, ropy brood or twisted larvae explains that these can be signs
-  of foulbrood and asks you to report them before moving bees or equipment.
+  of foulbrood, which must be reported, and asks you to keep the hive's frames and equipment away from your other
+  hives until you have spoken with your state or territory.
 - The honey bee section links to the Code of Practice and to your state or territory's beekeeper registration page,
   and hives can be found in search.
+- The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood
+  diseases, small hive beetle and wax moth, and exotic mites to report. Each page says when its facts were last checked
+  and links the pages they come from: the Code of Practice, BeeAware, Business Queensland and Plant Health Australia.

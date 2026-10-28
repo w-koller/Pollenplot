@@ -59,6 +59,7 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     check, following the Australian Honey Bee Industry Biosecurity Code of Practice, version 2.1), with each state's
     registration page in `BeekeeperRegistration`. `HiveReminders` decides which due checks a notification tells
     about: each once while it stays due.
+  - `guide/`: `Guide` and `GuideParser`, which reads a bee guide page (see Guides below).
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
   Android runtime matches; the app brings the Android one. `TextEmbedderTest` compares tokens and vectors with
@@ -66,7 +67,7 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
 - `app/data`: `GardenRepository` (records, detections, the search index and JSON-LD export), `GardenViews` (records
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), `BeeRepository` (the honey bee records) and `BeeViews` (hives with their zone, apiary and what each is due
-  for today), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
+  for today), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on
@@ -98,8 +99,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
   finder, `ui/wildlife` the Wildlife tab, an animal's page, a sighting's page and the safety notice, and `ui/review`
   the review cards (`AnimalCards` for animals), `PhotoReviewScreen` (shared by the Identify results and the Review
-  queue) and `ReviewModel`, and `ui/bees` the Bees tab (`HoneySection`), a hive's page, its editor and the form for
-  each kind of record (`HoneyForms`).
+  queue) and `ReviewModel`, `ui/bees` the Bees tab (`HoneySection`), a hive's page, its editor and the form for
+  each kind of record (`HoneyForms`), and `ui/guides` a guide page (`GuideScreen`).
 - `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a
   point through the Atlas of Living Australia) and `PhoneLocation` (approximate location from the phone's own location
   service). `app/web` holds `Web`, the small HTTP client the app's few web requests go through.
@@ -163,6 +164,16 @@ the real files on every test run. Animals and fungi are in `kb/fauna/*.json`, ch
 names its group, family, the states it is native to (or `introduced`), and a hazard only with a note saying what to
 do. A rule names its states and links the official page it comes from; check the number or address on that page
 before adding it, because summaries elsewhere are often out of date.
+
+## Guides
+
+The bee guides are Markdown pages in `app/src/main/assets/guides/<section>/` (honey, native, hotels), one topic per
+file. Each starts with front matter: `title`, `summary` (a sentence), `section`, `order`, `lastChecked` and
+`sources`, one per line as `  - Title | https://…`. `GuideParser` accepts `## ` headings, paragraphs, `- ` bullets,
+`1. ` steps, `> ` notes for what must not be missed, `**bold**`, `*italic*` (species names) and `[links](https://…)`,
+and refuses anything else with its line. Every fact on a page must come from one of its sources; leave out what a
+source does not say, and name the state for a state's rule. Set `lastChecked` to the day the page was checked
+against its sources. `GuideFilesTest` in `:domain` reads every page on each test run.
 
 ## Material 3 Expressive
 

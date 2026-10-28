@@ -56,6 +56,9 @@ import kotlinx.serialization.Serializable
 /** A new record for a hive, of a kind named by [HoneyRecordKind]. */
 @Serializable data class HoneyRecordRoute(val hiveId: String, val kind: String)
 
+/** A page of a bee guide, by its id, such as `honey/varroa`. */
+@Serializable data class GuideRoute(val id: String)
+
 /** Questions to Gemma 4 about a plant in the garden, a kind of animal, or, with neither, the whole garden. */
 @Serializable data class AskRoute(val plantId: String? = null, val animalKey: String? = null)
 

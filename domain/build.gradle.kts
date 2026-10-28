@@ -23,4 +23,7 @@ tasks.test {
     // The weed sources the app ships, so a mistake in them fails the build.
     systemProperty("weeds.dir", rootProject.layout.projectDirectory.dir("app/src/main/assets/weeds").asFile.absolutePath)
     inputs.dir(rootProject.layout.projectDirectory.dir("app/src/main/assets/weeds"))
+    // The bee guides the app ships, so a page that does not read fails the build.
+    systemProperty("guides.dir", rootProject.layout.projectDirectory.dir("app/src/main/assets/guides").asFile.absolutePath)
+    inputs.dir(rootProject.layout.projectDirectory.dir("app/src/main/assets/guides"))
 }

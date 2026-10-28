@@ -28,6 +28,7 @@ import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.domain.bees.honey.BeekeeperRegistration
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveStatus
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
+import io.github.wkoller.pollenplot.domain.guide.Guide
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
@@ -37,8 +38,9 @@ import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.time.LocalDate
 
 /**
- * The honey bee section of the Bees tab: the checks due across the hives, soonest first, the hives, the reminders and
- * how often inspections come, whether Varroa is established where the hives are, and the state's registration page.
+ * The honey bee section of the Bees tab: the checks due across the hives, soonest first, the hives, the guide's pages,
+ * the reminders and how often inspections come, whether Varroa is established where the hives are, and the state's
+ * registration page.
  */
 internal fun LazyListScope.honeySection(
     hives: List<HiveView>,
@@ -46,8 +48,10 @@ internal fun LazyListScope.honeySection(
     settings: Settings,
     onSettings: ((Settings) -> Settings) -> Unit,
     notifications: NotificationAccess,
+    guide: List<Guide>,
     onAddHive: () -> Unit,
     onOpenHive: (String) -> Unit,
+    onOpenGuide: (String) -> Unit,
     onOpenLink: (String) -> Unit,
 ) {
     val state = settings.gardenState
@@ -73,6 +77,16 @@ internal fun LazyListScope.honeySection(
         items(hives, key = { "hive-" + it.hive.id }) { view -> HiveRow(view, onClick = { onOpenHive(view.hive.id) }) }
         item(key = "honey-add") {
             OutlinedButton(onClick = onAddHive, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.honey_add_hive)) }
+        }
+    }
+    if (guide.isNotEmpty()) {
+        item(key = "honey-guide") { SectionHeading(stringResource(R.string.guide)) }
+        items(guide, key = { "guide-" + it.id }) { page ->
+            ListItem(
+                onClick = { onOpenGuide(page.id) },
+                leadingContent = { Icon(painterResource(R.drawable.ic_menu_book), contentDescription = null) },
+                supportingContent = { Text(page.summary) },
+            ) { Text(page.title) }
         }
     }
     item(key = "honey-reminders") {

@@ -74,6 +74,9 @@
     <string name="add_photos">Add photos</string>
     <string name="add_check_weed">Check a weed</string>
     <string name="add_plant_by_name">Add a plant by name</string>
+    <string name="guide">Guide</string>
+    <string name="guide_last_checked">These facts were last checked against their sources on %1$s.</string>
+    <string name="guide_sources">Sources</string>
     <string name="honey_add_hive">Add a hive</string>
     <string name="honey_hives">Hives</string>
     <string name="honey_due">Due</string>
@@ -194,7 +197,7 @@
     <string name="sign_ants">Ants</string>
     <string name="honey_actions">What you did</string>
     <string name="honey_notes">Notes</string>
-    <string name="honey_foulbrood">Sunken or perforated cappings, ropy brood and twisted larvae can be signs of American or European foulbrood, which are notifiable in most of Australia. Please report them to your state\'s agriculture department, and please don\'t move bees or equipment from the hive until you have spoken with them.</string>
+    <string name="honey_foulbrood">Sunken or perforated cappings, ropy brood and twisted larvae can be signs of American or European foulbrood. American foulbrood must be reported in every state and territory, and European foulbrood everywhere except Queensland. Please contact your state or territory\'s department of agriculture, and please keep the hive\'s frames and equipment away from your other hives until you have spoken with them.</string>
     <string name="honey_inspection_queen">Queen seen</string>
     <string name="honey_inspection_eggs">Eggs seen</string>
     <string name="honey_inspection_no_queen">No queen or eggs seen</string>

@@ -138,8 +138,9 @@ STRINGS = {
     "honey_actions": "What you did",
     "honey_notes": "Notes",
     "honey_foulbrood": "Sunken or perforated cappings, ropy brood and twisted larvae can be signs of American or "
-    "European foulbrood, which are notifiable in most of Australia. Please report them to your state's agriculture "
-    "department, and please don't move bees or equipment from the hive until you have spoken with them.",
+    "European foulbrood. American foulbrood must be reported in every state and territory, and European foulbrood "
+    "everywhere except Queensland. Please contact your state or territory's department of agriculture, and please "
+    "keep the hive's frames and equipment away from your other hives until you have spoken with them.",
     "honey_inspection_queen": "Queen seen",
     "honey_inspection_eggs": "Eggs seen",
     "honey_inspection_no_queen": "No queen or eggs seen",

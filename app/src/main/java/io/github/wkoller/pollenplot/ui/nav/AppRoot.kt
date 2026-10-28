@@ -56,6 +56,7 @@ import io.github.wkoller.pollenplot.ui.bees.HiveEditorScreen
 import io.github.wkoller.pollenplot.ui.bees.HiveScreen
 import io.github.wkoller.pollenplot.ui.bees.HoneyRecordKind
 import io.github.wkoller.pollenplot.ui.bees.HoneyRecordScreen
+import io.github.wkoller.pollenplot.ui.guides.GuideScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
@@ -389,11 +390,14 @@ fun AppRoot(
                         beeViews = container.beeViews,
                         settings = container.settingsStore,
                         notifications = container.notifications,
+                        guides = container.guides,
                         onOpenSettings = openSettings,
                         onAddHive = { navController.navigate(HiveEditRoute()) },
                         onOpenHive = { navController.navigate(HiveRoute(it)) },
+                        onOpenGuide = { navController.navigate(GuideRoute(it)) },
                     )
                 }
+                composable<GuideRoute> { entry -> GuideScreen(container.guides, entry.toRoute<GuideRoute>().id, onBack = back) }
                 composable<HiveRoute> { entry ->
                     val id = entry.toRoute<HiveRoute>().id
                     HiveScreen(
