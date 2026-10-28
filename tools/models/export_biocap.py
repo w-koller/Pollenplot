@@ -132,11 +132,22 @@ def fetch(url, retries=5):
             time.sleep(3 * (attempt + 1))
 
 
-def evaluation_photos(rows, species_count, per_species, seed):
-    """Research-grade iNaturalist photos with open licences, for species chosen from the index's most observed."""
+# How many species of each group the evaluation photographs: plants most, as most photos show plants.
+EVAL_PLAN = {"plant": 120, "bird": 25, "insect": 25, "spider": 8, "reptile": 8, "frog": 8, "mammal": 8, "fungus": 8}
+
+
+def group_of(row):
+    return row.get("group") or "plant"
+
+
+def evaluation_photos(rows, plan, per_species, seed):
+    """Research-grade iNaturalist photos with open licences, for species chosen from each group's most observed."""
     random.seed(seed)
-    observed = [i for i, row in enumerate(rows) if int(row["observations"]) > 0]
-    chosen = random.sample(observed[: species_count * 3], species_count)
+    chosen = []
+    for group, species_count in plan.items():
+        observed = [i for i, row in enumerate(rows) if group_of(row) == group and int(row["observations"]) > 0]
+        if observed:
+            chosen += random.sample(observed[: species_count * 3], min(species_count, len(observed[: species_count * 3])))
     photos = []
     for index in chosen:
         species = rows[index]["taxonomy"].split()
@@ -165,8 +176,7 @@ def evaluation_photos(rows, species_count, per_species, seed):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True)
-    parser.add_argument("--eval-species", type=int, default=120)
-    parser.add_argument("--eval-photos", type=int, default=3)
+    parser.add_argument("--eval-photos", type=int, default=3, help="Photos of each species in the evaluation")
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
     torch.set_grad_enabled(False)
@@ -219,10 +229,14 @@ def main():
     species16 = species.astype(np.float16).astype(np.float32)
 
     # Evaluation, one step at a time from BioCAP as published to what the phone runs: the phone's preparation of the
-    # photo, the export to ONNX, then each 8-bit form. The 8-bit form that names the photos best is the one shipped.
-    photos = evaluation_photos(rows, args.eval_species, args.eval_photos, seed=PACK_VERSION)
+    # photo, the export to ONNX, then each smaller form. Each photo's species is looked for among its own group, as the
+    # app does once it knows what the photo shows; separately, the closest species overall says whether BioCAP can
+    # tell the group, which the gallery scan relies on.
+    groups = np.array([group_of(row) for row in rows])
+    photos = evaluation_photos(rows, EVAL_PLAN, args.eval_photos, seed=PACK_VERSION)
     steps = ["PyTorch, BioCAP's preparation", "PyTorch, the phone's preparation", "ONNX, the phone's preparation"] + list(sessions)
-    hits = {step: [0, 0] for step in steps}
+    hits = {step: [0, 0, 0] for step in steps}
+    by_group = {}
     cosines = {name: [] for name in sessions}
     for truth, image in photos:
         pixels = pixels_of(phone_square(image))
@@ -235,11 +249,21 @@ def main():
             vectors[name] = session.run(None, {"pixels": pixels})[0][0]
             cosines[name].append(float(vectors[name] @ vectors[steps[2]]))
         for step, vector in vectors.items():
-            ranking = np.argsort(-(species16 @ vector))[:5]
+            scores = species16 @ vector
+            group_right = groups[int(np.argmax(scores))] == groups[truth]
+            scores = np.where(groups == groups[truth], scores, -np.inf)
+            ranking = np.argsort(-scores)[:5]
             hits[step][0] += int(ranking[0] == truth)
             hits[step][1] += int(truth in ranking)
+            hits[step][2] += int(group_right)
+            if step == steps[2]:
+                tally = by_group.setdefault(str(groups[truth]), [0, 0, 0, 0])
+                tally[0] += 1
+                tally[1] += int(ranking[0] == truth)
+                tally[2] += int(truth in ranking)
+                tally[3] += int(group_right)
     count = max(1, len(photos))
-    measured = {step: {"top1": round(top1 / count, 4), "top5": round(top5 / count, 4)} for step, (top1, top5) in hits.items()}
+    measured = {step: {"top1": round(top1 / count, 4), "top5": round(top5 / count, 4), "group": round(group / count, 4)} for step, (top1, top5, group) in hits.items()}
     for name in sessions:
         measured[name]["cosine_to_onnx_mean"] = round(float(np.mean(cosines[name])), 4) if cosines[name] else None
         measured[name]["cosine_to_onnx_min"] = round(float(np.min(cosines[name])), 4) if cosines[name] else None
@@ -253,7 +277,11 @@ def main():
         chosen = max(sessions, key=lambda name: (measured[name]["top1"], measured[name]["top5"], -measured[name]["bytes"]))
     shutil.copyfile(variants[chosen], os.path.join(args.out, "biocap-visual.onnx"))
     phone = sessions[chosen]
-    results = {"photos": len(photos), "steps": measured, "shipped": chosen}
+    groups_measured = {
+        group: {"photos": n, "top1": round(top1 / n, 4), "top5": round(top5 / n, 4), "group": round(right / n, 4)}
+        for group, (n, top1, top5, right) in sorted(by_group.items(), key=lambda item: -item[1][0])
+    }
+    results = {"photos": len(photos), "steps": measured, "groups": groups_measured, "shipped": chosen}
     print(json.dumps(results, indent=1))
 
     # Reference vectors for the app's tests: 224 x 224 images, so only the model run and normalisation are compared.
@@ -270,9 +298,9 @@ def main():
 
     with open(os.path.join(args.out, "species.tsv"), "w", newline="") as f:
         writer = csv.writer(f, delimiter="\t", lineterminator="\n")
-        writer.writerow(["name", "common", "aliases"])
+        writer.writerow(["name", "common", "aliases", "group"])
         for row in rows:
-            writer.writerow([row["name"], row["common"], row["aliases"]])
+            writer.writerow([row["name"], row["common"], row["aliases"], group_of(row)])
 
     files = ["biocap-visual.onnx", "species.f16", "species.tsv"]
     manifest = {
@@ -307,12 +335,16 @@ def main():
         f.write(f"BioCAP pack {PACK_VERSION}: {len(rows)} species, model {REPO}@{REVISION[:7]}.\n\n")
         f.write(f"Evaluated on {results['photos']} iNaturalist research-grade photos from Australia, each step from BioCAP ")
         f.write("as published to the model the phone runs.\n\n")
-        f.write("| | Top 1 | Top 5 | Cosine to ONNX (mean, lowest) | Size |\n|---|---|---|---|---|\n")
+        f.write("Top 1 and top 5 look for each species among its own group. Group is how often the closest species of all is ")
+        f.write("in the right group.\n\n")
+        f.write("| | Top 1 | Top 5 | Group | Cosine to ONNX (mean, lowest) | Size |\n|---|---|---|---|---|---|\n")
         for step, value in measured.items():
             cosine = f"{value['cosine_to_onnx_mean']}, {value['cosine_to_onnx_min']}" if "bytes" in value else ""
             size = f"{value['bytes'] / 1e6:.0f} MB" if "bytes" in value else ""
-            f.write(f"| {step} | {value['top1']:.1%} | {value['top5']:.1%} | {cosine} | {size} |\n")
-        f.write(f"\nThe pack holds {chosen}.\n")
+            f.write(f"| {step} | {value['top1']:.1%} | {value['top5']:.1%} | {value['group']:.1%} | {cosine} | {size} |\n")
+        f.write(f"\nThe pack holds {chosen}.\n\nBy group, with the ONNX model:\n\n| Group | Photos | Top 1 | Top 5 | Group |\n|---|---|---|---|---|\n")
+        for group, value in groups_measured.items():
+            f.write(f"| {group} | {value['photos']} | {value['top1']:.1%} | {value['top5']:.1%} | {value['group']:.1%} |\n")
     print(f"Wrote {pack}")
 
 

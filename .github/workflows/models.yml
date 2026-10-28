@@ -1,14 +1,19 @@
 name: Model pack
 
 # Builds the accurate identification pack from BioCAP and, when asked, publishes it as a release the app downloads.
-# The export needs PyTorch and a few gigabytes of disk, so it runs here rather than on a development machine.
+# The export needs PyTorch and a few gigabytes of disk, so it runs here rather than on a development machine. A pack is
+# best built and evaluated first, then published from that run, so the release holds exactly the files evaluated.
 on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Publish the pack as a release (biocap-pack-N, N from tools/models/export_biocap.py)"
+        description: "Publish the pack as a release (biocap-pack-N)"
         type: boolean
         default: false
+      from_run:
+        description: "Publish the pack an earlier run of this workflow built, by its run ID, instead of building it again"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -16,19 +21,22 @@ permissions:
 jobs:
   biocap:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     permissions:
       contents: write
+      actions: read
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
+        if: inputs.from_run == ''
         with:
           python-version: "3.12"
 
       - name: Install PyTorch for the CPU and the export tools
+        if: inputs.from_run == ''
         run: |
           # torchvision comes from the same index as torch: a torchvision from PyPI is built for another torch and
           # fails to load its operators.
@@ -39,9 +47,11 @@ jobs:
           pip freeze > pip-freeze.txt
 
       - name: Export BioCAP and build the pack
+        if: inputs.from_run == ''
         run: python tools/models/export_biocap.py --out build/biocap
 
       - name: Upload the pack, its evaluation and the test references
+        if: inputs.from_run == ''
         uses: actions/upload-artifact@v7
         with:
           name: biocap-pack
@@ -53,10 +63,21 @@ jobs:
             build/biocap/reference.json
             pip-freeze.txt
 
+      - name: Fetch the pack an earlier run built
+        if: inputs.from_run != ''
+        uses: actions/download-artifact@v7
+        with:
+          name: biocap-pack
+          run-id: ${{ inputs.from_run }}
+          github-token: ${{ github.token }}
+          path: .
+
       - name: Publish the pack as a release
         if: inputs.publish
         run: |
-          version=$(sed -n 's/^PACK_VERSION = \([0-9]*\)$/\1/p' tools/models/export_biocap.py)
+          pack=$(ls build/biocap/biocap-pack-*.zip)
+          version=$(basename "$pack" .zip | sed 's/^biocap-pack-//')
+          (cd build/biocap && sha256sum --check "biocap-pack-$version.zip.sha256")
           # Not marked as the latest release, which stays the newest app version.
           gh release create "biocap-pack-$version" \
             "build/biocap/biocap-pack-$version.zip" "build/biocap/biocap-pack-$version.zip.sha256" \

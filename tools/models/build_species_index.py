@@ -1,14 +1,16 @@
 """Builds the species index the accurate identifier (BioCAP) chooses from: tools/models/species_index.tsv.
 
-The index is the plants a backyard in Australia is likely to show:
-- every species in the app's knowledge base,
-- every species the quick model (AIY Plants V1) knows,
+The index is the plants, animals and fungi a backyard in Australia is likely to show:
+- every plant, animal and fungus in the app's knowledge bases,
+- every species the quick models (AIY Plants, Birds and Insects V1) know,
 - the cultivated and wild plants most often recorded in Australia on iNaturalist,
+- the wild animals and fungi most often recorded there, group by group,
 - Brisbane City Council's weed list and the national weed lists on the Atlas of Living Australia.
 
-Each species gets its taxonomy from the GBIF backbone, which matches the taxonomy BioCAP was trained with, and a common
-name from the knowledge base or iNaturalist where there is one. Every web lookup is cached in --cache, so a rerun
-only asks for what is new. Run it with the standard library only:
+Each species gets its taxonomy from the GBIF backbone, which matches the taxonomy BioCAP was trained with, a common
+name from the knowledge base or iNaturalist where there is one, and its group (plant, bird, insect and so on), which
+tells the app what a photo shows. Every web lookup is cached in --cache, so a rerun only asks for what is new. Run it
+with the standard library only:
 
     python3 tools/models/build_species_index.py --cache /path/to/cache
 """
@@ -27,8 +29,42 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, "tools", "models", "species_index.tsv")
-AIY_LABELS = os.path.join(ROOT, "app", "src", "main", "assets", "ml", "aiy_plants_v1_labels.txt")
+AIY_LABELS = os.path.join(ROOT, "app", "src", "main", "assets", "ml", "aiy_{kind}_v1_labels.txt")
+
+# The animals and fungi of a backyard, by iNaturalist's iconic taxon: how many of the most recorded in Australia to
+# include from each, and the GBIF kingdom they belong to.
+WILD_GROUPS = {
+    "Aves": (700, "Animalia"),
+    "Insecta": (1500, "Animalia"),
+    "Arachnida": (300, "Animalia"),
+    "Reptilia": (250, "Animalia"),
+    "Amphibia": (120, "Animalia"),
+    "Mammalia": (200, "Animalia"),
+    "Actinopterygii": (200, "Animalia"),
+    "Mollusca": (200, "Animalia"),
+    "Fungi": (400, "Fungi"),
+}
+
+# The app's group for each GBIF class; plants and fungi go by kingdom, and molluscs by phylum.
+GROUPS_BY_CLASS = {
+    "Aves": "bird", "Insecta": "insect", "Arachnida": "spider", "Amphibia": "frog", "Mammalia": "mammal",
+    "Reptilia": "reptile", "Squamata": "reptile", "Testudines": "reptile", "Crocodylia": "reptile",
+    "Actinopterygii": "fish", "Elasmobranchii": "fish",
+}
+
+
+def group_of(match):
+    """The group the app files a species under: plant, bird, insect, spider, reptile, frog, mammal, fish, mollusc,
+    fungus or other."""
+    if match["kingdom"] == "Plantae":
+        return "plant"
+    if match["kingdom"] == "Fungi":
+        return "fungus"
+    if match.get("phylum") == "Mollusca":
+        return "mollusc"
+    return GROUPS_BY_CLASS.get(match.get("class"), "other")
 KB_SPECIES = os.path.join(ROOT, "app", "src", "main", "assets", "kb", "species", "*.json")
+KB_FAUNA = os.path.join(ROOT, "app", "src", "main", "assets", "kb", "fauna", "*.json")
 
 INAT_AUSTRALIA = 6744
 USER_AGENT = "Pollenplot species index builder (https://github.com/w-koller/Pollenplot)"
@@ -36,11 +72,16 @@ RANKS = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
 
 class Cache:
-    """Remembers each web lookup by its URL, saved after every few hundred new answers. Safe to use from threads."""
+    """Remembers each web lookup by its URL, saved after every few hundred new answers. Safe to use from threads.
+    iNaturalist's taxon records are large, so only the fields the index uses are kept of them."""
 
     def __init__(self, path):
         self.path = path
         self.data = json.load(open(path)) if os.path.exists(path) else {}
+        for url, value in self.data.items():
+            keep = inat_fields(url)
+            if keep:
+                self.data[url] = keep(value)
         self.unsaved = 0
         self.lock = threading.Lock()
 
@@ -60,6 +101,9 @@ class Cache:
                 print(f"  retry {attempt + 1} for {url}: {error}", file=sys.stderr)
                 time.sleep(5 * (attempt + 1))
         time.sleep(pause)
+        keep = inat_fields(url)
+        if keep:
+            value = keep(value)
         with self.lock:
             self.data[url] = value
             self.unsaved += 1
@@ -88,19 +132,30 @@ def kb_species():
     return species
 
 
-def aiy_labels():
-    labels = [line.strip() for line in open(AIY_LABELS) if line.strip()]
+def kb_fauna():
+    """The animal knowledge base: name, common name, synonyms and GBIF kingdom. Its venomous animals and those the
+    law asks about must be in the index, or the app could never name them and say what to do."""
+    animals = []
+    for path in sorted(glob.glob(KB_FAUNA)):
+        for item in json.load(open(path)):
+            kingdom = "Fungi" if item["group"] == "fungus" else "Animalia"
+            animals.append((item["name"], (item.get("common") or [None])[0], item.get("synonyms") or [], kingdom))
+    return animals
+
+
+def aiy_labels(kind):
+    labels = [line.strip() for line in open(AIY_LABELS.format(kind=kind)) if line.strip()]
     return [label for label in labels if label != "None"]
 
 
-def inat_top(cache, captive, count):
+def inat_top(cache, captive, count, iconic="Plantae"):
     """The plants most observed in Australia on iNaturalist, with their Australian English common names."""
     results = []
     page = 1
     while len(results) < count:
         query = {
             "place_id": INAT_AUSTRALIA,
-            "iconic_taxa": "Plantae",
+            "iconic_taxa": iconic,
             "captive": "true" if captive else "false",
             "per_page": 500,
             "page": page,
@@ -160,6 +215,15 @@ def ala_list(cache, uid):
     return names
 
 
+def inat_fields(url):
+    """What to keep of an iNaturalist taxon lookup: a search's name, ID and ancestors, and each ancestor's rank and name."""
+    if "api.inaturalist.org/v1/taxa?" in url:
+        return lambda v: {"results": [{"name": t["name"], "id": t["id"], "ancestor_ids": t.get("ancestor_ids", [])} for t in v.get("results", [])]}
+    if "api.inaturalist.org/v1/taxa/" in url:
+        return lambda v: {"results": [{"rank": t["rank"], "name": t["name"]} for t in v.get("results", [])]}
+    return None
+
+
 def inat_classification(cache, name):
     """Kingdom to genus as iNaturalist has them, for a species the GBIF backbone does not know by this name yet, such
     as tea trees that Australia's census moved from Leptospermum to Gaudium. iNaturalist's plant classes and phyla
@@ -180,8 +244,8 @@ def inat_classification(cache, name):
     return {**{rank: ancestors[rank] for rank in RANKS[:-1]}, "species": name, "key": f"inat:{taxon['id']}"}
 
 
-def gbif_match(cache, name):
-    url = "https://api.gbif.org/v1/species/match?" + urllib.parse.urlencode({"name": name, "kingdom": "Plantae", "strict": "true"})
+def gbif_match(cache, name, kingdom="Plantae"):
+    url = "https://api.gbif.org/v1/species/match?" + urllib.parse.urlencode({"name": name, "kingdom": kingdom, "strict": "true"})
     return cache.get(url, pause=0.05)
 
 
@@ -190,19 +254,32 @@ def main():
     parser.add_argument("--cache", required=True, help="A JSON file for the web lookups, kept between runs")
     parser.add_argument("--inat-cultivated", type=int, default=3000)
     parser.add_argument("--inat-wild", type=int, default=5000)
+    parser.add_argument("--out", default=OUT, help="Where to write the index")
     args = parser.parse_args()
     cache = Cache(args.cache)
 
-    # Each candidate: the name a source uses, a common name if the source has one, and where it came from.
+    # Each candidate: the name a source uses, a common name if the source has one, and where it came from. A name's
+    # kingdom tells GBIF where to look, as a few names are used for both a plant and an animal.
     candidates = []
+    kingdoms = {}
     kb_names = {}
     for name, common, synonyms in kb_species():
         candidates.append((name, common, "kb"))
         kb_names[name] = name
         for synonym in synonyms:
             kb_names[synonym] = name
-    for label in aiy_labels():
+    for name, common, synonyms, kingdom in kb_fauna():
+        candidates.append((name, common, "kb_fauna"))
+        kingdoms[name] = kingdom
+        kb_names[name] = name
+        for synonym in synonyms:
+            kb_names[synonym] = name
+    for label in aiy_labels("plants"):
         candidates.append((label, None, "aiy"))
+    for kind in ("birds", "insects"):
+        for label in aiy_labels(kind):
+            candidates.append((label, None, f"aiy_{kind}"))
+            kingdoms[label] = "Animalia"
     print("iNaturalist, cultivated", file=sys.stderr)
     inat_counts = {}
     for name, common, count in inat_top(cache, captive=True, count=args.inat_cultivated):
@@ -212,6 +289,12 @@ def main():
     for name, common, count in inat_top(cache, captive=False, count=args.inat_wild):
         candidates.append((name, common, "inat_wild"))
         inat_counts[name] = inat_counts.get(name, 0) + count
+    for iconic, (count, kingdom) in WILD_GROUPS.items():
+        print(f"iNaturalist, {iconic}", file=sys.stderr)
+        for name, common, observed in inat_top(cache, captive=False, count=count, iconic=iconic):
+            candidates.append((name, common, f"inat_{iconic.lower()}"))
+            inat_counts[name] = inat_counts.get(name, 0) + observed
+            kingdoms[name] = kingdom
     print("Brisbane weeds", file=sys.stderr)
     for name, common in brisbane_weeds(cache):
         candidates.append((name, common, "brisbane_weed"))
@@ -228,15 +311,19 @@ def main():
     matches = {}
     # A few lookups at a time: one at a time, GBIF takes hours for this many names.
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
-        for i, (name, match) in enumerate(zip(names, pool.map(lambda n: gbif_match(cache, n), names))):
+        found = pool.map(lambda n: gbif_match(cache, n, kingdoms.get(n, "Plantae")), names)
+        for i, (name, match) in enumerate(zip(names, found)):
             if i % 500 == 0:
                 print(f"  {i}", file=sys.stderr, flush=True)
-            if match.get("matchType") in ("EXACT", "FUZZY") and match.get("kingdom") == "Plantae" and match.get("species") and all(match.get(r) for r in RANKS):
+            expected = kingdoms.get(name, "Plantae")
+            if match.get("matchType") in ("EXACT", "FUZZY") and match.get("kingdom") == expected and match.get("species") and all(match.get(r) for r in RANKS):
                 matches[name] = {**match, "key": f"gbif:{match.get('speciesKey', match['usageKey'])}"}
             else:
                 unmatched.append(name)
-    # Names iNaturalist gave that the backbone does not have yet are classified as iNaturalist has them.
-    inat_names = {c[0] for c in candidates if c[2].startswith("inat_")}
+    # Names iNaturalist gave that the backbone does not have yet are classified as iNaturalist has them, and so are the
+    # knowledge base's animals. The backbone leaves snakes and lizards without an order and ray-finned fish without a
+    # class, which BioCAP's taxonomy has, so those come from iNaturalist too.
+    inat_names = {c[0] for c in candidates if c[2].startswith("inat_") or c[2] == "kb_fauna"}
     for name in [n for n in unmatched if n in inat_names]:
         match = inat_classification(cache, name)
         if match:
@@ -251,6 +338,7 @@ def main():
         key = match["key"]
         entry = entries.setdefault(key, {
             "taxonomy": " ".join(match[r] if r != "species" else match["species"].split()[1] for r in RANKS),
+            "group": group_of(match),
             "gbif": match["species"],
             "names": [],
             "common": None,
@@ -264,7 +352,7 @@ def main():
         if name in kb_names:
             entry["kb"] = kb_names[name]
         # The knowledge base's common name comes first, then iNaturalist's Australian English name.
-        if common and (entry["common"] is None or source == "kb"):
+        if common and (entry["common"] is None or source in ("kb", "kb_fauna")):
             entry["common"] = common
         entry["observations"] = max(entry["observations"], inat_counts.get(name, 0))
 
@@ -285,13 +373,14 @@ def main():
             "|".join(n for n in entry["names"] if n != label),
             str(entry["observations"]),
             str(key),
+            entry["group"],
         ])
     rows.sort(key=lambda r: (-int(r[5]), r[0]))
-    with open(OUT, "w", newline="") as f:
+    with open(args.out, "w", newline="") as f:
         writer = csv.writer(f, delimiter="\t", lineterminator="\n")
-        writer.writerow(["name", "taxonomy", "common", "sources", "aliases", "observations", "taxon"])
+        writer.writerow(["name", "taxonomy", "common", "sources", "aliases", "observations", "taxon", "group"])
         writer.writerows(rows)
-    print(f"Wrote {len(rows)} species to {os.path.relpath(OUT, ROOT)}; {len(unmatched)} names had no GBIF species match.", file=sys.stderr)
+    print(f"Wrote {len(rows)} species to {args.out}; {len(unmatched)} names had no GBIF species match.", file=sys.stderr)
     with open(os.path.join(os.path.dirname(args.cache), "unmatched_names.txt"), "w") as f:
         f.write("\n".join(unmatched) + "\n")
 
