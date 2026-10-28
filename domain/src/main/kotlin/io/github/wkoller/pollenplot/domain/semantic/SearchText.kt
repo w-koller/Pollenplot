@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.domain.semantic
 
+import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
@@ -7,7 +8,7 @@ import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 
-enum class SearchKind { ZONE, PLANT, SIGHTING }
+enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE }
 
 /**
  * A record as the search index holds it: the record's key, its kind, the title shown in results and the words it
@@ -42,6 +43,22 @@ object SearchText {
             zoneName?.let { "in $it" },
             roles.joinToString(", ") { words(it.name) }.ifBlank { null },
             plant.notes.ifBlank { null },
+        ).joinToString(". "),
+    )
+
+    /** A honey bee hive, found by its name, its kind of hive, where it is and its queen's year. */
+    fun hive(hive: HoneyHive, zoneName: String?, apiaryName: String?): SearchDoc = SearchDoc(
+        id = hive.id,
+        kind = SearchKind.HIVE,
+        title = hive.name,
+        body = listOfNotNull(
+            "honey bee hive",
+            words(hive.type.name),
+            zoneName?.let { "in $it" },
+            apiaryName?.let { "apiary $it" },
+            hive.queenYear?.let { "queen from $it, marked ${words(hive.queenColour!!.name)}" },
+            words(hive.status.name),
+            hive.notes.ifBlank { null },
         ).joinToString(". "),
     )
 

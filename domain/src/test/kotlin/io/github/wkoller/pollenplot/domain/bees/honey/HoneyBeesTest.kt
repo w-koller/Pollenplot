@@ -34,6 +34,8 @@ class HoneyBeesTest {
         assertEquals("4 mites in 300 bees is 1.3 per 100", 13, VarroaCheck("v", "h1", LocalDate.of(2026, 10, 1), VarroaMethod.ALCOHOL_WASH, 300, 4, null).mitesPer100BeesTenths)
         assertNull(VarroaCheck("v", "h1", LocalDate.of(2026, 10, 1), VarroaMethod.STICKY_MAT, 3, 4, null).mitesPer100BeesTenths)
         assertEquals("4 mites over 3 days is 1.3 a day", 13, VarroaCheck("v", "h1", LocalDate.of(2026, 10, 1), VarroaMethod.STICKY_MAT, 3, 4, null).mitesPerDayTenths)
+        assertEquals("A soapy water wash counts like an alcohol wash", 13, VarroaCheck("v", "h1", LocalDate.of(2026, 10, 1), VarroaMethod.SOAPY_WATER_WASH, 300, 4, null).mitesPer100BeesTenths)
+        assertNull("Drone uncapping samples no number of bees", VarroaCheck("v", "h1", LocalDate.of(2026, 10, 1), VarroaMethod.DRONE_UNCAPPING, 0, 4, null).mitesPer100BeesTenths)
     }
 
     @Test

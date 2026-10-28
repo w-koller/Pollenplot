@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.domain.semantic
 
+import io.github.wkoller.pollenplot.domain.bees.honey.HiveStatus
+import io.github.wkoller.pollenplot.domain.bees.honey.HiveType
+import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
@@ -73,5 +76,14 @@ class GardenGraphTest {
         assertTrue(doc.body, doc.body.contains("in Back Citrus Patch"))
         assertTrue(doc.body, doc.body.contains("pollinator magnet"))
         assertEquals("orchard. full sun. mulched", SearchText.zone(zone).body)
+    }
+
+    @Test
+    fun `a hive is found by its kind, its place and its queen`() {
+        val hive = HoneyHive("33333333-3333-3333-3333-333333333333", "Hive 1", HiveType.LANGSTROTH_8, null, zone.id, 1, 1, 2025, HiveStatus.ACTIVE, null)
+        val doc = SearchText.hive(hive, "Hive Corner", "Home")
+        assertEquals(SearchKind.HIVE, doc.kind)
+        assertEquals("Hive 1", doc.title)
+        assertEquals("honey bee hive. langstroth 8. in Hive Corner. apiary Home. queen from 2025, marked blue. active", doc.body)
     }
 }

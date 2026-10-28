@@ -40,6 +40,8 @@ data class Settings(
     val lastZoneId: String? = null,
     /** Let Gemma 4, once it is on the phone, give a second opinion on unsure finds while the phone charges. */
     val secondOpinions: Boolean = true,
+    /** Varroa mite is established where the honey bee hives are, so mite checks are suggested monthly. */
+    val varroaEstablished: Boolean = false,
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
@@ -67,6 +69,7 @@ class SettingsStore(context: Context) {
         val scanSince = longPreferencesKey("scan_since")
         val lastZoneId = stringPreferencesKey("last_zone_id")
         val secondOpinions = booleanPreferencesKey("second_opinions")
+        val varroaEstablished = booleanPreferencesKey("varroa_established")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -92,6 +95,7 @@ class SettingsStore(context: Context) {
             scanSince = this[Keys.scanSince],
             lastZoneId = this[Keys.lastZoneId],
             secondOpinions = this[Keys.secondOpinions] ?: defaults.secondOpinions,
+            varroaEstablished = this[Keys.varroaEstablished] ?: defaults.varroaEstablished,
         )
     }
 
@@ -109,6 +113,7 @@ class SettingsStore(context: Context) {
         setOrRemove(Keys.scanSince, settings.scanSince)
         setOrRemove(Keys.lastZoneId, settings.lastZoneId)
         this[Keys.secondOpinions] = settings.secondOpinions
+        this[Keys.varroaEstablished] = settings.varroaEstablished
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

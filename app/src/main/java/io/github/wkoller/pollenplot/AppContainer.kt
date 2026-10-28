@@ -6,6 +6,8 @@ import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
 import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.ai.SecondOpinionWorker
+import io.github.wkoller.pollenplot.data.BeeRepository
+import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
@@ -83,6 +85,7 @@ class AppContainer(
     )
     val database: PollenplotDatabase = database ?: PollenplotDatabase.create(appContext)
     val knowledge = KnowledgeRepository(appContext, scope)
+    val bees = BeeRepository(this.database, clock)
     val garden = GardenRepository(
         db = this.database,
         clock = clock,
@@ -91,6 +94,7 @@ class AppContainer(
         fauna = { knowledge.awaitFauna() },
     )
     val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
+    val beeViews = BeeViews(bees, garden, settingsStore, clock)
     val places = PlaceFinder(this.web) { weeds.sources }
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
@@ -127,7 +131,11 @@ class AppContainer(
         // the garden's state or weed lists change. A garden holds hundreds of records at most, so this takes a moment.
         scope.launch {
             knowledge.await()
-            views.locality.distinctUntilChanged().collectLatest { garden.reindexAll() }
+            views.locality.distinctUntilChanged().collectLatest {
+                garden.reindexAll()
+                // The rebuild clears the whole index, hives included.
+                bees.reindex()
+            }
         }
         // The weed lists are brought up to date once a month on Wi-Fi, and straight away when the garden moves.
         scope.launch {

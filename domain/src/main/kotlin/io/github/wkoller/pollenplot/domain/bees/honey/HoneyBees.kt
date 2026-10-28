@@ -76,8 +76,11 @@ data class Inspection(
 }
 
 enum class VarroaMethod {
-    /** About 300 bees from a brood frame washed in alcohol or detergent, which kills them and counts the mites well. */
+    /** About 300 bees from a brood frame washed in alcohol, which kills them and counts the mites well. */
     ALCOHOL_WASH,
+
+    /** The same wash in soapy water. */
+    SOAPY_WATER_WASH,
 
     /** About 300 bees shaken in icing sugar, which leaves them alive and counts most of the mites. */
     SUGAR_SHAKE,
@@ -105,11 +108,16 @@ data class VarroaCheck(
      * methods, which do not sample a number of bees.
      */
     val mitesPer100BeesTenths: Int?
-        get() = if ((method == VarroaMethod.ALCOHOL_WASH || method == VarroaMethod.SUGAR_SHAKE) && sample > 0) {
+        get() = if (method in SAMPLED && sample > 0) {
             ((mites * 1000L + sample / 2) / sample).toInt()
         } else {
             null
         }
+
+    private companion object {
+        /** The methods that count the mites on a sample of bees. */
+        val SAMPLED = setOf(VarroaMethod.ALCOHOL_WASH, VarroaMethod.SOAPY_WATER_WASH, VarroaMethod.SUGAR_SHAKE)
+    }
 
     /** Mites that fell per day, in tenths, for a sticky mat; null for the other methods. */
     val mitesPerDayTenths: Int?

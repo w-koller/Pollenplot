@@ -52,15 +52,20 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     notices for animals that are venomous or that the law in the garden's state asks about).
   - `id/`: identification. `RegionPlanner` (the tiles each photo is classified in and how regions are chosen),
     `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
-  plants recorded near it), `ThumbnailMath`, `FlowerHint`,
-    `Confidence` and `ZoneSuggestion` (the zone offered for a plant found in a photo).
+    plants recorded near it), `ThumbnailMath`, `FlowerHint`, `Confidence` and `ZoneSuggestion` (the zone offered for
+    a plant found in a photo).
+  - `bees/honey/`: `HoneyBees` (apiaries, hives and their records: inspections, mite checks, treatments, feeding,
+    harvests and colony events) and `HiveTasks` (when each hive is due for an inspection, a brood check and a mite
+    check, following the Australian Honey Bee Industry Biosecurity Code of Practice, version 2.1), with each state's
+    registration page in `BeekeeperRegistration`.
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
   Android runtime matches; the app brings the Android one. `TextEmbedderTest` compares tokens and vectors with
   `ml/src/test/resources/bge_reference.json`, made with Hugging Face's tokenizers and ONNX Runtime in Python.
 - `app/data`: `GardenRepository` (records, detections, the search index and JSON-LD export), `GardenViews` (records
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
-  review), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
+  review), `BeeRepository` (the honey bee records) and `BeeViews` (hives with their zone, apiary and what each is due
+  for today), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on
@@ -90,8 +95,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
   finder, `ui/wildlife` the Wildlife tab, an animal's page, a sighting's page and the safety notice, and `ui/review`
-  the review cards (`AnimalCards` for animals), `PhotoReviewScreen` (shared by
-  the Identify results and the Review queue) and `ReviewModel`.
+  the review cards (`AnimalCards` for animals), `PhotoReviewScreen` (shared by the Identify results and the Review
+  queue) and `ReviewModel`, and `ui/bees` the Bees tab (`HoneySection`), a hive's page, its editor and the form for
+  each kind of record (`HoneyForms`).
 - `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a
   point through the Atlas of Living Australia) and `PhoneLocation` (approximate location from the phone's own location
   service). `app/web` holds `Web`, the small HTTP client the app's few web requests go through.
@@ -173,8 +179,9 @@ through `ui/components/PollenShapes.kt` and other components, so an API change t
   migration and a schema committed in `app/schemas/`, and there is no destructive migration fallback. The read-only
   knowledge database is rebuilt from `app/src/main/assets/kb/` whenever its version changes.
 - Garden locations sent to online services (weather, ALA) are rounded to about 1 km. Photos never leave the phone.
-- Every write goes through `GardenRepository`, which also updates the FTS4 search index and links. Room supports
-  FTS4 but not FTS5, so the index uses FTS4; queries are reduced to letters and digits with a prefix star on each word.
+- Every write goes through `GardenRepository`, which also updates the FTS4 search index and links, or through
+  `BeeRepository` for bee records, which puts hives in the same index. Room supports FTS4 but not FTS5, so the index
+  uses FTS4; queries are reduced to letters and digits with a prefix star on each word.
 
 ## Copy
 

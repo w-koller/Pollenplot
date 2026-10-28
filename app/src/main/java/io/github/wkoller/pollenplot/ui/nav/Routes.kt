@@ -47,6 +47,15 @@ import kotlinx.serialization.Serializable
 /** A sighting without a photo, optionally in a zone. */
 @Serializable data class AddSightingRoute(val zoneId: String? = null)
 
+/** One honey bee hive. */
+@Serializable data class HiveRoute(val id: String)
+
+/** A new honey bee hive, or a hive's details to change. */
+@Serializable data class HiveEditRoute(val id: String? = null)
+
+/** A new record for a hive, of a kind named by [HoneyRecordKind]. */
+@Serializable data class HoneyRecordRoute(val hiveId: String, val kind: String)
+
 /** Questions to Gemma 4 about a plant in the garden, a kind of animal, or, with neither, the whole garden. */
 @Serializable data class AskRoute(val plantId: String? = null, val animalKey: String? = null)
 

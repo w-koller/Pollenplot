@@ -62,6 +62,7 @@ fun SearchScreen(
     onAddSpecies: (String) -> Unit,
     onAskGarden: (() -> Unit)? = null,
     onOpenSighting: (String) -> Unit = {},
+    onOpenHive: (String) -> Unit = {},
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val hits by produceState(initialValue = emptyList<SearchHit>(), query) { value = garden.search(query) }
@@ -106,10 +107,10 @@ fun SearchScreen(
             if (hits.isEmpty()) {
                 item { Text(stringResource(R.string.search_none, query.trim()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
             }
-            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting) }
+            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive) }
             if (related.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_related)) }
-                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting) }
+                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive) }
             }
             if (species.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_could_add)) }
@@ -121,7 +122,7 @@ fun SearchScreen(
 
 /** A search result, shown as the same row as everywhere else; the index text is only for matching. */
 @Composable
-private fun HitRow(hit: SearchHit, plants: List<PlantView>, zones: List<ZoneView>, onOpenZone: (String) -> Unit, onOpenPlant: (String) -> Unit, onOpenSighting: (String) -> Unit) {
+private fun HitRow(hit: SearchHit, plants: List<PlantView>, zones: List<ZoneView>, onOpenZone: (String) -> Unit, onOpenPlant: (String) -> Unit, onOpenSighting: (String) -> Unit, onOpenHive: (String) -> Unit) {
     val plant = plants.firstOrNull { it.plant.id == hit.recordId }
     val zone = zones.firstOrNull { it.zone.id == hit.recordId }
     when {
@@ -132,6 +133,7 @@ private fun HitRow(hit: SearchHit, plants: List<PlantView>, zones: List<ZoneView
                 when (hit.kind) {
                     SearchKind.ZONE.name -> onOpenZone(hit.recordId)
                     SearchKind.SIGHTING.name -> onOpenSighting(hit.recordId)
+                    SearchKind.HIVE.name -> onOpenHive(hit.recordId)
                     else -> onOpenPlant(hit.recordId)
                 }
             },
@@ -139,6 +141,7 @@ private fun HitRow(hit: SearchHit, plants: List<PlantView>, zones: List<ZoneView
                 val icon = when (hit.kind) {
                     SearchKind.ZONE.name -> R.drawable.ic_yard
                     SearchKind.SIGHTING.name -> R.drawable.ic_raven
+                    SearchKind.HIVE.name -> R.drawable.ic_hive
                     else -> R.drawable.ic_potted_plant
                 }
                 Icon(painterResource(icon), contentDescription = null)

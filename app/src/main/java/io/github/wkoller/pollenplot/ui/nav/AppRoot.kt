@@ -52,6 +52,10 @@ import io.github.wkoller.pollenplot.scan.AddPhotosWorker
 import io.github.wkoller.pollenplot.ui.assistant.AskModel
 import io.github.wkoller.pollenplot.ui.assistant.AskScreen
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
+import io.github.wkoller.pollenplot.ui.bees.HiveEditorScreen
+import io.github.wkoller.pollenplot.ui.bees.HiveScreen
+import io.github.wkoller.pollenplot.ui.bees.HoneyRecordKind
+import io.github.wkoller.pollenplot.ui.bees.HoneyRecordScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
@@ -262,6 +266,7 @@ fun AppRoot(
                         onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
                         onAskGarden = { navController.navigate(AskRoute()) },
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                        onOpenHive = { navController.navigate(HiveRoute(it)) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->
@@ -379,7 +384,41 @@ fun AppRoot(
                         onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
                     )
                 }
-                composable<BeesRoute> { BeesScreen(onOpenSettings = openSettings) }
+                composable<BeesRoute> {
+                    BeesScreen(
+                        beeViews = container.beeViews,
+                        settings = container.settingsStore,
+                        onOpenSettings = openSettings,
+                        onAddHive = { navController.navigate(HiveEditRoute()) },
+                        onOpenHive = { navController.navigate(HiveRoute(it)) },
+                    )
+                }
+                composable<HiveRoute> { entry ->
+                    val id = entry.toRoute<HiveRoute>().id
+                    HiveScreen(
+                        views = container.beeViews,
+                        bees = container.bees,
+                        hiveId = id,
+                        onBack = back,
+                        onEdit = { navController.navigate(HiveEditRoute(id)) },
+                        onRecord = { kind -> navController.navigate(HoneyRecordRoute(id, kind.name)) },
+                    )
+                }
+                composable<HiveEditRoute> { entry ->
+                    HiveEditorScreen(
+                        bees = container.bees,
+                        views = container.views,
+                        hiveId = entry.toRoute<HiveEditRoute>().id,
+                        today = container.beeViews.today(),
+                        onBack = back,
+                        onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
+                        onCreated = { id -> navController.navigate(HiveRoute(id)) { popUpTo<HiveEditRoute> { inclusive = true } } },
+                    )
+                }
+                composable<HoneyRecordRoute> { entry ->
+                    val route = entry.toRoute<HoneyRecordRoute>()
+                    HoneyRecordScreen(HoneyRecordKind.valueOf(route.kind), route.hiveId, container.bees, container.beeViews.today(), onBack = back)
+                }
                 composable<WaterRoute> { WaterScreen(onOpenSettings = openSettings) }
                 composable<SettingsRoute> {
                     SettingsScreen(

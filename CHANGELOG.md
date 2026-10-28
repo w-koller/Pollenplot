@@ -95,3 +95,16 @@
   Pollenplot's own answer, with the number to call: 000, the Poisons Information Centre, the Exotic Plant Pest
   Hotline, or each state's wildlife rescue service. An answer that gives a chemical amount anyway is replaced by the
   label's.
+- Honey bees, on the Bees tab: your European honey bee hives with their zone, apiary and its registration number,
+  kind of hive, boxes, the queen's year and marking colour, and status. A hive's page shows
+  what it is due for and everything recorded for it: inspections (the queen and eggs, the brood, temperament, frames of
+  bees and stores, queen cells, signs of pests and disease and what you did), mite checks with mites per 100 bees or
+  per day, treatments, feeding, harvests, and colony events such as swarms, splits and requeening.
+- Hive reminders follow the Australian Honey Bee Industry Biosecurity Code of Practice: an inspection every two weeks
+  in spring and summer and every six weeks in autumn, a brood check three months after the last, and a mite check in
+  spring, summer and autumn, or every month where Varroa mite is established. A check that is overdue says so in words
+  and with an icon.
+- An inspection that notes sunken or perforated cappings, ropy brood or twisted larvae explains that these can be signs
+  of foulbrood and asks you to report them before moving bees or equipment.
+- The honey bee section links to the Code of Practice and to your state or territory's beekeeper registration page,
+  and hives can be found in search.
