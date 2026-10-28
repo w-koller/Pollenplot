@@ -319,6 +319,36 @@ class GardenRepository(
         search.delete(id)
     }
 
+    /** Records an animal seen without a photo, such as a kookaburra heard calling. */
+    suspend fun recordSighting(
+        speciesName: String?,
+        label: String,
+        group: LifeGroup,
+        zoneId: String?,
+        plantId: String?,
+        behaviour: Behaviour?,
+        count: Int,
+        seenAt: Instant,
+        notes: String,
+    ): Sighting {
+        val sighting = Sighting(
+            id = UUID.randomUUID().toString(),
+            speciesName = speciesName,
+            label = label.trim(),
+            group = speciesName?.let { fauna().animal(it)?.group } ?: group,
+            zoneId = zoneId,
+            plantId = plantId,
+            behaviour = behaviour,
+            count = count.coerceAtLeast(1),
+            photoId = null,
+            thumbnail = null,
+            seenAt = seenAt,
+            notes = notes.trim(),
+        )
+        addSighting(sighting)
+        return sighting
+    }
+
     /** Makes a detection a sighting, with the photo, its cut-out and when the photo was taken. */
     suspend fun confirmSighting(
         detectionId: String,
@@ -335,7 +365,8 @@ class GardenRepository(
             id = UUID.randomUUID().toString(),
             speciesName = speciesName,
             label = label,
-            group = group,
+            // The user may have chosen an animal of another group than the camera was set to.
+            group = speciesName?.let { fauna().animal(it)?.group } ?: group,
             zoneId = zoneId,
             plantId = plantId,
             behaviour = behaviour,

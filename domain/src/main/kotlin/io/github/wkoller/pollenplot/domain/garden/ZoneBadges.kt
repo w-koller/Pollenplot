@@ -2,9 +2,10 @@ package io.github.wkoller.pollenplot.domain.garden
 
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.WaterNeed
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 
 /** Badges for a whole zone, shown on its tile on the Plot. Problems come first. */
-enum class ZoneBadge { WEED_FOUND, MIXED_THIRST, POLLINATOR_HOTSPOT }
+enum class ZoneBadge { WEED_FOUND, MIXED_THIRST, POLLINATOR_HOTSPOT, FROGS_SEEN }
 
 /** What a zone's badges are worked out from, for one plant in it. */
 data class PlantFacts(val water: WaterNeed?, val roles: List<EcoRole>)
@@ -19,13 +20,16 @@ object ZoneBadges {
      */
     const val MIXED_THIRST_RATIO = 3
 
-    fun of(plants: List<PlantFacts>): List<ZoneBadge> {
+    /** The badges for a zone with [plants] in it, where animals of the groups in [seen] have been seen. */
+    fun of(plants: List<PlantFacts>, seen: Set<LifeGroup> = emptySet()): List<ZoneBadge> {
         val badges = mutableSetOf<ZoneBadge>()
         if (plants.any { EcoRole.WEED_RISK in it.roles }) badges += ZoneBadge.WEED_FOUND
         val factors = plants.mapNotNull { it.water?.plantFactorBp }
         if (factors.isNotEmpty() && factors.max() >= MIXED_THIRST_RATIO * factors.min()) badges += ZoneBadge.MIXED_THIRST
         val feeders = plants.count { EcoRole.POLLINATOR_MAGNET in it.roles || EcoRole.NATIVE_BEE_FAVOURITE in it.roles }
         if (feeders >= HOTSPOT_PLANTS) badges += ZoneBadge.POLLINATOR_HOTSPOT
+        // Frogs are a sign of a healthy, chemical-free patch, so seeing them confirms what the plants suggest.
+        if (LifeGroup.FROG in seen) badges += ZoneBadge.FROGS_SEEN
         return ZoneBadge.entries.filter { it in badges }
     }
 }

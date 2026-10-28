@@ -35,8 +35,17 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SearchRoute
 
-/** Identify with the camera, or check whether a plant is a weed. */
-@Serializable data class IdentifyRoute(val checkingWeed: Boolean = false)
+/** Identify with the camera, or check whether a plant is a weed. [group] is what the camera starts out looking for. */
+@Serializable data class IdentifyRoute(val checkingWeed: Boolean = false, val group: String? = null)
+
+/** One kind of animal seen in the yard, by its knowledge base name or the name it was recorded under. */
+@Serializable data class AnimalRoute(val key: String)
+
+/** One sighting, to see, change or delete. */
+@Serializable data class SightingRoute(val id: String)
+
+/** A sighting without a photo, optionally in a zone. */
+@Serializable data class AddSightingRoute(val zoneId: String? = null)
 
 /** Plants found in photos, waiting for review. */
 @Serializable data object ReviewRoute
@@ -79,10 +88,20 @@ enum class TopLevelTab(
     WATER(WaterRoute, R.string.tab_water, R.drawable.ic_water_drop, R.drawable.ic_water_drop_filled),
 }
 
-/** The choices in the Plot's add menu. */
+/** The choices in the add menus on the Plot and Wildlife tabs. */
 enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
     IDENTIFY(R.string.add_identify_camera, R.drawable.ic_photo_camera),
     PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate),
     WEED(R.string.add_check_weed, R.drawable.ic_grass),
     PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant),
+    SIGHTING(R.string.add_sighting_by_name, R.drawable.ic_edit),
+    ;
+
+    companion object {
+        /** The Plot's add menu. */
+        val PLOT = listOf(IDENTIFY, PHOTOS, WEED, PLANT)
+
+        /** The Wildlife tab's add menu. Photos added from the gallery are only searched for plants so far. */
+        val WILDLIFE = listOf(IDENTIFY, SIGHTING)
+    }
 }

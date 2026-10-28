@@ -12,6 +12,18 @@ STRINGS = {
     "group_fungus": "Fungus",
     "group_other": "Other",
 
+    "group_plural_plant": "Plants",
+    "group_plural_bird": "Birds",
+    "group_plural_insect": "Insects",
+    "group_plural_spider": "Spiders",
+    "group_plural_reptile": "Reptiles",
+    "group_plural_frog": "Frogs",
+    "group_plural_mammal": "Mammals",
+    "group_plural_fish": "Fish",
+    "group_plural_mollusc": "Snails and slugs",
+    "group_plural_fungus": "Fungi",
+    "group_plural_other": "Other",
+
     "group_noun_bird": "bird",
     "group_noun_insect": "insect",
     "group_noun_spider": "spider",
@@ -65,8 +77,106 @@ STRINGS = {
 
     "animal_rule_source": "The official page",
 
+    "fauna_role_pollinator": "Pollinator",
+    "fauna_role_pest_controller": "Eats garden pests",
+    "fauna_role_plant_pest": "Garden pest",
+    "fauna_role_seed_disperser": "Spreads seeds",
+    "fauna_role_decomposer": "Breaks down dead plants",
+
+    "add_sighting_by_name": "Add a sighting by name",
+    "wildlife_none_in_year": "No wildlife was recorded in your yard in %1$d.",
+    "wildlife_native_unknown": "Pollenplot's animal list doesn't have these yet, so it can't say which are native.",
+    "wildlife_by_month": "Month by month",
+    "wildlife_notices": "Animals to know about",
+    "wildlife_group_chip": "%1$s: %2$d",
+    "wildlife_new_badge": "New to your yard",
+    "wildlife_recent": "Recent sightings",
+
+    "zone_wildlife_heading": "Wildlife seen here",
+    "zone_no_wildlife": "No animals have been recorded in this zone yet.",
+    "zone_add_sighting": "Add a sighting",
+
+    "sighting_on_plant_in_zone": "On %1$s in %2$s",
+    "sighting_on_plant": "On %1$s",
+    "sighting_in_zone": "In %1$s",
+
+    "animal_in_yard": "In your yard",
+    "animal_first_seen": "First seen on %1$s.",
+    "animal_seen_on": "Plants it was seen on",
+    "animal_uses": "Plants it uses",
+    "animal_uses_growing": "Growing in your garden",
+    "animal_needs": "What it needs",
+    "animal_family": "Family %1$s",
+    "animal_native_to": "Native to %1$s.",
+    "animal_introduced": "Introduced to Australia.",
+    "animal_native_everywhere": "Native across Australia.",
+    "animal_sightings": "Sightings",
+    "animal_not_in_list": "Pollenplot's animal list doesn't have this one yet, so only your sightings are shown.",
+
+    "sighting_title": "Sighting",
+    "sighting_new_title": "Add a sighting",
+    "sighting_seen_at": "Seen on %1$s at %2$s.",
+    "sighting_choose_animal": "Choose the animal",
+    "sighting_change_animal": "Change the animal",
+    "sighting_about_animal": "About this animal",
+    "sighting_when": "When",
+    "sighting_change_date": "Change the date",
+    "sighting_notes": "Notes",
+    "sighting_group": "What kind of animal",
+    "sighting_save": "Save",
+    "sighting_add": "Add sighting",
+    "sighting_delete": "Delete sighting",
+    "sighting_delete_title": "Delete this sighting?",
+    "sighting_delete_body": "The sighting will be removed from your wildlife records. The photo it came from stays in the "
+    "app.",
+    "sighting_delete_confirm": "Delete",
+    "sighting_missing": "This sighting has been deleted.",
+
     "animal_search_title": "Choose the animal",
     "animal_search_label": "Name of the animal or fungus",
     "animal_search_none": "Pollenplot's animal list has nothing called “%1$s” yet.",
     "animal_search_use": "Use “%1$s”",
+}
+
+PLURALS = {
+    "wildlife_month_species": {
+        "one": "%1$s: %2$d species",
+        "other": "%1$s: %2$d species",
+    },
+    "wildlife_group_heading": {
+        "one": "%1$s · %2$d species",
+        "other": "%1$s · %2$d species",
+    },
+    "wildlife_species_this_year": {
+        "one": "%1$d species seen in your yard this year",
+        "other": "%1$d species seen in your yard this year",
+    },
+    "wildlife_species_in_year": {
+        "one": "%1$d species seen in your yard in %2$d",
+        "other": "%1$d species seen in your yard in %2$d",
+    },
+    "wildlife_native": {
+        "one": "%1$d of them is native to Australia.",
+        "other": "%1$d of them are native to Australia.",
+    },
+    "wildlife_new": {
+        "one": "%1$d was seen in your yard for the first time.",
+        "other": "%1$d were seen in your yard for the first time.",
+    },
+    "wildlife_seen_times": {
+        "one": "Seen once",
+        "other": "Seen %1$d times",
+    },
+    "wildlife_show_all": {
+        "one": "Show %1$d sighting",
+        "other": "Show all %1$d sightings",
+    },
+    "sighting_count": {
+        "one": "%1$d seen",
+        "other": "%1$d together",
+    },
+    "animal_seen_summary": {
+        "one": "Seen once, on %2$s.",
+        "other": "Seen %1$d times, most recently on %2$s.",
+    },
 }

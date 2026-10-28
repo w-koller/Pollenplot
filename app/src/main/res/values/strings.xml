@@ -6,6 +6,7 @@
     <string name="back">Back</string>
     <string name="settings">Settings</string>
     <string name="cancel">Cancel</string>
+    <string name="choose">Choose</string>
     <string name="list_and">%1$s and %2$s</string>
     <string name="list_range">%1$s to %2$s</string>
     <string name="list_all_year">all year</string>
@@ -260,6 +261,7 @@
     <string name="badge_pollinator_hotspot">Pollinator hotspot</string>
     <string name="badge_mixed_thirst">Mixed thirst</string>
     <string name="badge_weed_found">Weed found</string>
+    <string name="badge_frogs_seen">Frogs seen</string>
     <string name="zone_add_title">Add a zone</string>
     <string name="zone_name_label">Zone name</string>
     <string name="zone_name_example">For example, Front Native Strip</string>
@@ -560,6 +562,17 @@
     <string name="group_mollusc">Snail or slug</string>
     <string name="group_fungus">Fungus</string>
     <string name="group_other">Other</string>
+    <string name="group_plural_plant">Plants</string>
+    <string name="group_plural_bird">Birds</string>
+    <string name="group_plural_insect">Insects</string>
+    <string name="group_plural_spider">Spiders</string>
+    <string name="group_plural_reptile">Reptiles</string>
+    <string name="group_plural_frog">Frogs</string>
+    <string name="group_plural_mammal">Mammals</string>
+    <string name="group_plural_fish">Fish</string>
+    <string name="group_plural_mollusc">Snails and slugs</string>
+    <string name="group_plural_fungus">Fungi</string>
+    <string name="group_plural_other">Other</string>
     <string name="group_noun_bird">bird</string>
     <string name="group_noun_insect">insect</string>
     <string name="group_noun_spider">spider</string>
@@ -606,6 +619,54 @@
     <string name="hazard_swoops">Swoops</string>
     <string name="hazard_poisonous">Poisonous</string>
     <string name="animal_rule_source">The official page</string>
+    <string name="fauna_role_pollinator">Pollinator</string>
+    <string name="fauna_role_pest_controller">Eats garden pests</string>
+    <string name="fauna_role_plant_pest">Garden pest</string>
+    <string name="fauna_role_seed_disperser">Spreads seeds</string>
+    <string name="fauna_role_decomposer">Breaks down dead plants</string>
+    <string name="add_sighting_by_name">Add a sighting by name</string>
+    <string name="wildlife_none_in_year">No wildlife was recorded in your yard in %1$d.</string>
+    <string name="wildlife_native_unknown">Pollenplot\'s animal list doesn\'t have these yet, so it can\'t say which are native.</string>
+    <string name="wildlife_by_month">Month by month</string>
+    <string name="wildlife_notices">Animals to know about</string>
+    <string name="wildlife_group_chip">%1$s: %2$d</string>
+    <string name="wildlife_new_badge">New to your yard</string>
+    <string name="wildlife_recent">Recent sightings</string>
+    <string name="zone_wildlife_heading">Wildlife seen here</string>
+    <string name="zone_no_wildlife">No animals have been recorded in this zone yet.</string>
+    <string name="zone_add_sighting">Add a sighting</string>
+    <string name="sighting_on_plant_in_zone">On %1$s in %2$s</string>
+    <string name="sighting_on_plant">On %1$s</string>
+    <string name="sighting_in_zone">In %1$s</string>
+    <string name="animal_in_yard">In your yard</string>
+    <string name="animal_first_seen">First seen on %1$s.</string>
+    <string name="animal_seen_on">Plants it was seen on</string>
+    <string name="animal_uses">Plants it uses</string>
+    <string name="animal_uses_growing">Growing in your garden</string>
+    <string name="animal_needs">What it needs</string>
+    <string name="animal_family">Family %1$s</string>
+    <string name="animal_native_to">Native to %1$s.</string>
+    <string name="animal_introduced">Introduced to Australia.</string>
+    <string name="animal_native_everywhere">Native across Australia.</string>
+    <string name="animal_sightings">Sightings</string>
+    <string name="animal_not_in_list">Pollenplot\'s animal list doesn\'t have this one yet, so only your sightings are shown.</string>
+    <string name="sighting_title">Sighting</string>
+    <string name="sighting_new_title">Add a sighting</string>
+    <string name="sighting_seen_at">Seen on %1$s at %2$s.</string>
+    <string name="sighting_choose_animal">Choose the animal</string>
+    <string name="sighting_change_animal">Change the animal</string>
+    <string name="sighting_about_animal">About this animal</string>
+    <string name="sighting_when">When</string>
+    <string name="sighting_change_date">Change the date</string>
+    <string name="sighting_notes">Notes</string>
+    <string name="sighting_group">What kind of animal</string>
+    <string name="sighting_save">Save</string>
+    <string name="sighting_add">Add sighting</string>
+    <string name="sighting_delete">Delete sighting</string>
+    <string name="sighting_delete_title">Delete this sighting?</string>
+    <string name="sighting_delete_body">The sighting will be removed from your wildlife records. The photo it came from stays in the app.</string>
+    <string name="sighting_delete_confirm">Delete</string>
+    <string name="sighting_missing">This sighting has been deleted.</string>
     <string name="animal_search_title">Choose the animal</string>
     <string name="animal_search_label">Name of the animal or fungus</string>
     <string name="animal_search_none">Pollenplot\'s animal list has nothing called “%1$s” yet.</string>
@@ -665,5 +726,45 @@
     <plurals name="weeds_records">
         <item quantity="one">%1$d record</item>
         <item quantity="other">%1$d records</item>
+    </plurals>
+    <plurals name="wildlife_month_species">
+        <item quantity="one">%1$s: %2$d species</item>
+        <item quantity="other">%1$s: %2$d species</item>
+    </plurals>
+    <plurals name="wildlife_group_heading">
+        <item quantity="one">%1$s · %2$d species</item>
+        <item quantity="other">%1$s · %2$d species</item>
+    </plurals>
+    <plurals name="wildlife_species_this_year">
+        <item quantity="one">%1$d species seen in your yard this year</item>
+        <item quantity="other">%1$d species seen in your yard this year</item>
+    </plurals>
+    <plurals name="wildlife_species_in_year">
+        <item quantity="one">%1$d species seen in your yard in %2$d</item>
+        <item quantity="other">%1$d species seen in your yard in %2$d</item>
+    </plurals>
+    <plurals name="wildlife_native">
+        <item quantity="one">%1$d of them is native to Australia.</item>
+        <item quantity="other">%1$d of them are native to Australia.</item>
+    </plurals>
+    <plurals name="wildlife_new">
+        <item quantity="one">%1$d was seen in your yard for the first time.</item>
+        <item quantity="other">%1$d were seen in your yard for the first time.</item>
+    </plurals>
+    <plurals name="wildlife_seen_times">
+        <item quantity="one">Seen once</item>
+        <item quantity="other">Seen %1$d times</item>
+    </plurals>
+    <plurals name="wildlife_show_all">
+        <item quantity="one">Show %1$d sighting</item>
+        <item quantity="other">Show all %1$d sightings</item>
+    </plurals>
+    <plurals name="sighting_count">
+        <item quantity="one">%1$d seen</item>
+        <item quantity="other">%1$d together</item>
+    </plurals>
+    <plurals name="animal_seen_summary">
+        <item quantity="one">Seen once, on %2$s.</item>
+        <item quantity="other">Seen %1$d times, most recently on %2$s.</item>
     </plurals>
 </resources>

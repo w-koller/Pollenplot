@@ -7,6 +7,7 @@ import io.github.wkoller.pollenplot.domain.season.MonthSet
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
+import java.time.LocalDate
 import java.time.Month
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -41,11 +42,23 @@ object UiFormat {
     private fun decimal(value: BigDecimal, places: Int): String =
         value.setScale(places, RoundingMode.HALF_UP).stripTrailingZeros().let { if (it.scale() < 0) it.setScale(0) else it }.toPlainString()
 
-    /** "a", "a and b", "a, b and c", using the words in [words]. */
     /** A date written out, such as "3 October 2026", in the phone's time zone. */
     fun longDate(instant: Instant, locale: Locale = Locale.getDefault(), zone: ZoneId = ZoneId.systemDefault()): String =
         DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).format(instant.atZone(zone))
 
+    /** A day written out, such as "3 October 2026". */
+    fun longDate(date: LocalDate, locale: Locale = Locale.getDefault()): String =
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).format(date)
+
+    /** A day and month, such as "3 Oct", for lists where the year is clear. */
+    fun shortDate(instant: Instant, locale: Locale = Locale.getDefault(), zone: ZoneId = ZoneId.systemDefault()): String =
+        DateTimeFormatter.ofPattern("d MMM", locale).format(instant.atZone(zone))
+
+    /** A time of day, such as "7:30 am". */
+    fun time(instant: Instant, locale: Locale = Locale.getDefault(), zone: ZoneId = ZoneId.systemDefault()): String =
+        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone))
+
+    /** "a", "a and b", "a, b and c", using the words in [words]. */
     fun joinAnd(items: List<String>, words: ListWords = ListWords.ENGLISH): String = when (items.size) {
         0 -> ""
         1 -> items[0]

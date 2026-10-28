@@ -25,6 +25,7 @@ STRINGS = {
     "badge_pollinator_hotspot": "Pollinator hotspot",
     "badge_mixed_thirst": "Mixed thirst",
     "badge_weed_found": "Weed found",
+    "badge_frogs_seen": "Frogs seen",
 
     # Adding a zone
     "zone_add_title": "Add a zone",

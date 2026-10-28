@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,17 @@ fun PlantAvatar(
     thumbnail: String? = null,
     containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+) = PictureAvatar(form.icon, size, modifier, thumbnail, containerColor, contentColor)
+
+/** A cut-out from a photo in a clover shape, or [icon] on a coloured background when there is none. */
+@Composable
+fun PictureAvatar(
+    @DrawableRes icon: Int,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    thumbnail: String? = null,
+    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
 ) {
     val context = LocalContext.current
     val file = remember(thumbnail) { thumbnail?.let { File(context.filesDir, it) } }
@@ -40,7 +52,7 @@ fun PlantAvatar(
         modifier.size(size).clip(PollenShapes.clover()).background(containerColor),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(painterResource(form.icon), contentDescription = null, tint = contentColor, modifier = Modifier.size(size * 0.5f))
+        Icon(painterResource(icon), contentDescription = null, tint = contentColor, modifier = Modifier.size(size * 0.5f))
         if (file != null) {
             // The icon stays underneath, so it shows while the picture loads or if the file has gone.
             AsyncImage(model = file, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())

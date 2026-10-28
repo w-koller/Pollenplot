@@ -62,6 +62,7 @@ import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.tone
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
+import io.github.wkoller.pollenplot.ui.wildlife.SightingRow
 import kotlinx.coroutines.launch
 
 /** A zone's own page: what kind of area it is, its size and conditions, its badges and its plants. */
@@ -74,6 +75,8 @@ fun ZoneDetailScreen(
     onEdit: () -> Unit,
     onOpenPlant: (String) -> Unit,
     onAddPlant: () -> Unit,
+    onOpenSighting: (String) -> Unit = {},
+    onAddSighting: () -> Unit = {},
 ) {
     val view by views.zone(zoneId).collectAsStateWithLifecycle(initialValue = null)
     val loaded = view
@@ -129,9 +132,25 @@ fun ZoneDetailScreen(
                     Text(stringResource(R.string.zone_add_plant), modifier = Modifier.padding(start = 8.dp))
                 }
             }
+            item { SectionHeading(stringResource(R.string.zone_wildlife_heading)) }
+            if (loaded.sightings.isEmpty()) {
+                item { Text(stringResource(R.string.zone_no_wildlife), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+            }
+            items(loaded.sightings.take(ZONE_SIGHTINGS), key = { "sighting-" + it.sighting.id }) { sighting ->
+                SightingRow(sighting, onClick = { onOpenSighting(sighting.sighting.id) }, showZone = false)
+            }
+            item {
+                OutlinedButton(onClick = onAddSighting, modifier = Modifier.padding(16.dp)) {
+                    Icon(painterResource(R.drawable.ic_add), contentDescription = null)
+                    Text(stringResource(R.string.zone_add_sighting), modifier = Modifier.padding(start = 8.dp))
+                }
+            }
         }
     }
 }
+
+/** The latest sightings a zone's page lists; the rest are on the Wildlife tab. */
+private const val ZONE_SIGHTINGS = 8
 
 /** Edits a zone's name, kind, conditions and notes, or removes it. */
 @OptIn(ExperimentalLayoutApi::class)

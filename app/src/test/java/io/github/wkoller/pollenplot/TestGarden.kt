@@ -35,6 +35,11 @@ class TestApp : PollenplotApp() {
     override fun createContainer(): AppContainer = AppContainer(this, identifier = identifier, gallery = gallery)
 }
 
+/** The app on a fixed morning, 28 October 2026 in Brisbane, so the Wildlife tab's year and months stay put. */
+class WildlifeTestApp : PollenplotApp() {
+    override fun createContainer(): AppContainer = AppContainer(this, fixedClock = DemoWildlife.clock)
+}
+
 /** The app with a stand-in for the text model, for tests of search by meaning. */
 class MeaningTestApp : PollenplotApp() {
     override fun createContainer(): AppContainer = AppContainer(this, embedder = ConceptEmbedder())

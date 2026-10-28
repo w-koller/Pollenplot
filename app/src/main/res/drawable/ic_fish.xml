@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pollenplot's own fish, drawn to sit beside Material Symbols. The eye is cut out. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path android:fillColor="#FF000000" android:fillType="evenOdd" android:pathData="M2.4,12C5,7.6 8.8,6.2 11.8,6.2C14.6,6.2 16.6,8.2 17.8,12C16.6,15.8 14.6,17.8 11.8,17.8C8.8,17.8 5,16.4 2.4,12ZM6.4,11.2a1,1 0,1 0,2 0a1,1 0,1 0,-2 0Z" />
+    <path android:fillColor="#FF000000" android:pathData="M16.6,12L21.2,7.6C21.5,7.3 22,7.5 22,8L22,16C22,16.5 21.5,16.7 21.2,16.4Z" />
+</vector>

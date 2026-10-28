@@ -47,6 +47,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid and tidy placement) and `ZoneBadges`.
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `JsonLd`
     and `SearchText` (what the search index holds for each record).
+  - `wildlife/`: `LifeGroup`, the animal knowledge base (`FaunaBase`, with each state's rules and their official
+    pages), `Sighting` and `Biodiversity` (a year of sightings for the Wildlife tab: each kind seen, the months, and
+    notices for animals that are venomous or that the law in the garden's state asks about).
   - `id/`: identification. `RegionPlanner` (the tiles each photo is classified in and how regions are chosen),
     `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
   plants recorded near it), `ThumbnailMath`, `FlowerHint`,
@@ -59,8 +62,10 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
-- `app/ml`: `PlantIdentifier` and `FastPlantIdentifier` (AIY Plants V1 through the LiteRT `Interpreter`), and bitmap
-  helpers.
+- `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
+  and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on
+  top, limited to the species of the group the user chose), and bitmap helpers. The quick models cannot tell a plant
+  from an animal, so the camera's group chips say which to ask.
 - `app/search`: `MeaningSearch` (the optional text model, its download and the vectors it makes for each record, kept
   in the `embeddings` table and refreshed by `MeaningIndexWorker` after edits). Meaning matches come after keyword
   matches, at most three and only above `MeaningMatch.MIN_SCORE`, because this small model scores unrelated text
@@ -73,7 +78,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
-  finder, and `ui/review` the review cards, `PhotoReviewScreen` (shared by
+  finder, `ui/wildlife` the Wildlife tab, an animal's page, a sighting's page and the safety notice, and `ui/review`
+  the review cards (`AnimalCards` for animals), `PhotoReviewScreen` (shared by
   the Identify results and the Review queue) and `ReviewModel`.
 - `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a
   point through the Atlas of Living Australia) and `PhoneLocation` (approximate location from the phone's own location
@@ -90,6 +96,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   `PollenplotApp`. Tests that scan or review photos run with `@Config(application = TestApp::class)`, which gives the
   container a `FakeGallery` and a `ScriptedIdentifier`; `TestPhotos` paints garden photos, and workers run through
   `TestListenableWorkerBuilder` after `WorkManagerTestInitHelper.initializeTestWorkManager`.
+- `WildlifeTestApp` fixes the container's clock at 8 am on 28 October 2026 in Brisbane, and `DemoWildlife` seeds a
+  year of sightings in `DemoGarden`. Tests that read dates run with the `en-rAU` qualifier, because Robolectric
+  otherwise formats them for the United States.
 - `MeaningTestApp` gives the container a `ConceptEmbedder` in place of the text model, whose runtime cannot load on
   the JVM.
 - `WeedTestApp` gives the container a `RecordedWeb`, which answers from responses recorded from Open-Meteo, the Atlas
@@ -130,7 +139,10 @@ and forage is `honey [nectar, pollen]`, `stingless [nectar, pollen, resin]`, `so
 fact out rather than guess it: the app says "Not recorded yet", and `CareResolver` fills gaps from the genus and family
 only where a fact holds for the whole group. Weed status comes from official sources for the user's area, so species
 records keep only the national Weeds of National Significance flag. `KnowledgeBaseFilesTest` in `:domain` checks
-the real files on every test run.
+the real files on every test run. Animals and fungi are in `kb/fauna/*.json`, checked by `FaunaFilesTest`: each
+names its group, family, the states it is native to (or `introduced`), and a hazard only with a note saying what to
+do. A rule names its states and links the official page it comes from; check the number or address on that page
+before adding it, because summaries elsewhere are often out of date.
 
 ## Material 3 Expressive
 

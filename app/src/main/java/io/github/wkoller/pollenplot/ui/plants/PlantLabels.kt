@@ -74,6 +74,7 @@ val ZoneBadge.label: Int
         ZoneBadge.WEED_FOUND -> R.string.badge_weed_found
         ZoneBadge.MIXED_THIRST -> R.string.badge_mixed_thirst
         ZoneBadge.POLLINATOR_HOTSPOT -> R.string.badge_pollinator_hotspot
+        ZoneBadge.FROGS_SEEN -> R.string.badge_frogs_seen
     }
 
 @get:DrawableRes
@@ -82,12 +83,13 @@ val ZoneBadge.icon: Int
         ZoneBadge.WEED_FOUND -> R.drawable.ic_warning
         ZoneBadge.MIXED_THIRST -> R.drawable.ic_humidity_high
         ZoneBadge.POLLINATOR_HOTSPOT -> R.drawable.ic_emoji_nature
+        ZoneBadge.FROGS_SEEN -> R.drawable.ic_frog
     }
 
 val ZoneBadge.tone: BadgeTone
     get() = when (this) {
         ZoneBadge.WEED_FOUND, ZoneBadge.MIXED_THIRST -> BadgeTone.WARNING
-        ZoneBadge.POLLINATOR_HOTSPOT -> BadgeTone.WILDLIFE
+        ZoneBadge.POLLINATOR_HOTSPOT, ZoneBadge.FROGS_SEEN -> BadgeTone.WILDLIFE
     }
 
 @get:DrawableRes

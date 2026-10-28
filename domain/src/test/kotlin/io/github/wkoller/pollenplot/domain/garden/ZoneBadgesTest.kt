@@ -2,6 +2,7 @@ package io.github.wkoller.pollenplot.domain.garden
 
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.WaterNeed
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -36,5 +37,12 @@ class ZoneBadgesTest {
             ZoneBadges.of(listOf(lantana, citrus, tomato)),
         )
         assertEquals(emptyList<ZoneBadge>(), ZoneBadges.of(emptyList()))
+    }
+
+    @Test
+    fun `frogs seen in a zone confirm it suits them`() {
+        assertEquals(listOf(ZoneBadge.FROGS_SEEN), ZoneBadges.of(listOf(lomandra), seen = setOf(LifeGroup.FROG, LifeGroup.BIRD)))
+        assertEquals("Frog-safe plants alone are not a sighting", emptyList<ZoneBadge>(), ZoneBadges.of(listOf(lomandra), seen = setOf(LifeGroup.BIRD)))
+        assertEquals("Problems still come first", listOf(ZoneBadge.WEED_FOUND, ZoneBadge.FROGS_SEEN), ZoneBadges.of(listOf(lantana), seen = setOf(LifeGroup.FROG)))
     }
 }

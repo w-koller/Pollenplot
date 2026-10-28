@@ -52,7 +52,7 @@ import java.time.Clock
 /**
  * Builds the app's shared objects once. Screens and workers reach it through [PollenplotApp]. Tests pass an in-memory
  * [database], a fake [identifier] and [embedder] in place of the on-device models, a [gallery] of their own photos,
- * recorded [web] answers and a fixed [location].
+ * recorded [web] answers, a fixed [location] and a [fixedClock].
  */
 class AppContainer(
     context: Context,
@@ -62,9 +62,10 @@ class AppContainer(
     embedder: Embedder? = null,
     web: Web? = null,
     location: LocationSource? = null,
+    fixedClock: Clock? = null,
 ) {
     val appContext: Context = context.applicationContext
-    val clock: Clock = PhoneClock
+    val clock: Clock = fixedClock ?: PhoneClock
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val settingsStore = SettingsStore(appContext)
     val web: Web = web ?: HttpWeb()

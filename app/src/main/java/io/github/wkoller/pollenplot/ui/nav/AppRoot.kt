@@ -43,6 +43,7 @@ import io.github.wkoller.pollenplot.AppContainer
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.wkoller.pollenplot.MainActivity
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.PackState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
@@ -71,6 +72,8 @@ import io.github.wkoller.pollenplot.ui.water.WaterScreen
 import io.github.wkoller.pollenplot.ui.weeds.CompareScreen
 import io.github.wkoller.pollenplot.ui.weeds.WeedFinderScreen
 import io.github.wkoller.pollenplot.ui.weeds.WeedsScreen
+import io.github.wkoller.pollenplot.ui.wildlife.AnimalScreen
+import io.github.wkoller.pollenplot.ui.wildlife.SightingScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
 
 /** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
@@ -181,6 +184,7 @@ fun AppRoot(
                                 AddAction.PHOTOS -> addPhotos()
                                 AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
+                                AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
                             }
                         },
                         onOpenZone = { navController.navigate(ZoneRoute(it)) },
@@ -200,6 +204,8 @@ fun AppRoot(
                         onEdit = { navController.navigate(ZoneEditRoute(id)) },
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddPlant = { navController.navigate(AddPlantRoute(zoneId = id)) },
+                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                        onAddSighting = { navController.navigate(AddSightingRoute(zoneId = id)) },
                     )
                 }
                 composable<ZoneEditRoute> { entry ->
@@ -280,7 +286,60 @@ fun AppRoot(
                     )
                 }
                 composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
-                composable<WildlifeRoute> { WildlifeScreen(onOpenSettings = openSettings) }
+                composable<WildlifeRoute> {
+                    WildlifeScreen(
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        clock = container.clock,
+                        onOpenSettings = openSettings,
+                        onAdd = { action ->
+                            when (action) {
+                                // Birds are what most people photograph first; the camera's chips change it.
+                                AddAction.IDENTIFY -> navController.navigate(IdentifyRoute(group = LifeGroup.BIRD.name))
+                                AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
+                                AddAction.PHOTOS -> addPhotos()
+                                AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
+                                AddAction.PLANT -> navController.navigate(AddPlantRoute())
+                            }
+                        },
+                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                    )
+                }
+                composable<AnimalRoute> { entry ->
+                    AnimalScreen(
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        key = entry.toRoute<AnimalRoute>().key,
+                        onBack = back,
+                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                    )
+                }
+                composable<SightingRoute> { entry ->
+                    SightingScreen(
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        garden = container.garden,
+                        clock = container.clock,
+                        sightingId = entry.toRoute<SightingRoute>().id,
+                        startZoneId = null,
+                        onBack = back,
+                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                    )
+                }
+                composable<AddSightingRoute> { entry ->
+                    SightingScreen(
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        garden = container.garden,
+                        clock = container.clock,
+                        sightingId = null,
+                        startZoneId = entry.toRoute<AddSightingRoute>().zoneId,
+                        onBack = back,
+                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                    )
+                }
                 composable<BeesRoute> { BeesScreen(onOpenSettings = openSettings) }
                 composable<WaterRoute> { WaterScreen(onOpenSettings = openSettings) }
                 composable<SettingsRoute> {

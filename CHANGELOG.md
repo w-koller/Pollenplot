@@ -54,3 +54,16 @@
   council's own identification tool does. Opened from Check a weed, the photo's suggestions come first.
 - About › Data sources credits Brisbane City Council, the Atlas of Living Australia, Weeds Australia, Open-Meteo and
   each state and territory's weed agency.
+- Identify animals with the camera: choose what you are photographing, such as a bird, insect, spider, frog or
+  fungus. AIY Birds V1 and AIY Insects V1 run on the phone for live suggestions of birds and insects, checked against
+  their published SHA-256 when the app is built.
+- An animal knowledge base of 76 animals and fungi found in Australian backyards: what each does in a garden, the
+  plants it uses, what it needs, what to know before going near it and, where the law asks something, what to do,
+  with the official page. Fire ants must be reported in Queensland and New South Wales, for example.
+- Sightings: an animal found in a photo is added as a sighting, with its zone, the plant it was on and what it was
+  doing, instead of as a plant.
+- The Wildlife tab: the species seen in your yard each year by group, how many are native and how many are new, the
+  months they were seen in, the animals to know about, such as venomous spiders and animals to report, and the latest
+  sightings. Each animal has a page with what Pollenplot knows about it, the plants it was seen on and every
+  sighting, and each sighting can be changed or deleted. Sightings can also be added by name, without a photo.
+- Each zone's page lists the wildlife seen in it, and a zone where frogs have been seen gets a Frogs seen badge.

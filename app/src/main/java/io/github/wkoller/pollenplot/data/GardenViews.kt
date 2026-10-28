@@ -71,8 +71,8 @@ data class SightingView(val sighting: Sighting, val animal: Animal?, val zoneNam
     val scientificName: String? get() = animal?.name?.takeIf { it != title }
 }
 
-/** A zone with the plants growing in it and the zone's badges. */
-data class ZoneView(val zone: Zone, val plants: List<PlantView>, val badges: List<ZoneBadge>)
+/** A zone with the plants growing in it, the zone's badges and the animals seen in it, the latest first. */
+data class ZoneView(val zone: Zone, val plants: List<PlantView>, val badges: List<ZoneBadge>, val sightings: List<SightingView> = emptyList())
 
 /** The garden for the screens: records joined with the knowledge base, the garden's state and its weed lists. */
 class GardenViews(repository: GardenRepository, knowledge: KnowledgeRepository, settings: SettingsStore, weeds: Flow<WeedData>) {
@@ -88,14 +88,6 @@ class GardenViews(repository: GardenRepository, knowledge: KnowledgeRepository, 
         plants.map { view(it, kb, locality, zoneNames) }
     }
 
-    val zones: Flow<List<ZoneView>> = combine(repository.zoneList, plants) { zones, plants ->
-        val byZone = plants.filter { it.isGrowing }.groupBy { it.plant.zoneId }
-        zones.map { zone ->
-            val inZone = byZone[zone.id].orEmpty()
-            ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles) }))
-        }
-    }
-
     /** Every sighting, the most recent first. */
     val sightings: Flow<List<SightingView>> = combine(repository.sightingList, repository.zoneList, plants, knowledge.fauna) { sightings, zones, plants, fauna ->
         val zoneNames = zones.associate { it.id to it.name }
@@ -107,6 +99,17 @@ class GardenViews(repository: GardenRepository, knowledge: KnowledgeRepository, 
                 sighting.zoneId?.let(zoneNames::get),
                 sighting.plantId?.let(plantTitles::get),
             )
+        }
+    }
+
+    val zones: Flow<List<ZoneView>> = combine(repository.zoneList, plants, sightings) { zones, plants, sightings ->
+        val byZone = plants.filter { it.isGrowing }.groupBy { it.plant.zoneId }
+        val seenIn = sightings.groupBy { it.sighting.zoneId }
+        zones.map { zone ->
+            val inZone = byZone[zone.id].orEmpty()
+            val seen = seenIn[zone.id].orEmpty()
+            val groups = seen.map { it.animal?.group ?: it.sighting.group }.toSet()
+            ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles) }, groups), seen)
         }
     }
 

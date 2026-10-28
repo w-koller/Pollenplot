@@ -31,9 +31,8 @@ import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
-import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import io.github.wkoller.pollenplot.ui.wildlife.SafetyNotice
+import io.github.wkoller.pollenplot.ui.wildlife.SightingFields
 import io.github.wkoller.pollenplot.ui.wildlife.label
 
 /**
@@ -67,8 +66,6 @@ internal fun UndecidedAnimal(
     }
     val animal = chosenName?.let { fauna?.animal(it) }
     val zoneId = if (zoneChosen) ownZone else suggestedZoneId
-    // The plants it could have been on: those in the chosen zone, or every plant when no zone is chosen.
-    val nearbyPlants = plants.filter { it.isGrowing && (zoneId == null || it.plant.zoneId == zoneId) }
 
     Header(
         thumbnail = detection.thumbnail,
@@ -108,26 +105,20 @@ internal fun UndecidedAnimal(
         Text(stringResource(R.string.review_choose_another_animal))
     }
 
-    ZoneChooser(zones, zoneId) {
-        ownZone = it
-        zoneChosen = true
-        plantId = null
-    }
-    if (nearbyPlants.isNotEmpty()) {
-        val titles = nearbyPlants.associate { it.plant.id to it.title }
-        ChipGroup(
-            title = stringResource(R.string.review_on_plant),
-            options = listOf<String?>(null) + nearbyPlants.map { it.plant.id },
-            selected = plantId,
-            label = { id -> id?.let(titles::get) ?: stringResource(R.string.review_on_no_plant) },
-        ) { plantId = it }
-    }
-    ChipGroup(
-        title = stringResource(R.string.review_behaviour),
-        options = listOf<Behaviour?>(null) + Behaviour.entries,
-        selected = behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } },
-        label = { stringResource(it.label) },
-    ) { behaviour = it?.name }
+    SightingFields(
+        zones = zones,
+        plants = plants,
+        zoneId = zoneId,
+        plantId = plantId,
+        behaviour = behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } },
+        onZone = {
+            ownZone = it
+            zoneChosen = true
+            plantId = null
+        },
+        onPlant = { plantId = it },
+        onBehaviour = { behaviour = it?.name },
+    )
 
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(

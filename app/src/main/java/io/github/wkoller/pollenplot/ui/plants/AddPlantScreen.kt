@@ -184,13 +184,13 @@ fun ZoneChooser(zones: List<ZoneView>, zoneId: String?, onChoose: (String?) -> U
 }
 
 @Composable
-fun QuantityStepper(quantity: Int, onChange: (Int) -> Unit) {
+fun QuantityStepper(quantity: Int, countText: @Composable (Int) -> String = { pluralStringResource(R.plurals.plant_count, it, it) }, onChange: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.add_sheet_quantity), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         FilledTonalIconButton(onClick = { onChange(quantity - 1) }, enabled = quantity > 1) {
             Icon(painterResource(R.drawable.ic_remove), contentDescription = stringResource(R.string.quantity_less))
         }
-        Text(pluralStringResource(R.plurals.plant_count, quantity, quantity), style = MaterialTheme.typography.bodyLarge)
+        Text(countText(quantity), style = MaterialTheme.typography.bodyLarge)
         FilledTonalIconButton(onClick = { onChange(quantity + 1) }) {
             Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.quantity_more))
         }
