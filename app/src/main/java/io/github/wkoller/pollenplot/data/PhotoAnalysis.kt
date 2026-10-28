@@ -27,11 +27,17 @@ class PhotoAnalysis(
     private val garden: GardenRepository,
     private val knowledge: KnowledgeRepository,
     private val clock: Clock,
-    /** How many times a plant has been recorded near the garden, for the boost such plants get. */
+    /** How many times a plant or animal has been recorded near the garden, for the boost they get. */
     private val nearby: (String) -> Int = { 0 },
 ) {
-    suspend fun analyse(bitmap: Bitmap, origin: PhotoOrigin, takenAt: Instant = clock.instant(), group: LifeGroup = LifeGroup.PLANT): AnalysedPhoto {
-        val found = identifier().identify(bitmap, group)
+    /**
+     * Looks for what [group] the camera was pointed at in [bitmap], or, for a photo nobody chose a group for, for what
+     * the identifier says the photo shows.
+     */
+    suspend fun analyse(bitmap: Bitmap, origin: PhotoOrigin, takenAt: Instant = clock.instant(), group: LifeGroup? = null): AnalysedPhoto {
+        val models = identifier()
+        // The camera says what it was pointed at; a photo from the gallery is looked at for what it shows.
+        val found = models.identify(bitmap, group ?: models.groupOf(bitmap))
         if (found.regions.isEmpty()) return AnalysedPhoto(null, found.found, emptyList())
         val kb = knowledge.await()
         val fauna = knowledge.awaitFauna()

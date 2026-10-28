@@ -50,6 +50,12 @@ interface Identifier {
     /** A quick look at the middle of a camera frame, for the live suggestions. */
     suspend fun glance(frame: Bitmap, group: LifeGroup = LifeGroup.PLANT): TileResult
 
+    /**
+     * What the middle of a photo nobody chose a group for most likely shows, such as a photo from the gallery. The
+     * quick models cannot tell, so without the accurate pack it is a plant.
+     */
+    suspend fun groupOf(photo: Bitmap): LifeGroup = LifeGroup.PLANT
+
     fun close()
 }
 

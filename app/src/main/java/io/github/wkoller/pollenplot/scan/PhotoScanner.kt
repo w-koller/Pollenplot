@@ -3,6 +3,7 @@ package io.github.wkoller.pollenplot.scan
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
+import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.ScanOutcome
@@ -12,17 +13,29 @@ import java.time.Clock
 import java.time.Instant
 
 /** What a scan of some photos found. */
-data class ScanTally(val photos: Int = 0, val photosWithPlants: Int = 0, val plants: Int = 0, val unreadable: Int = 0) {
-    fun withPhoto(plantsFound: Int?): ScanTally = when (plantsFound) {
-        null -> copy(photos = photos + 1, unreadable = unreadable + 1)
-        0 -> copy(photos = photos + 1)
-        else -> copy(photos = photos + 1, photosWithPlants = photosWithPlants + 1, plants = plants + plantsFound)
+data class ScanTally(val photos: Int = 0, val photosWithFinds: Int = 0, val plants: Int = 0, val animals: Int = 0, val unreadable: Int = 0) {
+    fun withPhoto(found: Found?): ScanTally = when {
+        found == null -> copy(photos = photos + 1, unreadable = unreadable + 1)
+        found.total == 0 -> copy(photos = photos + 1)
+        else -> copy(photos = photos + 1, photosWithFinds = photosWithFinds + 1, plants = plants + found.plants, animals = animals + found.animals)
+    }
+
+    val found: Int get() = plants + animals
+}
+
+/** What one photo showed: how many plants, and how many animals or fungi. */
+data class Found(val plants: Int, val animals: Int) {
+    val total: Int get() = plants + animals
+
+    companion object {
+        fun of(detections: List<DetectionRecord>) = Found(detections.count { !it.group.isWildlife }, detections.count { it.group.isWildlife })
     }
 }
 
 /**
- * Looks for plants in photos from the gallery and photos the user adds. Photos that show plants are kept for review;
- * the others are not kept. Each gallery photo is remembered, so no scan looks at it twice.
+ * Looks for plants in photos from the gallery and photos the user adds, and, with the accurate pack, for the animal in
+ * a photo that shows one. Photos that show something are kept for review; the others are not kept. Each gallery photo
+ * is remembered, so no scan looks at it twice.
  */
 class PhotoScanner(
     private val gallery: Gallery,
@@ -33,8 +46,8 @@ class PhotoScanner(
     private val garden: GardenRepository,
     private val clock: Clock,
 ) {
-    /** Scans one gallery photo and returns how many plants it showed, or null if it could not be read. */
-    suspend fun scanLibraryPhoto(photo: GalleryPhoto): Int? {
+    /** Scans one gallery photo and returns what it showed, or null if it could not be read. */
+    suspend fun scanLibraryPhoto(photo: GalleryPhoto): Found? {
         val bitmap = gallery.load(photo.uri, PhotoStore.MAX_SIDE)
         if (bitmap == null) {
             garden.recordScan(photo.id, photo.takenAt, ScanOutcome.FAILED, null)
@@ -43,14 +56,14 @@ class PhotoScanner(
         val result = quick.analyse(bitmap, PhotoOrigin.LIBRARY, photo.takenAt)
         val outcome = if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS
         garden.recordScan(photo.id, photo.takenAt, outcome, result.photo?.id)
-        return result.detections.size
+        return Found.of(result.detections)
     }
 
     /**
-     * Looks again at a gallery photo the quick model saw no plant in, now that the accurate pack is on the phone, and
-     * returns how many plants it showed, or null if it could not be read.
+     * Looks again at a gallery photo the quick model saw no plant in, now that the accurate pack is on the phone, which
+     * also tells whether it shows an animal, and returns what it showed, or null if it could not be read.
      */
-    suspend fun recheckLibraryPhoto(mediaId: Long, takenAt: Instant): Int? {
+    suspend fun recheckLibraryPhoto(mediaId: Long, takenAt: Instant): Found? {
         val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId)
         val bitmap = gallery.load(uri, PhotoStore.MAX_SIDE)
         if (bitmap == null) {
@@ -60,11 +73,11 @@ class PhotoScanner(
         val result = analysis.analyse(bitmap, PhotoOrigin.LIBRARY, takenAt)
         val outcome = if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS
         garden.recordScan(mediaId, takenAt, outcome, result.photo?.id, accurate = true)
-        return result.detections.size
+        return Found.of(result.detections)
     }
 
-    /** Scans a photo the user added and returns how many plants it showed, or null if it could not be read. */
-    suspend fun scanAddedPhoto(uri: Uri): Int? {
+    /** Scans a photo the user added and returns what it showed, or null if it could not be read. */
+    suspend fun scanAddedPhoto(uri: Uri): Found? {
         val bitmap = gallery.load(uri, PhotoStore.MAX_SIDE) ?: return null
         val takenAt = gallery.takenAt(uri) ?: clock.instant()
         val result = analysis.analyse(bitmap, PhotoOrigin.IMPORT, takenAt)
@@ -72,7 +85,7 @@ class PhotoScanner(
         mediaIdOf(uri)?.let { id ->
             garden.recordScan(id, takenAt, if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS, result.photo?.id)
         }
-        return result.detections.size
+        return Found.of(result.detections)
     }
 
     /**

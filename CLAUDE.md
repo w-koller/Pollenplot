@@ -65,7 +65,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
 - `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on
   top, limited to the species of the group the user chose), and bitmap helpers. The quick models cannot tell a plant
-  from an animal, so the camera's group chips say which to ask.
+  from an animal, so the camera's group chips say which to ask. For a photo nobody chose a group for, `groupOf` asks
+  BioCAP, whose closest species must clearly agree on a group (`AccurateRegions.GROUP_SHARE_BP`); without the pack,
+  it is a plant.
 - `app/search`: `MeaningSearch` (the optional text model, its download and the vectors it makes for each record, kept
   in the `embeddings` table and refreshed by `MeaningIndexWorker` after edits). Meaning matches come after keyword
   matches, at most three and only above `MeaningMatch.MIN_SCORE`, because this small model scores unrelated text

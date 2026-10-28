@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.domain.id
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -48,5 +49,14 @@ class AccurateRegionsTest {
             listOf(a, c),
             AccurateRegions.select(checked, existing = listOf(BoxBp(3_000, 0, 7_000, 4_000) to "Hakea salicifolia"), max = 6).map { it.first },
         )
+    }
+
+    @Test
+    fun `a photo is taken to show a group only when its species clearly lead`() {
+        val scale = 100f
+        assertEquals("Birds take nearly all the shares", "bird", AccurateRegions.groupOf(listOf("bird" to 0.30f, "bird" to 0.29f, "plant" to 0.25f), scale))
+        assertEquals("Two close plants outweigh one bird", "plant", AccurateRegions.groupOf(listOf("bird" to 0.300f, "plant" to 0.299f, "plant" to 0.298f), scale))
+        assertNull("Three groups about even", AccurateRegions.groupOf(listOf("bird" to 0.300f, "insect" to 0.299f, "plant" to 0.298f), scale))
+        assertNull(AccurateRegions.groupOf(emptyList(), scale))
     }
 }

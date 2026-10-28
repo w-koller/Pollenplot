@@ -27,6 +27,18 @@ class AccurateModels(private val encoder: BioCapEncoder, val index: SpeciesIndex
         return AccurateRegions.shares(near.map { it.species.name to it.similarity }, logitScale).take(KEPT).map { it.copy(common = common[it.label]) }
     }
 
+    /**
+     * What [box] in [photo] most likely shows, from the groups of BioCAP's closest species of all; a plant when no
+     * group is clear, or when the pack's index has no groups.
+     */
+    fun groupOf(photo: Bitmap, box: BoxBp): LifeGroup {
+        if (!index.hasGroups) return LifeGroup.PLANT
+        val vector = encoder.encode(Bitmaps.squarePixels(photo, box, BioCapEncoder.SIZE))
+        val near = index.nearest(vector, count = CONSIDERED)
+        return AccurateRegions.groupOf(near.mapNotNull { match -> match.species.group?.let { it to match.similarity } }, logitScale)
+            ?.let(LifeGroup::of) ?: LifeGroup.PLANT
+    }
+
     override fun close() = encoder.close()
 
     private companion object {
@@ -72,6 +84,11 @@ class AccuratePlantIdentifier(private val fast: FastPlantIdentifier, private val
     }
 
     override suspend fun glance(frame: Bitmap, group: LifeGroup): TileResult = fast.glance(frame, group)
+
+    override suspend fun groupOf(photo: Bitmap): LifeGroup {
+        val accurate = models() ?: return LifeGroup.PLANT
+        return withContext(Dispatchers.Default) { accurate.groupOf(photo, FastPlantIdentifier.CENTRE) }
+    }
 
     override fun close() = fast.close()
 

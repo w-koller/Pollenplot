@@ -15,6 +15,12 @@ object AccurateRegions {
     /** A tile becomes a region of its own when BioCAP gives its best species at least this share. */
     const val MIN_SHARE_BP = 3_500
 
+    /**
+     * A photo nobody said anything about is taken to show an animal of a group only when the group's species take at
+     * least this share of BioCAP's belief; otherwise it is looked at for plants, as before.
+     */
+    const val GROUP_SHARE_BP = 6_000
+
     /** Two new regions of the same species that overlap more than this are one plant. */
     private const val SAME_SPECIES_IOU = 0.1
 
@@ -30,6 +36,19 @@ object AccurateRegions {
         val total = weights.sum()
         return similarities.mapIndexed { i, (label, _) -> LabelScore(label, (weights[i] / total * BoxBp.FULL).roundToInt()) }
             .sortedByDescending { it.scoreBp }
+    }
+
+    /**
+     * The group a photo shows, from the groups of BioCAP's closest species of every group with their similarities:
+     * the group whose species take at least [GROUP_SHARE_BP] of the shares, or null when none is that clear.
+     */
+    fun groupOf(closest: List<Pair<String, Float>>, logitScale: Float): String? {
+        if (closest.isEmpty()) return null
+        val top = closest.maxOf { it.second }
+        val weights = closest.map { (group, s) -> group to exp((logitScale * (s - top)).toDouble()) }
+        val total = weights.sumOf { it.second }
+        val (group, weight) = weights.groupBy({ it.first }, { it.second }).mapValues { it.value.sum() }.maxBy { it.value }
+        return group.takeIf { weight / total * BoxBp.FULL >= GROUP_SHARE_BP }
     }
 
     /** The tiles worth BioCAP's look: those the quick model did not call "no plant" and no region covers already. */

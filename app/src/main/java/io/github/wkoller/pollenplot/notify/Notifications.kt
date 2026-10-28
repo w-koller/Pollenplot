@@ -40,24 +40,41 @@ class Notifications(private val context: Context) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         )
 
-    /** Tells the user that a scan of the gallery found plants, and opens the Review queue when tapped. */
+    /** Tells the user that a scan of the gallery found plants or animals, and opens the Review queue when tapped. */
     fun showScanResult(tally: ScanTally) {
-        if (tally.plants == 0) return
-        val res = context.resources
-        show(
-            SCAN_RESULT,
-            res.getQuantityString(R.plurals.notify_found_title, tally.plants, tally.plants),
-            res.getQuantityString(R.plurals.notify_found_body, tally.plants),
-        )
+        if (tally.found == 0) return
+        show(SCAN_RESULT, foundTitle(tally), foundBody(tally))
     }
 
     /** Tells the user what was found in the photos they added. */
     fun showAddedResult(tally: ScanTally) {
         val res = context.resources
-        if (tally.plants > 0) {
-            show(ADDED_RESULT, res.getQuantityString(R.plurals.notify_found_title, tally.plants, tally.plants), res.getQuantityString(R.plurals.notify_found_body, tally.plants))
+        if (tally.found > 0) {
+            show(ADDED_RESULT, foundTitle(tally), foundBody(tally))
         } else {
             show(ADDED_RESULT, res.getQuantityString(R.plurals.notify_none_title, tally.photos), context.getString(R.string.notify_none_body))
+        }
+    }
+
+    private fun foundTitle(tally: ScanTally): String {
+        val res = context.resources
+        return when {
+            tally.animals == 0 -> res.getQuantityString(R.plurals.notify_found_title, tally.plants, tally.plants)
+            tally.plants == 0 -> res.getQuantityString(R.plurals.notify_found_animals_title, tally.animals, tally.animals)
+            else -> res.getString(
+                R.string.notify_found_both_title,
+                res.getQuantityString(R.plurals.count_plants, tally.plants, tally.plants),
+                res.getQuantityString(R.plurals.count_animals, tally.animals, tally.animals),
+            )
+        }
+    }
+
+    private fun foundBody(tally: ScanTally): String {
+        val res = context.resources
+        return when {
+            tally.animals == 0 -> res.getQuantityString(R.plurals.notify_found_body, tally.plants)
+            tally.plants == 0 -> res.getQuantityString(R.plurals.notify_found_animals_body, tally.animals)
+            else -> res.getString(R.string.notify_found_both_body)
         }
     }
 

@@ -9,7 +9,10 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.testing.WorkManagerTestInitHelper
 import io.github.wkoller.pollenplot.TestPhotos.bottlebrush
 import io.github.wkoller.pollenplot.TestPhotos.rosemary
+import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
 import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.scan.LibraryScanWorker
@@ -139,5 +142,25 @@ class PhotoScanningTest {
             TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(lawn.uri))).build().doWork()
         }
         assertEquals(listOf("No plant was found in the photo you added."), notificationTitles())
+    }
+
+    @Test
+    fun `an added photo of a bird is looked at as a bird`() {
+        val birdPhoto = TestPhotos.gardenPhoto(listOf(rosemary))
+        app.identifier.groupFor = { photo -> if (photo === birdPhoto) LifeGroup.BIRD else LifeGroup.PLANT }
+        app.identifier.animalFor = { photo, group ->
+            listOf(FastPlantIdentifier.region(photo, FastPlantIdentifier.CENTRE, mapOf(IdSource.BIOCAP to listOf(LabelScore("Manorina melanocephala", 8_000))), group))
+        }
+        val bird = app.gallery.add(3, now, birdPhoto)
+        runBlocking {
+            app.container.knowledge.awaitFauna()
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(bird.uri))).build().doWork()
+        }
+        assertEquals(listOf("Pollenplot found 1 animal in your photos."), notificationTitles())
+        assertEquals(listOf(LifeGroup.BIRD), app.identifier.asked)
+        val photoId = runBlocking { garden.pendingReviewPhotos.first().single() }
+        val detection = runBlocking { garden.detectionsInPhoto(photoId).first().single() }
+        assertEquals(LifeGroup.BIRD, detection.group)
+        assertEquals("Manorina melanocephala", detection.candidates.first().speciesName)
     }
 }

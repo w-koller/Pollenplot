@@ -73,10 +73,11 @@ class ConceptEmbedder : Embedder {
 
 /**
  * Stands in for the on-device models: it finds whatever [regionsFor] says each photo shows, and [animalFor] says the
- * animal in the middle of the frame is.
+ * animal in the middle of the frame is. [groupFor] is what the accurate pack would say a photo shows.
  */
 class ScriptedIdentifier(
     var animalFor: (Bitmap, LifeGroup) -> List<FoundRegion> = { _, _ -> emptyList() },
+    var groupFor: (Bitmap) -> LifeGroup = { LifeGroup.PLANT },
     var regionsFor: (Bitmap) -> List<FoundRegion> = { emptyList() },
 ) : Identifier {
     /** The groups the camera asked about, in order. */
@@ -89,6 +90,8 @@ class ScriptedIdentifier(
     }
 
     override suspend fun glance(frame: Bitmap, group: LifeGroup) = TileResult(BoxBp.WHOLE, emptyList(), backgroundBp = 0)
+
+    override suspend fun groupOf(photo: Bitmap) = groupFor(photo)
 
     override fun close() = Unit
 }

@@ -38,7 +38,9 @@ STRINGS = {
 
     # Notifications
     "notify_scans_channel": "Plants found in photos",
-    "notify_scans_channel_description": "Tells you when Pollenplot finds plants in your photos.",
+    "notify_scans_channel_description": "Tells you when Pollenplot finds plants or animals in your photos.",
+    "notify_found_both_title": "Pollenplot found %1$s and %2$s in your photos.",
+    "notify_found_both_body": "Please review them to add them to your garden and your sightings.",
     "notify_none_body": "Please try photos taken closer to the plants, in good light.",
 }
 
@@ -53,6 +55,16 @@ PLURALS = {
         "one": "Please review it to add it to your garden.",
         "other": "Please review them to add them to your garden.",
     },
+    "notify_found_animals_title": {
+        "one": "Pollenplot found %d animal in your photos.",
+        "other": "Pollenplot found %d animals in your photos.",
+    },
+    "notify_found_animals_body": {
+        "one": "Please review it to add it to your sightings.",
+        "other": "Please review them to add them to your sightings.",
+    },
+    "count_plants": {"one": "%d plant", "other": "%d plants"},
+    "count_animals": {"one": "%d animal", "other": "%d animals"},
     "notify_none_title": {
         "one": "No plant was found in the photo you added.",
         "other": "No plants were found in the %d photos you added.",

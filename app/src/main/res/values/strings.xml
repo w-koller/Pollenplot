@@ -346,7 +346,9 @@
     <string name="scan_back_three_months">3 months</string>
     <string name="scan_back_year">1 year</string>
     <string name="notify_scans_channel">Plants found in photos</string>
-    <string name="notify_scans_channel_description">Tells you when Pollenplot finds plants in your photos.</string>
+    <string name="notify_scans_channel_description">Tells you when Pollenplot finds plants or animals in your photos.</string>
+    <string name="notify_found_both_title">Pollenplot found %1$s and %2$s in your photos.</string>
+    <string name="notify_found_both_body">Please review them to add them to your garden and your sightings.</string>
     <string name="notify_none_body">Please try photos taken closer to the plants, in good light.</string>
     <string name="settings_title">Settings</string>
     <string name="settings_appearance">Appearance</string>
@@ -713,6 +715,22 @@
     <plurals name="notify_found_body">
         <item quantity="one">Please review it to add it to your garden.</item>
         <item quantity="other">Please review them to add them to your garden.</item>
+    </plurals>
+    <plurals name="notify_found_animals_title">
+        <item quantity="one">Pollenplot found %d animal in your photos.</item>
+        <item quantity="other">Pollenplot found %d animals in your photos.</item>
+    </plurals>
+    <plurals name="notify_found_animals_body">
+        <item quantity="one">Please review it to add it to your sightings.</item>
+        <item quantity="other">Please review them to add them to your sightings.</item>
+    </plurals>
+    <plurals name="count_plants">
+        <item quantity="one">%d plant</item>
+        <item quantity="other">%d plants</item>
+    </plurals>
+    <plurals name="count_animals">
+        <item quantity="one">%d animal</item>
+        <item quantity="other">%d animals</item>
     </plurals>
     <plurals name="notify_none_title">
         <item quantity="one">No plant was found in the photo you added.</item>

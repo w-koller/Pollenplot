@@ -71,6 +71,9 @@
 - Garden pests seen in your yard come with what they do, what helps, and the animals in the knowledge base that eat
   them, such as ladybirds and hover flies for aphids. When no birds, insects, frogs or reptiles have been seen this
   year, the Wildlife tab has ideas for bringing them into the yard.
+- With the accurate pack, a photo you add or one the gallery scan looks at again while charging is looked at for
+  what it shows: a photo of a bird, frog or other animal becomes a sighting to review instead of a plant, and the
+  notification counts animals and plants apart.
 - A suggestion the knowledge bases do not have is shown by its common name from the accurate pack, with its scientific
   name below, and a sighting of it keeps the scientific name for the records.
 - Recorded near you, on the Wildlife tab: the animals recorded most often within 10 km of the garden on the Atlas of
