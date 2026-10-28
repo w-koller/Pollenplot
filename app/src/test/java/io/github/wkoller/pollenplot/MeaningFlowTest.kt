@@ -5,11 +5,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -74,7 +76,8 @@ class MeaningFlowTest {
         compose.onNodeWithText("Models").performClick()
         waitFor(hasText("On your phone. Search shows related plants and zones after what your words find."))
         compose.onNodeWithText("Delete").assertIsDisplayed()
-        compose.onNodeWithText("Not ready yet. It will arrive in an update.").assertIsDisplayed()
+        // The accurate pack and the garden assistant can still be downloaded.
+        compose.onAllNodesWithText("Download").assertCountEquals(2)
         shot("models_installed")
     }
 

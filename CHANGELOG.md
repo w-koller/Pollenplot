@@ -71,6 +71,9 @@
 - Garden pests seen in your yard come with what they do, what helps, and the animals in the knowledge base that eat
   them, such as ladybirds and hover flies for aphids. When no birds, insects, frogs or reptiles have been seen this
   year, the Wildlife tab has ideas for bringing them into the yard.
+- The accurate identification pack is published: BioCAP and 13,644 plants, animals and fungi found in Australia, a
+  127 MB download in Settings › Models. On 627 research-grade photos from Australia it names the species first 44% of
+  the time and among its first five 72% of the time, and puts the closest species in the right group 96% of the time.
 - With the accurate pack, a photo you add or one the gallery scan looks at again while charging is looked at for
   what it shows: a photo of a bird, frog or other animal becomes a sighting to review instead of a plant, and the
   notification counts animals and plants apart.

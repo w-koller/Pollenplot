@@ -89,8 +89,8 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("Use colours from your wallpaper").assertIsDisplayed()
         shot("settings")
         compose.onNodeWithText("Models").performClick()
-        // Search by meaning and the garden assistant can each be downloaded; the accurate pack is not published yet.
-        compose.onAllNodesWithText("Download").assertCountEquals(2)
+        // Search by meaning, accurate identification and the garden assistant can each be downloaded.
+        compose.onAllNodesWithText("Download").assertCountEquals(3)
         compose.onNodeWithText("Garden assistant").assertIsDisplayed()
         shot("models")
         compose.onNodeWithContentDescription("Back").performClick()

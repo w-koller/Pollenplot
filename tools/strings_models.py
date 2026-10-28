@@ -19,9 +19,10 @@ STRINGS = {
     "models_failed_check": "The download was damaged, so it was deleted. Please try again.",
     "models_try_again": "Try again",
     "models_accurate": "Accurate identification",
-    "models_accurate_body": "BioCAP knows many more Australian native plants and weeds than the quick model, and "
-    "looks again at plants the quick model is unsure of. %1$s, downloaded on Wi-Fi.",
-    "models_accurate_body_short": "BioCAP knows many more Australian native plants and weeds than the quick model.",
+    "models_accurate_body": "BioCAP knows many more Australian native plants, weeds and animals than the quick models, "
+    "and looks again at finds they are unsure of. %1$s, downloaded on Wi-Fi.",
+    "models_accurate_body_short": "BioCAP knows many more Australian native plants, weeds and animals than the quick "
+    "models.",
     "models_accurate_notification": "Downloading BioCAP for accurate identification.",
     "models_accurate_ready": "On your phone. Pollenplot uses BioCAP for every photo it identifies.",
     "models_unpacking": "Unpacking and checking the models.",
