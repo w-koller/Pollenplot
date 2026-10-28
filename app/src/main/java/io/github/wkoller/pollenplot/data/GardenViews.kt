@@ -69,6 +69,9 @@ data class SightingView(val sighting: Sighting, val animal: Animal?, val zoneNam
     val title: String get() = animal?.displayName ?: sighting.label
 
     val scientificName: String? get() = animal?.name?.takeIf { it != title }
+
+    /** The kind it is of, as [io.github.wkoller.pollenplot.domain.wildlife.Biodiversity.keyOf] names it. */
+    val key: String get() = animal?.name ?: KnowledgeBase.normalise(sighting.speciesName ?: sighting.label)
 }
 
 /** A zone with the plants growing in it, the zone's badges and the animals seen in it, the latest first. */

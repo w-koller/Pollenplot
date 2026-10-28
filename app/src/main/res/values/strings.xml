@@ -774,6 +774,10 @@
         <item quantity="one">Show %1$d sighting</item>
         <item quantity="other">Show all %1$d sightings</item>
     </plurals>
+    <plurals name="zone_tile_wildlife">
+        <item quantity="one">%1$d species seen</item>
+        <item quantity="other">%1$d species seen</item>
+    </plurals>
     <plurals name="wildlife_nearby_records">
         <item quantity="one">Recorded once</item>
         <item quantity="other">Recorded %1$s times</item>

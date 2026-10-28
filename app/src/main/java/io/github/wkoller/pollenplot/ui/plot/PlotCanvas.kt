@@ -173,12 +173,13 @@ private fun ZoneTile(
     val widthDp = with(density) { width.toDp() }
     val heightDp = with(density) { height.toDp() }
     val (container, content) = kindColours(view.zone.kind)
+    val kinds = view.sightings.map { it.key }.distinct().size
     val description = stringResource(
         R.string.zone_tile_description,
         view.zone.name,
         stringResource(view.zone.kind.label),
         pluralStringResource(R.plurals.plant_count, view.plants.size, view.plants.size),
-    )
+    ) + if (kinds > 0) ", " + pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds) else ""
 
     Box(Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }.size(widthDp, heightDp)) {
         Surface(
@@ -212,7 +213,7 @@ private fun ZoneTile(
                     },
                 ),
         ) {
-            TileContent(view, widthDp.value, heightDp.value)
+            TileContent(view, kinds, widthDp.value, heightDp.value)
         }
         if (selected) {
             Surface(
@@ -248,9 +249,12 @@ private fun ZoneTile(
     }
 }
 
-/** What fits on a tile depends on its size on screen: just the name when zoomed out, then plants, then badges. */
+/**
+ * What fits on a tile depends on its size on screen: just the name when zoomed out, then plants, then badges, then how
+ * many [kinds] of animals have been seen there.
+ */
 @Composable
-private fun TileContent(view: ZoneView, widthDp: Float, heightDp: Float) {
+private fun TileContent(view: ZoneView, kinds: Int, widthDp: Float, heightDp: Float) {
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (widthDp >= 72) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
@@ -267,6 +271,12 @@ private fun TileContent(view: ZoneView, widthDp: Float, heightDp: Float) {
         }
         if (heightDp >= 116 && view.badges.isNotEmpty()) {
             IconBadges(view.badges.map { BadgeItem(it.icon, stringResource(it.label), it.tone) }, size = 24.dp)
+        }
+        if (heightDp >= 148 && kinds > 0) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(painterResource(R.drawable.ic_raven), contentDescription = null, modifier = Modifier.size(16.dp))
+                Text(pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

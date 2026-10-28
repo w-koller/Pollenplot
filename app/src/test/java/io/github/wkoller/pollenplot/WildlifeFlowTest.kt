@@ -4,8 +4,10 @@ import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -163,6 +165,17 @@ class WildlifeFlowTest {
         compose.onNodeWithText("Frogs seen").assertExists()
         compose.onNodeWithText("Eastern dwarf tree frog").assertExists()
         shot("zone_wildlife")
+    }
+
+    @Test
+    fun plotTilesSayWhatWasSeenThere() {
+        seed()
+        show()
+        // The native strip had a lorikeet and a frog this year, and a noisy miner the year before.
+        waitFor(hasContentDescription("Front Native Strip, Garden bed, 5 plants, 3 species seen"))
+        waitFor(hasContentDescription("Hive Corner", substring = true))
+        compose.onNode(hasContentDescription("Hive Corner", substring = true)).assertContentDescriptionContains("2 species seen", substring = true)
+        shot("plot_wildlife")
     }
 
     @Test

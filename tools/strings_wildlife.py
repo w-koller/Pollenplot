@@ -195,6 +195,10 @@ PLURALS = {
         "one": "Show %1$d sighting",
         "other": "Show all %1$d sightings",
     },
+    "zone_tile_wildlife": {
+        "one": "%1$d species seen",
+        "other": "%1$d species seen",
+    },
     "wildlife_nearby_records": {
         "one": "Recorded once",
         "other": "Recorded %1$s times",
