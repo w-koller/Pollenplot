@@ -205,6 +205,15 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                     }
                 }
             }
+            item { SectionHeading(stringResource(R.string.scan_second_opinion_heading)) }
+            item {
+                ListItem(
+                    checked = current.secondOpinions,
+                    onCheckedChange = { wanted -> scope.launch { store.update { it.copy(secondOpinions = wanted) } } },
+                    supportingContent = { Text(stringResource(R.string.scan_second_opinion_body)) },
+                    trailingContent = { Switch(checked = current.secondOpinions, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.scan_second_opinion)) }
+            }
         }
     }
 }

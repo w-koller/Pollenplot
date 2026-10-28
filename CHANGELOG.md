@@ -82,6 +82,8 @@
 - The garden assistant, an optional 2.6 GB download in Settings › Models: Gemma 4 E2B runs on the phone with LiteRT-LM
   and answers questions about a plant or animal from its page, using the knowledge bases and its cut-out, and about
   the whole garden from search, citing the records it used. Nothing you ask leaves the phone.
+- Second opinions from Gemma 4, in Settings › Photo scanning: while the phone is charging and not in use, Gemma 4 looks
+  again at finds the other models were unsure of, and its choice counts as one vote among theirs.
 - Questions where a wrong answer could hurt someone never reach Gemma 4: bites and stings, poisoning, eating anything
   identified, chemical amounts, signs of notifiable bee pests, handling dangerous animals and injured wildlife get
   Pollenplot's own answer, with the number to call: 000, the Poisons Information Centre, the Exotic Plant Pest

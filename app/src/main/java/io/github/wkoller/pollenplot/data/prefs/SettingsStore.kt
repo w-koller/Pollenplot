@@ -38,6 +38,8 @@ data class Settings(
     val scanSince: Long? = null,
     /** The zone chosen for the last plant added, which is offered for the next one. */
     val lastZoneId: String? = null,
+    /** Let Gemma 4, once it is on the phone, give a second opinion on unsure finds while the phone charges. */
+    val secondOpinions: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
@@ -64,6 +66,7 @@ class SettingsStore(context: Context) {
         val scanBackDays = intPreferencesKey("scan_back_days")
         val scanSince = longPreferencesKey("scan_since")
         val lastZoneId = stringPreferencesKey("last_zone_id")
+        val secondOpinions = booleanPreferencesKey("second_opinions")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -88,6 +91,7 @@ class SettingsStore(context: Context) {
             scanBackDays = this[Keys.scanBackDays] ?: defaults.scanBackDays,
             scanSince = this[Keys.scanSince],
             lastZoneId = this[Keys.lastZoneId],
+            secondOpinions = this[Keys.secondOpinions] ?: defaults.secondOpinions,
         )
     }
 
@@ -104,6 +108,7 @@ class SettingsStore(context: Context) {
         this[Keys.scanBackDays] = settings.scanBackDays
         setOrRemove(Keys.scanSince, settings.scanSince)
         setOrRemove(Keys.lastZoneId, settings.lastZoneId)
+        this[Keys.secondOpinions] = settings.secondOpinions
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

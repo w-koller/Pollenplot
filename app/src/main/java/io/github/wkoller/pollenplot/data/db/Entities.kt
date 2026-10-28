@@ -126,6 +126,8 @@ data class DetectionEntity(
     val lifeGroup: String = "PLANT",
     /** The sighting it became, for an animal. */
     val sightingId: String? = null,
+    /** Gemma 4 has given its second opinion, or the suggestions were sure enough not to need one. */
+    val secondOpinion: Boolean = false,
 )
 
 /** One suggestion for a detection, in rank order. */

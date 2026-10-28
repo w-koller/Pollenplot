@@ -53,8 +53,23 @@ class AskTestApp : PollenplotApp() {
     override fun createContainer(): AppContainer = AppContainer(this, assistant = assistant, fixedClock = DemoWildlife.clock)
 }
 
-/** Stands in for Gemma 4: answers every question with [answer], citing [cited], a word at a time. */
-class FakeAssistant(var answer: String = "", var cited: List<CitedRecord> = emptyList()) : Assistant {
+/**
+ * Stands in for Gemma 4: answers every question with [answer], citing [cited], a word at a time, and gives the second
+ * opinion [choose] picks.
+ */
+class FakeAssistant(
+    var answer: String = "",
+    var cited: List<CitedRecord> = emptyList(),
+    var choose: (List<String>) -> Int? = { null },
+) : Assistant {
+    /** The suggestions each second opinion was asked about. */
+    val opinions = mutableListOf<List<String>>()
+
+    override suspend fun secondOpinion(thumbnail: String, suggestions: List<String>): Int? {
+        opinions += suggestions
+        return choose(suggestions)
+    }
+
     /** The questions asked, with the official weed status the screen passed for each. */
     val asked = mutableListOf<Pair<String, String?>>()
 

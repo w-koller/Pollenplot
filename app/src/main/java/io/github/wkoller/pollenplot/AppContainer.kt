@@ -5,6 +5,7 @@ import android.util.Log
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
 import io.github.wkoller.pollenplot.ai.GemmaModel
+import io.github.wkoller.pollenplot.ai.SecondOpinionWorker
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
@@ -117,6 +118,11 @@ class AppContainer(
     }
 
     init {
+        // Finds already waiting for review get Gemma 4's second opinion once it is on the phone.
+        scope.launch {
+            gemma.state.first { it == DownloadState.Complete }
+            SecondOpinionWorker.enqueue(appContext)
+        }
         // The search text includes knowledge base facts and badges, so it is rebuilt when the app starts and whenever
         // the garden's state or weed lists change. A garden holds hundreds of records at most, so this takes a moment.
         scope.launch {

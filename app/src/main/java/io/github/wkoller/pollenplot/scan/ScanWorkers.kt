@@ -19,6 +19,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import io.github.wkoller.pollenplot.PollenplotApp
+import io.github.wkoller.pollenplot.ai.SecondOpinionWorker
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdSource
@@ -27,10 +28,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.withContext
 
 /** Looks for plants in the photos the user added, one at a time, and says what it found. */
 class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
@@ -43,6 +44,7 @@ class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWor
             tally = tally.withPhoto(container.scanner.scanAddedPhoto(uri))
         }
         container.notifications.showAddedResult(tally)
+        if (tally.found > 0) SecondOpinionWorker.enqueue(applicationContext)
         return Result.success()
     }
 
@@ -91,8 +93,13 @@ class LibraryScanWorker(context: Context, params: WorkerParameters) : CoroutineW
         }
         container.notifications.showScanResult(tally)
         if (more) ScanScheduler.scanNow(applicationContext)
-        // The accurate pass follows while the phone charges, for new photos with plants and those without.
-        if (container.accurate.ready && tally.photos > 0) AccurateScanWorker.enqueue(applicationContext)
+        // The accurate pass follows while the phone charges, for new photos with plants and those without, and asks
+        // for second opinions when it is done; without it, the second opinions follow straight on.
+        if (container.accurate.ready && tally.photos > 0) {
+            AccurateScanWorker.enqueue(applicationContext)
+        } else if (tally.found > 0) {
+            SecondOpinionWorker.enqueue(applicationContext)
+        }
         return Result.success()
     }
 
@@ -203,7 +210,7 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
             }
         }
         container.notifications.showScanResult(tally)
-        if (more) enqueue(applicationContext)
+        if (more) enqueue(applicationContext) else SecondOpinionWorker.enqueue(applicationContext)
         return Result.success()
     }
 

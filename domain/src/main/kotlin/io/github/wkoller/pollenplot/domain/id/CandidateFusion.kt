@@ -61,6 +61,38 @@ object CandidateFusion {
     fun withoutBoost(candidate: Candidate, garden: Set<String>, nearby: (String) -> Int = { 0 }): Int =
         (candidate.scoreBp.toLong() * BoxBp.FULL / boostBp(candidate.speciesName, candidate.label, garden, nearby)).toInt()
 
+    /**
+     * Whether a detection's suggestions are unsure enough to be worth a second opinion from Gemma 4: there is more
+     * than one, and the best is not of high confidence.
+     */
+    fun needsSecondOpinion(candidates: List<Candidate>): Boolean =
+        candidates.size > 1 && Confidence.of(candidates.maxOf { it.scoreBp }) != Confidence.HIGH
+
+    /**
+     * The suggestions after a second opinion from Gemma 4. Its choice, by index, counts as one more model's vote at
+     * its weight, the way [fuse] weighs each model: the chosen suggestion gets the vote and the others none of it. Null
+     * means it chose none of them, which lowers each a little, as a model that saw none of them would.
+     */
+    fun withSecondOpinion(
+        candidates: List<Candidate>,
+        chosen: Int?,
+        garden: Set<String>,
+        nearby: (String) -> Int = { 0 },
+        weights: Map<IdSource, Int> = DEFAULT_WEIGHTS,
+    ): List<Candidate> {
+        val total = candidates.flatMap { it.sources }.toSet().sumOf { weights[it] ?: 1 }.coerceAtLeast(1).toLong()
+        val gemma = (weights[IdSource.GEMMA] ?: 1).toLong()
+        return candidates.mapIndexed { i, candidate ->
+            val vote = if (i == chosen) BoxBp.FULL.toLong() else 0L
+            val unboosted = (withoutBoost(candidate, garden, nearby) * total + vote * gemma) / (total + gemma)
+            val score = unboosted * boostBp(candidate.speciesName, candidate.label, garden, nearby) / BoxBp.FULL
+            candidate.copy(
+                scoreBp = score.toInt().coerceAtMost(BoxBp.FULL),
+                sources = if (i == chosen) candidate.sources + IdSource.GEMMA else candidate.sources,
+            )
+        }.sortedByDescending { it.scoreBp }
+    }
+
     fun fuse(
         results: Map<IdSource, List<LabelScore>>,
         kb: KnowledgeBase?,

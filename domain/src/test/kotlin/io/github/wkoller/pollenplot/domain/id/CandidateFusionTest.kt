@@ -2,6 +2,7 @@ package io.github.wkoller.pollenplot.domain.id
 
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBaseFilesTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -93,5 +94,23 @@ class CandidateFusionTest {
         val boosted = Candidate("Rosmarinus officinalis", "Salvia rosmarinus", 6_450, setOf(IdSource.AIY_PLANTS))
         assertEquals(4_300, CandidateFusion.withoutBoost(boosted, garden = setOf("Salvia rosmarinus")))
         assertEquals(6_450, CandidateFusion.withoutBoost(boosted, garden = emptySet()))
+    }
+
+    @Test
+    fun `a second opinion is one more vote, at Gemma's weight`() {
+        val candidates = listOf(
+            Candidate("Grevillea banksii", "Grevillea banksii", 4_500, setOf(IdSource.BIOCAP, IdSource.AIY_PLANTS)),
+            Candidate("Grevillea robusta", "Grevillea robusta", 4_000, setOf(IdSource.BIOCAP)),
+        )
+        assertTrue(CandidateFusion.needsSecondOpinion(candidates))
+        // BioCAP and AIY weigh 6 and 3, Gemma 1: the chosen one gains (10,000 - 4,000) / 10, the other loses a tenth.
+        val chosen = CandidateFusion.withSecondOpinion(candidates, chosen = 1, garden = emptySet())
+        assertEquals(listOf("Grevillea robusta", "Grevillea banksii"), chosen.map { it.label })
+        assertEquals(4_600, chosen[0].scoreBp)
+        assertEquals(4_050, chosen[1].scoreBp)
+        assertTrue(IdSource.GEMMA in chosen[0].sources)
+        val none = CandidateFusion.withSecondOpinion(candidates, chosen = null, garden = emptySet())
+        assertEquals("None of them lowers each a little", listOf(4_050, 3_600), none.map { it.scoreBp })
+        assertFalse("A sure suggestion needs no second opinion", CandidateFusion.needsSecondOpinion(listOf(candidates[0].copy(scoreBp = 7_000), candidates[1])))
     }
 }

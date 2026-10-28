@@ -27,6 +27,10 @@ STRINGS = {
     "ask_intro_garden": "Please ask about your whole garden, such as which plants feed birds or where frogs were "
     "seen.",
     "ask_open": "Ask Gemma",
+    "scan_second_opinion_heading": "Second opinions",
+    "scan_second_opinion": "Second opinions from Gemma 4",
+    "scan_second_opinion_body": "While your phone is charging and not in use, Gemma 4 looks again at finds the other "
+    "models were unsure of. Its choice counts as one vote among theirs. This needs Gemma 4 from Settings › Models.",
     "ask_garden_open": "Ask your garden",
 
     "fixed_bite": "Please call 000 now if someone has been bitten by a snake or a funnel-web spider, or has trouble "

@@ -70,6 +70,12 @@ interface Assistant {
      */
     fun ask(subject: AskSubject, question: String, history: List<Pair<String, String>> = emptyList(), weedStatus: String? = null): Flow<AssistantReply>
 
+    /**
+     * Which of [suggestions] the cut-out at [thumbnail] shows, by index, or null for none of them. It fails if Gemma 4
+     * is not on the phone or could not answer.
+     */
+    suspend fun secondOpinion(thumbnail: String, suggestions: List<String>): Int?
+
     fun stop()
 }
 
@@ -141,6 +147,20 @@ class GardenAssistant(
         } catch (error: Throwable) {
             onError(error)
             send(AssistantReply.Failed)
+        }
+    }
+
+    override suspend fun secondOpinion(thumbnail: String, suggestions: List<String>): Int? {
+        check(model.ready) { "Gemma 4 is not on the phone" }
+        val image = checkNotNull(photo(thumbnail)) { "The cut-out has gone" }
+        return model.withEngine { engine ->
+            withContext(Dispatchers.Default) {
+                // The most likely answer every time, so the same photo gets the same opinion.
+                engine.createConversation(ConversationConfig(Contents.of(GardenPrompts.SYSTEM), emptyList(), emptyList(), SamplerConfig(1, 1.0, 0.0, 0))).use { conversation ->
+                    val answer = conversation.sendMessage(Contents.of(Content.ImageBytes(image), Content.Text(GardenPrompts.secondOpinion(suggestions))))
+                    GardenPrompts.choice(answer.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }, suggestions.size)
+                }
+            }
         }
     }
 

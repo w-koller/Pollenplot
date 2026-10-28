@@ -240,6 +240,15 @@ class GardenRepository(
         detections.touch(detectionId)
     }
 
+    /** Finds waiting for review that Gemma 4 has not given a second opinion on yet, the newest first. */
+    suspend fun waitingForSecondOpinion(limit: Int): List<DetectionRecord> = detections.waitingForSecondOpinion(limit).map { record(it) }
+
+    /** Records that a find has had its second opinion, with its suggestions weighed again when there was one. */
+    suspend fun recordSecondOpinion(detectionId: String, candidates: List<Candidate>?) = db.withTransaction {
+        if (candidates != null) replaceCandidates(detectionId, candidates)
+        detections.markSecondOpinion(detectionId)
+    }
+
     suspend fun detection(id: String): DetectionRecord? = detections.get(id)?.let { record(it) }
 
     /** The plants found in one photo, updated as each is reviewed. */

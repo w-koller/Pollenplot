@@ -22,6 +22,9 @@
     <string name="ask_intro_animal">Please ask anything about the %1$s, such as what it eats or how to help it.</string>
     <string name="ask_intro_garden">Please ask about your whole garden, such as which plants feed birds or where frogs were seen.</string>
     <string name="ask_open">Ask Gemma</string>
+    <string name="scan_second_opinion_heading">Second opinions</string>
+    <string name="scan_second_opinion">Second opinions from Gemma 4</string>
+    <string name="scan_second_opinion_body">While your phone is charging and not in use, Gemma 4 looks again at finds the other models were unsure of. Its choice counts as one vote among theirs. This needs Gemma 4 from Settings › Models.</string>
     <string name="ask_garden_open">Ask your garden</string>
     <string name="fixed_bite">Please call 000 now if someone has been bitten by a snake or a funnel-web spider, or has trouble breathing, a swollen face or throat, or has collapsed. For other bites and stings, please call the Poisons Information Centre on 13 11 26 for advice, at any time of day. For a pet, please call your vet.</string>
     <string name="fixed_poisoning">Please call the Poisons Information Centre on 13 11 26 now, even if there are no signs yet. It answers at any time of day, from anywhere in Australia. Please call 000 if the person is unconscious, has trouble breathing or is having a fit. For a pet, please call your vet or an emergency vet straight away, and take the plant or a photo of it with you.</string>

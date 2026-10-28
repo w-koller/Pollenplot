@@ -99,6 +99,12 @@ interface DetectionDao {
     )
     suspend fun pendingWithout(source: String): List<DetectionEntity>
 
+    @Query("SELECT * FROM detections WHERE status = 'NEEDS_REVIEW' AND secondOpinion = 0 ORDER BY createdAt DESC LIMIT :limit")
+    suspend fun waitingForSecondOpinion(limit: Int): List<DetectionEntity>
+
+    @Query("UPDATE detections SET secondOpinion = 1 WHERE id = :id")
+    suspend fun markSecondOpinion(id: String)
+
     @Query("DELETE FROM candidates WHERE detectionId = :id")
     suspend fun deleteCandidates(id: String)
 

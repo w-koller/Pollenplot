@@ -74,7 +74,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   `GardenPrompts`, `AssistantFacts` (a plant's or animal's facts as plain lines for the model; nothing about eating)
   and `WildlifeRescue` (each state's rescue service, checked against its official page). The model cannot run on the
   JVM, so screen tests use `AskTestApp` and its `FakeAssistant`; the guard, the not-downloaded reply and the search for
-  a question's records run for real.
+  a question's records run for real. `SecondOpinionWorker` asks Gemma about unsure finds while the phone charges and is
+  idle; its choice is one vote at Gemma's weight (`CandidateFusion.withSecondOpinion`). A plant waits for BioCAP's
+  accurate pass first, because that pass weighs the suggestions again from the models alone.
 - `app/search`: `MeaningSearch` (the optional text model, its download and the vectors it makes for each record, kept
   in the `embeddings` table and refreshed by `MeaningIndexWorker` after edits). Meaning matches come after keyword
   matches, at most three and only above `MeaningMatch.MIN_SCORE`, because this small model scores unrelated text
