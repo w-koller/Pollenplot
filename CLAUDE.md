@@ -68,6 +68,13 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   from an animal, so the camera's group chips say which to ask. For a photo nobody chose a group for, `groupOf` asks
   BioCAP, whose closest species must clearly agree on a group (`AccurateRegions.GROUP_SHARE_BP`); without the pack,
   it is a plant.
+- `app/ai`: `GemmaModel` (Gemma 4 E2B through LiteRT-LM, with an image backend, downloaded when the user asks and
+  released after two idle minutes) and `GardenAssistant`, behind the `Assistant` interface. `domain/assistant` holds
+  `GardenAssistantGuard` (the questions Pollenplot answers itself, and answers that give a chemical amount),
+  `GardenPrompts`, `AssistantFacts` (a plant's or animal's facts as plain lines for the model; nothing about eating)
+  and `WildlifeRescue` (each state's rescue service, checked against its official page). The model cannot run on the
+  JVM, so screen tests use `AskTestApp` and its `FakeAssistant`; the guard, the not-downloaded reply and the search for
+  a question's records run for real.
 - `app/search`: `MeaningSearch` (the optional text model, its download and the vectors it makes for each record, kept
   in the `embeddings` table and refreshed by `MeaningIndexWorker` after edits). Meaning matches come after keyword
   matches, at most three and only above `MeaningMatch.MIN_SCORE`, because this small model scores unrelated text

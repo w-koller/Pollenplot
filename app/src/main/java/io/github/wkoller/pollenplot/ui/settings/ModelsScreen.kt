@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.ml.AccuratePack
 import io.github.wkoller.pollenplot.ml.PackState
@@ -41,10 +42,11 @@ import kotlinx.coroutines.launch
 
 /** Settings › Models: the models the app can download, how big they are, and whether they are on the phone. */
 @Composable
-fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, onBack: () -> Unit) {
+fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, gemma: GemmaModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val state by meaning.state.collectAsStateWithLifecycle()
     val pack by accurate.state.collectAsStateWithLifecycle()
+    val assistant by gemma.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     DetailScaffold(title = stringResource(R.string.models_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -69,6 +71,23 @@ fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, onBack: () -> U
                         onUseMobileData = { meaning.download.restartWithMobileData() },
                         onCancel = { meaning.download.cancel() },
                         onDelete = { scope.launch { meaning.delete() } },
+                    )
+                }
+            }
+            item {
+                ModelCard(
+                    icon = R.drawable.ic_forum,
+                    title = stringResource(R.string.models_gemma),
+                    body = stringResource(R.string.models_gemma_body, Formatter.formatShortFileSize(context, gemma.download.sizeBytes)),
+                ) {
+                    DownloadControls(
+                        state = assistant,
+                        totalBytes = gemma.download.sizeBytes,
+                        ready = R.string.models_gemma_ready,
+                        onDownload = { gemma.download.start() },
+                        onUseMobileData = { gemma.download.restartWithMobileData() },
+                        onCancel = { gemma.download.cancel() },
+                        onDelete = { scope.launch { gemma.delete() } },
                     )
                 }
             }

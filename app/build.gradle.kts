@@ -112,6 +112,10 @@ android {
         buildConfigField("String", "BIOCAP_URL", "\"${providers.gradleProperty("pollenplot.biocap.url").get()}\"")
         buildConfigField("String", "BIOCAP_SHA256", "\"${providers.gradleProperty("pollenplot.biocap.sha256").get()}\"")
         buildConfigField("long", "BIOCAP_BYTES", "${providers.gradleProperty("pollenplot.biocap.bytes").get()}L")
+        // Gemma 4 E2B for the garden assistant, an optional download pinned the same way.
+        buildConfigField("String", "GEMMA_URL", "\"${providers.gradleProperty("pollenplot.gemma.url").get()}\"")
+        buildConfigField("String", "GEMMA_SHA256", "\"${providers.gradleProperty("pollenplot.gemma.sha256").get()}\"")
+        buildConfigField("long", "GEMMA_BYTES", "${providers.gradleProperty("pollenplot.gemma.bytes").get()}L")
     }
 
     signingConfigs {
@@ -177,6 +181,7 @@ room {
 // The archives whose licence and notice files are shown in About › Licences. Libraries join this list as they are added.
 val licenceArchives: Configuration = configurations.detachedConfiguration(
     dependencies.create("com.google.ai.edge.litert:litert:${libs.versions.litert.get()}@aar"),
+    dependencies.create("com.google.ai.edge.litertlm:litertlm-android:${libs.versions.litertlm.get()}@aar"),
 ).apply { isTransitive = false }
 
 androidComponents {
@@ -228,6 +233,8 @@ dependencies {
         exclude(group = "com.google.android.play")
         exclude(group = "com.google.android.gms")
     }
+    // LiteRT-LM runs Gemma 4 on the phone for the garden assistant.
+    implementation(libs.litertlm.android)
     implementation(libs.coil.compose)
     implementation(libs.androidx.exifinterface)
 

@@ -69,6 +69,14 @@ class GardenAssistantGuardTest {
     )
 
     @Test
+    fun `an answer that gives a chemical amount anyway is caught`() {
+        assertEquals(true, GardenAssistantGuard.answerGivesAmount("Mix 5 ml of neem oil per litre of water."))
+        assertEquals(true, GardenAssistantGuard.answerGivesAmount("Use a 2 percent glyphosate spray."))
+        assertEquals(false, GardenAssistantGuard.answerGivesAmount("Please follow the label on the neem oil bottle."))
+        assertEquals("Water is not a chemical", false, GardenAssistantGuard.answerGivesAmount("Give each citrus 18 litres of water a week."))
+    }
+
+    @Test
     fun `everyday garden questions reach the model`() = assertKind(
         QuestionKind.GENERAL,
         "When does the grevillea flower?",

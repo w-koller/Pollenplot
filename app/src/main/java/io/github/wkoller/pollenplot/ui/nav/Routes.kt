@@ -47,6 +47,9 @@ import kotlinx.serialization.Serializable
 /** A sighting without a photo, optionally in a zone. */
 @Serializable data class AddSightingRoute(val zoneId: String? = null)
 
+/** Questions to Gemma 4 about a plant in the garden, a kind of animal, or, with neither, the whole garden. */
+@Serializable data class AskRoute(val plantId: String? = null, val animalKey: String? = null)
+
 /** Plants found in photos, waiting for review. */
 @Serializable data object ReviewRoute
 

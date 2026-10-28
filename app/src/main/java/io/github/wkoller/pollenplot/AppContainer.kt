@@ -1,16 +1,24 @@
 package io.github.wkoller.pollenplot
 
 import android.content.Context
+import android.util.Log
+import io.github.wkoller.pollenplot.ai.Assistant
+import io.github.wkoller.pollenplot.ai.GardenAssistant
+import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
+import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
+import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
+import io.github.wkoller.pollenplot.data.prefs.SettingsStore
+import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.ml.AccuratePack
 import io.github.wkoller.pollenplot.ml.AccuratePlantIdentifier
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
-import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.Identifier
+import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.place.LocationSource
@@ -22,10 +30,6 @@ import io.github.wkoller.pollenplot.scan.MediaStoreGallery
 import io.github.wkoller.pollenplot.scan.PhotoScanner
 import io.github.wkoller.pollenplot.search.MeaningIndexWorker
 import io.github.wkoller.pollenplot.search.MeaningSearch
-import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
-import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
-import io.github.wkoller.pollenplot.data.prefs.SettingsStore
-import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.web.HttpWeb
 import io.github.wkoller.pollenplot.web.Web
 import io.github.wkoller.pollenplot.weeds.WeedLibrary
@@ -34,14 +38,14 @@ import io.github.wkoller.pollenplot.weeds.WeedSync
 import io.github.wkoller.pollenplot.weeds.WeedSyncWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -52,7 +56,7 @@ import java.time.Clock
 /**
  * Builds the app's shared objects once. Screens and workers reach it through [PollenplotApp]. Tests pass an in-memory
  * [database], a fake [identifier] and [embedder] in place of the on-device models, a [gallery] of their own photos,
- * recorded [web] answers, a fixed [location] and a [fixedClock].
+ * recorded [web] answers, a fixed [location], a [fixedClock] and an [assistant] in place of Gemma 4.
  */
 class AppContainer(
     context: Context,
@@ -63,6 +67,7 @@ class AppContainer(
     web: Web? = null,
     location: LocationSource? = null,
     fixedClock: Clock? = null,
+    assistant: Assistant? = null,
 ) {
     val appContext: Context = context.applicationContext
     val clock: Clock = fixedClock ?: PhoneClock
@@ -106,6 +111,10 @@ class AppContainer(
     val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby), analysis, garden, clock)
     val notifications = Notifications(appContext)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
+    val gemma = GemmaModel(appContext)
+    val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
+        Log.w("GardenAssistant", "Gemma 4 could not answer", error)
+    }
 
     init {
         // The search text includes knowledge base facts and badges, so it is rebuilt when the app starts and whenever

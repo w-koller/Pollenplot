@@ -6,23 +6,29 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
+import io.github.wkoller.pollenplot.ai.AskSubject
+import io.github.wkoller.pollenplot.ai.Assistant
+import io.github.wkoller.pollenplot.ai.AssistantReply
+import io.github.wkoller.pollenplot.domain.assistant.CitedRecord
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.id.TileResult
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.FoundRegion
 import io.github.wkoller.pollenplot.ml.Identification
-import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.scan.Album
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.scan.GalleryPhoto
-import java.time.Instant
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import java.time.Instant
 
 /**
  * The app with a gallery of painted photos and a stand-in for the models, for tests of scanning and review. Tests that
@@ -38,6 +44,31 @@ class TestApp : PollenplotApp() {
 /** The app on a fixed morning, 28 October 2026 in Brisbane, so the Wildlife tab's year and months stay put. */
 class WildlifeTestApp : PollenplotApp() {
     override fun createContainer(): AppContainer = AppContainer(this, fixedClock = DemoWildlife.clock)
+}
+
+/** The app with a stand-in for Gemma 4, which cannot run on the JVM, on the same fixed morning as the wildlife tests. */
+class AskTestApp : PollenplotApp() {
+    val assistant = FakeAssistant()
+
+    override fun createContainer(): AppContainer = AppContainer(this, assistant = assistant, fixedClock = DemoWildlife.clock)
+}
+
+/** Stands in for Gemma 4: answers every question with [answer], citing [cited], a word at a time. */
+class FakeAssistant(var answer: String = "", var cited: List<CitedRecord> = emptyList()) : Assistant {
+    /** The questions asked, with the official weed status the screen passed for each. */
+    val asked = mutableListOf<Pair<String, String?>>()
+
+    override val ready: Boolean = true
+
+    override fun ask(subject: AskSubject, question: String, history: List<Pair<String, String>>, weedStatus: String?): Flow<AssistantReply> = flow {
+        asked += question to weedStatus
+        emit(AssistantReply.Loading)
+        val words = answer.split(" ")
+        for (i in 1 until words.size) emit(AssistantReply.Streaming(words.take(i).joinToString(" ")))
+        emit(AssistantReply.Done(answer, cited))
+    }
+
+    override fun stop() = Unit
 }
 
 /** The app with a stand-in for the text model, for tests of search by meaning. */

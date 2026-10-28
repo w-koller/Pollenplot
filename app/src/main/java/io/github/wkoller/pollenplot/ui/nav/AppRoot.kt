@@ -26,9 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -40,13 +43,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import androidx.work.WorkManager
 import io.github.wkoller.pollenplot.AppContainer
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.wkoller.pollenplot.MainActivity
+import io.github.wkoller.pollenplot.ai.AskSubject
+import io.github.wkoller.pollenplot.domain.assistant.RecordKind
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.PackState
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
+import io.github.wkoller.pollenplot.ui.assistant.AskModel
+import io.github.wkoller.pollenplot.ui.assistant.AskScreen
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
@@ -227,6 +231,7 @@ fun AppRoot(
                         onCompare = { navController.navigate(CompareRoute(it, plantId = id)) },
                         onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                        onAsk = { navController.navigate(AskRoute(plantId = id)) },
                     )
                 }
                 composable<AddPlantRoute> { entry ->
@@ -253,6 +258,7 @@ fun AppRoot(
                         onOpenZone = { navController.navigate(ZoneRoute(it)) },
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
+                        onAskGarden = { navController.navigate(AskRoute()) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->
@@ -311,13 +317,39 @@ fun AppRoot(
                     )
                 }
                 composable<AnimalRoute> { entry ->
+                    val key = entry.toRoute<AnimalRoute>().key
                     AnimalScreen(
                         views = container.views,
                         knowledge = container.knowledge,
-                        key = entry.toRoute<AnimalRoute>().key,
+                        key = key,
                         onBack = back,
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onAsk = { navController.navigate(AskRoute(animalKey = key)) },
+                    )
+                }
+                composable<AskRoute> { entry ->
+                    val route = entry.toRoute<AskRoute>()
+                    val subject = when {
+                        route.plantId != null -> AskSubject.Plant(route.plantId)
+                        route.animalKey != null -> AskSubject.Animal(route.animalKey)
+                        else -> AskSubject.Garden
+                    }
+                    val model = viewModel { AskModel(container.assistant, subject) }
+                    AskScreen(
+                        model = model,
+                        assistant = container.assistant,
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        onBack = back,
+                        onOpenModels = { navController.navigate(ModelsRoute) },
+                        onOpenRecord = { record ->
+                            when (record.kind) {
+                                RecordKind.PLANT -> navController.navigate(PlantRoute(record.id))
+                                RecordKind.ZONE -> navController.navigate(ZoneRoute(record.id))
+                                RecordKind.SIGHTING -> navController.navigate(SightingRoute(record.id))
+                            }
+                        },
                     )
                 }
                 composable<SightingRoute> { entry ->
@@ -356,7 +388,7 @@ fun AppRoot(
                         onOpenAbout = { navController.navigate(AboutRoute) },
                     )
                 }
-                composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, onBack = back) }
+                composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, container.gemma, onBack = back) }
                 composable<GardenLocationRoute> {
                     val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
                     GardenLocationScreen(model, container.settingsStore, onBack = back)

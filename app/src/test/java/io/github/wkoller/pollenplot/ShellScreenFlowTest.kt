@@ -6,11 +6,13 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -87,7 +89,9 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("Use colours from your wallpaper").assertIsDisplayed()
         shot("settings")
         compose.onNodeWithText("Models").performClick()
-        compose.onNodeWithText("Download").assertIsDisplayed()
+        // Search by meaning and the garden assistant can each be downloaded; the accurate pack is not published yet.
+        compose.onAllNodesWithText("Download").assertCountEquals(2)
+        compose.onNodeWithText("Garden assistant").assertIsDisplayed()
         shot("models")
         compose.onNodeWithContentDescription("Back").performClick()
         compose.onNodeWithText("About Pollenplot").performClick()

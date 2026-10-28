@@ -79,3 +79,11 @@
 - Recorded near you, on the Wildlife tab: the animals recorded most often within 10 km of the garden on the Atlas of
   Living Australia, a group at a time, with those seen in your yard marked. Identification gives them the same small
   boost as plants recorded nearby. They are brought up to date with the weed lists.
+- The garden assistant, an optional 2.6 GB download in Settings › Models: Gemma 4 E2B runs on the phone with LiteRT-LM
+  and answers questions about a plant or animal from its page, using the knowledge bases and its cut-out, and about
+  the whole garden from search, citing the records it used. Nothing you ask leaves the phone.
+- Questions where a wrong answer could hurt someone never reach Gemma 4: bites and stings, poisoning, eating anything
+  identified, chemical amounts, signs of notifiable bee pests, handling dangerous animals and injured wildlife get
+  Pollenplot's own answer, with the number to call: 000, the Poisons Information Centre, the Exotic Plant Pest
+  Hotline, or each state's wildlife rescue service. An answer that gives a chemical amount anyway is replaced by the
+  label's.

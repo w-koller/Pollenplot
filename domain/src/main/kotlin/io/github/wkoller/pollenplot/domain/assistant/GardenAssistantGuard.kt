@@ -50,6 +50,17 @@ object GardenAssistantGuard {
         }
     }
 
+    /**
+     * Whether an answer gives an amount of a chemical anyway, such as "10 ml per litre of neem oil". Only the product's
+     * label may say that, so such an answer is replaced by the app's own.
+     */
+    fun answerGivesAmount(answer: String): Boolean {
+        val text = normalise(answer)
+        return CHEMICALS.any { it.containsMatchIn(text) } && AMOUNT.containsMatchIn(text)
+    }
+
+    private val AMOUNT = Regex("\\b\\d+( \\d+)? ?(ml|millilitres?|l|litres?|g|grams?|kg|kilograms?|tsp|teaspoons?|tbsp|tablespoons?|cups?|drops?|percent|per cent|parts?)\\b")
+
     private fun normalise(text: String): String = text.lowercase().replace('’', '\'').replace(Regex("[^a-z0-9' ]+"), " ").replace(Regex("\\s+"), " ").trim()
 
     private fun words(vararg words: String): List<Regex> = words.map { Regex("\\b$it\\b") }

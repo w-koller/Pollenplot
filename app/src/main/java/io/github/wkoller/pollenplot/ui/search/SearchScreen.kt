@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -59,6 +60,7 @@ fun SearchScreen(
     onOpenZone: (String) -> Unit,
     onOpenPlant: (String) -> Unit,
     onAddSpecies: (String) -> Unit,
+    onAskGarden: (() -> Unit)? = null,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val hits by produceState(initialValue = emptyList<SearchHit>(), query) { value = garden.search(query) }
@@ -75,7 +77,13 @@ fun SearchScreen(
         if (loadedKb == null || query.isBlank()) emptyList() else loadedKb.search(query, limit = 8).map { it to locality.roles(it, CareResolver.resolve(loadedKb, it).care) }
     }
 
-    DetailScaffold(title = stringResource(R.string.search_title), onBack = onBack) { padding ->
+    DetailScaffold(
+        title = stringResource(R.string.search_title),
+        onBack = onBack,
+        actions = {
+            onAskGarden?.let { ask -> IconButton(onClick = ask) { Icon(painterResource(R.drawable.ic_forum), contentDescription = stringResource(R.string.ask_garden_open)) } }
+        },
+    ) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
             item {
                 OutlinedTextField(

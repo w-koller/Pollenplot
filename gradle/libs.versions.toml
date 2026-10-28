@@ -17,6 +17,7 @@ serialization = "1.12.0"
 graphicsShapes = "1.0.1"
 camerax = "1.6.2"
 litert = "2.3.0"
+litertlm = "0.18.0"
 onnxruntime = "1.31.0"
 coil = "3.6.3"
 exifinterface = "1.4.2"
@@ -42,6 +43,7 @@ camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.r
 camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 camera-compose = { group = "androidx.camera", name = "camera-compose", version.ref = "camerax" }
 litert = { group = "com.google.ai.edge.litert", name = "litert", version.ref = "litert" }
+litertlm-android = { group = "com.google.ai.edge.litertlm", name = "litertlm-android", version.ref = "litertlm" }
 onnxruntime-android = { group = "com.microsoft.onnxruntime", name = "onnxruntime-android", version.ref = "onnxruntime" }
 onnxruntime = { group = "com.microsoft.onnxruntime", name = "onnxruntime", version.ref = "onnxruntime" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }

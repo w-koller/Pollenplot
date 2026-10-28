@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -52,6 +55,7 @@ fun AnimalScreen(
     onBack: () -> Unit,
     onOpenSighting: (String) -> Unit,
     onOpenPlant: (String) -> Unit,
+    onAsk: (() -> Unit)? = null,
 ) {
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -66,7 +70,13 @@ fun AnimalScreen(
         plants.filter { it.plant.id in ids }.sortedByDescending { ids[it.plant.id] }
     }
 
-    DetailScaffold(title = title, onBack = onBack) { padding ->
+    DetailScaffold(
+        title = title,
+        onBack = onBack,
+        actions = {
+            onAsk?.let { ask -> IconButton(onClick = ask) { Icon(painterResource(R.drawable.ic_forum), contentDescription = stringResource(R.string.ask_open)) } }
+        },
+    ) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
             item(key = "header") {
                 Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {

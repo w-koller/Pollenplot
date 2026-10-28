@@ -88,6 +88,7 @@ fun PlantDetailScreen(
     onCompare: (speciesName: String) -> Unit = {},
     onOpenAnimal: (String) -> Unit = {},
     onOpenSighting: (String) -> Unit = {},
+    onAsk: (() -> Unit)? = null,
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -105,6 +106,7 @@ fun PlantDetailScreen(
         title = loaded?.title.orEmpty(),
         onBack = onBack,
         actions = {
+            onAsk?.let { ask -> IconButton(onClick = ask) { Icon(painterResource(R.drawable.ic_forum), contentDescription = stringResource(R.string.ask_open)) } }
             IconButton(onClick = { editing = true }) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.plant_edit)) }
             IconButton(onClick = { confirmRemove = true }) { Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.plant_remove)) }
         },
