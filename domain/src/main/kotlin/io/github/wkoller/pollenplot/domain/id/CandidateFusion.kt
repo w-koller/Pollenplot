@@ -4,13 +4,15 @@ import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 
 /**
  * A suggestion for what a region shows. [speciesName] is the knowledge base's name for it when the model's label is a
- * species or synonym the knowledge base knows; otherwise the suggestion is shown by the model's own label.
+ * species or synonym the knowledge base knows; otherwise the suggestion is shown by its [common] name from a model, or
+ * the model's own label.
  */
 data class Candidate(
     val label: String,
     val speciesName: String?,
     val scoreBp: Int,
     val sources: Set<IdSource>,
+    val common: String? = null,
 ) {
     /** The genus, from the first word of the scientific name. */
     val genus: String get() = (speciesName ?: label).substringBefore(' ')
@@ -82,28 +84,29 @@ object CandidateFusion {
     ): List<Candidate> {
         val present = results.filterValues { it.isNotEmpty() }
         val totalWeight = present.keys.sumOf { weights[it] ?: 1 }.coerceAtLeast(1)
-        data class Entry(var label: String, val speciesName: String?, var weighted: Long, val sources: MutableSet<IdSource>)
+        data class Entry(var label: String, val speciesName: String?, var weighted: Long, val sources: MutableSet<IdSource>, var common: String?)
         val entries = linkedMapOf<String, Entry>()
         for ((source, labels) in present) {
             val weight = weights[source] ?: 1
             // A model can name one species twice through synonyms; only its best score for that species counts.
-            val best = mutableMapOf<String, Pair<String, Int>>()
+            val best = mutableMapOf<String, LabelScore>()
             for (label in labels) {
                 val species = nameOf(label.label)
                 val key = KnowledgeBase.normalise(species ?: label.label)
-                if ((best[key]?.second ?: -1) < label.scoreBp) best[key] = label.label to label.scoreBp
+                if ((best[key]?.scoreBp ?: -1) < label.scoreBp) best[key] = label
             }
             for ((key, value) in best) {
-                val species = nameOf(value.first)
-                val entry = entries.getOrPut(key) { Entry(value.first, species, 0, mutableSetOf()) }
-                entry.weighted += value.second.toLong() * weight
+                val species = nameOf(value.label)
+                val entry = entries.getOrPut(key) { Entry(value.label, species, 0, mutableSetOf(), value.common) }
+                entry.weighted += value.scoreBp.toLong() * weight
                 entry.sources += source
+                if (entry.common == null) entry.common = value.common
             }
         }
         return entries.values
             .map { e ->
                 val score = e.weighted / totalWeight * boostBp(e.speciesName, e.label, garden, nearby) / BoxBp.FULL
-                Candidate(e.label, e.speciesName, score.toInt().coerceAtMost(BoxBp.FULL), e.sources.toSet())
+                Candidate(e.label, e.speciesName, score.toInt().coerceAtMost(BoxBp.FULL), e.sources.toSet(), e.common)
             }
             .sortedByDescending { it.scoreBp }
             .take(limit)

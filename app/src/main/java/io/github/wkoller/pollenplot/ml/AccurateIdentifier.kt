@@ -15,15 +15,16 @@ import kotlinx.coroutines.withContext
 /** BioCAP and the species it can name, open and ready. */
 class AccurateModels(private val encoder: BioCapEncoder, val index: SpeciesIndex, private val logitScale: Float) : AutoCloseable {
     /**
-     * BioCAP's labels for the square around [box] in [photo]: the closest species of [group] as shares, best first. A
-     * pack whose index has no groups names plants only.
+     * BioCAP's labels for the square around [box] in [photo]: the closest species of [group] as shares, best first,
+     * with the index's common names. A pack whose index has no groups names plants only.
      */
     fun labels(photo: Bitmap, box: BoxBp, group: LifeGroup = LifeGroup.PLANT): List<LabelScore> {
         if (!index.hasGroups && group != LifeGroup.PLANT) return emptyList()
         val vector = encoder.encode(Bitmaps.squarePixels(photo, box, BioCapEncoder.SIZE))
         val wanted = group.name.lowercase()
         val near = index.nearest(vector, count = CONSIDERED) { species -> species.group == null || species.group == wanted }
-        return AccurateRegions.shares(near.map { it.species.name to it.similarity }, logitScale).take(KEPT)
+        val common = near.associate { it.species.name to it.species.common }
+        return AccurateRegions.shares(near.map { it.species.name to it.similarity }, logitScale).take(KEPT).map { it.copy(common = common[it.label]) }
     }
 
     override fun close() = encoder.close()

@@ -223,7 +223,7 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val nameOf: (Candidate) -> String = { candidate ->
         val name = candidate.speciesName ?: candidate.label
-        (if (group == LifeGroup.PLANT) kb?.species(name)?.displayName else fauna?.animal(name)?.displayName) ?: candidate.label
+        (if (group == LifeGroup.PLANT) kb?.species(name)?.displayName else fauna?.animal(name)?.displayName) ?: candidate.common ?: candidate.label
     }
     val imageCapture = remember { identifyImageCapture() }
     LightSystemBarIcons()

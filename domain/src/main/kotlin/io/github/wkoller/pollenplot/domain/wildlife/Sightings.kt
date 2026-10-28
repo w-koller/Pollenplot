@@ -8,7 +8,7 @@ enum class Behaviour { FEEDING, POLLINATING, NESTING, BASKING, CALLING, MATING, 
 /** An animal or fungus seen in the garden, from a photo or noted by the user. */
 data class Sighting(
     val id: String,
-    /** The knowledge base's name for it, when the knowledge base has it. */
+    /** Its scientific name, when known: the knowledge base's name for it, or the identifier's. */
     val speciesName: String?,
     /** The name it was recorded under: the identifier's label or the user's choice. */
     val label: String,

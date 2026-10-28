@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1ee3a4cce0020c61e2afde970eafb24e",
+    "identityHash": "136b8398e7ef25ea90ee299872d7956f",
     "entities": [
       {
         "tableName": "zones",
@@ -430,7 +430,7 @@
       },
       {
         "tableName": "candidates",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`detectionId` TEXT NOT NULL, `rank` INTEGER NOT NULL, `label` TEXT NOT NULL, `speciesName` TEXT, `scoreBp` INTEGER NOT NULL, `sources` TEXT NOT NULL, PRIMARY KEY(`detectionId`, `rank`), FOREIGN KEY(`detectionId`) REFERENCES `detections`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`detectionId` TEXT NOT NULL, `rank` INTEGER NOT NULL, `label` TEXT NOT NULL, `speciesName` TEXT, `scoreBp` INTEGER NOT NULL, `sources` TEXT NOT NULL, `common` TEXT, PRIMARY KEY(`detectionId`, `rank`), FOREIGN KEY(`detectionId`) REFERENCES `detections`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "detectionId",
@@ -466,6 +466,11 @@
             "columnName": "sources",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "common",
+            "columnName": "common",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -924,7 +929,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1ee3a4cce0020c61e2afde970eafb24e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '136b8398e7ef25ea90ee299872d7956f')"
     ]
   }
 }

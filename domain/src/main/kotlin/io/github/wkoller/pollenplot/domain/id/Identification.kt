@@ -12,8 +12,11 @@ enum class PhotoOrigin { CAMERA, IMPORT, LIBRARY }
 /** Where a detection is in review: waiting, confirmed as a plant in the garden, or not a plant. */
 enum class DetectionStatus { NEEDS_REVIEW, CONFIRMED, REJECTED }
 
-/** One label from one model, as the model named it, with its score in basis points. */
-data class LabelScore(val label: String, val scoreBp: Int)
+/**
+ * One label from one model, as the model named it, with its score in basis points, and a [common] name when the model
+ * has one, as the accurate pack's species index does.
+ */
+data class LabelScore(val label: String, val scoreBp: Int, val common: String? = null)
 
 /** A box within an image, in basis points of the image's width and height (0 to 10,000). */
 data class BoxBp(val left: Int, val top: Int, val right: Int, val bottom: Int) {

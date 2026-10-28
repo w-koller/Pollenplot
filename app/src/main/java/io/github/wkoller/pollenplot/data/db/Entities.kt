@@ -142,6 +142,8 @@ data class CandidateEntity(
     val scoreBp: Int,
     /** The models that suggested it, by name, separated by commas. */
     val sources: String,
+    /** A common name from the model, for a label the knowledge base does not have. */
+    val common: String? = null,
 )
 
 /** A plant seen in flower on a date, from a photo or from the user. Pollen Rhythms compares these with the calendar. */

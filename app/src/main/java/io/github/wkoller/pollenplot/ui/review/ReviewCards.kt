@@ -86,7 +86,7 @@ class ReviewCallbacks(
     val onOpenPlant: (String) -> Unit,
     /** Compares the photo with photos of a species, for a suggestion that is a weed. */
     val onCompare: ((detection: DetectionRecord, speciesName: String) -> Unit)? = null,
-    /** Adds an animal or fungus as a sighting: its knowledge base name if it has one, the name chosen, and where. */
+    /** Adds an animal or fungus as a sighting: its scientific name if known, the name to show for it, and where. */
     val onAddSighting: ((detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantId: String?, behaviour: Behaviour?) -> Unit)? = null,
 )
 
@@ -218,8 +218,9 @@ private fun Undecided(
 
     Header(
         thumbnail = detection.thumbnail,
-        title = chosenSpecies?.displayName ?: chosenCandidate?.label ?: stringResource(R.string.review_unnamed),
-        subtitle = chosenSpecies?.let { species -> species.name.takeIf { it != species.displayName } },
+        title = chosenSpecies?.displayName ?: chosenCandidate?.common ?: chosenCandidate?.label ?: stringResource(R.string.review_unnamed),
+        subtitle = chosenSpecies?.let { species -> species.name.takeIf { it != species.displayName } }
+            ?: chosenCandidate?.takeIf { chosenSpecies == null && it.common != null }?.label,
     ) {
         if (chosenCandidate != null) ConfidenceBadge(chosenCandidate.scoreBp)
         if (chosenSpecies != null && kb != null) {
@@ -324,9 +325,9 @@ fun Cutout(thumbnail: String, size: Dp, modifier: Modifier = Modifier) {
 private fun SuggestionRow(candidate: Candidate, kb: KnowledgeBase?, selected: Boolean, onClick: () -> Unit) {
     val species = candidate.speciesName?.let { kb?.species(it) }
     ChoiceRow(
-        title = species?.displayName ?: candidate.label,
-        subtitle = species?.name ?: stringResource(R.string.review_not_in_kb),
-        italic = species != null,
+        title = species?.displayName ?: candidate.common ?: candidate.label,
+        subtitle = species?.name ?: candidate.label.takeIf { candidate.common != null } ?: stringResource(R.string.review_not_in_kb),
+        italic = species != null || candidate.common != null,
         trailing = stringResource(confidenceLabel(candidate.scoreBp)),
         selected = selected,
         onClick = onClick,

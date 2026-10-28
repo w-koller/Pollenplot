@@ -67,10 +67,12 @@ internal fun UndecidedAnimal(
     val animal = chosenName?.let { fauna?.animal(it) }
     val zoneId = if (zoneChosen) ownZone else suggestedZoneId
 
+    // An animal the knowledge base does not have is named by the model's common name, with its scientific name below.
+    val common = chosenCandidate?.common.takeIf { animal == null }
     Header(
         thumbnail = detection.thumbnail,
-        title = animal?.displayName ?: chosenName ?: stringResource(R.string.review_unnamed_animal),
-        subtitle = animal?.name?.takeIf { it != animal.displayName },
+        title = animal?.displayName ?: common ?: chosenName ?: stringResource(R.string.review_unnamed_animal),
+        subtitle = animal?.name?.takeIf { it != animal.displayName } ?: chosenName.takeIf { common != null },
     ) {
         chosenCandidate?.let { ConfidenceBadge(it.scoreBp) }
         Text(
@@ -124,7 +126,10 @@ internal fun UndecidedAnimal(
         Button(
             onClick = {
                 val label = chosenName ?: return@Button
-                callbacks.onAddSighting?.invoke(detection, animal?.name, label, zoneId, plantId, behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } })
+                // The scientific name is kept even for an animal the knowledge base does not have; a name the user
+                // typed may be a common name, so it is only the label.
+                val scientific = animal?.name ?: chosenCandidate?.let { it.speciesName ?: it.label }
+                callbacks.onAddSighting?.invoke(detection, scientific, animal?.displayName ?: common ?: label, zoneId, plantId, behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } })
             },
             enabled = chosenName != null && callbacks.onAddSighting != null,
         ) { Text(stringResource(R.string.review_add_sighting)) }
@@ -136,9 +141,9 @@ internal fun UndecidedAnimal(
 private fun AnimalSuggestionRow(candidate: Candidate, fauna: FaunaBase?, selected: Boolean, onClick: () -> Unit) {
     val animal = (candidate.speciesName ?: candidate.label).let { fauna?.animal(it) }
     ChoiceRow(
-        title = animal?.displayName ?: candidate.label,
-        subtitle = animal?.name ?: stringResource(R.string.review_not_in_fauna),
-        italic = animal != null,
+        title = animal?.displayName ?: candidate.common ?: candidate.label,
+        subtitle = animal?.name ?: candidate.label.takeIf { candidate.common != null } ?: stringResource(R.string.review_not_in_fauna),
+        italic = animal != null || candidate.common != null,
         trailing = stringResource(confidenceLabel(candidate.scoreBp)),
         selected = selected,
         onClick = onClick,

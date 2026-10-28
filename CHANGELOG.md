@@ -71,6 +71,8 @@
 - Garden pests seen in your yard come with what they do, what helps, and the animals in the knowledge base that eat
   them, such as ladybirds and hover flies for aphids. When no birds, insects, frogs or reptiles have been seen this
   year, the Wildlife tab has ideas for bringing them into the yard.
+- A suggestion the knowledge bases do not have is shown by its common name from the accurate pack, with its scientific
+  name below, and a sighting of it keeps the scientific name for the records.
 - Recorded near you, on the Wildlife tab: the animals recorded most often within 10 km of the garden on the Atlas of
   Living Australia, a group at a time, with those seen in your yard marked. Identification gives them the same small
   boost as plants recorded nearby. They are brought up to date with the weed lists.

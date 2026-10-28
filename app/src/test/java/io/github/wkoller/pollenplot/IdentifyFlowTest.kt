@@ -5,6 +5,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.printToString
 import androidx.lifecycle.SavedStateHandle
@@ -203,6 +205,22 @@ class IdentifyFlowTest {
         compose.onNodeWithText("Venomous").assertExists()
         compose.onNodeWithText("13 11 26", substring = true).assertExists()
         shot("identify_redback")
+    }
+
+    @Test
+    fun anAnimalTheKnowledgeBaseLacksIsNamedByItsCommonName() {
+        seed()
+        val model = analysedAnimal(LifeGroup.SPIDER, IdSource.BIOCAP to listOf(LabelScore("Mopsus mormon", 7_000, common = "Green jumping spider")))
+        show(model)
+        waitFor(hasText("Green jumping spider"))
+        // Under the card's title and under the suggestion.
+        compose.onAllNodesWithText("Mopsus mormon").assertCountEquals(2)
+        shot("identify_common_name")
+        compose.onNodeWithText("Add sighting").performScrollTo().performClick()
+        waitFor(hasText("Added to your sightings."))
+        val sighting = runBlocking { garden.sightingList.first { it.isNotEmpty() }.single() }
+        assertEquals("The scientific name is kept for the records", "Mopsus mormon", sighting.speciesName)
+        assertEquals("Green jumping spider", sighting.label)
     }
 
     /** Runs a painted photo through the app's analysis as a photo of [group], with [labels] as what the models said. */

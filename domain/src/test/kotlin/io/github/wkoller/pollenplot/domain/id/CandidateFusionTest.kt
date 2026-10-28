@@ -25,6 +25,20 @@ class CandidateFusionTest {
     }
 
     @Test
+    fun `a model's common name is kept for a label the knowledge base does not have`() {
+        val fused = CandidateFusion.fuse(
+            mapOf(
+                IdSource.AIY_INSECTS to listOf(LabelScore("Mopsus mormon", 2_000)),
+                IdSource.BIOCAP to listOf(LabelScore("Mopsus mormon", 7_000, common = "Green jumping spider")),
+            ),
+            nameOf = { null },
+            garden = emptySet(),
+        )
+        assertEquals("Green jumping spider", fused.single().common)
+        assertEquals("Mopsus mormon", fused.single().label)
+    }
+
+    @Test
     fun `a species already in the garden is boosted`() {
         val results = mapOf(IdSource.AIY_PLANTS to listOf(LabelScore("Lantana camara", 4_000), LabelScore("Salvia rosmarinus", 3_000)))
         assertEquals("Lantana camara", CandidateFusion.fuse(results, kb, emptySet())[0].speciesName)

@@ -181,7 +181,7 @@ class GardenRepository(
                 ),
             )
             detections.insertCandidates(
-                draft.candidates.mapIndexed { rank, c -> CandidateEntity(id, rank, c.label, c.speciesName, c.scoreBp, c.sources.joinToString(",") { it.name }) },
+                draft.candidates.mapIndexed { rank, c -> CandidateEntity(id, rank, c.label, c.speciesName, c.scoreBp, c.sources.joinToString(",") { it.name }, c.common) },
             )
             DetectionRecord(id, photo.id, draft.box, draft.thumbnail, draft.flowering, DetectionStatus.NEEDS_REVIEW, null, draft.candidates, takenAt, draft.group)
         }
@@ -235,7 +235,7 @@ class GardenRepository(
     suspend fun replaceCandidates(detectionId: String, candidates: List<Candidate>) = db.withTransaction {
         detections.deleteCandidates(detectionId)
         detections.insertCandidates(
-            candidates.mapIndexed { rank, c -> CandidateEntity(detectionId, rank, c.label, c.speciesName, c.scoreBp, c.sources.joinToString(",") { it.name }) },
+            candidates.mapIndexed { rank, c -> CandidateEntity(detectionId, rank, c.label, c.speciesName, c.scoreBp, c.sources.joinToString(",") { it.name }, c.common) },
         )
         detections.touch(detectionId)
     }
@@ -249,7 +249,7 @@ class GardenRepository(
     private suspend fun record(entity: DetectionEntity): DetectionRecord {
         val takenAt = photos.get(entity.photoId)?.takenAt?.let(Instant::ofEpochMilli) ?: Instant.ofEpochMilli(entity.createdAt)
         val candidates = detections.candidates(entity.id).map { c ->
-            Candidate(c.label, c.speciesName, c.scoreBp, c.sources.split(',').mapNotNull { name -> IdSource.entries.firstOrNull { it.name == name } }.toSet())
+            Candidate(c.label, c.speciesName, c.scoreBp, c.sources.split(',').mapNotNull { name -> IdSource.entries.firstOrNull { it.name == name } }.toSet(), c.common)
         }
         return DetectionRecord(
             entity.id, entity.photoId, BoxBp(entity.leftBp, entity.topBp, entity.rightBp, entity.bottomBp), entity.thumbnail, entity.flowering,
