@@ -13,10 +13,14 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
+import io.github.wkoller.pollenplot.domain.bees.honey.HiveTaskKind
 import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
 import io.github.wkoller.pollenplot.scan.ScanTally
 import io.github.wkoller.pollenplot.ui.ListWords
 import io.github.wkoller.pollenplot.ui.UiFormat
+import io.github.wkoller.pollenplot.ui.bees.label
+import java.time.LocalDate
 
 /** The app's notifications. Each kind has its own channel, so the user can turn one off and keep the rest. */
 class Notifications(private val context: Context) {
@@ -31,6 +35,10 @@ class Notifications(private val context: Context) {
         system.createNotificationChannel(
             NotificationChannel(WEEDS_CHANNEL, context.getString(R.string.notify_weeds_channel), NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { description = context.getString(R.string.notify_weeds_channel_description) },
+        )
+        system.createNotificationChannel(
+            NotificationChannel(HIVES_CHANNEL, context.getString(R.string.notify_hive_channel), NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { description = context.getString(R.string.notify_hive_channel_description) },
         )
     }
 
@@ -94,6 +102,32 @@ class Notifications(private val context: Context) {
         )
     }
 
+    /**
+     * Tells the user that hive checks are due, each named with its hive, and opens the Bees tab when tapped. Returns
+     * whether it could be shown, so that checks are only remembered as told about once they have been.
+     */
+    fun showHiveTasks(tasks: List<Pair<String, HiveTask>>, today: LocalDate): Boolean {
+        if (tasks.isEmpty() || !allowed) return false
+        val res = context.resources
+        val (title, body) = if (tasks.size == 1) {
+            val (hive, task) = tasks.single()
+            val title = res.getString(
+                when (task.kind) {
+                    HiveTaskKind.INSPECT -> R.string.notify_hive_inspect_title
+                    HiveTaskKind.BROOD_CHECK -> R.string.notify_hive_brood_title
+                    HiveTaskKind.MITE_CHECK -> R.string.notify_hive_mites_title
+                },
+                hive,
+            )
+            title to if (task.overdue(today)) res.getString(R.string.notify_hive_overdue, UiFormat.longDate(task.due)) else res.getString(R.string.notify_hive_due_today)
+        } else {
+            res.getQuantityString(R.plurals.notify_hive_many_title, tasks.size, tasks.size) to
+                tasks.joinToString("\n") { (hive, task) -> res.getString(R.string.honey_task_line, hive, res.getString(task.kind.label)) }
+        }
+        show(HIVE_TASKS, title, body, channel = HIVES_CHANNEL, open = MainActivity.OPEN_BEES, icon = R.drawable.ic_hive)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -124,8 +158,10 @@ class Notifications(private val context: Context) {
     private companion object {
         const val SCANS_CHANNEL = "plant_scans"
         const val WEEDS_CHANNEL = "weeds_nearby"
+        const val HIVES_CHANNEL = "hive_tasks"
         const val SCAN_RESULT = 1
         const val ADDED_RESULT = 2
         const val WEEDS_NEARBY = 3
+        const val HIVE_TASKS = 4
     }
 }

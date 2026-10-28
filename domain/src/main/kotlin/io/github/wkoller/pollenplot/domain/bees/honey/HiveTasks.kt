@@ -27,7 +27,8 @@ data class HiveTask(val hiveId: String, val kind: HiveTaskKind, val due: LocalDa
  * follow the Australian Honey Bee Industry Biosecurity Code of Practice (version 2.1, 2025): each hive's brood at least
  * three times a year and at least three calendar months apart (3.1), and mites in spring, summer and autumn where
  * Varroa is not established (3.2), and more often where it is (3.3), monthly here. Inspections come every two weeks in
- * spring and summer, when colonies build up and may swarm, every six weeks in autumn, and wait for spring in winter.
+ * spring and summer unless the beekeeper chooses otherwise, when colonies build up and may swarm, every six weeks in
+ * autumn, and wait for spring in winter. A check that has never been done was due on the day the hive was added.
  */
 object HiveTasks {
     const val INSPECT_DAYS_GROWING = 14L
@@ -43,6 +44,7 @@ object HiveTasks {
         today: LocalDate,
         hemisphere: Hemisphere,
         varroaEstablished: Boolean,
+        inspectDays: Long = INSPECT_DAYS_GROWING,
     ): List<HiveTask> {
         if (hive.status == HiveStatus.DEAD || hive.status == HiveStatus.GONE) return emptyList()
         val ownInspections = inspections.filter { it.hiveId == hive.id }
@@ -50,16 +52,18 @@ object HiveTasks {
         val lastBrood = ownInspections.filter { it.brood != null }.maxOfOrNull { it.date }
         val lastCheck = checks.filter { it.hiveId == hive.id }.maxOfOrNull { it.date }
         val season = Seasons.of(today.month, hemisphere)
+        // Counting a check never done from the day the hive was added keeps its due date still, so it can fall overdue.
+        val added = hive.startedOn?.takeIf { !it.isAfter(today) } ?: today
 
         val inspect = when (season) {
-            Season.SPRING, Season.SUMMER -> lastInspection?.plusDays(INSPECT_DAYS_GROWING) ?: today
-            Season.AUTUMN -> lastInspection?.plusDays(INSPECT_DAYS_AUTUMN) ?: today
+            Season.SPRING, Season.SUMMER -> lastInspection?.plusDays(inspectDays) ?: added
+            Season.AUTUMN -> lastInspection?.plusDays(INSPECT_DAYS_AUTUMN) ?: added
             // A colony is left closed in the cold, so the next inspection is due as spring starts.
-            Season.WINTER -> maxOf(start(Season.SPRING, today, hemisphere), lastInspection?.plusDays(INSPECT_DAYS_GROWING) ?: today)
+            Season.WINTER -> maxOf(start(Season.SPRING, today, hemisphere), lastInspection?.plusDays(inspectDays) ?: added)
         }
-        val brood = lastBrood?.plusMonths(BROOD_CHECK_MONTHS) ?: today
+        val brood = lastBrood?.plusMonths(BROOD_CHECK_MONTHS) ?: added
         val mites = if (varroaEstablished) {
-            lastCheck?.plusDays(MITE_CHECK_DAYS_ESTABLISHED) ?: today
+            lastCheck?.plusDays(MITE_CHECK_DAYS_ESTABLISHED) ?: added
         } else {
             miteCheckWithoutVarroa(lastCheck, today, hemisphere)
         }

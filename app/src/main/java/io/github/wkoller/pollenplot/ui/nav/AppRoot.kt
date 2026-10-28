@@ -130,15 +130,15 @@ fun AppRoot(
     // has its first screen, because there is nowhere to navigate from before then.
     val ready = entry != null
     LaunchedEffect(open, ready) {
-        val route: Any? = when (open) {
-            MainActivity.OPEN_REVIEW -> ReviewRoute
-            MainActivity.OPEN_WEEDS -> WeedsRoute
-            else -> null
+        if (!ready) return@LaunchedEffect
+        when (open) {
+            MainActivity.OPEN_REVIEW -> navController.navigate(ReviewRoute) { launchSingleTop = true }
+            MainActivity.OPEN_WEEDS -> navController.navigate(WeedsRoute) { launchSingleTop = true }
+            // A tab opens as if it were chosen in the navigation bar.
+            MainActivity.OPEN_BEES -> openTab(TopLevelTab.BEES)
+            else -> return@LaunchedEffect
         }
-        if (ready && route != null) {
-            navController.navigate(route) { launchSingleTop = true }
-            onOpened()
-        }
+        onOpened()
     }
 
     Row(Modifier.fillMaxSize()) {
@@ -388,6 +388,7 @@ fun AppRoot(
                     BeesScreen(
                         beeViews = container.beeViews,
                         settings = container.settingsStore,
+                        notifications = container.notifications,
                         onOpenSettings = openSettings,
                         onAddHive = { navController.navigate(HiveEditRoute()) },
                         onOpenHive = { navController.navigate(HiveRoute(it)) },

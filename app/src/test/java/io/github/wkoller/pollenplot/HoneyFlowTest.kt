@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot
 
+import android.Manifest
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -43,6 +44,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
@@ -72,6 +74,7 @@ class HoneyFlowTest {
 
     @Test
     fun aHiveFromItsFirstInspection() {
+        shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
         show()
         compose.onNodeWithText("Bees").performClick()
         waitFor(hasText("You have no honey bee hives yet."))
@@ -85,7 +88,7 @@ class HoneyFlowTest {
 
         waitFor(hasText("Queen from 2025, marked blue"))
         compose.onNodeWithText("Langstroth, 8 frames · Hive Corner").assertExists()
-        // Never inspected, so everything is due today.
+        // Never inspected, so everything was due the day it was added, today.
         compose.onAllNodesWithText("Due by 28 October 2026").onFirst().assertExists()
         shot("hive_new")
 
@@ -179,6 +182,40 @@ class HoneyFlowTest {
         compose.onNodeWithText("Mark as ended today").performClick()
         waitFor(hasText("Apivar · Amitraz · Ended on 28 October 2026"))
         assertEquals(LocalDate.of(2026, 10, 28), runBlocking { bees.treatments.first().single().ended })
+    }
+
+    @Test
+    fun remindersAndHowOftenInspectionsCome() {
+        runBlocking {
+            val hive = bees.addHive("Hive 3", HiveType.WARRE, null, null, null, LocalDate.of(2026, 10, 1))
+            bees.saveInspection(Inspection(bees.newRecordId(), hive.id, LocalDate.of(2026, 10, 25), true, true, BroodPattern.SOLID, Temperament.CALM, 5, 3, QueenCells.NONE, emptySet(), ""))
+        }
+        show()
+        compose.onNodeWithText("Bees").performClick()
+        waitFor(hasText("Due by 8 November 2026"))
+        // Reminders are on unless turned off, and Android has not been asked to allow notifications yet.
+        compose.onNodeWithText("Notifications are off", substring = true).assertExists()
+        compose.onNodeWithText("Allow notifications").assertExists()
+
+        compose.onNodeWithText("Every week").performClick()
+        waitFor(hasText("Due by 1 November 2026"))
+        assertEquals(7, runBlocking { app.container.settingsStore.current().inspectEveryDays })
+
+        compose.onNodeWithText("Remind me when a hive check is due").performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Allow notifications").fetchSemanticsNodes().isEmpty() }
+        assertEquals(false, runBlocking { app.container.settingsStore.current().hiveReminders })
+    }
+
+    @Test
+    fun aReminderOpensTheBeesTab() {
+        var opened = false
+        compose.setContent {
+            PollenplotTheme(Settings()) {
+                Surface { AppRoot(app.container, open = MainActivity.OPEN_BEES, onOpened = { opened = true }) }
+            }
+        }
+        waitFor(hasText("You have no honey bee hives yet."))
+        assertTrue(opened)
     }
 
     private fun show(settings: Settings = Settings()) {

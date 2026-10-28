@@ -11,14 +11,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +43,7 @@ import io.github.wkoller.pollenplot.scan.Album
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.scan.ScanScheduler
+import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import kotlinx.coroutines.Dispatchers
@@ -133,7 +129,7 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
             }
             if (refused && access == GalleryAccess.NONE) {
                 item {
-                    Notice(stringResource(R.string.scan_denied), stringResource(R.string.identify_permission_settings)) {
+                    ActionNotice(stringResource(R.string.scan_denied), stringResource(R.string.identify_permission_settings)) {
                         context.startActivity(
                             Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
@@ -142,11 +138,11 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                 }
             }
             if (on && access == GalleryAccess.PARTIAL) {
-                item { Notice(stringResource(R.string.scan_partial), stringResource(R.string.scan_partial_allow), onAction = ::requestPhotos) }
+                item { ActionNotice(stringResource(R.string.scan_partial), stringResource(R.string.scan_partial_allow), onAction = ::requestPhotos) }
             }
             if (on && !notificationsAllowed) {
                 item {
-                    Notice(stringResource(R.string.scan_notifications_off), stringResource(R.string.scan_notifications_allow)) {
+                    ActionNotice(stringResource(R.string.scan_notifications_off), stringResource(R.string.scan_notifications_allow)) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && activity?.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) != false) {
                             askForNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
                         } else {
@@ -229,17 +225,3 @@ private fun backLabel(days: Int): Int = when (days) {
     else -> R.string.scan_back_year
 }
 
-/** Something the user may want to change, with a button to change it. */
-@Composable
-private fun Notice(text: String, action: String, onAction: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(text, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onAction) { Text(action) }
-        }
-    }
-}

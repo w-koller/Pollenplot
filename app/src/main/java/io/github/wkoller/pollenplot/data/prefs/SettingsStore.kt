@@ -42,9 +42,19 @@ data class Settings(
     val secondOpinions: Boolean = true,
     /** Varroa mite is established where the honey bee hives are, so mite checks are suggested monthly. */
     val varroaEstablished: Boolean = false,
+    /** Send a notification on the morning a hive check falls due. */
+    val hiveReminders: Boolean = true,
+    /** How many days apart hive inspections come in spring and summer. */
+    val inspectEveryDays: Int = DEFAULT_INSPECT_EVERY_DAYS,
+    /** The hive checks still due that a notification has told about, as `HiveReminders.key` gives them. */
+    val hiveTasksTold: Set<String> = emptySet(),
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
+        const val DEFAULT_INSPECT_EVERY_DAYS = 14
+
+        /** The inspection intervals a beekeeper can choose, from a week to a fortnight. */
+        val INSPECT_EVERY_CHOICES = listOf(7, 10, 14)
     }
 }
 
@@ -70,6 +80,9 @@ class SettingsStore(context: Context) {
         val lastZoneId = stringPreferencesKey("last_zone_id")
         val secondOpinions = booleanPreferencesKey("second_opinions")
         val varroaEstablished = booleanPreferencesKey("varroa_established")
+        val hiveReminders = booleanPreferencesKey("hive_reminders")
+        val inspectEveryDays = intPreferencesKey("inspect_every_days")
+        val hiveTasksTold = stringSetPreferencesKey("hive_tasks_told")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -96,6 +109,9 @@ class SettingsStore(context: Context) {
             lastZoneId = this[Keys.lastZoneId],
             secondOpinions = this[Keys.secondOpinions] ?: defaults.secondOpinions,
             varroaEstablished = this[Keys.varroaEstablished] ?: defaults.varroaEstablished,
+            hiveReminders = this[Keys.hiveReminders] ?: defaults.hiveReminders,
+            inspectEveryDays = this[Keys.inspectEveryDays]?.takeIf { it in Settings.INSPECT_EVERY_CHOICES } ?: defaults.inspectEveryDays,
+            hiveTasksTold = this[Keys.hiveTasksTold] ?: defaults.hiveTasksTold,
         )
     }
 
@@ -114,6 +130,9 @@ class SettingsStore(context: Context) {
         setOrRemove(Keys.lastZoneId, settings.lastZoneId)
         this[Keys.secondOpinions] = settings.secondOpinions
         this[Keys.varroaEstablished] = settings.varroaEstablished
+        this[Keys.hiveReminders] = settings.hiveReminders
+        this[Keys.inspectEveryDays] = settings.inspectEveryDays
+        this[Keys.hiveTasksTold] = settings.hiveTasksTold
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

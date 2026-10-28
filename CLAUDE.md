@@ -57,7 +57,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `bees/honey/`: `HoneyBees` (apiaries, hives and their records: inspections, mite checks, treatments, feeding,
     harvests and colony events) and `HiveTasks` (when each hive is due for an inspection, a brood check and a mite
     check, following the Australian Honey Bee Industry Biosecurity Code of Practice, version 2.1), with each state's
-    registration page in `BeekeeperRegistration`.
+    registration page in `BeekeeperRegistration`. `HiveReminders` decides which due checks a notification tells
+    about: each once while it stays due.
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
   Android runtime matches; the app brings the Android one. `TextEmbedderTest` compares tokens and vectors with
@@ -90,7 +91,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   added photos through the analysis, each gallery photo recorded in `scanned_media` so it is looked at once), and the
   WorkManager jobs: `AddPhotosWorker`, `LibraryScanWorker` (stops after eight minutes and queues the rest),
   `LibraryWatchWorker` (a content-URI trigger that re-arms itself) and `ScanScheduler`, which matches them to the
-  settings. `app/notify` holds the notification channels.
+  settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which looks at the hives at about
+  seven each morning while there are hives and the reminders are on.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed

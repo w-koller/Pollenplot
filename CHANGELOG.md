@@ -100,10 +100,12 @@
   what it is due for and everything recorded for it: inspections (the queen and eggs, the brood, temperament, frames of
   bees and stores, queen cells, signs of pests and disease and what you did), mite checks with mites per 100 bees or
   per day, treatments, feeding, harvests, and colony events such as swarms, splits and requeening.
-- Hive reminders follow the Australian Honey Bee Industry Biosecurity Code of Practice: an inspection every two weeks
-  in spring and summer and every six weeks in autumn, a brood check three months after the last, and a mite check in
-  spring, summer and autumn, or every month where Varroa mite is established. A check that is overdue says so in words
-  and with an icon.
+- Hive reminders follow the Australian Honey Bee Industry Biosecurity Code of Practice: an inspection every fortnight
+  in spring and summer, or every week or 10 days if you choose, and every six weeks in autumn, a brood check three
+  months after the last, and a mite check in spring, summer and autumn, or every month where Varroa mite is
+  established. A check that is overdue says so in words and with an icon.
+- A notification on the morning a hive check falls due, on its own Hive tasks channel, opens the Bees tab. Each check
+  is told about once, and again only when it next falls due. The reminders can be turned off in the honey bee section.
 - An inspection that notes sunken or perforated cappings, ropy brood or twisted larvae explains that these can be signs
   of foulbrood and asks you to report them before moving bees or equipment.
 - The honey bee section links to the Code of Practice and to your state or territory's beekeeper registration page,

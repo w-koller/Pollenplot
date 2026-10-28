@@ -29,7 +29,7 @@ class BeeViews(bees: BeeRepository, garden: GardenRepository, settings: Settings
                 zoneName = hive.zoneId?.let(zoneNames::get),
                 apiary = apiaries.firstOrNull { it.id == hive.apiaryId },
                 lastInspection = inspections.filter { it.hiveId == hive.id }.maxOfOrNull { it.date },
-                tasks = HiveTasks.of(hive, inspections, checks, today, hemisphere, current.varroaEstablished),
+                tasks = HiveTasks.of(hive, inspections, checks, today, hemisphere, current.varroaEstablished, current.inspectEveryDays.toLong()),
             )
         }
     }

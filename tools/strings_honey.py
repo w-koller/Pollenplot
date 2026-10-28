@@ -25,6 +25,27 @@ STRINGS = {
     "at least one hive in each apiary to be checked for mites in spring, summer and autumn. Where Varroa is "
     "established, it asks for more checks, and Pollenplot suggests one each month.",
     "honey_code_open": "The Biosecurity Code of Practice",
+    "honey_reminders": "Reminders",
+    "honey_reminders_switch": "Remind me when a hive check is due",
+    "honey_reminders_body": "Pollenplot sends a notification on the morning an inspection, a brood check or a mite "
+    "check falls due.",
+    "honey_reminders_off": "Notifications are off, so Pollenplot cannot remind you when a hive check is due. Please "
+    "allow them to get reminders.",
+    "honey_inspect_every": "Inspections in spring and summer",
+    "honey_every_week": "Every week",
+    "honey_every_10_days": "Every 10 days",
+    "honey_every_fortnight": "Every fortnight",
+
+    "notify_hive_channel": "Hive tasks",
+    "notify_hive_channel_description": "Reminders when a honey bee hive is due for an inspection, a brood check or a "
+    "mite check.",
+    "notify_hive_inspect_title": "%1$s is due for an inspection",
+    "notify_hive_brood_title": "%1$s is due for a brood check",
+    "notify_hive_mites_title": "%1$s is due for a mite check",
+    "notify_hive_due_today": "It is due today. Please record it on the hive's page once it is done, and Pollenplot "
+    "will work out when the next one is due.",
+    "notify_hive_overdue": "It was due by %1$s. Please record it on the hive's page once it is done, and Pollenplot "
+    "will work out when the next one is due.",
 
     "hive_type_langstroth_8": "Langstroth, 8 frames",
     "hive_type_langstroth_10": "Langstroth, 10 frames",
@@ -173,6 +194,7 @@ STRINGS = {
 }
 
 PLURALS = {
+    "notify_hive_many_title": {"one": "%d hive check is due", "other": "%d hive checks are due"},
     "honey_mites_per_100": {"one": "%1$s mite per 100 bees", "other": "%1$s mites per 100 bees"},
     "honey_mites_per_day": {"one": "%1$s mite a day", "other": "%1$s mites a day"},
     "honey_mites_found": {"one": "%1$d mite found", "other": "%1$d mites found"},

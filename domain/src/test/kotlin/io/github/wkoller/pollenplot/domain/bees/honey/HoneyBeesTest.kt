@@ -72,6 +72,41 @@ class HoneyBeesTest {
     }
 
     @Test
+    fun `a beekeeper can choose to inspect more often in spring and summer`() {
+        val due = HiveTasks.of(hive, listOf(inspection(LocalDate.of(2026, 10, 20))), emptyList(), LocalDate.of(2026, 10, 28), Hemisphere.SOUTHERN, false, inspectDays = 7)
+        assertEquals(LocalDate.of(2026, 10, 27), due.single { it.kind == HiveTaskKind.INSPECT }.due)
+    }
+
+    @Test
+    fun `a check never done was due on the day the hive was added`() {
+        val added = hive.copy(startedOn = LocalDate.of(2026, 10, 20))
+        val due = HiveTasks.of(added, emptyList(), emptyList(), LocalDate.of(2026, 10, 28), Hemisphere.SOUTHERN, true).associate { it.kind to it.due }
+        assertEquals(LocalDate.of(2026, 10, 20), due[HiveTaskKind.INSPECT])
+        assertEquals(LocalDate.of(2026, 10, 20), due[HiveTaskKind.BROOD_CHECK])
+        assertEquals(LocalDate.of(2026, 10, 20), due[HiveTaskKind.MITE_CHECK])
+        assertTrue(HiveTasks.of(added, emptyList(), emptyList(), LocalDate.of(2026, 10, 28), Hemisphere.SOUTHERN, true).all { it.overdue(LocalDate.of(2026, 10, 28)) })
+        assertEquals("Without the day, it is due today", LocalDate.of(2026, 10, 28), tasks(LocalDate.of(2026, 10, 28))[HiveTaskKind.INSPECT])
+    }
+
+    @Test
+    fun `each check is told about once while it is due`() {
+        val today = LocalDate.of(2026, 10, 28)
+        val due = HiveTasks.of(hive, listOf(inspection(LocalDate.of(2026, 10, 10))), listOf(check(LocalDate.of(2026, 9, 15))), today, Hemisphere.SOUTHERN, false)
+        val first = HiveReminders.toTell(due, today, emptySet())
+        assertEquals("The inspection is due, the brood and mite checks are not", listOf(HiveTaskKind.INSPECT), first.map { it.kind })
+        val told = HiveReminders.remembered(due, today, emptySet(), first)
+        assertTrue("Not again the next morning", HiveReminders.toTell(due, today.plusDays(1), told).isEmpty())
+
+        // Once the inspection is done, it is forgotten, and told about again when the next one falls due.
+        val after = HiveTasks.of(hive, listOf(inspection(today)), listOf(check(LocalDate.of(2026, 9, 15))), today, Hemisphere.SOUTHERN, false)
+        val forgotten = HiveReminders.remembered(after, today, told, emptyList())
+        assertTrue(forgotten.isEmpty())
+        val fortnight = today.plusDays(14)
+        val later = HiveTasks.of(hive, listOf(inspection(today)), listOf(check(LocalDate.of(2026, 9, 15))), fortnight, Hemisphere.SOUTHERN, false)
+        assertEquals(listOf(HiveTaskKind.INSPECT), HiveReminders.toTell(later, fortnight, forgotten).map { it.kind })
+    }
+
+    @Test
     fun `a hive that died has nothing due`() {
         assertTrue(HiveTasks.of(hive.copy(status = HiveStatus.DEAD), emptyList(), emptyList(), LocalDate.of(2026, 10, 28), Hemisphere.SOUTHERN, false).isEmpty())
     }

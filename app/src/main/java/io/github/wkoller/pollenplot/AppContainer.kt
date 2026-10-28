@@ -23,6 +23,8 @@ import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
+import io.github.wkoller.pollenplot.notify.HiveReminderCheck
+import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PhoneLocation
@@ -115,6 +117,7 @@ class AppContainer(
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
     val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby), analysis, garden, clock)
     val notifications = Notifications(appContext)
+    val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
@@ -143,6 +146,12 @@ class AppContainer(
             settingsStore.settings.map { settings -> settings.gardenPlace?.let { it.latE7 to it.lonE7 } }
                 .distinctUntilChanged().drop(1)
                 .collect { WeedSyncWorker.runNow(appContext) }
+        }
+        // The hives are looked at each morning for checks that have fallen due, while there are hives to remind about.
+        scope.launch {
+            combine(settingsStore.settings.map { it.hiveReminders }, bees.hives.map { it.isNotEmpty() }) { on, hives -> on && hives }
+                .distinctUntilChanged()
+                .collect { HiveReminderWorker.update(appContext, it, clock) }
         }
         // Once the accurate pack is on the phone, the plants waiting for review and the gallery get its second look.
         scope.launch {

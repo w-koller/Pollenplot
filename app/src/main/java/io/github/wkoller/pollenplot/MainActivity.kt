@@ -47,5 +47,6 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_OPEN = "open"
         const val OPEN_REVIEW = "review"
         const val OPEN_WEEDS = "weeds"
+        const val OPEN_BEES = "bees"
     }
 }

@@ -19,9 +19,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
+import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.ui.components.ConnectedChoice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
+import io.github.wkoller.pollenplot.ui.components.rememberNotificationAccess
 import kotlinx.coroutines.launch
 
 /**
@@ -38,6 +40,7 @@ enum class BeeSection(@StringRes val label: Int, @DrawableRes val icon: Int, @St
 fun BeesScreen(
     beeViews: BeeViews,
     settings: SettingsStore,
+    notifications: Notifications,
     onOpenSettings: () -> Unit,
     onAddHive: () -> Unit,
     onOpenHive: (String) -> Unit,
@@ -48,6 +51,7 @@ fun BeesScreen(
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
     val uri = LocalUriHandler.current
+    val access = rememberNotificationAccess(notifications)
     TabScaffold(
         title = stringResource(R.string.bees_title),
         subtitle = stringResource(R.string.bees_subtitle),
@@ -64,13 +68,14 @@ fun BeesScreen(
                 )
             }
             val loaded = hives
-            if (section == BeeSection.HONEY && loaded != null && current != null) {
+            val chosen = current
+            if (section == BeeSection.HONEY && loaded != null && chosen != null) {
                 honeySection(
                     hives = loaded,
                     today = beeViews.today(),
-                    state = current?.gardenState,
-                    varroaEstablished = current?.varroaEstablished == true,
-                    onVarroa = { on -> scope.launch { settings.update { it.copy(varroaEstablished = on) } } },
+                    settings = chosen,
+                    onSettings = { change -> scope.launch { settings.update(change) } },
+                    notifications = access,
                     onAddHive = onAddHive,
                     onOpenHive = onOpenHive,
                     onOpenLink = { uri.openUri(it) },

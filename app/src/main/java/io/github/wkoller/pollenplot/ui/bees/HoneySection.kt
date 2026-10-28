@@ -24,29 +24,33 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.HiveView
+import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.domain.bees.honey.BeekeeperRegistration
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveStatus
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
-import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.ui.UiFormat
+import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
+import io.github.wkoller.pollenplot.ui.components.NotificationAccess
+import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.time.LocalDate
 
 /**
- * The honey bee section of the Bees tab: the checks due across the hives, soonest first, the hives, whether Varroa is
- * established where they are, and the state's registration page.
+ * The honey bee section of the Bees tab: the checks due across the hives, soonest first, the hives, the reminders and
+ * how often inspections come, whether Varroa is established where the hives are, and the state's registration page.
  */
 internal fun LazyListScope.honeySection(
     hives: List<HiveView>,
     today: LocalDate,
-    state: AuState?,
-    varroaEstablished: Boolean,
-    onVarroa: (Boolean) -> Unit,
+    settings: Settings,
+    onSettings: ((Settings) -> Settings) -> Unit,
+    notifications: NotificationAccess,
     onAddHive: () -> Unit,
     onOpenHive: (String) -> Unit,
     onOpenLink: (String) -> Unit,
 ) {
+    val state = settings.gardenState
     if (hives.isEmpty()) {
         item(key = "honey-empty") {
             Column {
@@ -71,14 +75,36 @@ internal fun LazyListScope.honeySection(
             OutlinedButton(onClick = onAddHive, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.honey_add_hive)) }
         }
     }
+    item(key = "honey-reminders") {
+        Column {
+            SectionHeading(stringResource(R.string.honey_reminders))
+            ListItem(
+                checked = settings.hiveReminders,
+                onCheckedChange = { on ->
+                    onSettings { it.copy(hiveReminders = on) }
+                    if (on && !notifications.allowed) notifications.ask()
+                },
+                supportingContent = { Text(stringResource(R.string.honey_reminders_body)) },
+                trailingContent = { Switch(checked = settings.hiveReminders, onCheckedChange = null) },
+            ) { Text(stringResource(R.string.honey_reminders_switch)) }
+            if (settings.hiveReminders && !notifications.allowed) {
+                ActionNotice(stringResource(R.string.honey_reminders_off), stringResource(R.string.scan_notifications_allow), notifications.ask)
+            }
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                ChipGroup(stringResource(R.string.honey_inspect_every), Settings.INSPECT_EVERY_CHOICES, settings.inspectEveryDays, { stringResource(inspectEveryLabel(it)) }) { days ->
+                    onSettings { it.copy(inspectEveryDays = days) }
+                }
+            }
+        }
+    }
     item(key = "honey-varroa") {
         Column {
             SectionHeading(stringResource(R.string.honey_varroa))
             ListItem(
-                checked = varroaEstablished,
-                onCheckedChange = onVarroa,
+                checked = settings.varroaEstablished,
+                onCheckedChange = { on -> onSettings { it.copy(varroaEstablished = on) } },
                 supportingContent = { Text(stringResource(R.string.honey_varroa_body)) },
-                trailingContent = { Switch(checked = varroaEstablished, onCheckedChange = null) },
+                trailingContent = { Switch(checked = settings.varroaEstablished, onCheckedChange = null) },
             ) { Text(stringResource(R.string.honey_varroa_switch)) }
             TextButton(onClick = { onOpenLink(BeekeeperRegistration.CODE_OF_PRACTICE) }, modifier = Modifier.padding(horizontal = 8.dp)) {
                 Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
@@ -144,3 +170,10 @@ private fun HiveRow(view: HiveView, onClick: () -> Unit) {
 
 /** The checks due shown in the section; each hive's page shows all of its own. */
 private const val DUE_SHOWN = 6
+
+/** How a choice of days between inspections is written. */
+private fun inspectEveryLabel(days: Int): Int = when (days) {
+    7 -> R.string.honey_every_week
+    10 -> R.string.honey_every_10_days
+    else -> R.string.honey_every_fortnight
+}
