@@ -168,6 +168,17 @@ class WildlifeFlowTest {
     }
 
     @Test
+    fun aSightingFoundInSearchOpensItsPage() {
+        seed()
+        show()
+        compose.onNodeWithContentDescription("Search your garden").performClick()
+        compose.onNode(hasSetTextAction()).performTextInput("lorikeet")
+        waitFor(hasText("Rainbow lorikeet"))
+        compose.onAllNodesWithText("Rainbow lorikeet").onFirst().performClick()
+        waitFor(hasText("Seen on 25 October 2026", substring = true))
+    }
+
+    @Test
     fun plotTilesSayWhatWasSeenThere() {
         seed()
         show()

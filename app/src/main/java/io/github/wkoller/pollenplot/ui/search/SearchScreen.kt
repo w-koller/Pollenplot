@@ -61,6 +61,7 @@ fun SearchScreen(
     onOpenPlant: (String) -> Unit,
     onAddSpecies: (String) -> Unit,
     onAskGarden: (() -> Unit)? = null,
+    onOpenSighting: (String) -> Unit = {},
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val hits by produceState(initialValue = emptyList<SearchHit>(), query) { value = garden.search(query) }
@@ -105,10 +106,10 @@ fun SearchScreen(
             if (hits.isEmpty()) {
                 item { Text(stringResource(R.string.search_none, query.trim()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
             }
-            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant) }
+            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting) }
             if (related.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_related)) }
-                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant) }
+                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting) }
             }
             if (species.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_could_add)) }
@@ -120,15 +121,28 @@ fun SearchScreen(
 
 /** A search result, shown as the same row as everywhere else; the index text is only for matching. */
 @Composable
-private fun HitRow(hit: SearchHit, plants: List<PlantView>, zones: List<ZoneView>, onOpenZone: (String) -> Unit, onOpenPlant: (String) -> Unit) {
+private fun HitRow(hit: SearchHit, plants: List<PlantView>, zones: List<ZoneView>, onOpenZone: (String) -> Unit, onOpenPlant: (String) -> Unit, onOpenSighting: (String) -> Unit) {
     val plant = plants.firstOrNull { it.plant.id == hit.recordId }
     val zone = zones.firstOrNull { it.zone.id == hit.recordId }
     when {
         plant != null -> PlantRow(plant, onClick = { onOpenPlant(hit.recordId) })
         zone != null -> ZoneCard(zone, onClick = { onOpenZone(hit.recordId) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
         else -> ListItem(
-            onClick = { if (hit.kind == SearchKind.ZONE.name) onOpenZone(hit.recordId) else onOpenPlant(hit.recordId) },
-            leadingContent = { Icon(painterResource(if (hit.kind == SearchKind.ZONE.name) R.drawable.ic_yard else R.drawable.ic_potted_plant), contentDescription = null) },
+            onClick = {
+                when (hit.kind) {
+                    SearchKind.ZONE.name -> onOpenZone(hit.recordId)
+                    SearchKind.SIGHTING.name -> onOpenSighting(hit.recordId)
+                    else -> onOpenPlant(hit.recordId)
+                }
+            },
+            leadingContent = {
+                val icon = when (hit.kind) {
+                    SearchKind.ZONE.name -> R.drawable.ic_yard
+                    SearchKind.SIGHTING.name -> R.drawable.ic_raven
+                    else -> R.drawable.ic_potted_plant
+                }
+                Icon(painterResource(icon), contentDescription = null)
+            },
         ) { Text(hit.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
 }

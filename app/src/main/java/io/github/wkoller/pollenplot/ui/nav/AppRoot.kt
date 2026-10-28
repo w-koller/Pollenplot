@@ -261,6 +261,7 @@ fun AppRoot(
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
                         onAskGarden = { navController.navigate(AskRoute()) },
+                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->
