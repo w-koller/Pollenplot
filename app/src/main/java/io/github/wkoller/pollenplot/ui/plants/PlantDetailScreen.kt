@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
@@ -66,6 +68,8 @@ import io.github.wkoller.pollenplot.domain.plants.ResolvedCare
 import io.github.wkoller.pollenplot.domain.plants.Toxicity
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import io.github.wkoller.pollenplot.ui.UiFormat
+import io.github.wkoller.pollenplot.ui.assistant.CareDraftCard
+import io.github.wkoller.pollenplot.ui.assistant.DraftState
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.RoleBadges
@@ -89,8 +93,12 @@ fun PlantDetailScreen(
     onOpenAnimal: (String) -> Unit = {},
     onOpenSighting: (String) -> Unit = {},
     onAsk: (() -> Unit)? = null,
+    assistant: Assistant? = null,
+    onOpenModels: () -> Unit = {},
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
+    val draft by remember(plantId) { garden.careDraft(plantId) }.collectAsStateWithLifecycle(initialValue = null)
+    var draftState by remember { mutableStateOf(DraftState.IDLE) }
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val all by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -124,7 +132,28 @@ fun PlantDetailScreen(
                 val name = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()
                 item { WeedCard(loaded.weed, locality, scientificName = name, onCompare = { onCompare(name) }) }
             }
-            if (resolved == null) {
+            val unknownName = loaded.plant.speciesName
+            if (resolved == null && unknownName != null && assistant != null) {
+                // Gemma 4 can draft the care of a plant the knowledge base does not have, kept apart from it.
+                item {
+                    CareDraftCard(
+                        draft = draft,
+                        ready = assistant.ready,
+                        state = draftState,
+                        onDraft = {
+                            draftState = DraftState.WORKING
+                            scope.launch {
+                                val made = runCatching { assistant.draftCare(unknownName) }.getOrNull()
+                                if (made != null) garden.saveCareDraft(plantId, made)
+                                draftState = if (made != null) DraftState.IDLE else DraftState.FAILED
+                            }
+                        },
+                        onKeep = { scope.launch { garden.keepCareDraft(plantId) } },
+                        onRemove = { scope.launch { garden.deleteCareDraft(plantId) } },
+                        onOpenModels = onOpenModels,
+                    )
+                }
+            } else if (resolved == null) {
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {
                 facts(resolved, loaded, all, kb)

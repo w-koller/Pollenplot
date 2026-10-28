@@ -11,6 +11,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -20,14 +21,19 @@ import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.domain.assistant.CitedRecord
+import io.github.wkoller.pollenplot.domain.assistant.DraftedCare
 import io.github.wkoller.pollenplot.domain.assistant.RecordKind
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.plants.Sun
+import io.github.wkoller.pollenplot.domain.plants.WaterNeed
 import io.github.wkoller.pollenplot.ui.assistant.AskModel
 import io.github.wkoller.pollenplot.ui.assistant.AskScreen
+import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.theme.PollenplotTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -127,6 +133,32 @@ class AskFlowTest {
         waitFor(hasText("Lantana is a weed where you live."))
         assertEquals("Should I keep it?", app.assistant.asked.single().first)
         assertTrue(ids.front.isNotEmpty())
+    }
+
+    @Test
+    @Config(qualifiers = "en-rAU-w411dp-h1600dp-xhdpi")
+    fun gemmaDraftsTheCareOfAPlantTheKnowledgeBaseLacks() {
+        val ids = seed()
+        val name = "Petalostigma pubescens"
+        assertNull("The knowledge base must not have it", runBlocking { container.knowledge.await().species(name) })
+        val plant = runBlocking { container.garden.addPlant(name, null, ids.front) }
+        app.assistant.draft = DraftedCare(sun = listOf(Sun.FULL_SUN), water = WaterNeed.LOW, drought = 3, heightMm = listOf(3_000, 8_000), note = "It needs little care once established.")
+        compose.setContent {
+            PollenplotTheme(Settings()) {
+                Surface { PlantDetailScreen(container.views, container.garden, container.knowledge, plant.id, onBack = {}, assistant = app.assistant) }
+            }
+        }
+        waitFor(hasText("Draft its care"))
+        compose.onNodeWithText("Draft its care").performScrollTo().performClick()
+        waitFor(hasText("Care drafted by Gemma 4"))
+        compose.onNodeWithText("Written by Gemma 4. Please check.").assertExists()
+        compose.onNodeWithText("Height: 3 to 8 m").assertExists()
+        assertEquals(listOf(name), app.assistant.drafted)
+        shot("plant_care_draft")
+        compose.onNodeWithText("Keep it").performScrollTo().performClick()
+        waitFor(hasText("You kept this draft", substring = true))
+        compose.onNodeWithText("Remove").performScrollTo().performClick()
+        waitFor(hasText("Draft its care"))
     }
 
     private fun seed(): DemoGarden.Ids = runBlocking {

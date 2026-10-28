@@ -27,6 +27,22 @@ STRINGS = {
     "ask_intro_garden": "Please ask about your whole garden, such as which plants feed birds or where frogs were "
     "seen.",
     "ask_open": "Ask Gemma",
+    "draft_heading": "Care",
+    "draft_none": "Pollenplot's knowledge base doesn't have this plant yet.",
+    "draft_needs_gemma": "Gemma 4 can draft its care once it is on this phone. Please download it in Settings › "
+    "Models.",
+    "draft_offer": "Gemma 4 can draft its care from what it knows. Please check the draft before relying on it.",
+    "draft_working": "Gemma 4 is drafting its care.",
+    "draft_failed": "Gemma 4 couldn't draft its care this time. Please try again.",
+    "draft_make": "Draft its care",
+    "draft_title": "Care drafted by Gemma 4",
+    "draft_badge": "Written by Gemma 4. Please check.",
+    "draft_light": "Light: %1$s",
+    "draft_native": "Native to Australia.",
+    "draft_not_native": "Not native to Australia.",
+    "draft_kept": "You kept this draft. It is still Gemma 4's, not checked facts.",
+    "draft_keep": "Keep it",
+    "draft_remove": "Remove",
     "scan_second_opinion_heading": "Second opinions",
     "scan_second_opinion": "Second opinions from Gemma 4",
     "scan_second_opinion_body": "While your phone is charging and not in use, Gemma 4 looks again at finds the other "

@@ -232,6 +232,8 @@ fun AppRoot(
                         onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
                         onAsk = { navController.navigate(AskRoute(plantId = id)) },
+                        assistant = container.assistant,
+                        onOpenModels = { navController.navigate(ModelsRoute) },
                     )
                 }
                 composable<AddPlantRoute> { entry ->

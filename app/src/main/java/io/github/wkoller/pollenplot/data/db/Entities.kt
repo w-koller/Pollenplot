@@ -130,6 +130,20 @@ data class DetectionEntity(
     val secondOpinion: Boolean = false,
 )
 
+/** Care facts Gemma 4 drafted for a plant the knowledge base does not have, kept apart from the knowledge base. */
+@Entity(
+    tableName = "care_drafts",
+    foreignKeys = [ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.CASCADE)],
+)
+data class CareDraftEntity(
+    @PrimaryKey val plantId: String,
+    /** The draft as `DraftedCare` writes it. */
+    val json: String,
+    val createdAt: Long,
+    /** The user chose to keep it; it is still Gemma 4's draft. */
+    val kept: Boolean = false,
+)
+
 /** One suggestion for a detection, in rank order. */
 @Entity(
     tableName = "candidates",

@@ -16,6 +16,7 @@ import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.assistant.AssistantFacts
 import io.github.wkoller.pollenplot.domain.assistant.CitedRecord
+import io.github.wkoller.pollenplot.domain.assistant.DraftedCare
 import io.github.wkoller.pollenplot.domain.assistant.GardenAssistantGuard
 import io.github.wkoller.pollenplot.domain.assistant.GardenPrompts
 import io.github.wkoller.pollenplot.domain.assistant.QuestionKind
@@ -75,6 +76,12 @@ interface Assistant {
      * is not on the phone or could not answer.
      */
     suspend fun secondOpinion(thumbnail: String, suggestions: List<String>): Int?
+
+    /**
+     * Care facts drafted for the plant called [name], which the knowledge base does not have, or null when the answer
+     * had nothing usable. It fails if Gemma 4 is not on the phone or could not answer.
+     */
+    suspend fun draftCare(name: String): DraftedCare?
 
     fun stop()
 }
@@ -159,6 +166,18 @@ class GardenAssistant(
                 engine.createConversation(ConversationConfig(Contents.of(GardenPrompts.SYSTEM), emptyList(), emptyList(), SamplerConfig(1, 1.0, 0.0, 0))).use { conversation ->
                     val answer = conversation.sendMessage(Contents.of(Content.ImageBytes(image), Content.Text(GardenPrompts.secondOpinion(suggestions))))
                     GardenPrompts.choice(answer.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }, suggestions.size)
+                }
+            }
+        }
+    }
+
+    override suspend fun draftCare(name: String): DraftedCare? {
+        check(model.ready) { "Gemma 4 is not on the phone" }
+        return model.withEngine { engine ->
+            withContext(Dispatchers.Default) {
+                engine.createConversation(ConversationConfig(Contents.of(GardenPrompts.SYSTEM), emptyList(), emptyList(), SamplerConfig(1, 1.0, 0.0, 0))).use { conversation ->
+                    val answer = conversation.sendMessage(DraftedCare.prompt(name))
+                    DraftedCare.parse(answer.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text })
                 }
             }
         }

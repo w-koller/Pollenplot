@@ -2,6 +2,7 @@ package io.github.wkoller.pollenplot.data
 
 import androidx.room.withTransaction
 import io.github.wkoller.pollenplot.data.db.CandidateEntity
+import io.github.wkoller.pollenplot.data.db.CareDraftEntity
 import io.github.wkoller.pollenplot.data.db.DetectionEntity
 import io.github.wkoller.pollenplot.data.db.EmbeddingEntity
 import io.github.wkoller.pollenplot.data.db.FloweringEntity
@@ -14,29 +15,30 @@ import io.github.wkoller.pollenplot.data.db.SearchHit
 import io.github.wkoller.pollenplot.data.db.toDomain
 import io.github.wkoller.pollenplot.data.db.toEntity
 import io.github.wkoller.pollenplot.data.photos.StoredPhoto
+import io.github.wkoller.pollenplot.domain.assistant.DraftedCare
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
+import io.github.wkoller.pollenplot.domain.garden.PlotLayout
+import io.github.wkoller.pollenplot.domain.garden.Zone
+import io.github.wkoller.pollenplot.domain.garden.ZoneKind
+import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
-import io.github.wkoller.pollenplot.domain.garden.PlotLayout
-import io.github.wkoller.pollenplot.domain.garden.Zone
-import io.github.wkoller.pollenplot.domain.garden.ZoneKind
-import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
-import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
-import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
-import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
-import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import io.github.wkoller.pollenplot.domain.semantic.GardenGraph
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.domain.semantic.Link
 import io.github.wkoller.pollenplot.domain.semantic.MeaningMatch
 import io.github.wkoller.pollenplot.domain.semantic.SearchText
 import io.github.wkoller.pollenplot.domain.semantic.Triple
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -75,6 +77,7 @@ class GardenRepository(
     private val scanned = db.scannedMediaDao()
     private val embeddings = db.embeddingDao()
     private val sightings = db.sightingDao()
+    private val drafts = db.careDraftDao()
     private val layoutLock = Mutex()
 
     val zoneList: Flow<List<Zone>> = zones.observeAll().map { list -> list.map { it.toDomain() } }
@@ -239,6 +242,17 @@ class GardenRepository(
         )
         detections.touch(detectionId)
     }
+
+    /** The care Gemma 4 drafted for a plant, and whether the user kept it; null when there is none. */
+    fun careDraft(plantId: String): Flow<Pair<DraftedCare, Boolean>?> = drafts.observe(plantId).map { entity ->
+        entity?.let { runCatching { DraftedCare.fromJson(it.json) }.getOrNull()?.let { draft -> draft to it.kept } }
+    }
+
+    suspend fun saveCareDraft(plantId: String, draft: DraftedCare) = drafts.upsert(CareDraftEntity(plantId, draft.toJson(), now()))
+
+    suspend fun keepCareDraft(plantId: String) = drafts.keep(plantId)
+
+    suspend fun deleteCareDraft(plantId: String) = drafts.delete(plantId)
 
     /** Finds waiting for review that Gemma 4 has not given a second opinion on yet, the newest first. */
     suspend fun waitingForSecondOpinion(limit: Int): List<DetectionRecord> = detections.waitingForSecondOpinion(limit).map { record(it) }

@@ -219,3 +219,18 @@ interface EmbeddingDao {
     @Query("DELETE FROM embeddings")
     suspend fun clear()
 }
+
+@Dao
+interface CareDraftDao {
+    @Query("SELECT * FROM care_drafts WHERE plantId = :plantId")
+    fun observe(plantId: String): Flow<CareDraftEntity?>
+
+    @Upsert
+    suspend fun upsert(draft: CareDraftEntity)
+
+    @Query("UPDATE care_drafts SET kept = 1 WHERE plantId = :plantId")
+    suspend fun keep(plantId: String)
+
+    @Query("DELETE FROM care_drafts WHERE plantId = :plantId")
+    suspend fun delete(plantId: String)
+}

@@ -10,6 +10,7 @@ import io.github.wkoller.pollenplot.ai.AskSubject
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.AssistantReply
 import io.github.wkoller.pollenplot.domain.assistant.CitedRecord
+import io.github.wkoller.pollenplot.domain.assistant.DraftedCare
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
@@ -64,6 +65,15 @@ class FakeAssistant(
 ) : Assistant {
     /** The suggestions each second opinion was asked about. */
     val opinions = mutableListOf<List<String>>()
+
+    /** The care drafted for every plant asked about, and the plants asked about. */
+    var draft: DraftedCare? = null
+    val drafted = mutableListOf<String>()
+
+    override suspend fun draftCare(name: String): DraftedCare? {
+        drafted += name
+        return draft
+    }
 
     override suspend fun secondOpinion(thumbnail: String, suggestions: List<String>): Int? {
         opinions += suggestions
