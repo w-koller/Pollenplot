@@ -4,7 +4,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /** The models that suggest what a photo shows. */
-enum class IdSource { AIY_PLANTS, BIOCAP, GEMMA }
+enum class IdSource { AIY_PLANTS, AIY_BIRDS, AIY_INSECTS, BIOCAP, GEMMA }
 
 /** Where a photo came from. */
 enum class PhotoOrigin { CAMERA, IMPORT, LIBRARY }

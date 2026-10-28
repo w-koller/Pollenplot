@@ -15,7 +15,9 @@ import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
-import io.github.wkoller.pollenplot.ml.PlantIdentifier
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ml.AiyModel
+import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ui.review.DetectionActions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -39,13 +41,14 @@ sealed interface IdentifyStage {
 }
 
 /**
- * The Identify screen's state: live suggestions while the camera is pointed at a plant, then the photo being looked at,
- * then the plants found in it. The results survive the phone being turned, and the app being closed in the background,
- * because only the photo's ID is kept and everything else is read back from the database.
+ * The Identify screen's state: what the user is photographing (a plant, or a bird, insect or other animal), live
+ * suggestions while the camera is pointed at it, then the photo being looked at, then what was found in it. The
+ * results survive the phone being turned, and the app being closed in the background, because only the photo's ID and
+ * the choice are kept and everything else is read back from the database.
  */
 class IdentifyModel(
     private val analysis: PhotoAnalysis,
-    private val identifier: () -> PlantIdentifier,
+    private val identifier: () -> Identifier,
     private val garden: GardenRepository,
     private val knowledge: KnowledgeRepository,
     settings: SettingsStore,
@@ -55,6 +58,11 @@ class IdentifyModel(
 ) : ViewModel() {
     private val _stage = MutableStateFlow(saved.get<String>(PHOTO_ID)?.let { IdentifyStage.Results(it) } ?: IdentifyStage.Camera)
     val stage: StateFlow<IdentifyStage> = _stage.asStateFlow()
+
+    private val _group = MutableStateFlow(saved.get<String>(GROUP)?.let(LifeGroup::of) ?: LifeGroup.PLANT)
+
+    /** What the user is photographing. The quick models cannot tell a plant from an animal, so the user says. */
+    val group: StateFlow<LifeGroup> = _group.asStateFlow()
 
     private val _live = MutableStateFlow<List<Candidate>>(emptyList())
 
@@ -88,24 +96,41 @@ class IdentifyModel(
         saved.get<String>(PHOTO_ID)?.let(::watch)
     }
 
+    /** Photographs a different kind of thing from now on. */
+    fun choose(group: LifeGroup) {
+        if (_group.value == group) return
+        _group.value = group
+        saved[GROUP] = group.name
+        _live.value = emptyList()
+    }
+
     /** Looks at one camera frame and updates the live suggestions. */
     suspend fun glance(frame: Bitmap) {
         if (_stage.value != IdentifyStage.Camera) return
+        val group = _group.value
+        val model = AiyModel.of(group) ?: return
         val result = try {
-            identifier().glance(frame)
+            identifier().glance(frame, group)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Log.w(TAG, "The live suggestions failed", e)
             return
         }
+        // The choice may have changed while the frame was looked at.
+        if (group != _group.value) return
         _live.value = if (result.backgroundBp >= LIVE_MAX_BACKGROUND_BP) {
             emptyList()
-        } else {
+        } else if (group == LifeGroup.PLANT) {
             val growing = gardenSpecies ?: garden.plantList.first()
                 .filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
                 .also { gardenSpecies = it }
             CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to result.labels), knowledge.knowledge.value, growing, nearby = nearby)
+                .filter { it.scoreBp >= LIVE_MIN_SCORE_BP }
+                .take(LIVE_COUNT)
+        } else {
+            val fauna = knowledge.fauna.value
+            CandidateFusion.fuse(mapOf(model.source to result.labels), { label -> fauna?.animal(label)?.name }, emptySet(), nearby = nearby)
                 .filter { it.scoreBp >= LIVE_MIN_SCORE_BP }
                 .take(LIVE_COUNT)
         }
@@ -136,7 +161,7 @@ class IdentifyModel(
         _captured.value = photo
         _stage.value = IdentifyStage.Analysing
         _stage.value = try {
-            val result = analysis.analyse(photo, PhotoOrigin.CAMERA)
+            val result = analysis.analyse(photo, PhotoOrigin.CAMERA, group = _group.value)
             val stored = result.photo
             if (stored == null || result.detections.isEmpty()) {
                 IdentifyStage.NoneFound
@@ -180,6 +205,7 @@ class IdentifyModel(
     private companion object {
         const val TAG = "Identify"
         const val PHOTO_ID = "photoId"
+        const val GROUP = "group"
 
         /** Live suggestions are shown only when the model is at least this sure, so the chips do not flicker with noise. */
         const val LIVE_MIN_SCORE_BP = 1_500

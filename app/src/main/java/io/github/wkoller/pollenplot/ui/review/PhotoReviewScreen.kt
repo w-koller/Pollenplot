@@ -50,6 +50,7 @@ import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.id.ZoneSuggestion
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import kotlinx.coroutines.CoroutineScope
@@ -70,6 +71,13 @@ class DetectionActions(private val garden: GardenRepository, private val setting
 
     fun attach(detection: DetectionRecord, plantId: String, flowering: Boolean) {
         scope.launch { garden.attachDetection(detection.id, plantId, flowering) }
+    }
+
+    fun addSighting(detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantId: String?, behaviour: Behaviour?) {
+        scope.launch {
+            garden.confirmSighting(detection.id, speciesName, label, detection.group, zoneId, plantId, behaviour)
+            if (zoneId != null) settings.update { it.copy(lastZoneId = zoneId) }
+        }
     }
 
     fun reject(detection: DetectionRecord) {
@@ -109,8 +117,10 @@ fun PhotoReviewScreen(
     onCompare: ((detectionId: String, speciesName: String) -> Unit)? = null,
 ) {
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
+    val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
+    val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     var choices by rememberSaveable(stateSaver = ChoicesSaver) { mutableStateOf(emptyMap<String, ReviewChoice>()) }
@@ -124,11 +134,23 @@ fun PhotoReviewScreen(
             onChooseAnother = { choosingFor = it.id },
             onOpenPlant = onOpenPlant,
             onCompare = onCompare?.let { compare -> { detection, species -> compare(detection.id, species) } },
+            onAddSighting = actions::addSighting,
         )
     }
 
     val searchingFor = choosingFor
     val loadedKb = kb
+    // An animal is looked for among the animals, a plant among the plants.
+    val searchingGroup = searchingFor?.let { id -> reviews?.flatMap { it.detections }?.firstOrNull { it.id == id }?.group }
+    val loadedFauna = fauna
+    if (searchingFor != null && searchingGroup != null && searchingGroup.isWildlife && loadedFauna != null) {
+        BackHandler { choosingFor = null }
+        FaunaSearch(loadedFauna, searchingGroup, onBack = { choosingFor = null }) { name ->
+            choices = choices + (searchingFor to ReviewChoice.Picked(name))
+            choosingFor = null
+        }
+        return
+    }
     if (searchingFor != null && loadedKb != null) {
         BackHandler { choosingFor = null }
         SpeciesSearch(loadedKb, locality, onBack = { choosingFor = null }) { name ->
@@ -174,6 +196,8 @@ fun PhotoReviewScreen(
                             suggestedZoneId = suggestedZone,
                             callbacks = callbacks,
                             modifier = Modifier.readable(),
+                            fauna = fauna,
+                            sightings = sightings,
                         )
                     }
                 }

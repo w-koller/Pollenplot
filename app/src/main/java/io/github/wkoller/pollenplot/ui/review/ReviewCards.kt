@@ -53,6 +53,7 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
+import io.github.wkoller.pollenplot.data.SightingView
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.Confidence
@@ -60,6 +61,8 @@ import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.Species
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
 import io.github.wkoller.pollenplot.ui.weeds.WeedNotice
 import io.github.wkoller.pollenplot.ui.components.Badge
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
@@ -68,10 +71,10 @@ import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
 import java.io.File
 
 /** Suggestions below this score are left off the card; the user can still search for the plant. */
-private const val MIN_SHOWN_SCORE_BP = 500
+internal const val MIN_SHOWN_SCORE_BP = 500
 
 /** The card lists at most this many suggestions. */
-private const val MAX_SHOWN = 3
+internal const val MAX_SHOWN = 3
 
 /** What a review card does when the user decides. The screen passes these on to the database. */
 class ReviewCallbacks(
@@ -83,6 +86,8 @@ class ReviewCallbacks(
     val onOpenPlant: (String) -> Unit,
     /** Compares the photo with photos of a species, for a suggestion that is a weed. */
     val onCompare: ((detection: DetectionRecord, speciesName: String) -> Unit)? = null,
+    /** Adds an animal or fungus as a sighting: its knowledge base name if it has one, the name chosen, and where. */
+    val onAddSighting: ((detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantId: String?, behaviour: Behaviour?) -> Unit)? = null,
 )
 
 /**
@@ -105,6 +110,8 @@ fun DetectionReviewCard(
     suggestedZoneId: String?,
     callbacks: ReviewCallbacks,
     modifier: Modifier = Modifier,
+    fauna: FaunaBase? = null,
+    sightings: List<SightingView> = emptyList(),
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
@@ -116,8 +123,23 @@ fun DetectionReviewCard(
                 Text(stringResource(R.string.review_plant_number, number, total), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
             when (detection.status) {
-                DetectionStatus.NEEDS_REVIEW -> Undecided(detection, kb, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
-                DetectionStatus.CONFIRMED -> {
+                DetectionStatus.NEEDS_REVIEW -> if (detection.group.isWildlife) {
+                    UndecidedAnimal(detection, fauna, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
+                } else {
+                    Undecided(detection, kb, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
+                }
+                DetectionStatus.CONFIRMED -> if (detection.sightingId != null) {
+                    val sighting = sightings.firstOrNull { it.sighting.id == detection.sightingId }
+                    if (sighting == null) {
+                        Header(detection.thumbnail, stringResource(R.string.review_sighting_added), null)
+                    } else {
+                        Header(detection.thumbnail, sighting.title, sighting.scientificName)
+                        Text(
+                            sighting.zoneName?.let { stringResource(R.string.review_sighting_added_zone, it) } ?: stringResource(R.string.review_sighting_added),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                } else {
                     val plant = plants.firstOrNull { it.plant.id == detection.plantId }
                     Header(detection.thumbnail, plant?.title ?: stringResource(R.string.review_added), plant?.scientificName)
                     Text(
@@ -129,8 +151,9 @@ fun DetectionReviewCard(
                     }
                 }
                 DetectionStatus.REJECTED -> {
-                    Header(detection.thumbnail, stringResource(R.string.review_rejected_title), null)
-                    Text(stringResource(R.string.review_rejected), style = MaterialTheme.typography.bodyLarge)
+                    val wildlife = detection.group.isWildlife
+                    Header(detection.thumbnail, stringResource(if (wildlife) R.string.review_rejected_wildlife_title else R.string.review_rejected_title), null)
+                    Text(stringResource(if (wildlife) R.string.review_rejected_wildlife else R.string.review_rejected), style = MaterialTheme.typography.bodyLarge)
                     TextButton(onClick = { callbacks.onUndoReject(detection) }) { Text(stringResource(R.string.review_undo)) }
                 }
             }
@@ -276,7 +299,7 @@ private fun Undecided(
 
 /** The cut-out and the name of what was found, with extra lines such as the confidence underneath. */
 @Composable
-private fun Header(thumbnail: String, title: String, subtitle: String?, extra: @Composable () -> Unit = {}) {
+internal fun Header(thumbnail: String, title: String, subtitle: String?, extra: @Composable () -> Unit = {}) {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Cutout(thumbnail, 112.dp)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -316,7 +339,7 @@ private fun SpeciesChoiceRow(species: Species, selected: Boolean, onClick: () ->
 }
 
 @Composable
-private fun ChoiceRow(title: String, subtitle: String, italic: Boolean, trailing: String, selected: Boolean, onClick: () -> Unit) {
+internal fun ChoiceRow(title: String, subtitle: String, italic: Boolean, trailing: String, selected: Boolean, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
         verticalAlignment = Alignment.CenterVertically,

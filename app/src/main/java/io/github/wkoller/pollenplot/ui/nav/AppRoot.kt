@@ -43,6 +43,8 @@ import io.github.wkoller.pollenplot.AppContainer
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.wkoller.pollenplot.MainActivity
+import io.github.wkoller.pollenplot.ml.PackState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
@@ -258,6 +260,7 @@ fun AppRoot(
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
                         checkingWeed = entry.toRoute<IdentifyRoute>().checkingWeed,
+                        accurateReady = container.accurate.state.collectAsStateWithLifecycle().value == PackState.Ready,
                         onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
                         onOpenFinder = { navController.navigate(WeedFinderRoute(it)) },
                     )

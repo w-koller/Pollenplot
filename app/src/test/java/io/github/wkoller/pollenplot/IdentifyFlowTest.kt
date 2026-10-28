@@ -30,6 +30,11 @@ import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.id.IdSource
+import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.FoundRegion
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
@@ -160,6 +165,60 @@ class IdentifyFlowTest {
         compose.onNodeWithContentDescription("Open the add menu").performClick()
         compose.onNodeWithText("Identify with the camera").performClick()
         compose.onNodeWithText("Pollenplot needs the camera to identify plants.").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h2200dp-xhdpi")
+    fun aBirdBecomesASightingOnThePlantItWasOn() {
+        val ids = seed()
+        val plantsBefore = plants().size
+        val model = analysedAnimal(LifeGroup.BIRD, IdSource.AIY_BIRDS to listOf(LabelScore("Manorina melanocephala", 6_500), LabelScore("Anthochaera carunculata", 1_200)))
+        show(model)
+        waitFor(hasText("Noisy miner"))
+        compose.onNodeWithText("Red wattlebird").assertExists()
+        shot("identify_bird")
+        compose.onNodeWithText("Hive Corner").performClick()
+        compose.onNodeWithText("Rosemary").performClick()
+        compose.onNodeWithText("Feeding").performClick()
+        compose.onNodeWithText("Add sighting").performClick()
+        waitFor(hasText("Added to your sightings in Hive Corner."))
+        compose.onNodeWithText("Noisy miner").assertExists()
+        shot("identify_bird_added")
+        val sighting = runBlocking { garden.sightingList.first { it.isNotEmpty() }.single() }
+        assertEquals("Manorina melanocephala", sighting.speciesName)
+        assertEquals(LifeGroup.BIRD, sighting.group)
+        assertEquals(Behaviour.FEEDING, sighting.behaviour)
+        assertEquals(ids.hive, sighting.zoneId)
+        assertEquals(plants().single { it.speciesName == "Salvia rosmarinus" }.id, sighting.plantId)
+        assertEquals("No plant was added", plantsBefore, plants().size)
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h2200dp-xhdpi")
+    fun aVenomousSpiderSaysWhatToDo() {
+        seed()
+        val model = analysedAnimal(LifeGroup.SPIDER, IdSource.BIOCAP to listOf(LabelScore("Latrodectus hasselti", 8_000)))
+        show(model)
+        waitFor(hasText("Redback spider"))
+        compose.onNodeWithText("Venomous").assertExists()
+        compose.onNodeWithText("13 11 26", substring = true).assertExists()
+        shot("identify_redback")
+    }
+
+    /** Runs a painted photo through the app's analysis as a photo of [group], with [labels] as what the models said. */
+    private fun analysedAnimal(group: LifeGroup, vararg labels: Pair<IdSource, List<LabelScore>>): IdentifyModel {
+        val identifier = ScriptedIdentifier(animalFor = { photo, asked -> listOf(FastPlantIdentifier.region(photo, FastPlantIdentifier.CENTRE, labels.toMap(), asked)) })
+        val container = app.container
+        val analysis = PhotoAnalysis({ identifier }, container.photos, garden, container.knowledge, container.clock)
+        val model = IdentifyModel(analysis, { identifier }, garden, container.knowledge, container.settingsStore, SavedStateHandle())
+        model.choose(group)
+        runBlocking {
+            container.knowledge.awaitFauna()
+            model.analyse(TestPhotos.gardenPhoto())
+        }
+        assertEquals(listOf(group), identifier.asked)
+        assertTrue("The photo was analysed, not ${model.stage.value}", model.stage.value is IdentifyStage.Results)
+        return model
     }
 
     private fun seed(): DemoGarden.Ids = runBlocking {

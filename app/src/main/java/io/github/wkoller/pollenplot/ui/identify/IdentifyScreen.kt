@@ -12,6 +12,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.ui.semantics.contentDescription
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ml.AiyModel
+import io.github.wkoller.pollenplot.ui.wildlife.CAMERA_GROUPS
+import io.github.wkoller.pollenplot.ui.wildlife.label
+import io.github.wkoller.pollenplot.ui.wildlife.noun
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -113,19 +123,32 @@ fun IdentifyScreen(
     checkingWeed: Boolean = false,
     onCompare: (detectionId: String, speciesName: String) -> Unit = { _, _ -> },
     onOpenFinder: ((detectionId: String?) -> Unit)? = null,
+    /** Whether the accurate pack is on the phone, which names the groups the quick models do not cover. */
+    accurateReady: Boolean = false,
 ) {
     val stage by model.stage.collectAsStateWithLifecycle()
-    // Checking a weed is the same identification; each suggestion's weed status shows on its card.
+    val group by model.group.collectAsStateWithLifecycle()
+    // Checking a weed is the same identification of plants; each suggestion's weed status shows on its card.
+    LaunchedEffect(checkingWeed) { if (checkingWeed) model.choose(LifeGroup.PLANT) }
     val screenTitle = stringResource(if (checkingWeed) R.string.identify_weed_title else R.string.identify_title)
-    val hint = stringResource(if (checkingWeed) R.string.identify_weed_hint else R.string.identify_point)
+    val hint = when {
+        checkingWeed -> stringResource(R.string.identify_weed_hint)
+        group == LifeGroup.PLANT -> stringResource(R.string.identify_point)
+        AiyModel.of(group) == null && !accurateReady -> stringResource(R.string.identify_needs_pack)
+        else -> stringResource(R.string.identify_point_animal, stringResource(group.noun))
+    }
     when (val current = stage) {
-        IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack)
+        IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack, chooseGroup = !checkingWeed)
         IdentifyStage.Analysing -> Analysing(model)
         is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed })
         IdentifyStage.NoneFound -> Problem(
             screenTitle = screenTitle,
-            title = stringResource(R.string.identify_none_title),
-            body = stringResource(R.string.identify_none_body),
+            title = if (group == LifeGroup.PLANT) stringResource(R.string.identify_none_title) else stringResource(R.string.identify_none_animal, stringResource(group.noun)),
+            body = when {
+                group == LifeGroup.PLANT -> stringResource(R.string.identify_none_body)
+                AiyModel.of(group) == null && !accurateReady -> stringResource(R.string.identify_needs_pack)
+                else -> stringResource(R.string.identify_none_animal_body)
+            },
             onBack = onBack,
             onTryAgain = model::takeAnother,
             onAddByName = onAddByName,
@@ -145,7 +168,7 @@ private fun hasCamera(context: Context) = ContextCompat.checkSelfPermission(cont
 
 /** Asks for the camera the first time, explains why if the user says no, and shows the viewfinder once allowed. */
 @Composable
-private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, title: String, hint: String, onBack: () -> Unit) {
+private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, title: String, hint: String, onBack: () -> Unit, chooseGroup: Boolean) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     var granted by remember { mutableStateOf(hasCamera(context)) }
@@ -169,7 +192,7 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, tit
     }
 
     if (granted) {
-        Viewfinder(model, knowledge, hint, onBack)
+        Viewfinder(model, knowledge, hint, onBack, chooseGroup)
     } else {
         DetailScaffold(title = title, onBack = onBack) { padding ->
             Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -192,10 +215,16 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, tit
 /** The camera, full screen, with the live suggestions and the button that takes the photo. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hint: String, onBack: () -> Unit) {
+private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hint: String, onBack: () -> Unit, chooseGroup: Boolean) {
     val live by model.live.collectAsStateWithLifecycle()
     val capturing by model.capturing.collectAsStateWithLifecycle()
+    val group by model.group.collectAsStateWithLifecycle()
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
+    val fauna by knowledge.fauna.collectAsStateWithLifecycle()
+    val nameOf: (Candidate) -> String = { candidate ->
+        val name = candidate.speciesName ?: candidate.label
+        (if (group == LifeGroup.PLANT) kb?.species(name)?.displayName else fauna?.animal(name)?.displayName) ?: candidate.label
+    }
     val imageCapture = remember { identifyImageCapture() }
     LightSystemBarIcons()
 
@@ -212,8 +241,12 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
                 .padding(8.dp),
         ) {
-            FilledTonalIconButton(onClick = onBack, colors = IconButtonDefaults.filledTonalIconButtonColors()) {
-                Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalIconButton(onClick = onBack, colors = IconButtonDefaults.filledTonalIconButtonColors()) {
+                    Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
+                }
+                // The quick models cannot tell a plant from an animal, so the user says what the photo is of.
+                if (chooseGroup) GroupChoice(group, model::choose)
             }
         }
         Column(
@@ -224,7 +257,7 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            LiveSuggestions(live, kb, hint)
+            LiveSuggestions(live, nameOf, hint)
             MediumExtendedFloatingActionButton(
                 text = { Text(stringResource(if (capturing) R.string.identify_capturing else R.string.identify_capture)) },
                 icon = {
@@ -240,9 +273,33 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
     }
 }
 
-/** Up to three suggestions for what the camera sees, or a request to point it at a plant. */
+/** What the photo is of, as a row of chips over the camera that scrolls sideways. */
 @Composable
-private fun LiveSuggestions(live: List<Candidate>, kb: KnowledgeBase?, hint: String) {
+private fun GroupChoice(selected: LifeGroup, onChoose: (LifeGroup) -> Unit) {
+    val description = stringResource(R.string.identify_what)
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).semantics { contentDescription = description },
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        CAMERA_GROUPS.forEach { group ->
+            FilterChip(
+                selected = group == selected,
+                onClick = { onChoose(group) },
+                label = { Text(stringResource(group.label)) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color.Black.copy(alpha = 0.55f),
+                    labelColor = Color.White,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+            )
+        }
+    }
+}
+
+/** Up to three suggestions for what the camera sees, or a request to point it at what is being photographed. */
+@Composable
+private fun LiveSuggestions(live: List<Candidate>, nameOf: (Candidate) -> String, hint: String) {
     val pill = Modifier.clip(CircleShape)
     if (live.isEmpty()) {
         Surface(color = Color.Black.copy(alpha = 0.6f), contentColor = Color.White, modifier = pill) {
@@ -256,7 +313,7 @@ private fun LiveSuggestions(live: List<Candidate>, kb: KnowledgeBase?, hint: Str
         modifier = Modifier.fillMaxWidth(),
     ) {
         live.forEachIndexed { i, candidate ->
-            val name = candidate.speciesName?.let { kb?.species(it)?.displayName } ?: candidate.label
+            val name = nameOf(candidate)
             val label = stringResource(R.string.identify_live_label, name, stringResource(confidenceLabel(candidate.scoreBp)))
             Surface(
                 color = if (i == 0) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -340,12 +397,22 @@ private fun Results(
         onBack = onBack,
         onOpenPlant = onOpenPlant,
         photoHeading = { review ->
+            // A photo of an animal has one animal in it, in the middle of the square.
+            val animal = review.detections.firstOrNull()?.group?.takeIf { it.isWildlife }
             Text(
-                pluralStringResource(R.plurals.identify_found, review.detections.size, review.detections.size),
+                if (animal != null) {
+                    stringResource(R.string.identify_found_animal, stringResource(animal.noun))
+                } else {
+                    pluralStringResource(R.plurals.identify_found, review.detections.size, review.detections.size)
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
-            Text(stringResource(R.string.identify_model_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(if (animal != null) R.string.identify_animal_note else R.string.identify_model_note),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         },
         bottom = {
             // Checking a weed: when no suggestion is right, the council's list can be searched by what the plant looks like.

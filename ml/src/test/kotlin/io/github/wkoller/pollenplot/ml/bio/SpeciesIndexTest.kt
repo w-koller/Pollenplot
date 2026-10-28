@@ -34,6 +34,21 @@ class SpeciesIndexTest {
     }
 
     @Test
+    fun `groups keep plants and animals apart`() {
+        val tsv = listOf("name\tcommon\taliases\tgroup", "Grevillea robusta\tSilky oak\t\tplant", "Manorina melanocephala\tNoisy miner\t\tbird")
+        val halves = listOf(1f, 0f, 0.8f, 0.6f)
+        val bytes = ByteBuffer.allocate(halves.size * 2).order(ByteOrder.LITTLE_ENDIAN)
+        halves.forEach { bytes.putShort(toHalf(it)) }
+        val index = SpeciesIndex.read(tsv, bytes.array(), dimensions = 2)
+        assertTrue(index.hasGroups)
+        assertEquals("bird", index.species[1].group)
+        assertEquals(listOf("Grevillea robusta"), index.nearest(floatArrayOf(1f, 0f), count = 1).map { it.species.name })
+        assertEquals(listOf("Manorina melanocephala"), index.nearest(floatArrayOf(1f, 0f), count = 1) { it.group == "bird" }.map { it.species.name })
+        val old = SpeciesIndex.read(listOf("name\tcommon\taliases", "Grevillea robusta\tSilky oak\t"), bytes.array().copyOf(4), dimensions = 2)
+        assertTrue("Packs from before animals joined have no groups", !old.hasGroups)
+    }
+
+    @Test
     fun `pixels are scaled and normalised plane by plane`() {
         val white = IntArray(BioCapEncoder.SIZE * BioCapEncoder.SIZE) { 0xFFFFFFFF.toInt() }
         val pixels = BioCapEncoder.pixels(white)

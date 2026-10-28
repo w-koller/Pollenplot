@@ -17,6 +17,8 @@ import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.ResolvedCare
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.weeds.WeedStatus
+import io.github.wkoller.pollenplot.domain.wildlife.Animal
+import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import io.github.wkoller.pollenplot.weeds.WeedData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -61,6 +63,14 @@ data class PlantView(
     val isGrowing: Boolean get() = plant.status == PlantStatus.GROWING
 }
 
+/** A sighting with its animal in the knowledge base, when it is there, and the names of its zone and plant. */
+data class SightingView(val sighting: Sighting, val animal: Animal?, val zoneName: String?, val plantTitle: String?) {
+    /** The animal's common name, or the name it was recorded under. */
+    val title: String get() = animal?.displayName ?: sighting.label
+
+    val scientificName: String? get() = animal?.name?.takeIf { it != title }
+}
+
 /** A zone with the plants growing in it and the zone's badges. */
 data class ZoneView(val zone: Zone, val plants: List<PlantView>, val badges: List<ZoneBadge>)
 
@@ -83,6 +93,20 @@ class GardenViews(repository: GardenRepository, knowledge: KnowledgeRepository, 
         zones.map { zone ->
             val inZone = byZone[zone.id].orEmpty()
             ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles) }))
+        }
+    }
+
+    /** Every sighting, the most recent first. */
+    val sightings: Flow<List<SightingView>> = combine(repository.sightingList, repository.zoneList, plants, knowledge.fauna) { sightings, zones, plants, fauna ->
+        val zoneNames = zones.associate { it.id to it.name }
+        val plantTitles = plants.associate { it.plant.id to it.title }
+        sightings.map { sighting ->
+            SightingView(
+                sighting,
+                fauna?.animal(sighting.speciesName ?: sighting.label),
+                sighting.zoneId?.let(zoneNames::get),
+                sighting.plantId?.let(plantTitles::get),
+            )
         }
     }
 

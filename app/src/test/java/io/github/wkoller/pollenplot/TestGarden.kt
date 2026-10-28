@@ -12,7 +12,8 @@ import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.id.TileResult
 import io.github.wkoller.pollenplot.ml.FoundRegion
 import io.github.wkoller.pollenplot.ml.Identification
-import io.github.wkoller.pollenplot.ml.PlantIdentifier
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.scan.Album
 import io.github.wkoller.pollenplot.scan.Gallery
@@ -65,14 +66,24 @@ class ConceptEmbedder : Embedder {
     }
 }
 
-/** Stands in for the on-device models: it finds whatever [regionsFor] says each photo shows. */
-class ScriptedIdentifier(var regionsFor: (Bitmap) -> List<FoundRegion> = { emptyList() }) : PlantIdentifier {
-    override suspend fun identify(photo: Bitmap): Identification {
-        val regions = regionsFor(photo)
-        return Identification(showsPlant = regions.isNotEmpty(), regions = regions)
+/**
+ * Stands in for the on-device models: it finds whatever [regionsFor] says each photo shows, and [animalFor] says the
+ * animal in the middle of the frame is.
+ */
+class ScriptedIdentifier(
+    var animalFor: (Bitmap, LifeGroup) -> List<FoundRegion> = { _, _ -> emptyList() },
+    var regionsFor: (Bitmap) -> List<FoundRegion> = { emptyList() },
+) : Identifier {
+    /** The groups the camera asked about, in order. */
+    val asked = mutableListOf<LifeGroup>()
+
+    override suspend fun identify(photo: Bitmap, group: LifeGroup): Identification {
+        asked += group
+        val regions = if (group == LifeGroup.PLANT) regionsFor(photo) else animalFor(photo, group)
+        return Identification(found = regions.isNotEmpty(), regions = regions)
     }
 
-    override suspend fun glance(frame: Bitmap) = TileResult(BoxBp.WHOLE, emptyList(), backgroundBp = 0)
+    override suspend fun glance(frame: Bitmap, group: LifeGroup) = TileResult(BoxBp.WHOLE, emptyList(), backgroundBp = 0)
 
     override fun close() = Unit
 }

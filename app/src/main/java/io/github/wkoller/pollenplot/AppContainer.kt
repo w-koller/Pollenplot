@@ -10,7 +10,7 @@ import io.github.wkoller.pollenplot.ml.AccuratePack
 import io.github.wkoller.pollenplot.ml.AccuratePlantIdentifier
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.PackState
-import io.github.wkoller.pollenplot.ml.PlantIdentifier
+import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.place.LocationSource
@@ -57,7 +57,7 @@ import java.time.Clock
 class AppContainer(
     context: Context,
     database: PollenplotDatabase? = null,
-    identifier: PlantIdentifier? = null,
+    identifier: Identifier? = null,
     gallery: Gallery? = null,
     embedder: Embedder? = null,
     web: Web? = null,
@@ -98,8 +98,8 @@ class AppContainer(
      */
     private val testIdentifier = identifier
     private val fast by lazy { FastPlantIdentifier(appContext) }
-    private val quickIdentifier: PlantIdentifier by lazy { testIdentifier ?: fast }
-    val identifier: PlantIdentifier by lazy { testIdentifier ?: AccuratePlantIdentifier(fast) { accurate.open() } }
+    private val quickIdentifier: Identifier by lazy { testIdentifier ?: fast }
+    val identifier: Identifier by lazy { testIdentifier ?: AccuratePlantIdentifier(fast) { accurate.open() } }
     val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock, ::recordsNearby)
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
     val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby), analysis, garden, clock)

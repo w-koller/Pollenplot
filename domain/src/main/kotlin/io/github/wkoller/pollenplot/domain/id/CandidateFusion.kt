@@ -23,7 +23,13 @@ data class Candidate(
  */
 object CandidateFusion {
     /** How much each model counts, in relative units. The accurate model counts most once it is installed. */
-    val DEFAULT_WEIGHTS: Map<IdSource, Int> = mapOf(IdSource.BIOCAP to 6, IdSource.AIY_PLANTS to 3, IdSource.GEMMA to 1)
+    val DEFAULT_WEIGHTS: Map<IdSource, Int> = mapOf(
+        IdSource.BIOCAP to 6,
+        IdSource.AIY_PLANTS to 3,
+        IdSource.AIY_BIRDS to 3,
+        IdSource.AIY_INSECTS to 3,
+        IdSource.GEMMA to 1,
+    )
 
     /** A species already in the garden has its score multiplied by this, in basis points of 1. */
     const val GARDEN_BOOST_BP = 15_000
@@ -60,6 +66,19 @@ object CandidateFusion {
         weights: Map<IdSource, Int> = DEFAULT_WEIGHTS,
         limit: Int = 5,
         nearby: (String) -> Int = { 0 },
+    ): List<Candidate> = fuse(results, { label -> kb?.species(label)?.name }, garden, weights, limit, nearby)
+
+    /**
+     * As [fuse] above, with [nameOf] giving the knowledge base's name for a model's label, so animals can be matched
+     * to the animal knowledge base the same way plants are matched to the plant one.
+     */
+    fun fuse(
+        results: Map<IdSource, List<LabelScore>>,
+        nameOf: (String) -> String?,
+        garden: Set<String>,
+        weights: Map<IdSource, Int> = DEFAULT_WEIGHTS,
+        limit: Int = 5,
+        nearby: (String) -> Int = { 0 },
     ): List<Candidate> {
         val present = results.filterValues { it.isNotEmpty() }
         val totalWeight = present.keys.sumOf { weights[it] ?: 1 }.coerceAtLeast(1)
@@ -70,12 +89,12 @@ object CandidateFusion {
             // A model can name one species twice through synonyms; only its best score for that species counts.
             val best = mutableMapOf<String, Pair<String, Int>>()
             for (label in labels) {
-                val species = kb?.species(label.label)?.name
+                val species = nameOf(label.label)
                 val key = KnowledgeBase.normalise(species ?: label.label)
                 if ((best[key]?.second ?: -1) < label.scoreBp) best[key] = label.label to label.scoreBp
             }
             for ((key, value) in best) {
-                val species = kb?.species(value.first)?.name
+                val species = nameOf(value.first)
                 val entry = entries.getOrPut(key) { Entry(value.first, species, 0, mutableSetOf()) }
                 entry.weighted += value.second.toLong() * weight
                 entry.sources += source

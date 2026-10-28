@@ -53,7 +53,11 @@ class BioCapEncoder(modelPath: String, threads: Int = 4) : AutoCloseable {
 }
 
 /** One species the pack can name, with the knowledge base's or iNaturalist's common name and other names it goes by. */
-data class IndexedSpecies(val name: String, val common: String?, val aliases: List<String>)
+/**
+ * One species the pack can name, with the knowledge base's or iNaturalist's common name, other names it goes by, and
+ * its group, such as "plant" or "bird". Packs made before animals joined the index have no groups.
+ */
+data class IndexedSpecies(val name: String, val common: String?, val aliases: List<String>, val group: String? = null)
 
 /** A species and how close a photo's vector is to it, as cosine similarity. */
 data class SpeciesMatch(val index: Int, val species: IndexedSpecies, val similarity: Float)
@@ -67,11 +71,15 @@ class SpeciesIndex(val species: List<IndexedSpecies>, private val vectors: Short
         require(vectors.size == species.size * dimensions) { "Expected ${species.size} vectors of $dimensions numbers" }
     }
 
-    /** The [count] species closest to [vector], the closest first. */
-    fun nearest(vector: FloatArray, count: Int = 5): List<SpeciesMatch> {
+    /** Whether the index knows each species' group, so it can tell a plant from an animal. */
+    val hasGroups: Boolean = species.any { it.group != null }
+
+    /** The [count] species closest to [vector] among those [accept] lets through, the closest first. */
+    fun nearest(vector: FloatArray, count: Int = 5, accept: (IndexedSpecies) -> Boolean = { true }): List<SpeciesMatch> {
         require(vector.size == dimensions)
         val best = java.util.PriorityQueue<Pair<Int, Float>>(count + 1, compareBy { it.second })
         for (s in species.indices) {
+            if (!accept(species[s])) continue
             val base = s * dimensions
             var dot = 0f
             for (d in 0 until dimensions) dot += vector[d] * HALF[vectors[base + d].toInt() and 0xFFFF]
@@ -106,7 +114,12 @@ class SpeciesIndex(val species: List<IndexedSpecies>, private val vectors: Short
         fun read(tsv: List<String>, f16: ByteArray, dimensions: Int): SpeciesIndex {
             val rows = tsv.drop(1).filter { it.isNotBlank() }.map { line ->
                 val cells = line.split('\t')
-                IndexedSpecies(cells[0], cells.getOrNull(1)?.ifBlank { null }, cells.getOrNull(2)?.split('|')?.filter { it.isNotBlank() }.orEmpty())
+                IndexedSpecies(
+                    cells[0],
+                    cells.getOrNull(1)?.ifBlank { null },
+                    cells.getOrNull(2)?.split('|')?.filter { it.isNotBlank() }.orEmpty(),
+                    cells.getOrNull(3)?.ifBlank { null },
+                )
             }
             val buffer = java.nio.ByteBuffer.wrap(f16).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
             val vectors = ShortArray(buffer.remaining()).also { buffer.get(it) }
