@@ -58,8 +58,8 @@ import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.plants.CareField
 import io.github.wkoller.pollenplot.domain.plants.CareProfile
 import io.github.wkoller.pollenplot.domain.plants.CompanionRelation
-import io.github.wkoller.pollenplot.domain.plants.CompostSafe
 import io.github.wkoller.pollenplot.domain.plants.Companions
+import io.github.wkoller.pollenplot.domain.plants.CompostSafe
 import io.github.wkoller.pollenplot.domain.plants.FactLevel
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.ResolvedCare
@@ -72,6 +72,7 @@ import io.github.wkoller.pollenplot.ui.components.RoleBadges
 import io.github.wkoller.pollenplot.ui.listWords
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import io.github.wkoller.pollenplot.ui.weeds.WeedCard
+import io.github.wkoller.pollenplot.ui.wildlife.PlantAnimalsCard
 import kotlinx.coroutines.launch
 import java.time.Month
 import java.time.format.TextStyle
@@ -85,8 +86,12 @@ fun PlantDetailScreen(
     plantId: String,
     onBack: () -> Unit,
     onCompare: (speciesName: String) -> Unit = {},
+    onOpenAnimal: (String) -> Unit = {},
+    onOpenSighting: (String) -> Unit = {},
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
+    val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
+    val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val all by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = emptyList())
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
@@ -121,6 +126,11 @@ fun PlantDetailScreen(
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {
                 facts(resolved, loaded, all, kb)
+            }
+            val seen = sightings.filter { it.sighting.plantId == plantId }
+            val users = (loaded.species?.name ?: loaded.plant.speciesName)?.let { fauna?.usersOf(it) }.orEmpty()
+            if (seen.isNotEmpty() || users.isNotEmpty()) {
+                item { PlantAnimalsCard(seen, users, onOpenSighting, onOpenAnimal) }
             }
             if (loaded.plant.notes.isNotBlank()) {
                 item {

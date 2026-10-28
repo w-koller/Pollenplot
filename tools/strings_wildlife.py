@@ -99,6 +99,23 @@ STRINGS = {
     "update.",
     "wildlife_seen_in_yard": "Seen in your yard",
 
+    "plant_animals": "Animals on this plant",
+    "plant_animals_seen": "Seen on it in your yard",
+    "plant_animals_use": "Animals that use it",
+
+    "wildlife_pests": "Garden pests",
+    "wildlife_pest_eaten_by": "Animals that eat it",
+    "wildlife_ideas": "Ideas for your yard",
+    "idea_bird": "No birds have been recorded this year. Dense or prickly shrubs give small birds shelter, a shallow "
+    "bath out of a cat's reach gives them water, and native plants that flower at different times feed honeyeaters "
+    "through the year.",
+    "idea_insect": "No insects have been recorded this year. Flowers through the year, a patch of bare ground or a bee "
+    "hotel to nest in, and no sprays while plants are flowering bring bees, butterflies and hover flies.",
+    "idea_frog": "No frogs have been recorded this year. A pond or bog garden that holds water for weeks, with shallow "
+    "edges, plants around it and no fish, gives them somewhere to breed. Snail pellets and sprays harm them.",
+    "idea_reptile": "No reptiles have been recorded this year. Rocks and logs in a sunny spot to bask on, with leaf "
+    "litter, mulch and low plants to hide in, suit skinks and blue-tongued lizards. Snail pellets harm them too.",
+
     "zone_wildlife_heading": "Wildlife seen here",
     "zone_no_wildlife": "No animals have been recorded in this zone yet.",
     "zone_add_sighting": "Add a sighting",

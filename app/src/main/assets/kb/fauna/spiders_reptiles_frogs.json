@@ -26,6 +26,7 @@
     "native": ["QLD", "NSW", "ACT", "VIC", "SA", "NT"], "roles": ["pest_controller"],
     "plant_note": "Eats snails, slugs, insects and fallen fruit.",
     "habitat": "Dense low plants, rocks and logs to shelter under, and no snail bait.",
+    "eats": ["Cornu aspersum"],
     "description": "A large, slow lizard with a broad head and a bright blue tongue it shows when threatened. It is harmless, and a friend to gardeners." },
   { "name": "Intellagama lesueurii", "common": ["Eastern water dragon"], "group": "reptile", "family": "Agamidae",
     "native": ["QLD", "NSW", "ACT", "VIC"],

@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -15,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -24,8 +27,10 @@ import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.garden.ZoneBadge
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
+import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneDetailScreen
 import io.github.wkoller.pollenplot.ui.theme.PollenplotTheme
 import kotlinx.coroutines.flow.first
@@ -59,20 +64,24 @@ class WildlifeFlowTest {
     }
 
     @Test
-    @Config(qualifiers = "en-rAU-w411dp-h2600dp-xhdpi")
+    @Config(qualifiers = "en-rAU-w411dp-h3600dp-xhdpi")
     fun theYearsWildlifeWithWhatToReport() {
         seed()
         show()
         compose.onNodeWithText("Wildlife").performClick()
-        waitFor(hasText("8 species seen in your yard this year"))
+        waitFor(hasText("9 species seen in your yard this year"))
         compose.onNodeWithText("6 of them are native to Australia.").assertExists()
-        compose.onNodeWithText("7 were seen in your yard for the first time.").assertExists()
+        compose.onNodeWithText("8 were seen in your yard for the first time.").assertExists()
         compose.onNodeWithText("Animals to know about").assertExists()
         compose.onNodeWithText("13 22 68", substring = true).assertExists()
+        // Aphids are a garden pest, and the knowledge base knows two animals that eat them.
+        compose.onNodeWithText("Garden pests").assertExists()
+        compose.onNodeWithText("Transverse ladybird").assertExists()
+        compose.onNodeWithText("Common hover fly").assertExists()
         compose.onNodeWithText("Birds · 3 species").assertExists()
         compose.onNodeWithText("Reptiles · 1 species").assertExists()
         // The skink isn't in the animal list, so Pollenplot says nothing about where it is native.
-        compose.onNodeWithText("Brown skink").assertExists()
+        compose.onAllNodesWithText("Brown skink").onFirst().assertExists()
         shot("wildlife_tab")
     }
 
@@ -91,14 +100,15 @@ class WildlifeFlowTest {
         seed()
         show()
         compose.onNodeWithText("Wildlife").performClick()
-        waitFor(hasText("Noisy miner"))
+        waitFor(hasText("9 species seen in your yard this year"))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Noisy miner"))
         compose.onAllNodesWithText("Noisy miner").onFirst().performClick()
         waitFor(hasText("Seen 3 times, most recently on 12 October 2026."))
         compose.onNodeWithText("First seen on 20 November 2025.").assertExists()
         compose.onNodeWithText("Plants it was seen on").assertExists()
         shot("wildlife_animal")
 
-        compose.onNodeWithText("12 October 2026").performClick()
+        compose.onNodeWithText("12 October 2026").performScrollTo().performClick()
         waitFor(hasText("Seen on 12 October 2026", substring = true))
         shot("wildlife_sighting")
         compose.onNodeWithText("Resting").performClick()
@@ -106,13 +116,13 @@ class WildlifeFlowTest {
         waitFor(hasText("Seen 3 times, most recently on 12 October 2026."))
         assertEquals(Behaviour.RESTING, sightings().first { it.seenAt.atZone(DemoWildlife.zone).dayOfMonth == 12 }.behaviour)
 
-        compose.onNodeWithText("3 August 2026").performClick()
+        compose.onNodeWithText("3 August 2026").performScrollTo().performClick()
         waitFor(hasText("Seen on 3 August 2026", substring = true))
         compose.onNodeWithContentDescription("Delete sighting").performClick()
         compose.onNodeWithText("Delete this sighting?").assertExists()
         compose.onNodeWithText("Delete").performClick()
         waitFor(hasText("Seen 2 times, most recently on 12 October 2026."))
-        assertEquals(9, sightings().size)
+        assertEquals(10, sightings().size)
     }
 
     @Test
@@ -120,7 +130,7 @@ class WildlifeFlowTest {
         val ids = seed()
         show()
         compose.onNodeWithText("Wildlife").performClick()
-        waitFor(hasText("8 species seen in your yard this year"))
+        waitFor(hasText("9 species seen in your yard this year"))
         compose.onNodeWithContentDescription("Open the add menu").performClick()
         compose.onNodeWithText("Add a sighting by name").performClick()
         compose.onNode(hasSetTextAction()).performTextInput("tongue")
@@ -131,7 +141,7 @@ class WildlifeFlowTest {
         compose.onNodeWithText("Basking").performClick()
         shot("wildlife_add_sighting")
         compose.onNodeWithText("Add sighting").performScrollTo().performClick()
-        waitFor(hasText("9 species seen in your yard this year"))
+        waitFor(hasText("10 species seen in your yard this year"))
         val added = sightings().single { it.speciesName == "Tiliqua scincoides" }
         assertEquals(ids.veg, added.zoneId)
         assertEquals(Behaviour.BASKING, added.behaviour)
@@ -161,8 +171,48 @@ class WildlifeFlowTest {
         seed()
         show(Settings(theme = ThemeChoice.DARK))
         compose.onNodeWithText("Wildlife").performClick()
-        waitFor(hasText("8 species seen in your yard this year"))
+        waitFor(hasText("9 species seen in your yard this year"))
         shot("wildlife_tab_dark_large")
+    }
+
+    @Test
+    @Config(qualifiers = "en-rAU-w411dp-h2400dp-xhdpi")
+    fun groupsNotSeenGetIdeas() {
+        val ids = runBlocking {
+            app.container.knowledge.await()
+            app.container.knowledge.awaitFauna()
+            DemoGarden.seed(garden)
+        }
+        runBlocking {
+            garden.recordSighting("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, ids.front, null, Behaviour.CALLING, 1, DemoWildlife.clock.instant(), "")
+        }
+        show()
+        compose.onNodeWithText("Wildlife").performClick()
+        waitFor(hasText("1 species seen in your yard this year"))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("No reptiles have been recorded this year", substring = true))
+        compose.onNodeWithText("Ideas for your yard").assertExists()
+        compose.onNodeWithText("No frogs have been recorded this year", substring = true).assertExists()
+        compose.onNodeWithText("No reptiles have been recorded this year", substring = true).assertExists()
+        compose.onNodeWithText("No insects have been recorded this year", substring = true).assertExists()
+        compose.onAllNodesWithText("No birds have been recorded this year", substring = true).assertCountEquals(0)
+        shot("wildlife_ideas")
+    }
+
+    @Test
+    @Config(qualifiers = "en-rAU-w411dp-h2400dp-xhdpi")
+    fun aPlantShowsTheAnimalsOnIt() {
+        val ids = seed()
+        compose.setContent {
+            PollenplotTheme(Settings()) {
+                Surface { PlantDetailScreen(app.container.views, garden, app.container.knowledge, ids.lemon, onBack = {}) }
+            }
+        }
+        waitFor(hasText("Mum's lemon"))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Bronze orange bug"))
+        compose.onNodeWithText("Animals on this plant").assertExists()
+        compose.onNodeWithText("Orchard swallowtail").assertExists()
+        compose.onNodeWithText("Bronze orange bug").assertExists()
+        shot("plant_lemon_animals")
     }
 
     private fun seed(): DemoGarden.Ids = runBlocking {

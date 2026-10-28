@@ -225,6 +225,8 @@ fun AppRoot(
                         plantId = id,
                         onBack = back,
                         onCompare = { navController.navigate(CompareRoute(it, plantId = id)) },
+                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
                     )
                 }
                 composable<AddPlantRoute> { entry ->

@@ -10,8 +10,8 @@ import java.time.LocalTime
 import java.time.ZoneId
 
 /**
- * A year of wildlife in [DemoGarden]: birds, a bee on the lavender, a frog in the native strip, fire ants in the veg
- * patch, a redback and a skink Pollenplot doesn't know, and a noisy miner from the year before.
+ * A year of wildlife in [DemoGarden]: birds, a bee on the lavender, a frog in the native strip, fire ants and aphids in
+ * the veg patch, a redback and a skink Pollenplot doesn't know, and a noisy miner from the year before.
  */
 object DemoWildlife {
     val zone: ZoneId = ZoneId.of("Australia/Brisbane")
@@ -33,6 +33,7 @@ object DemoWildlife {
         seen("Amegilla cingulata", "Blue-banded bee", LifeGroup.INSECT, LocalDate.of(2026, 10, 26), ids.hive, "Lavandula dentata", Behaviour.POLLINATING, count = 2)
         seen("Litoria fallax", "Eastern dwarf tree frog", LifeGroup.FROG, LocalDate.of(2026, 9, 15), ids.front, behaviour = Behaviour.CALLING)
         seen("Solenopsis invicta", "Red imported fire ant", LifeGroup.INSECT, LocalDate.of(2026, 10, 20), ids.veg, count = 30)
+        seen("Myzus persicae", "Green peach aphid", LifeGroup.INSECT, LocalDate.of(2026, 10, 22), ids.veg, "Solanum lycopersicum", Behaviour.FEEDING, count = 40)
         seen("Latrodectus hasselti", "Redback spider", LifeGroup.SPIDER, LocalDate.of(2026, 7, 2), ids.citrus, behaviour = Behaviour.RESTING)
         seen(null, "Brown skink", LifeGroup.REPTILE, LocalDate.of(2026, 3, 5), ids.veg, behaviour = Behaviour.BASKING)
         seen("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, LocalDate.of(2026, 1, 14), null, behaviour = Behaviour.CALLING)

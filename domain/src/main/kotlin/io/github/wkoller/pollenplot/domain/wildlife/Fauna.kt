@@ -48,6 +48,8 @@ data class Animal(
     val rules: List<AnimalRule>,
     val description: String,
     val synonyms: List<String>,
+    /** The animals in the knowledge base it eats, by scientific name or genus, such as a ladybird's aphids. */
+    val eats: List<String> = emptyList(),
 ) {
     val isNative: Boolean get() = nativeStates.isNotEmpty()
 
@@ -67,6 +69,13 @@ class FaunaBase(animals: List<Animal>) {
 
     /** The animal with this scientific name or synonym, ignoring case and spacing. */
     fun animal(name: String): Animal? = byName[KnowledgeBase.normalise(name)]
+
+    /** The animals in the knowledge base that eat [prey], by its scientific name or genus. */
+    fun predatorsOf(prey: Animal): List<Animal> {
+        val names = (listOf(prey.name) + prey.synonyms).map(KnowledgeBase::normalise).toSet()
+        val genus = KnowledgeBase.normalise(prey.name).substringBefore(' ')
+        return all.filter { animal -> animal.eats.any { KnowledgeBase.normalise(it).let { e -> e in names || e == genus } } }
+    }
 
     /** The animals that use a plant, by its species name or genus. */
     fun usersOf(speciesName: String): List<Animal> {
@@ -100,7 +109,13 @@ class FaunaBase(animals: List<Animal>) {
                     seen[key] = animal.name
                 }
             }
-            return FaunaParseResult(FaunaBase(animals), problems)
+            val base = FaunaBase(animals)
+            val genera = animals.map { KnowledgeBase.normalise(it.name).substringBefore(' ') }.toSet()
+            animals.forEach { animal ->
+                animal.eats.filter { base.animal(it) == null && KnowledgeBase.normalise(it) !in genera }
+                    .forEach { problems += "${animal.name} eats $it, which is not an animal or genus in the knowledge base" }
+            }
+            return FaunaParseResult(base, problems)
         }
     }
 }
@@ -127,6 +142,7 @@ internal data class AnimalJson(
     val rules: List<RuleJson> = emptyList(),
     val description: String? = null,
     val synonyms: List<String> = emptyList(),
+    val eats: List<String> = emptyList(),
 ) {
     fun toAnimal(where: String, problems: MutableList<String>): Animal? {
         val start = problems.size
@@ -151,6 +167,6 @@ internal data class AnimalJson(
             )
         }
         if (problems.size > start || group == null) return null
-        return Animal(name, common, group, family!!, states.toSet(), roles.toSet(), plants, plantNote, habitat, hazard, hazardNote, rules, description!!, synonyms)
+        return Animal(name, common, group, family!!, states.toSet(), roles.toSet(), plants, plantNote, habitat, hazard, hazardNote, rules, description!!, synonyms, eats)
     }
 }

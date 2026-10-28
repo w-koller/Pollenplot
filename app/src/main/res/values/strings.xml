@@ -637,6 +637,16 @@
     <string name="wildlife_nearby_no_location">Please set your garden\'s location to see the animals recorded near it.</string>
     <string name="wildlife_nearby_waiting">The animals recorded near your garden will be listed here after Pollenplot\'s next update.</string>
     <string name="wildlife_seen_in_yard">Seen in your yard</string>
+    <string name="plant_animals">Animals on this plant</string>
+    <string name="plant_animals_seen">Seen on it in your yard</string>
+    <string name="plant_animals_use">Animals that use it</string>
+    <string name="wildlife_pests">Garden pests</string>
+    <string name="wildlife_pest_eaten_by">Animals that eat it</string>
+    <string name="wildlife_ideas">Ideas for your yard</string>
+    <string name="idea_bird">No birds have been recorded this year. Dense or prickly shrubs give small birds shelter, a shallow bath out of a cat\'s reach gives them water, and native plants that flower at different times feed honeyeaters through the year.</string>
+    <string name="idea_insect">No insects have been recorded this year. Flowers through the year, a patch of bare ground or a bee hotel to nest in, and no sprays while plants are flowering bring bees, butterflies and hover flies.</string>
+    <string name="idea_frog">No frogs have been recorded this year. A pond or bog garden that holds water for weeks, with shallow edges, plants around it and no fish, gives them somewhere to breed. Snail pellets and sprays harm them.</string>
+    <string name="idea_reptile">No reptiles have been recorded this year. Rocks and logs in a sunny spot to bask on, with leaf litter, mulch and low plants to hide in, suit skinks and blue-tongued lizards. Snail pellets harm them too.</string>
     <string name="zone_wildlife_heading">Wildlife seen here</string>
     <string name="zone_no_wildlife">No animals have been recorded in this zone yet.</string>
     <string name="zone_add_sighting">Add a sighting</string>

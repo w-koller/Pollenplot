@@ -60,6 +60,7 @@
     "native": ["QLD", "NSW", "ACT", "VIC", "SA", "WA", "NT"], "roles": ["pest_controller"],
     "plant_note": "Adults and larvae eat aphids.",
     "habitat": "Gardens with aphids and flowers.",
+    "eats": ["Myzus persicae"],
     "description": "A small orange ladybird with black zigzag markings." },
   { "name": "Illeis galbula", "common": ["Fungus-eating ladybird"], "group": "insect", "family": "Coccinellidae",
     "native": ["QLD", "NSW", "ACT", "VIC", "NT", "WA"], "roles": ["pest_controller"],
@@ -105,6 +106,7 @@
     "plant_note": "Hunts caterpillars to feed its young.",
     "habitat": "Small open nests of grey paper under eaves and in shrubs.",
     "hazard": "stings", "hazard_note": "Paper wasps sting when their nest is disturbed. Please keep away from the nest.",
+    "eats": ["Pieris rapae"],
     "description": "A slender brown-and-yellow wasp that dangles its legs as it flies." },
   { "name": "Solenopsis invicta", "common": ["Red imported fire ant", "Fire ant"], "group": "insect", "family": "Formicidae",
     "introduced": true,
@@ -126,5 +128,6 @@
     "native": ["QLD", "NSW", "ACT", "VIC", "TAS", "SA", "WA", "NT"], "roles": ["pollinator", "pest_controller"],
     "plant_note": "Adults feed on nectar and pollen from small flowers; the larvae eat aphids.",
     "habitat": "Gardens with small open flowers such as alyssum, coriander and daisies.",
+    "eats": ["Myzus persicae"],
     "description": "A small fly with yellow and black bands that hovers in place over flowers. It does not sting." }
 ]

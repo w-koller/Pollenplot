@@ -58,6 +58,20 @@ class FaunaFilesTest {
     }
 
     @Test
+    fun `garden pests have something in the knowledge base that eats them`() {
+        val aphid = fauna.animal("Myzus persicae")!!
+        assertEquals(setOf("Coccinella transversalis", "Ischiodon scutellaris"), fauna.predatorsOf(aphid).map { it.name }.toSet())
+        assertEquals(listOf("Tiliqua scincoides"), fauna.predatorsOf(fauna.animal("Cornu aspersum")!!).map { it.name })
+    }
+
+    @Test
+    fun `what an animal eats must be in the knowledge base`() {
+        val text = """[{"name": "Coccinella transversalis", "common": ["Transverse ladybird"], "group": "insect", "family": "Coccinellidae",
+            "native": ["QLD"], "eats": ["Aphis gossypii"], "description": "A ladybird."}]"""
+        assertEquals(listOf("Coccinella transversalis eats Aphis gossypii, which is not an animal or genus in the knowledge base"), FaunaBase.parse(mapOf("a.json" to text)).problems)
+    }
+
+    @Test
     fun `animals are found by the plants they use`() {
         val citrusUsers = fauna.usersOf("Citrus × limon").map { it.name }
         assertTrue("Papilio aegeus" in citrusUsers && "Musgraveia sulciventris" in citrusUsers)
