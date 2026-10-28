@@ -84,14 +84,15 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
 - `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a
   point through the Atlas of Living Australia) and `PhoneLocation` (approximate location from the phone's own location
   service). `app/web` holds `Web`, the small HTTP client the app's few web requests go through.
-- `app/weeds`: `WeedLibrary` (the weed lists and nearby records kept in `filesDir/weeds`, read for the garden's place
-  and state as `WeedData`), `WeedSync` (brings them up to date; a source that cannot be reached keeps its last good
-  copy), `WeedSyncWorker` (monthly on Wi-Fi, and at once when the garden moves) and `WeedPhotos` (photos of a plant
-  recorded in Australia, fetched when the user compares, kept only in memory). Which sources apply where is in
-  `app/src/main/assets/weeds/sources.json`, checked by `WeedSourcesFileTest`. The rules that combine them are in
-  `domain/weeds` (`WeedResolver`, `WeedNames`, `BrisbaneWeeds`, `AlaLists`, `NearbyRecords`, `AlaNames`) and the
-  place parsing in `domain/place`. `GardenViews.locality` pairs the garden's state with its `WeedData`; badges, plant
-  views and the search index take their weed risk from it.
+- `app/weeds`: `WeedLibrary` (the weed lists, nearby plant records and the animals most recorded nearby, kept in
+  `filesDir/weeds` and read for the garden's place and state as `WeedData`), `WeedSync` (brings them up to date; a
+  source that cannot be reached keeps its last good copy), `WeedSyncWorker` (monthly on Wi-Fi, and at once when the
+  garden moves) and `WeedPhotos` (photos of a plant recorded in Australia, fetched when the user compares, kept only
+  in memory). Which sources apply where is in `app/src/main/assets/weeds/sources.json`, checked by
+  `WeedSourcesFileTest`. The rules that combine them are in `domain/weeds` (`WeedResolver`, `WeedNames`,
+  `BrisbaneWeeds`, `AlaLists`, `NearbyRecords`, `AlaNames`) and the place parsing in `domain/place`.
+  `GardenViews.locality` pairs the garden's state with its `WeedData`; badges, plant views and the search index take
+  their weed risk from it.
 - `AppContainer` builds the shared objects by hand. There is no dependency-injection library. Workers reach it through
   `PollenplotApp`. Tests that scan or review photos run with `@Config(application = TestApp::class)`, which gives the
   container a `FakeGallery` and a `ScriptedIdentifier`; `TestPhotos` paints garden photos, and workers run through

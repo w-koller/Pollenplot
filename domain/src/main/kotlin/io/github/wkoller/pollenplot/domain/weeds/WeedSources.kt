@@ -77,9 +77,13 @@ data class NationalSources(
     val photos: String,
 )
 
-/** Plant records near the garden: the search, with {lat}, {lon}, {radius} and {since}, its radius and how far back it looks. */
+/**
+ * Records near the garden: the search for plants, with {lat}, {lon}, {radius} and {since}, its radius and how far back
+ * it looks. [animals] is the same search for the animals most recorded there, with {taxon} for each group's filter in
+ * [groups], such as "class:Aves" for birds.
+ */
 @Serializable
-data class NearbySource(val url: String, val radiusKm: Int, val years: Int)
+data class NearbySource(val url: String, val radiusKm: Int, val years: Int, val animals: String? = null, val groups: Map<String, String> = emptyMap())
 
 /** Weeds Australia has no data service, so the app links to its pages: a search with {name}, and its identification key. */
 @Serializable

@@ -150,8 +150,8 @@ STRINGS = {
     "source_brisbane": "Brisbane City Council weed list",
     "source_brisbane_body": "Contains data from Brisbane City Council's open data, under CC BY 4.0.",
     "source_ala": "Atlas of Living Australia",
-    "source_ala_body": "National weed lists, plant records near your garden, council areas and plant names. Each "
-    "record keeps its provider's licence.",
+    "source_ala_body": "National weed lists, the plants and animals recorded near your garden, council areas and "
+    "plant names. Each record keeps its provider's licence.",
     "source_weeds_australia": "Weeds Australia",
     "source_weeds_australia_body": "Weed profiles and the identification key, by the Centre for Invasive Species "
     "Solutions.",

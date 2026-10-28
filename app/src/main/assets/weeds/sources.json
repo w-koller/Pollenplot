@@ -74,6 +74,18 @@
   },
   "nearby": {
     "url": "https://biocache-ws.ala.org.au/ws/occurrences/search?q=*:*&fq=kingdom:Plantae&fq=year:%5B{since}%20TO%20*%5D&lat={lat}&lon={lon}&radius={radius}&facets=species&flimit=-1&pageSize=0",
+    "animals": "https://biocache-ws.ala.org.au/ws/occurrences/search?q=*:*&fq={taxon}&fq=year:%5B{since}%20TO%20*%5D&lat={lat}&lon={lon}&radius={radius}&facets=common_name_and_lsid&flimit=40&fsort=count&pageSize=0",
+    "groups": {
+      "bird": "class:Aves",
+      "insect": "class:Insecta",
+      "spider": "class:Arachnida",
+      "reptile": "class:Reptilia",
+      "frog": "class:Amphibia",
+      "mammal": "class:Mammalia",
+      "fish": "class:Actinopterygii",
+      "mollusc": "phylum:Mollusca",
+      "fungus": "kingdom:Fungi"
+    },
     "radiusKm": 10,
     "years": 10
   },

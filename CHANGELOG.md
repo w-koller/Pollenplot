@@ -67,3 +67,6 @@
   sightings. Each animal has a page with what Pollenplot knows about it, the plants it was seen on and every
   sighting, and each sighting can be changed or deleted. Sightings can also be added by name, without a photo.
 - Each zone's page lists the wildlife seen in it, and a zone where frogs have been seen gets a Frogs seen badge.
+- Recorded near you, on the Wildlife tab: the animals recorded most often within 10 km of the garden on the Atlas of
+  Living Australia, a group at a time, with those seen in your yard marked. Identification gives them the same small
+  boost as plants recorded nearby. They are brought up to date with the weed lists.

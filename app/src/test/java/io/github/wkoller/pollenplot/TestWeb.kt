@@ -34,8 +34,9 @@ class FixedLocation(latitude: Double, longitude: Double) : LocationSource {
 
 /**
  * Answers the app's web requests with responses recorded from the real services in October 2026, so tests never
- * reach them: Open-Meteo's place search for "4068", the Atlas of Living Australia's council area, lists and records
- * near Taringa, and part of Brisbane City Council's weed list. Any other request fails, as it would offline.
+ * reach them: Open-Meteo's place search for "4068", the Atlas of Living Australia's council area, lists, and the plants
+ * and animals recorded near Taringa, and part of Brisbane City Council's weed list. Any other request fails, as it would
+ * offline.
  */
 class RecordedWeb : Web {
     /** Every address asked for, in order. */
@@ -57,6 +58,7 @@ class RecordedWeb : Web {
             "speciesListItems/dr823" in url -> "ala_list_dr823.json"
             "speciesListItems/dr35447" in url -> "ala_list_dr35447.json"
             "biocache-ws.ala.org.au" in url && "taxon_name" in url -> "ala_photos.json"
+            "biocache-ws.ala.org.au" in url && "common_name_and_lsid" in url -> ANIMALS.entries.first { (taxon, _) -> "fq=$taxon&" in url }.value
             "biocache-ws.ala.org.au" in url -> nearbyFile
             else -> throw IOException("No recorded answer for $url")
         }
@@ -92,5 +94,18 @@ class RecordedWeb : Web {
 
     private companion object {
         val RENAMED = mapOf("wedelia trilobata" to "sphagneticola trilobata", "eichhornia crassipes" to "pontederia crassipes")
+
+        /** The animals recorded near Taringa, one answer for each group's filter. */
+        val ANIMALS = mapOf(
+            "class:Aves" to "ala_animals_bird.json",
+            "class:Insecta" to "ala_animals_insect.json",
+            "class:Arachnida" to "ala_animals_spider.json",
+            "class:Reptilia" to "ala_animals_reptile.json",
+            "class:Amphibia" to "ala_animals_frog.json",
+            "class:Mammalia" to "ala_animals_mammal.json",
+            "class:Actinopterygii" to "ala_animals_fish.json",
+            "phylum:Mollusca" to "ala_animals_mollusc.json",
+            "kingdom:Fungi" to "ala_animals_fungus.json",
+        )
     }
 }

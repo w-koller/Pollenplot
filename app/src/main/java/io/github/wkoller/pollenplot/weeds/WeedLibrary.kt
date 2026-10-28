@@ -18,6 +18,8 @@ import io.github.wkoller.pollenplot.domain.weeds.WeedSources
 import io.github.wkoller.pollenplot.domain.weeds.WeedStatus
 import io.github.wkoller.pollenplot.domain.weeds.WeedsAustraliaLinks
 import io.github.wkoller.pollenplot.domain.weeds.WeedsNearby
+import io.github.wkoller.pollenplot.domain.wildlife.NearbyAnimals
+import io.github.wkoller.pollenplot.domain.wildlife.RecordedAnimal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,15 +60,20 @@ data class WeedData(
     val updatedAt: Instant?,
     /** The last update could not reach every source. */
     val lastUpdateFailed: Boolean,
+    /** The animals most recorded near the garden, once they have been downloaded for where the garden is now. */
+    val nearbyAnimals: NearbyAnimals? = null,
 ) {
     /** The status of the plant known by [names], its accepted name and synonyms. */
     fun status(names: Collection<String>): WeedStatus = WeedResolver.resolve(names, councilWeeds, national, nearby, accepted)
 
-    /** How many times a plant has been recorded near the garden, under its own name or the one the Atlas accepts. */
+    /**
+     * How many times a plant or animal has been recorded near the garden, a plant under its own name or the one the
+     * Atlas accepts.
+     */
     fun recordsNearby(name: String): Int {
-        val records = nearby ?: return 0
         val binomial = WeedNames.binomial(name)
-        return records.of(listOfNotNull(binomial, accepted[binomial]))
+        val plants = nearby?.of(listOfNotNull(binomial, accepted[binomial])) ?: 0
+        return plants + (nearbyAnimals?.records(name) ?: 0)
     }
 
     /** Whether any list has been downloaded, so a plant that is on none of them can be said not to be a weed. */
@@ -89,6 +96,10 @@ internal data class UpdateRecord(
 /** Where and how widely the nearby records were looked up. */
 @Serializable
 internal data class NearbyQuery(val lat: String, val lon: String, val radiusKm: Int, val sinceYear: Int)
+
+/** The animals most recorded near the garden, with where they were looked up. */
+@Serializable
+internal data class SavedAnimals(val query: NearbyQuery, val animals: List<RecordedAnimal>)
 
 /**
  * The weed lists and nearby records kept on the phone, so the Weed identifier works without a connection. [WeedSync]
@@ -123,6 +134,10 @@ class WeedLibrary(private val directory: File, readSources: () -> String, privat
     internal fun listFile(uid: String) = File(directory, "list-$uid.json")
 
     internal val nearbyFile get() = File(directory, "nearby.json")
+
+    private val animalsFile get() = File(directory, "animals.json")
+
+    internal fun saveAnimals(saved: SavedAnimals) = write(animalsFile, json.encodeToString(SavedAnimals.serializer(), saved))
 
     private val namesFile get() = File(directory, "names.json")
 
@@ -161,6 +176,12 @@ class WeedLibrary(private val directory: File, readSources: () -> String, privat
         val national = NationalWeeds(wons = list(sources.national.wons), alert = list(sources.national.alert))
         val query = record?.nearby?.takeIf { place != null && it.lat == place.latText && it.lon == place.lonText }
         val nearby = query?.let { q -> parse("nearby records") { read(nearbyFile)?.let { NearbyRecords.parse(it, q.radiusKm, q.sinceYear) } } }
+        // Animals saved for another place, before the garden moved, do not apply here.
+        val animals = place?.let { here ->
+            parse("nearby animals") { read(animalsFile)?.let { json.decodeFromString(SavedAnimals.serializer(), it) } }
+                ?.takeIf { it.query.lat == here.latText && it.query.lon == here.lonText }
+                ?.let { NearbyAnimals(it.animals, it.query.radiusKm, it.query.sinceYear) }
+        }
         return WeedData(
             state = sources.state(state),
             council = council,
@@ -172,6 +193,7 @@ class WeedLibrary(private val directory: File, readSources: () -> String, privat
             weedsAustralia = sources.weedsAustralia,
             updatedAt = record?.updatedAt?.let(Instant::ofEpochMilli),
             lastUpdateFailed = record?.lastUpdateFailed == true,
+            nearbyAnimals = animals,
         )
     }
 

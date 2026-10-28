@@ -91,6 +91,13 @@ STRINGS = {
     "wildlife_group_chip": "%1$s: %2$d",
     "wildlife_new_badge": "New to your yard",
     "wildlife_recent": "Recent sightings",
+    "wildlife_nearby": "Recorded near you",
+    "wildlife_nearby_body": "The animals recorded most often within %1$d km of your garden since %2$d, from the Atlas of "
+    "Living Australia.",
+    "wildlife_nearby_no_location": "Please set your garden's location to see the animals recorded near it.",
+    "wildlife_nearby_waiting": "The animals recorded near your garden will be listed here after Pollenplot's next "
+    "update.",
+    "wildlife_seen_in_yard": "Seen in your yard",
 
     "zone_wildlife_heading": "Wildlife seen here",
     "zone_no_wildlife": "No animals have been recorded in this zone yet.",
@@ -170,6 +177,14 @@ PLURALS = {
     "wildlife_show_all": {
         "one": "Show %1$d sighting",
         "other": "Show all %1$d sightings",
+    },
+    "wildlife_nearby_records": {
+        "one": "Recorded once",
+        "other": "Recorded %1$s times",
+    },
+    "wildlife_nearby_show_all": {
+        "one": "Show %1$d animal",
+        "other": "Show all %1$d",
     },
     "sighting_count": {
         "one": "%1$d seen",

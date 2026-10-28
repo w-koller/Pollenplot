@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
@@ -145,6 +146,30 @@ class WeedFlowTest {
         // Brisbane lists it without a category, and it is a Weed of National Significance.
         compose.onNodeWithText("Weed of National Significance").assertExists()
         shot("compare_bitou_bush")
+    }
+
+    @Test
+    @Config(qualifiers = "en-rAU-w411dp-h2000dp-xhdpi")
+    fun animalsRecordedNearTheGarden() {
+        seed()
+        runBlocking {
+            app.container.settingsStore.update { it.copy(gardenPlace = GardenPlace.at(-27.49, 152.98, "Taringa", "BRISBANE CITY"), gardenState = AuState.QLD) }
+            assertTrue(app.container.weedSync.update().complete)
+        }
+        assertTrue("Every group was asked for", app.web.asked.count { "common_name_and_lsid" in it } == 9)
+        val data = runBlocking { app.container.weeds.current() }
+        assertEquals("Noisy miners count towards suggestions near the garden", 51_564, data.recordsNearby("Manorina melanocephala"))
+        show()
+        compose.onNodeWithText("Wildlife").performClick()
+        waitFor(hasText("Recorded near you"))
+        compose.onNodeWithText("Noisy miner").assertExists()
+        compose.onNodeWithText("Recorded 51,564 times").assertExists()
+        compose.onNodeWithText("Torresian crow").assertExists()
+        shot("wildlife_nearby_birds")
+        compose.onNodeWithText("Frogs").performScrollTo().performClick()
+        waitFor(hasText("Striped marsh frog"))
+        compose.onNodeWithText("Cane toad").assertExists()
+        shot("wildlife_nearby_frogs")
     }
 
     @Test

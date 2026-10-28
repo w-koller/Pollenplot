@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -8,8 +9,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,7 +42,9 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
+import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.wildlife.Biodiversity
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ui.components.AddMenu
 import io.github.wkoller.pollenplot.ui.components.Badge
 import io.github.wkoller.pollenplot.ui.components.EmptyState
@@ -63,23 +66,48 @@ import java.time.Month
 fun WildlifeScreen(
     views: GardenViews,
     knowledge: KnowledgeRepository,
+    settings: SettingsStore,
     clock: Clock,
     onOpenSettings: () -> Unit,
     onAdd: (AddAction) -> Unit,
     onOpenAnimal: (String) -> Unit,
     onOpenSighting: (String) -> Unit,
+    onSetLocation: () -> Unit,
 ) {
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = null)
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
+    val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val zone = clock.zone
     val today = remember(clock) { LocalDate.now(clock) }
     var year by rememberSaveable { mutableIntStateOf(today.year) }
     var showAll by rememberSaveable { mutableStateOf(false) }
+    var nearbyGroup by rememberSaveable { mutableStateOf<String?>(null) }
+    var showAllNearby by rememberSaveable { mutableStateOf(false) }
     val loaded = sightings
     val records = remember(loaded) { loaded?.map { it.sighting }.orEmpty() }
     val yearsSeen = remember(records, zone) { Biodiversity.years(records, zone) }
     val summary = remember(records, fauna, year, zone) { Biodiversity.of(records, fauna, year, zone) }
+    val seenKeys = remember(records, fauna) { records.map { Biodiversity.keyOf(it, fauna) }.toSet() }
+    val nearby: LazyListScope.() -> Unit = {
+        if (current != null) {
+            nearbyAnimals(
+                nearby = locality.weeds.nearbyAnimals,
+                hasPlace = current?.gardenPlace != null,
+                fauna = fauna,
+                seenKeys = seenKeys,
+                group = nearbyGroup?.let(LifeGroup::of),
+                onGroup = {
+                    nearbyGroup = it.name
+                    showAllNearby = false
+                },
+                showAll = showAllNearby,
+                onShowAll = { showAllNearby = true },
+                onOpenAnimal = onOpenAnimal,
+                onSetLocation = onSetLocation,
+            )
+        }
+    }
 
     TabScaffold(
         title = stringResource(R.string.wildlife_title),
@@ -110,6 +138,8 @@ fun WildlifeScreen(
                         OutlinedButton(onClick = { onAdd(AddAction.SIGHTING) }) { Text(stringResource(R.string.add_sighting_by_name)) }
                     }
                 }
+                // What might visit, before anything has been seen.
+                nearby()
             }
             else -> {
                 val inYear = loaded.filter { it.sighting.seenAt.atZone(zone).year == year }
@@ -154,6 +184,7 @@ fun WildlifeScreen(
                             }
                         }
                     }
+                    nearby()
                 }
             }
         }

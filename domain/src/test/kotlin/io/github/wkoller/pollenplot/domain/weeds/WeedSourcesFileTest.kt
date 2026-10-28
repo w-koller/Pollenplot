@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.domain.weeds
 
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -41,5 +42,14 @@ class WeedSourcesFileTest {
         assertTrue("{name}" in sources.national.photos)
         listOf(sources.national.list, sources.national.names, sources.national.area, sources.national.photos, sources.nearby.url, sources.weedsAustralia.identify)
             .forEach { assertTrue(it, it.startsWith("https://")) }
+    }
+
+    @Test
+    fun `every wildlife group is looked up near the garden`() {
+        val animals = checkNotNull(sources.nearby.animals)
+        assertTrue(animals.startsWith("https://"))
+        listOf("{taxon}", "{lat}", "{lon}", "{radius}", "{since}").forEach { assertTrue(it, it in animals) }
+        val groups = sources.nearby.groups.keys.map { checkNotNull(LifeGroup.of(it)) { "$it is not a group" } }
+        assertEquals(LifeGroup.entries.filter { it.isWildlife && it != LifeGroup.OTHER }.toSet(), groups.toSet())
     }
 }

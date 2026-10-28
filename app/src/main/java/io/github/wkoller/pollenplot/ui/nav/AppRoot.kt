@@ -290,6 +290,7 @@ fun AppRoot(
                     WildlifeScreen(
                         views = container.views,
                         knowledge = container.knowledge,
+                        settings = container.settingsStore,
                         clock = container.clock,
                         onOpenSettings = openSettings,
                         onAdd = { action ->
@@ -304,6 +305,7 @@ fun AppRoot(
                         },
                         onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                        onSetLocation = { navController.navigate(GardenLocationRoute) },
                     )
                 }
                 composable<AnimalRoute> { entry ->

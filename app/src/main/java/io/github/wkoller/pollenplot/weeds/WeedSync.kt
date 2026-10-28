@@ -17,10 +17,14 @@ import io.github.wkoller.pollenplot.PollenplotApp
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.weeds.AlaLists
 import io.github.wkoller.pollenplot.domain.weeds.AlaNames
+import io.github.wkoller.pollenplot.domain.weeds.NearbyRecords
+import io.github.wkoller.pollenplot.domain.weeds.NearbySource
 import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
 import io.github.wkoller.pollenplot.domain.weeds.WeedLevel
-import io.github.wkoller.pollenplot.domain.weeds.NearbyRecords
 import io.github.wkoller.pollenplot.domain.weeds.WeedNames
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.domain.wildlife.NearbyAnimals
+import io.github.wkoller.pollenplot.domain.wildlife.RecordedAnimal
 import io.github.wkoller.pollenplot.place.PlaceFinder
 import io.github.wkoller.pollenplot.web.Web
 import kotlinx.coroutines.CancellationException
@@ -105,6 +109,7 @@ class WeedSync(
                 .replace("{radius}", query.radiusKm.toString()).replace("{since}", query.sinceYear.toString())
             val records = fetch(url, library.nearbyFile) { NearbyRecords.parse(it, query.radiusKm, query.sinceYear) }
             if (records == null) failed++ else nearby = query
+            if (!fetchAnimals(sources.nearby, query)) failed++
         }
 
         if (!matchNames(listed + namesToMatch().map(WeedNames::binomial), sources.national.names)) failed++
@@ -123,6 +128,23 @@ class WeedSync(
             if (fresh.isNotEmpty()) onNewWeedsNearby(fresh)
         }
         UpdateOutcome(failed)
+    }
+
+    /**
+     * The animals most recorded near the garden, one request for each group. They are saved only when every group
+     * answered, so a failed update keeps the last full set.
+     */
+    private suspend fun fetchAnimals(source: NearbySource, query: NearbyQuery): Boolean {
+        val template = source.animals ?: return true
+        val found = mutableListOf<RecordedAnimal>()
+        for ((name, taxon) in source.groups) {
+            val group = LifeGroup.of(name) ?: continue
+            val url = template.replace("{taxon}", taxon).replace("{lat}", query.lat).replace("{lon}", query.lon)
+                .replace("{radius}", query.radiusKm.toString()).replace("{since}", query.sinceYear.toString())
+            found += attempt("the $name records") { NearbyAnimals.parse(web.get(url), group) } ?: return false
+        }
+        library.saveAnimals(SavedAnimals(query, found))
+        return true
     }
 
     /** Looks up the names not asked about before, a hundred at a time. */

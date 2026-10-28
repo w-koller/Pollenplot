@@ -540,7 +540,7 @@
     <string name="source_brisbane">Brisbane City Council weed list</string>
     <string name="source_brisbane_body">Contains data from Brisbane City Council\'s open data, under CC BY 4.0.</string>
     <string name="source_ala">Atlas of Living Australia</string>
-    <string name="source_ala_body">National weed lists, plant records near your garden, council areas and plant names. Each record keeps its provider\'s licence.</string>
+    <string name="source_ala_body">National weed lists, the plants and animals recorded near your garden, council areas and plant names. Each record keeps its provider\'s licence.</string>
     <string name="source_weeds_australia">Weeds Australia</string>
     <string name="source_weeds_australia_body">Weed profiles and the identification key, by the Centre for Invasive Species Solutions.</string>
     <string name="source_open_meteo">Open-Meteo</string>
@@ -632,6 +632,11 @@
     <string name="wildlife_group_chip">%1$s: %2$d</string>
     <string name="wildlife_new_badge">New to your yard</string>
     <string name="wildlife_recent">Recent sightings</string>
+    <string name="wildlife_nearby">Recorded near you</string>
+    <string name="wildlife_nearby_body">The animals recorded most often within %1$d km of your garden since %2$d, from the Atlas of Living Australia.</string>
+    <string name="wildlife_nearby_no_location">Please set your garden\'s location to see the animals recorded near it.</string>
+    <string name="wildlife_nearby_waiting">The animals recorded near your garden will be listed here after Pollenplot\'s next update.</string>
+    <string name="wildlife_seen_in_yard">Seen in your yard</string>
     <string name="zone_wildlife_heading">Wildlife seen here</string>
     <string name="zone_no_wildlife">No animals have been recorded in this zone yet.</string>
     <string name="zone_add_sighting">Add a sighting</string>
@@ -758,6 +763,14 @@
     <plurals name="wildlife_show_all">
         <item quantity="one">Show %1$d sighting</item>
         <item quantity="other">Show all %1$d sightings</item>
+    </plurals>
+    <plurals name="wildlife_nearby_records">
+        <item quantity="one">Recorded once</item>
+        <item quantity="other">Recorded %1$s times</item>
+    </plurals>
+    <plurals name="wildlife_nearby_show_all">
+        <item quantity="one">Show %1$d animal</item>
+        <item quantity="other">Show all %1$d</item>
     </plurals>
     <plurals name="sighting_count">
         <item quantity="one">%1$d seen</item>
