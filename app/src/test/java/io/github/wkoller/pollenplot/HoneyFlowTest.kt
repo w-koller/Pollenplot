@@ -147,6 +147,7 @@ class HoneyFlowTest {
         runBlocking { bees.addHive("Sugarloaf", HiveType.FLOW, null, null, 2026, null) }
         show()
         compose.onNodeWithContentDescription("Search your garden").performClick()
+        waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("sugarloaf")
         waitFor(hasText("Sugarloaf"))
         compose.onAllNodesWithText("Sugarloaf").onFirst().performClick()

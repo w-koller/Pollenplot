@@ -108,6 +108,8 @@ class PlotScreenFlowTest {
         seed()
         show()
         compose.onNodeWithContentDescription("Search your garden").performClick()
+        // On a busy machine the search screen can take a moment to open.
+        waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("lemon")
         waitFor(hasText("Mum's lemon"))
         compose.onNodeWithText("Plants you could add").assertExists()

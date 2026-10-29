@@ -63,6 +63,7 @@ class MeaningFlowTest {
     @Test
     fun relatedByMeaning() {
         compose.onNodeWithContentDescription("Search your garden").performClick()
+        waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("poisonous to dogs")
         waitFor(hasText("Related by meaning"))
         compose.onNodeWithText("Lantana").assertIsDisplayed()
