@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,14 +32,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.BeeRepository
+import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.bees.honey.BroodPattern
 import io.github.wkoller.pollenplot.domain.bees.honey.ColonyEvent
 import io.github.wkoller.pollenplot.domain.bees.honey.ColonyEventKind
@@ -50,6 +54,7 @@ import io.github.wkoller.pollenplot.domain.bees.honey.Inspection
 import io.github.wkoller.pollenplot.domain.bees.honey.QueenCells
 import io.github.wkoller.pollenplot.domain.bees.honey.Temperament
 import io.github.wkoller.pollenplot.domain.bees.honey.Treatment
+import io.github.wkoller.pollenplot.domain.bees.honey.StateMiteChecks
 import io.github.wkoller.pollenplot.domain.bees.honey.VarroaCheck
 import io.github.wkoller.pollenplot.domain.bees.honey.VarroaMethod
 import io.github.wkoller.pollenplot.ui.UiFormat
@@ -67,8 +72,10 @@ import java.time.LocalDate
  * its own fields, on the day chosen. The fields keep what was typed while the phone is turned.
  */
 @Composable
-fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository, today: LocalDate, onBack: () -> Unit) {
+fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository, settings: SettingsStore, today: LocalDate, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
+    val uri = LocalUriHandler.current
     var day by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
     var pickingDate by rememberSaveable { mutableStateOf(false) }
     var notes by rememberSaveable { mutableStateOf("") }
@@ -144,6 +151,12 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
                     }
                     NumberField(stringResource(R.string.honey_mites), mites) { mites = it }
                     Toggle(stringResource(R.string.honey_reported), reported) { reported = it }
+                    StateMiteChecks.of(current?.gardenState)?.let { rule ->
+                        TextButton(onClick = { uri.openUri(rule.reportPage) }) {
+                            Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                            Text(stringResource(R.string.honey_report_bee123))
+                        }
+                    }
                 }
                 HoneyRecordKind.TREATMENT -> {
                     Text(stringResource(R.string.honey_treatment_label), style = MaterialTheme.typography.bodyLarge)

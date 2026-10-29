@@ -40,8 +40,8 @@ data class Settings(
     val lastZoneId: String? = null,
     /** Let Gemma 4, once it is on the phone, give a second opinion on unsure finds while the phone charges. */
     val secondOpinions: Boolean = true,
-    /** Varroa mite is established where the honey bee hives are, so mite checks are suggested monthly. */
-    val varroaEstablished: Boolean = false,
+    /** Mite checks every month, or null until the beekeeper chooses, when they follow what the garden's state asks. */
+    val monthlyMiteChecks: Boolean? = null,
     /** Send a notification on the morning a hive check falls due. */
     val hiveReminders: Boolean = true,
     /** How many days apart hive inspections come in spring and summer. */
@@ -79,7 +79,7 @@ class SettingsStore(context: Context) {
         val scanSince = longPreferencesKey("scan_since")
         val lastZoneId = stringPreferencesKey("last_zone_id")
         val secondOpinions = booleanPreferencesKey("second_opinions")
-        val varroaEstablished = booleanPreferencesKey("varroa_established")
+        val monthlyMiteChecks = booleanPreferencesKey("monthly_mite_checks")
         val hiveReminders = booleanPreferencesKey("hive_reminders")
         val inspectEveryDays = intPreferencesKey("inspect_every_days")
         val hiveTasksTold = stringSetPreferencesKey("hive_tasks_told")
@@ -108,7 +108,7 @@ class SettingsStore(context: Context) {
             scanSince = this[Keys.scanSince],
             lastZoneId = this[Keys.lastZoneId],
             secondOpinions = this[Keys.secondOpinions] ?: defaults.secondOpinions,
-            varroaEstablished = this[Keys.varroaEstablished] ?: defaults.varroaEstablished,
+            monthlyMiteChecks = this[Keys.monthlyMiteChecks],
             hiveReminders = this[Keys.hiveReminders] ?: defaults.hiveReminders,
             inspectEveryDays = this[Keys.inspectEveryDays]?.takeIf { it in Settings.INSPECT_EVERY_CHOICES } ?: defaults.inspectEveryDays,
             hiveTasksTold = this[Keys.hiveTasksTold] ?: defaults.hiveTasksTold,
@@ -129,7 +129,7 @@ class SettingsStore(context: Context) {
         setOrRemove(Keys.scanSince, settings.scanSince)
         setOrRemove(Keys.lastZoneId, settings.lastZoneId)
         this[Keys.secondOpinions] = settings.secondOpinions
-        this[Keys.varroaEstablished] = settings.varroaEstablished
+        setOrRemove(Keys.monthlyMiteChecks, settings.monthlyMiteChecks)
         this[Keys.hiveReminders] = settings.hiveReminders
         this[Keys.inspectEveryDays] = settings.inspectEveryDays
         this[Keys.hiveTasksTold] = settings.hiveTasksTold

@@ -57,7 +57,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `bees/honey/`: `HoneyBees` (apiaries, hives and their records: inspections, mite checks, treatments, feeding,
     harvests and colony events) and `HiveTasks` (when each hive is due for an inspection, a brood check and a mite
     check, following the Australian Honey Bee Industry Biosecurity Code of Practice, version 2.1), with each state's
-    registration page in `BeekeeperRegistration`. `HiveReminders` decides which due checks a notification tells
+    registration page in `BeekeeperRegistration` and the states that ask for more mite checks than the Code in
+    `StateMiteChecks`. `HiveReminders` decides which due checks a notification tells
     about: each once while it stays due.
   - `guide/`: `Guide` and `GuideParser`, which reads a bee guide page (see Guides below).
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and

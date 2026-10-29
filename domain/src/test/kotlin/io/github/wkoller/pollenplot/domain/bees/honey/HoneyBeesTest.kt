@@ -112,6 +112,16 @@ class HoneyBeesTest {
     }
 
     @Test
+    fun `mite checks are monthly in Queensland until the beekeeper chooses`() {
+        assertTrue(StateMiteChecks.monthly(null, AuState.QLD))
+        assertTrue(!StateMiteChecks.monthly(null, AuState.NSW))
+        assertTrue(!StateMiteChecks.monthly(null, null))
+        assertTrue(!StateMiteChecks.monthly(false, AuState.QLD))
+        assertTrue(StateMiteChecks.monthly(true, AuState.TAS))
+        assertTrue(StateMiteChecks.of(AuState.QLD)!!.reportPage.startsWith("https://www.business.qld.gov.au/"))
+    }
+
+    @Test
     fun `every state has a registration page`() {
         AuState.entries.forEach { assertTrue(BeekeeperRegistration.page(it).startsWith("https://")) }
     }

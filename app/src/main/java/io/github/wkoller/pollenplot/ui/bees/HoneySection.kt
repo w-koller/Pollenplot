@@ -28,6 +28,7 @@ import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.domain.bees.honey.BeekeeperRegistration
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveStatus
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
+import io.github.wkoller.pollenplot.domain.bees.honey.StateMiteChecks
 import io.github.wkoller.pollenplot.domain.guide.Guide
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.ActionNotice
@@ -112,14 +113,23 @@ internal fun LazyListScope.honeySection(
         }
     }
     item(key = "honey-varroa") {
+        val monthly = StateMiteChecks.monthly(settings.monthlyMiteChecks, state)
+        val rule = StateMiteChecks.of(state)
         Column {
             SectionHeading(stringResource(R.string.honey_varroa))
             ListItem(
-                checked = settings.varroaEstablished,
-                onCheckedChange = { on -> onSettings { it.copy(varroaEstablished = on) } },
+                checked = monthly,
+                onCheckedChange = { on -> onSettings { it.copy(monthlyMiteChecks = on) } },
                 supportingContent = { Text(stringResource(R.string.honey_varroa_body)) },
-                trailingContent = { Switch(checked = settings.varroaEstablished, onCheckedChange = null) },
+                trailingContent = { Switch(checked = monthly, onCheckedChange = null) },
             ) { Text(stringResource(R.string.honey_varroa_switch)) }
+            if (rule != null) {
+                Text(stringResource(R.string.honey_mites_qld), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                TextButton(onClick = { onOpenLink(rule.page) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                    Text(stringResource(R.string.honey_mites_qld_open))
+                }
+            }
             TextButton(onClick = { onOpenLink(BeekeeperRegistration.CODE_OF_PRACTICE) }, modifier = Modifier.padding(horizontal = 8.dp)) {
                 Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
                 Text(stringResource(R.string.honey_code_open))

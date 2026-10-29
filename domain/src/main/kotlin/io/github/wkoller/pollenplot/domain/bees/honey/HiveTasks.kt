@@ -36,14 +36,17 @@ object HiveTasks {
     const val BROOD_CHECK_MONTHS = 3L
     const val MITE_CHECK_DAYS_ESTABLISHED = 30L
 
-    /** What a living hive is due for, soonest first; a hive that died or is gone has nothing due. */
+    /**
+     * What a living hive is due for, soonest first; a hive that died or is gone has nothing due. [monthlyMiteChecks] is
+     * true where the Code asks for a check every month, because Varroa is established, or where the state asks for it.
+     */
     fun of(
         hive: HoneyHive,
         inspections: List<Inspection>,
         checks: List<VarroaCheck>,
         today: LocalDate,
         hemisphere: Hemisphere,
-        varroaEstablished: Boolean,
+        monthlyMiteChecks: Boolean,
         inspectDays: Long = INSPECT_DAYS_GROWING,
     ): List<HiveTask> {
         if (hive.status == HiveStatus.DEAD || hive.status == HiveStatus.GONE) return emptyList()
@@ -62,7 +65,7 @@ object HiveTasks {
             Season.WINTER -> maxOf(start(Season.SPRING, today, hemisphere), lastInspection?.plusDays(inspectDays) ?: added)
         }
         val brood = lastBrood?.plusMonths(BROOD_CHECK_MONTHS) ?: added
-        val mites = if (varroaEstablished) {
+        val mites = if (monthlyMiteChecks) {
             lastCheck?.plusDays(MITE_CHECK_DAYS_ESTABLISHED) ?: added
         } else {
             miteCheckWithoutVarroa(lastCheck, today, hemisphere)
@@ -104,6 +107,27 @@ object HiveTasks {
 
     /** The last day of the season that starts on [start]. */
     private fun end(start: LocalDate): LocalDate = start.plusMonths(3).minusDays(1)
+}
+
+/**
+ * States that ask for mite checks more often than the Code does, each with the page its rule comes from, checked on 29
+ * October 2026. The rules change, so the app links to them.
+ */
+object StateMiteChecks {
+    /** A state's ask: a mite check every month, with each check reported on [reportPage], even when no mites are found. */
+    data class Rule(val state: AuState, val page: String, val reportPage: String)
+
+    private val QUEENSLAND = Rule(
+        AuState.QLD,
+        page = "https://www.business.qld.gov.au/industries/farms-fishing-forestry/agriculture/animal/industries/bees/varroa-mite/check",
+        // Queensland's own address for its Bee 123 form, which it keeps pointing at the form.
+        reportPage = "https://www.business.qld.gov.au/industries/farms-fishing-forestry/agriculture/animal/industries/bees/varroa-mite/report-hive-check",
+    )
+
+    fun of(state: AuState?): Rule? = if (state == AuState.QLD) QUEENSLAND else null
+
+    /** Whether mite checks come every month: as the beekeeper chose, or, until they choose, as their state asks. */
+    fun monthly(chosen: Boolean?, state: AuState?): Boolean = chosen ?: (of(state) != null)
 }
 
 /**

@@ -104,6 +104,8 @@
   in spring and summer, or every week or 10 days if you choose, and every six weeks in autumn, a brood check three
   months after the last, and a mite check in spring, summer and autumn, or every month where Varroa mite is
   established. A check that is overdue says so in words and with an icon.
+- In Queensland, which asks for a mite check every month with each check reported on its Bee 123 form, mite checks
+  are monthly unless you choose otherwise, and the mite check form links the Bee 123 form.
 - A notification on the morning a hive check falls due, on its own Hive tasks channel, opens the Bees tab. Each check
   is told about once, and again only when it next falls due. The reminders can be turned off in the honey bee section.
 - An inspection that notes sunken or perforated cappings, ropy brood or twisted larvae explains that these can be signs

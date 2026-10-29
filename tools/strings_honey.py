@@ -18,12 +18,15 @@ STRINGS = {
     "honey_registration_open": "Open the registration page",
     "honey_registration_no_state": "Please choose your state or territory in Settings › Your garden to see its "
     "registration page.",
-    "honey_varroa": "Varroa mite",
-    "honey_varroa_switch": "Varroa mite is established where my hives are",
+    "honey_varroa": "Mite checks",
+    "honey_varroa_switch": "Remind me to check for mites every month",
     "honey_varroa_body": "The Biosecurity Code of Practice asks for each hive's brood to be checked for pests and "
-    "disease at least three times a year, at least three months apart. Where Varroa is not established, it asks for "
-    "at least one hive in each apiary to be checked for mites in spring, summer and autumn. Where Varroa is "
-    "established, it asks for more checks, and Pollenplot suggests one each month.",
+    "disease at least three times a year, at least three months apart. It asks for a mite check every month, all "
+    "year, where Varroa is established and the hive has brood. Elsewhere, it asks for at least one hive in each "
+    "apiary to be checked for mites in spring, summer and autumn.",
+    "honey_mites_qld": "Queensland asks beekeepers to check their hives for Varroa mite every month, and to report "
+    "every check on its Bee 123 form, even when no mites are found.",
+    "honey_mites_qld_open": "Queensland's page on checking for Varroa",
     "honey_code_open": "The Biosecurity Code of Practice",
     "honey_reminders": "Reminders",
     "honey_reminders_switch": "Remind me when a hive check is due",
@@ -156,6 +159,7 @@ STRINGS = {
     "honey_sample_days": "Days the mat was in",
     "honey_mites": "Mites counted",
     "honey_reported": "Reported to my state",
+    "honey_report_bee123": "Report this check on the Bee 123 form",
     "honey_check_drone_note": "Drone uncapping shows whether there are mites, but not enough to decide on a "
     "treatment.",
 

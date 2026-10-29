@@ -110,6 +110,8 @@ class HoneyFlowTest {
 
         compose.onNodeWithText("Record a mite check").performClick()
         waitFor(hasText("Mites counted"))
+        // The garden is in Queensland, which asks for every check to be reported.
+        compose.onNodeWithText("Report this check on the Bee 123 form").assertExists()
         compose.onNodeWithText("Mites counted").performTextInput("3")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         // Three mites in the usual 300 bees is one in a hundred.
@@ -117,8 +119,8 @@ class HoneyFlowTest {
         val check = runBlocking { bees.checks.first().single() }
         assertEquals(VarroaMethod.ALCOHOL_WASH, check.method)
         assertEquals(10, check.mitesPer100BeesTenths)
-        // Checked this spring, so the next mite check is due by the end of summer.
-        compose.onNodeWithText("Due by 28 February 2027").assertExists()
+        // Queensland asks for a mite check every month.
+        compose.onNodeWithText("Due by 27 November 2026").assertExists()
         compose.onNodeWithText("Due by 28 January 2027").assertExists()
         shot("hive_page")
 
@@ -129,12 +131,14 @@ class HoneyFlowTest {
         compose.onNodeWithText("Last inspected on 28 October 2026", substring = true).assertExists()
         shot("bees_honey")
 
-        // Where Varroa is established, mites are checked monthly instead.
-        scrollTo("Varroa mite is established where my hives are")
-        compose.onNodeWithText("Varroa mite is established where my hives are").performClick()
-        compose.waitUntil(10_000) { runBlocking { app.container.settingsStore.current().varroaEstablished } }
+        // Monthly checks follow the state until the beekeeper chooses. Without them, one check in spring is enough
+        // until the end of summer.
+        scrollTo("Queensland asks beekeepers to check their hives for Varroa mite every month", substring = true)
+        scrollTo("Remind me to check for mites every month")
+        compose.onNodeWithText("Remind me to check for mites every month").performClick()
+        compose.waitUntil(10_000) { runBlocking { app.container.settingsStore.current().monthlyMiteChecks } == false }
         scrollTo("Open the registration page")
-        scrollTo("Due by 27 November 2026")
+        scrollTo("Due by 28 February 2027")
     }
 
     @Test

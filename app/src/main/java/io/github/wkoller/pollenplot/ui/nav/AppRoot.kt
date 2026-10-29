@@ -422,7 +422,7 @@ fun AppRoot(
                 }
                 composable<HoneyRecordRoute> { entry ->
                     val route = entry.toRoute<HoneyRecordRoute>()
-                    HoneyRecordScreen(HoneyRecordKind.valueOf(route.kind), route.hiveId, container.bees, container.beeViews.today(), onBack = back)
+                    HoneyRecordScreen(HoneyRecordKind.valueOf(route.kind), route.hiveId, container.bees, container.settingsStore, container.beeViews.today(), onBack = back)
                 }
                 composable<WaterRoute> { WaterScreen(onOpenSettings = openSettings) }
                 composable<SettingsRoute> {
