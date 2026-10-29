@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.PlantView
+import io.github.wkoller.pollenplot.data.WaterState
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.ui.UiFormat
@@ -33,7 +35,8 @@ import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.PollenShapes
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
 import io.github.wkoller.pollenplot.ui.components.largeText
-import androidx.compose.foundation.background
+import io.github.wkoller.pollenplot.ui.water.NextWateringLine
+import io.github.wkoller.pollenplot.ui.water.byHand
 
 /** A plant in a list: its picture, names, zone and first badges. */
 @Composable
@@ -84,9 +87,9 @@ fun SpeciesRow(species: Species, roles: List<io.github.wkoller.pollenplot.domain
     }
 }
 
-/** A zone in the list view of the Plot: its kind, size, plants and badges. */
+/** A zone in the list view of the Plot: its kind, size, plants and badges, and its next watering. */
 @Composable
-fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier, water: WaterState? = null) {
     ElevatedCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -116,6 +119,8 @@ fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier)
                         }
                     }
                 }
+                val watering = water?.zones?.get(view.zone.id)
+                watering?.next?.let { NextWateringLine(it, water.today, water.window, watering.byHand) }
             }
         }
     }

@@ -224,6 +224,7 @@ fun AppRoot(
                         onOpenWater = { openTab(TopLevelTab.WATER) },
                         onOpenBees = { openTab(TopLevelTab.BEES) },
                         onOpenGuide = { navController.navigate(GuideRoute(it)) },
+                        water = container.waterViews,
                     )
                 }
                 composable<ZoneRoute> { entry ->
@@ -237,6 +238,8 @@ fun AppRoot(
                         onAddPlant = { navController.navigate(AddPlantRoute(zoneId = id)) },
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
                         onAddSighting = { navController.navigate(AddSightingRoute(zoneId = id)) },
+                        water = container.waterViews,
+                        onOpenWater = { openTab(TopLevelTab.WATER) },
                     )
                 }
                 composable<ZoneEditRoute> { entry ->

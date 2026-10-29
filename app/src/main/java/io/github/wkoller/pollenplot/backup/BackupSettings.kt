@@ -3,6 +3,7 @@ package io.github.wkoller.pollenplot.backup
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.bees.stingless.HeatAlerts
+import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.place.Places
 import io.github.wkoller.pollenplot.domain.plants.AuState
@@ -31,6 +32,8 @@ data class BackupSettings(
     val heatAlerts: Boolean? = null,
     val heatAlertTenthsC: Int? = null,
     val waterReminders: Boolean? = null,
+    val wateringFromMinute: Int? = null,
+    val wateringToMinute: Int? = null,
 ) {
     fun json(): String = format.encodeToString(serializer(), this)
 
@@ -58,6 +61,9 @@ data class BackupSettings(
             heatAlerts = heatAlerts ?: current.heatAlerts,
             heatAlertTenthsC = heatAlertTenthsC?.takeIf { it in HeatAlerts.CHOICES } ?: current.heatAlertTenthsC,
             waterReminders = waterReminders ?: current.waterReminders,
+            wateringWindow = wateringFromMinute?.let { from ->
+                wateringToMinute?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
+            } ?: current.wateringWindow,
         )
     }
 
@@ -85,6 +91,8 @@ data class BackupSettings(
             heatAlerts = settings.heatAlerts,
             heatAlertTenthsC = settings.heatAlertTenthsC,
             waterReminders = settings.waterReminders,
+            wateringFromMinute = settings.wateringWindow.fromMinute,
+            wateringToMinute = settings.wateringWindow.toMinute,
         )
 
         /** The settings in [text], or null when they cannot be read, in which case the phone's settings stay. */

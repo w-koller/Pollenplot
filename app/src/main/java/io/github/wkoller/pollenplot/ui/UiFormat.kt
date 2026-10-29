@@ -8,6 +8,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.Month
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -53,6 +54,13 @@ object UiFormat {
     /** A day and month, such as "3 Oct", for lists where the year is clear. */
     fun shortDate(instant: Instant, locale: Locale = Locale.getDefault(), zone: ZoneId = ZoneId.systemDefault()): String =
         DateTimeFormatter.ofPattern("d MMM", locale).format(instant.atZone(zone))
+
+    /** A time of day from minutes after midnight, such as 300 as "5:00 am". Midnight at the end of a day is 1440. */
+    fun timeOfDay(minute: Int, locale: Locale = Locale.getDefault()): String =
+        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(LocalTime.of(minute / 60 % 24, minute % 60))
+
+    /** A day with its weekday, such as "Thursday 29 October", for days close enough that the year is clear. */
+    fun weekdayDate(date: LocalDate, locale: Locale = Locale.getDefault()): String = DateTimeFormatter.ofPattern("EEEE d MMMM", locale).format(date)
 
     /** A time of day, such as "7:30 am". */
     fun time(instant: Instant, locale: Locale = Locale.getDefault(), zone: ZoneId = ZoneId.systemDefault()): String =

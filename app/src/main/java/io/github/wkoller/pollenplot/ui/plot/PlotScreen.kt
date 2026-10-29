@@ -47,6 +47,8 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.TodayViews
+import io.github.wkoller.pollenplot.data.WaterViews
+import io.github.wkoller.pollenplot.data.WaterState
 import io.github.wkoller.pollenplot.data.TodayState
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.ZoneView
@@ -80,9 +82,11 @@ fun PlotScreen(
     onOpenWater: () -> Unit = {},
     onOpenBees: () -> Unit = {},
     onOpenGuide: (String) -> Unit = {},
+    water: WaterViews? = null,
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
     val todayState by remember(today) { today?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
+    val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waiting by garden.pendingReviewCount.collectAsStateWithLifecycle(initialValue = 0)
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = null)
     var listMode by rememberSaveable { mutableStateOf(false) }
@@ -184,6 +188,7 @@ fun PlotScreen(
                             selectedId = selectedId,
                             onTapZone = { id -> if (editing) selectedId = id else onOpenZone(id) },
                             onChangeZone = { id, rect -> scope.launch { garden.moveZone(id, rect) } },
+                            water = waterState,
                         )
                         if (editing && selectedZone == null) {
                             Surface(
@@ -199,7 +204,7 @@ fun PlotScreen(
                 }
             }
             else -> PlotList(
-                loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds,
+                loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState,
                 header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } },
             )
         }
@@ -258,6 +263,7 @@ private fun PlotList(
     onAddZone: () -> Unit,
     onWeeds: () -> Unit,
     header: @Composable () -> Unit = {},
+    water: WaterState? = null,
 ) {
     val unzoned = plants.filter { it.plant.zoneId == null && it.isGrowing }
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
@@ -276,7 +282,7 @@ private fun PlotList(
             }
         }
         items(zones, key = { it.zone.id }) { view ->
-            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = 16.dp))
+            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = 16.dp), water = water)
         }
         if (unzoned.isNotEmpty()) {
             item { SectionHeading(stringResource(R.string.plot_unzoned)) }

@@ -24,6 +24,6 @@ class WaterPlanCheck(private val water: WaterRepository, private val views: Wate
         val due = state.lines.filter { it.plan.reason == PlanReason.DUE }.map { DueWatering(it.line.name, it.plan.minutes.takeIf { _ -> !it.line.method.byHand }, it.plan.applyMl / 1000) } +
             state.byHand.filter { it.plan.reason == PlanReason.DUE }.map { DueWatering(it.zone.name, null, it.plan.applyMl / 1000) }
         if (due.isEmpty()) return
-        if (notifications.showWatering(due)) settings.update { it.copy(waterToldOn = state.today.toString()) }
+        if (notifications.showWatering(due, state.window)) settings.update { it.copy(waterToldOn = state.today.toString()) }
     }
 }

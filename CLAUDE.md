@@ -69,7 +69,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     `OpenMeteoForecast`, and `wildlife/NativeBeesSeen` the native bees seen in a year.
   - `hotels/`: `BeeHotels` (hotels, their sections, looks and upkeep), `SealGuide` (who a nest's seal says is likely
     inside) and `HotelCare` (a hotel worth cleaning out in spring).
-  - `irrigation/`: `WaterPlanner` (a line's daily soil-water account, after FAO 56: when watering is due and how much),
+  - `irrigation/`: `WaterPlanner` (a line's daily soil-water account, after FAO 56: when watering is due and how much,
+    and with `week` the waterings the forecast holds), `WateringWindow` (the hours to water in, which the user sets),
     `SoilWater` (readily available water by soil, from the Tasmanian Institute of Agriculture, and root depths,
     Pollenplot's estimates), `Pairing` (plants of very different thirst on one line) and the line and weather types.
     `weather/OpenMeteoForecast` makes the forecast and weather requests and reads their answers.

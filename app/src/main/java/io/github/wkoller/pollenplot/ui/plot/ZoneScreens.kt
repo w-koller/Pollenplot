@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -48,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.plants.Soil
@@ -62,10 +64,13 @@ import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.tone
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
+import io.github.wkoller.pollenplot.ui.water.NextWateringLine
+import io.github.wkoller.pollenplot.ui.water.byHand
 import io.github.wkoller.pollenplot.ui.wildlife.SightingRow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 
 /** A zone's own page: what kind of area it is, its size and conditions, its badges and its plants. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -79,8 +84,11 @@ fun ZoneDetailScreen(
     onAddPlant: () -> Unit,
     onOpenSighting: (String) -> Unit = {},
     onAddSighting: () -> Unit = {},
+    water: WaterViews? = null,
+    onOpenWater: () -> Unit = {},
 ) {
     val view by views.zone(zoneId).collectAsStateWithLifecycle(initialValue = null)
+    val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val loaded = view
     DetailScaffold(
         title = loaded?.zone?.name.orEmpty(),
@@ -132,6 +140,29 @@ fun ZoneDetailScreen(
                 Button(onClick = onAddPlant, modifier = Modifier.padding(16.dp)) {
                     Icon(painterResource(R.drawable.ic_add), contentDescription = null)
                     Text(stringResource(R.string.zone_add_plant), modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+            val plans = waterState
+            val watering = plans?.zones?.get(zoneId)
+            if (plans != null && (watering != null || loaded.plants.isNotEmpty())) {
+                item { SectionHeading(stringResource(R.string.zone_watering)) }
+                item {
+                    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(watering?.line?.let { stringResource(R.string.zone_on_line, it.name) } ?: stringResource(R.string.zone_by_hand), style = MaterialTheme.typography.bodyLarge)
+                        val next = watering?.next
+                        if (next != null) {
+                            NextWateringLine(next, plans.today, plans.window, watering.byHand)
+                        } else {
+                            Text(stringResource(R.string.zone_no_watering), style = MaterialTheme.typography.bodyMedium)
+                        }
+                        watering?.pairing?.forEach { note ->
+                            Text(
+                                pluralStringResource(R.plurals.water_pairing, note.timesNeeded, note.plant.title, note.thirstiest.title, note.timesNeeded),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                        TextButton(onClick = onOpenWater) { Text(stringResource(R.string.zone_open_water)) }
+                    }
                 }
             }
             item { SectionHeading(stringResource(R.string.zone_wildlife_heading)) }

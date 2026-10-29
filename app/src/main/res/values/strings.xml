@@ -999,7 +999,7 @@
     <string name="water_lines">Watering lines</string>
     <string name="water_add_line">Add a watering line</string>
     <string name="water_by_hand">Watered by hand</string>
-    <string name="water_due">Please water today, about %1$s L in all.</string>
+    <string name="water_due">Please water today between %1$s and %2$s, about %3$s L in all.</string>
     <string name="water_wait">Watering is due, but %1$s mm of rain is likely tomorrow, so it can wait a day.</string>
     <string name="water_next">The next watering is due on %1$s.</string>
     <string name="water_not_this_week">No watering is needed in the coming week.</string>
@@ -1012,6 +1012,29 @@
     <string name="water_never">No watering recorded yet</string>
     <string name="water_watered">I watered today</string>
     <string name="water_how">How the plan is worked out</string>
+    <string name="water_coming_up">Coming up</string>
+    <string name="water_ahead_litres">%1$s at %2$s, about %3$s L</string>
+    <string name="water_ahead_rain">%1$s, but good rain is likely the day after</string>
+    <string name="water_day_today">today</string>
+    <string name="water_day_tomorrow">tomorrow</string>
+    <string name="water_day_on">on %1$s</string>
+    <string name="water_next_litres">Water %1$s at %2$s, about %3$s L.</string>
+    <string name="water_next_rain">Watering is due %1$s, but good rain is likely the day after.</string>
+    <string name="water_tile_today">Today, %1$s</string>
+    <string name="water_tile_tomorrow">Tomorrow, %1$s</string>
+    <string name="water_tile_day">%1$s, %2$s</string>
+    <string name="water_window">Watering times</string>
+    <string name="water_window_body">Pollenplot plans watering between %1$s and %2$s. Some water authorities set the hours a garden may be watered, so please choose hours that suit yours.</string>
+    <string name="water_window_from">Start at %1$s</string>
+    <string name="water_window_to">Finish by %1$s</string>
+    <string name="water_window_pick_from">Watering starts at</string>
+    <string name="water_window_pick_to">Watering finishes by</string>
+    <string name="water_window_set">Set the time</string>
+    <string name="zone_watering">Watering</string>
+    <string name="zone_on_line">%1$s waters this zone.</string>
+    <string name="zone_by_hand">This zone is watered by hand.</string>
+    <string name="zone_no_watering">No watering is planned for this zone in the coming week.</string>
+    <string name="zone_open_water">See the watering plan</string>
     <string name="water_reminders">Remind me when watering is due</string>
     <string name="water_reminders_body">Pollenplot looks at the weather each morning and sends a notification when a line or a zone is due for watering.</string>
     <string name="water_reminders_off">Notifications are off, so Pollenplot cannot remind you when watering is due. Please allow them to get reminders.</string>
@@ -1019,6 +1042,7 @@
     <string name="notify_water_channel_description">Reminders on the mornings a watering line or a zone is due for watering.</string>
     <string name="notify_water_title_one">%1$s is due for watering</string>
     <string name="notify_water_litres">%1$s, about %2$s L in all</string>
+    <string name="notify_water_window">Please water between %1$s and %2$s.</string>
     <string name="water_new_line">New watering line</string>
     <string name="water_line">Watering line</string>
     <string name="water_edit_line">Edit line</string>
@@ -1451,8 +1475,16 @@
         <item quantity="other">%1$s, for %2$d minutes</item>
     </plurals>
     <plurals name="water_due_minutes">
-        <item quantity="one">Please water today, for %1$d minute, which puts on about %2$s L.</item>
-        <item quantity="other">Please water today, for %1$d minutes, which puts on about %2$s L.</item>
+        <item quantity="one">Please water today between %1$s and %2$s, for %3$d minute, which puts on about %4$s L.</item>
+        <item quantity="other">Please water today between %1$s and %2$s, for %3$d minutes, which puts on about %4$s L.</item>
+    </plurals>
+    <plurals name="water_next_minutes">
+        <item quantity="one">Water %1$s at %2$s, for %3$d minute.</item>
+        <item quantity="other">Water %1$s at %2$s, for %3$d minutes.</item>
+    </plurals>
+    <plurals name="water_ahead_minutes">
+        <item quantity="one">%1$s at %2$s, for %3$d minute</item>
+        <item quantity="other">%1$s at %2$s, for %3$d minutes</item>
     </plurals>
     <plurals name="water_pairing">
         <item quantity="one">%1$s needs much less water than %2$s. With drippers of the same size it would get about %3$d time what it needs, so please give it a smaller dripper or cap its dripper.</item>

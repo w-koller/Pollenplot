@@ -5,21 +5,40 @@ import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.irrigation.Pairing
 import io.github.wkoller.pollenplot.domain.irrigation.PairingNote
+import io.github.wkoller.pollenplot.domain.irrigation.PlannedWatering
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
 import io.github.wkoller.pollenplot.domain.irrigation.WaterPlan
 import io.github.wkoller.pollenplot.domain.irrigation.WaterPlanner
 import io.github.wkoller.pollenplot.domain.irrigation.WaterPlant
 import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
+import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.Clock
 import java.time.LocalDate
 
-/** A line with the names of its zones, its plan, the plants pairing flags, and when it was last watered. */
-data class LinePlanView(val line: WateringLine, val zoneNames: List<String>, val plants: List<WaterPlant>, val plan: WaterPlan, val pairing: List<PairingNote>, val lastWatered: LocalDate?)
+/**
+ * A line with the names of its zones, its plan and the waterings the forecast holds, the plants pairing flags, and
+ * when it was last watered.
+ */
+data class LinePlanView(
+    val line: WateringLine,
+    val zoneNames: List<String>,
+    val plants: List<WaterPlant>,
+    val plan: WaterPlan,
+    val week: List<PlannedWatering>,
+    val pairing: List<PairingNote>,
+    val lastWatered: LocalDate?,
+)
 
-/** A zone with plants and no line, watered by hand, with its plan. */
-data class HandPlanView(val zone: Zone, val plants: List<WaterPlant>, val plan: WaterPlan, val lastWatered: LocalDate?)
+/** A zone with plants and no line, watered by hand, with its plan and the waterings the forecast holds. */
+data class HandPlanView(val zone: Zone, val plants: List<WaterPlant>, val plan: WaterPlan, val week: List<PlannedWatering>, val lastWatered: LocalDate?)
+
+/**
+ * How a zone is watered and when next, for the Plot and the zone's page: its [line], or null when it is watered by
+ * hand, the next watering the forecast holds, and the plants on its line that pairing flags.
+ */
+data class ZoneWatering(val line: WateringLine?, val next: PlannedWatering?, val pairing: List<PairingNote>)
 
 data class WaterState(
     val today: LocalDate,
@@ -30,6 +49,9 @@ data class WaterState(
     val et0TodayUm: Int?,
     val rainLastWeekUm: Int,
     val weatherFetchedAt: Long?,
+    val window: WateringWindow = WateringWindow.DEFAULT,
+    /** Each zone with plants or a line, by its id. */
+    val zones: Map<String, ZoneWatering> = emptyMap(),
 ) {
     val hasPlants: Boolean get() = lines.any { it.plants.isNotEmpty() } || byHand.isNotEmpty()
 }
@@ -65,6 +87,7 @@ class WaterViews(water: WaterRepository, views: GardenViews, garden: GardenRepos
                 zoneNames = line.zoneIds.mapNotNull { byZone[it]?.name }.sorted(),
                 plants = linePlants,
                 plan = WaterPlanner.plan(line.method, line.flowMlPerHour, linePlants, records.weather, today, last),
+                week = WaterPlanner.week(line.method, line.flowMlPerHour, linePlants, records.weather, today, last),
                 pairing = if (line.method.byHand) emptyList() else Pairing.check(linePlants),
                 lastWatered = last,
             )
@@ -73,8 +96,17 @@ class WaterViews(water: WaterRepository, views: GardenViews, garden: GardenRepos
         val byHand = zones.filter { it.id !in onLines }.mapNotNull { zone ->
             val zonePlants = waterPlants(setOf(zone.id)).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
             val last = records.waterings.filter { it.zoneId == zone.id }.maxOfOrNull { it.date }
-            HandPlanView(zone, zonePlants, WaterPlanner.plan(WaterMethod.HOSE, null, zonePlants, records.weather, today, last), last)
+            HandPlanView(
+                zone,
+                zonePlants,
+                WaterPlanner.plan(WaterMethod.HOSE, null, zonePlants, records.weather, today, last),
+                WaterPlanner.week(WaterMethod.HOSE, null, zonePlants, records.weather, today, last),
+                last,
+            )
         }
+        val zoneWatering = lines.flatMap { view ->
+            view.line.zoneIds.map { id -> id to ZoneWatering(view.line, view.week.firstOrNull(), view.pairing.filter { it.plant.zoneId == id }) }
+        }.toMap() + byHand.associate { it.zone.id to ZoneWatering(null, it.week.firstOrNull(), emptyList()) }
         WaterState(
             today = today,
             hasPlace = current.gardenPlace != null,
@@ -83,6 +115,8 @@ class WaterViews(water: WaterRepository, views: GardenViews, garden: GardenRepos
             et0TodayUm = records.weather.firstOrNull { it.date == today }?.et0Um,
             rainLastWeekUm = records.weather.filter { it.date.isBefore(today) && !it.date.isBefore(today.minusDays(7)) }.sumOf { WaterPlanner.effectiveRainUm(it) },
             weatherFetchedAt = records.fetchedAt,
+            window = current.wateringWindow,
+            zones = zoneWatering,
         )
     }
 

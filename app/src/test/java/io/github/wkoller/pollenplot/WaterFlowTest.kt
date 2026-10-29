@@ -13,6 +13,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -26,6 +27,7 @@ import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.irrigation.PlanReason
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
+import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.Soil
@@ -96,6 +98,7 @@ class WaterFlowTest {
         val manager = shadowOf(app.getSystemService(NotificationManager::class.java))
         val notification = manager.allNotifications.single()
         assertEquals("Veg Patch is due for watering", notification.extras.getString(Notification.EXTRA_TITLE))
+        assertTrue(notification.extras.getString(Notification.EXTRA_TEXT)!!.endsWith("\nPlease water between 5:00 am and 9:00 am."))
         assertEquals("watering", notification.channelId)
 
         app.getSystemService(NotificationManager::class.java).cancelAll()
@@ -126,6 +129,57 @@ class WaterFlowTest {
         waitFor(hasText("Last watered on 28 October 2026"))
         assertEquals(LocalDate.of(2026, 10, 28), runBlocking { water.waterings.first().single().date })
         shot("water")
+    }
+
+    @Test
+    fun theDaysAheadAndTheHoursToWaterIn() {
+        val veg = runBlocking {
+            // Tomatoes in sand hold little water, so they are due today and again within the forecast.
+            val zone = app.container.garden.zoneList.first().single { it.name == "Veg Patch" }
+            app.container.garden.updateZone(zone.copy(soil = Soil.SAND))
+            water.refreshWeather(app.container.settingsStore.current().gardenPlace!!)
+            app.container.waterViews.state.first { state -> state.byHand.any { it.zone.name == "Veg Patch" && it.week.isNotEmpty() } }
+                .byHand.single { it.zone.name == "Veg Patch" }
+        }
+        assertEquals(PlanReason.DUE, veg.plan.reason)
+        assertEquals(LocalDate.of(2026, 10, 28), veg.week.first().date)
+        assertTrue("Sand dries again within the forecast", veg.week.size > 1)
+
+        show()
+        compose.onNodeWithText("Water").performClick()
+        waitFor(hasText("Please water today between 5:00 am and 9:00 am", substring = true))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Coming up"))
+        val next = veg.week[1]
+        compose.onNodeWithText(next.date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH), substring = true).assertExists()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Watering times"))
+        compose.onNodeWithText("Pollenplot plans watering between 5:00 am and 9:00 am", substring = true).assertExists()
+        // The clock opens, and setting the time it shows keeps the hours as they are.
+        compose.onNodeWithText("Start at 5:00 am").performClick()
+        waitFor(hasText("Watering starts at"))
+        compose.onNodeWithText("Set the time").performClick()
+        assertEquals(WateringWindow.DEFAULT, runBlocking { app.container.settingsStore.current().wateringWindow })
+
+        runBlocking { app.container.settingsStore.update { it.copy(wateringWindow = WateringWindow(18 * 60, 20 * 60)) } }
+        waitFor(hasText("Pollenplot plans watering between 6:00 pm and 8:00 pm", substring = true))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Please water today between 6:00 pm and 8:00 pm", substring = true))
+        shot("water_week")
+    }
+
+    @Test
+    fun aZoneSaysWhenItIsNextWatered() {
+        runBlocking {
+            val zone = app.container.garden.zoneList.first().single { it.name == "Veg Patch" }
+            app.container.garden.updateZone(zone.copy(soil = Soil.SAND))
+            water.refreshWeather(app.container.settingsStore.current().gardenPlace!!)
+        }
+        show()
+        compose.onNodeWithContentDescription("Show as a list").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Veg Patch"))
+        waitFor(hasText("Water today at 5:00 am, about", substring = true))
+        compose.onNodeWithText("Veg Patch").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("This zone is watered by hand."))
+        compose.onAllNodesWithText("Water today at 5:00 am, about", substring = true).onFirst().assertExists()
+        compose.onNodeWithText("See the watering plan").assertExists()
     }
 
     @Test

@@ -64,6 +64,56 @@ class WaterPlannerTest {
     }
 
     @Test
+    fun `the days ahead hold each watering due over the forecast`() {
+        val sandy = listOf(lemon.copy(soil = Soil.SAND))
+        val weather = days(today.minusDays(7), 21)
+        val week = WaterPlanner.week(WaterMethod.DRIPPERS, 32_000, sandy, weather, today, lastWatered = null)
+        // The 127 L lasts about 7.2 days: due tomorrow, then full again after that watering and due 8 days later.
+        assertEquals(listOf(today.plusDays(1), today.plusDays(9)), week.map { it.date })
+        assertEquals(WaterPlanner.plan(WaterMethod.DRIPPERS, 32_000, sandy, weather, today, null).dueOn, week.first().date)
+        assertTrue(week.all { it.applyMl == 141_370L && it.minutes == 266 && !it.rainLikely })
+    }
+
+    @Test
+    fun `a watering with good rain likely the next day waits for the rain`() {
+        val sandy = listOf(lemon.copy(soil = Soil.SAND))
+        // At 6 mm a day the soil is used up by this morning, and 20 mm is likely tomorrow, of which 16 mm counts.
+        val weather = days(today.minusDays(7), 14, et0Um = 6_000, rain = mapOf(today.plusDays(1) to 20_000), chance = mapOf(today.plusDays(1) to 8_000))
+        val week = WaterPlanner.week(WaterMethod.DRIPPERS, 32_000, sandy, weather, today, lastWatered = null)
+        assertEquals(PlanReason.WAITING_FOR_RAIN, WaterPlanner.plan(WaterMethod.DRIPPERS, 32_000, sandy, weather, today, null).reason)
+        // The rainy day is not planned, and the rain fills the soil enough to put the next watering off for days.
+        assertEquals(listOf(today to true, today.plusDays(5) to false), week.map { it.date to it.rainLikely })
+    }
+
+    @Test
+    fun `nothing is planned for plants the plan cannot count`() {
+        val unknown = WaterPlant("x", "Mystery shrub", "citrus", plantFactorBp = null, widthMm = 1_000, form = GrowthForm.SHRUB, quantity = 1, soil = null)
+        assertTrue(WaterPlanner.week(WaterMethod.HOSE, null, listOf(unknown), days(today.minusDays(7), 14), today, null).isEmpty())
+    }
+
+    @Test
+    fun `a watering window runs forwards within a day`() {
+        assertEquals(300, WateringWindow.DEFAULT.fromMinute)
+        assertEquals(540, WateringWindow.DEFAULT.toMinute)
+        listOf(540 to 300, 300 to 300, -1 to 60, 60 to 24 * 60 + 1).forEach { (from, to) ->
+            assertTrue("$from to $to", runCatching { WateringWindow(from, to) }.isFailure)
+        }
+        assertEquals(24 * 60, WateringWindow(18 * 60, 24 * 60).toMinute)
+    }
+
+    @Test
+    fun `a new start or end time always leaves a window that runs forwards`() {
+        val early = WateringWindow.DEFAULT
+        assertEquals(WateringWindow(6 * 60, 9 * 60), early.startingAt(6 * 60))
+        assertEquals("Starting after it ends moves the end an hour on", WateringWindow(10 * 60, 11 * 60), early.startingAt(10 * 60))
+        assertEquals("but no later than midnight", WateringWindow(23 * 60 + 30, 24 * 60), early.startingAt(23 * 60 + 30))
+        assertEquals(WateringWindow(5 * 60, 10 * 60), early.endingAt(10 * 60))
+        assertEquals("Ending before it starts moves the start an hour back", WateringWindow(3 * 60, 4 * 60), early.endingAt(4 * 60))
+        assertEquals("Midnight at the end of the day", WateringWindow(5 * 60, 24 * 60), early.endingAt(0))
+        assertEquals("but no earlier than midnight", WateringWindow(0, 30), early.endingAt(30))
+    }
+
+    @Test
     fun `a plant that needs a third as much as the thirstiest on its line is flagged`() {
         val grevillea = WaterPlant("grevillea", "Grevillea", "citrus", plantFactorBp = 1_000, widthMm = 1_500, form = GrowthForm.SHRUB, quantity = 1, soil = Soil.LOAM)
         val salvia = WaterPlant("salvia", "Salvia", "citrus", plantFactorBp = 2_500, widthMm = 800, form = GrowthForm.SHRUB, quantity = 1, soil = Soil.LOAM)

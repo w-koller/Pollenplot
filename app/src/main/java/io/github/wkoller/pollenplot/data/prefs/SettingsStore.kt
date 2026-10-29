@@ -13,6 +13,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import io.github.wkoller.pollenplot.domain.bees.stingless.HeatAlerts
+import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +62,8 @@ data class Settings(
     val waterToldOn: String? = null,
     /** When a backup file was last saved on this phone, or the newest backup restored here, in epoch milliseconds. */
     val lastBackupAt: Long? = null,
+    /** The hours watering is planned for, to suit the local water rules. */
+    val wateringWindow: WateringWindow = WateringWindow.DEFAULT,
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
@@ -102,6 +105,8 @@ class SettingsStore(context: Context) {
         val waterReminders = booleanPreferencesKey("water_reminders")
         val waterToldOn = stringPreferencesKey("water_told_on")
         val lastBackupAt = longPreferencesKey("last_backup_at")
+        val wateringFromMinute = intPreferencesKey("watering_from_minute")
+        val wateringToMinute = intPreferencesKey("watering_to_minute")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -137,6 +142,9 @@ class SettingsStore(context: Context) {
             waterReminders = this[Keys.waterReminders] ?: defaults.waterReminders,
             waterToldOn = this[Keys.waterToldOn],
             lastBackupAt = this[Keys.lastBackupAt],
+            wateringWindow = this[Keys.wateringFromMinute]?.let { from ->
+                this[Keys.wateringToMinute]?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
+            } ?: defaults.wateringWindow,
         )
     }
 
@@ -164,6 +172,8 @@ class SettingsStore(context: Context) {
         this[Keys.waterReminders] = settings.waterReminders
         setOrRemove(Keys.waterToldOn, settings.waterToldOn)
         setOrRemove(Keys.lastBackupAt, settings.lastBackupAt)
+        this[Keys.wateringFromMinute] = settings.wateringWindow.fromMinute
+        this[Keys.wateringToMinute] = settings.wateringWindow.toMinute
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

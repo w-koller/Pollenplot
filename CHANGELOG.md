@@ -148,6 +148,11 @@
 - A line that waters plants of very different thirst says which plant would get several times what it needs from
   drippers of the same size, and suggests a smaller dripper or capping it.
 - A notification on the new Watering channel on the mornings when a line or a zone is due for watering.
+- Watering times, in the Water tab: the hours watering is planned for, from 5:00 am to 9:00 am until you choose
+  others to suit your water authority's rules. Plans and reminders say when to water, and each line and zone lists the
+  waterings coming up in the forecast, marking the ones good rain may do instead.
+- The Plot's zones show when each is next watered, and a zone's page says which line waters it, when it is next
+  watered and which of its plants get far more than they need.
 - The Today card, at the top of the Plot: the waterings due today, honey bee hive checks due or overdue, a hot day
   for stingless bees, bee hotels worth cleaning out this spring, the finds waiting for review and the weeds in the
   garden. Each line opens where it is done.

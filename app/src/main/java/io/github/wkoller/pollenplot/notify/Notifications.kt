@@ -15,6 +15,7 @@ import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTaskKind
+import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.domain.weather.DayForecast
 import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
 import io.github.wkoller.pollenplot.scan.ScanTally
@@ -154,17 +155,18 @@ class Notifications(private val context: Context) {
     }
 
     /** Tells what watering is due today, and opens the Water tab when tapped. Returns whether it could be shown. */
-    fun showWatering(due: List<DueWatering>): Boolean {
+    fun showWatering(due: List<DueWatering>, window: WateringWindow): Boolean {
         if (due.isEmpty() || !allowed) return false
         val res = context.resources
         fun line(item: DueWatering): String = item.minutes?.let { res.getQuantityString(R.plurals.notify_water_minutes, it, item.name, it) }
             ?: res.getString(R.string.notify_water_litres, item.name, item.litres.toString())
-        val (title, body) = if (due.size == 1) {
+        val (title, lines) = if (due.size == 1) {
             res.getString(R.string.notify_water_title_one, due.single().name) to line(due.single())
         } else {
             res.getQuantityString(R.plurals.notify_water_title, due.size, due.size) to due.joinToString("\n") { line(it) }
         }
-        show(WATERING, title, body, channel = WATERING_CHANNEL, open = MainActivity.OPEN_WATER, icon = R.drawable.ic_water_drop)
+        val hours = res.getString(R.string.notify_water_window, UiFormat.timeOfDay(window.fromMinute), UiFormat.timeOfDay(window.toMinute))
+        show(WATERING, title, lines + "\n" + hours, channel = WATERING_CHANNEL, open = MainActivity.OPEN_WATER, icon = R.drawable.ic_water_drop)
         return true
     }
 

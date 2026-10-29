@@ -39,22 +39,28 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.data.WaterState
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.garden.PlotLayout
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
+import io.github.wkoller.pollenplot.domain.irrigation.PlannedWatering
 import io.github.wkoller.pollenplot.ui.components.BadgeItem
 import io.github.wkoller.pollenplot.ui.components.IconBadges
 import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.tone
+import io.github.wkoller.pollenplot.ui.water.byHand
+import io.github.wkoller.pollenplot.ui.water.icon
+import io.github.wkoller.pollenplot.ui.water.nextWateringSentence
+import io.github.wkoller.pollenplot.ui.water.nextWateringShort
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -74,6 +80,7 @@ fun PlotCanvas(
     onTapZone: (String) -> Unit,
     onChangeZone: (String, ZoneRect) -> Unit,
     modifier: Modifier = Modifier,
+    water: WaterState? = null,
 ) {
     BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
         val density = LocalDensity.current.density
@@ -124,6 +131,7 @@ fun PlotCanvas(
                         selected = editing && view.zone.id == selectedId,
                         onTap = { onTapZone(view.zone.id) },
                         onChange = { onChangeZone(view.zone.id, it) },
+                        water = water,
                     )
                 }
             }
@@ -159,6 +167,7 @@ private fun ZoneTile(
     selected: Boolean,
     onTap: () -> Unit,
     onChange: (ZoneRect) -> Unit,
+    water: WaterState?,
 ) {
     val rect = view.zone.rect
     val density = LocalDensity.current
@@ -174,12 +183,15 @@ private fun ZoneTile(
     val heightDp = with(density) { height.toDp() }
     val (container, content) = kindColours(view.zone.kind)
     val kinds = view.sightings.map { it.key }.distinct().size
+    val watering = water?.zones?.get(view.zone.id)
+    val next = watering?.next
     val description = stringResource(
         R.string.zone_tile_description,
         view.zone.name,
         stringResource(view.zone.kind.label),
         pluralStringResource(R.plurals.plant_count, view.plants.size, view.plants.size),
-    ) + if (kinds > 0) ", " + pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds) else ""
+    ) + (if (kinds > 0) ", " + pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds) else "") +
+        (next?.let { ". " + nextWateringSentence(it, water.today, water.window, watering.byHand) } ?: "")
 
     Box(Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }.size(widthDp, heightDp)) {
         Surface(
@@ -213,7 +225,7 @@ private fun ZoneTile(
                     },
                 ),
         ) {
-            TileContent(view, kinds, widthDp.value, heightDp.value)
+            TileContent(view, kinds, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value)
         }
         if (selected) {
             Surface(
@@ -250,17 +262,26 @@ private fun ZoneTile(
 }
 
 /**
- * What fits on a tile depends on its size on screen: just the name when zoomed out, then plants, then badges, then how
- * many [kinds] of animals have been seen there.
+ * What fits on a tile depends on its size on screen: just the name when zoomed out, then the next watering, then
+ * plants, then badges, then how many [kinds] of animals have been seen there.
  */
 @Composable
-private fun TileContent(view: ZoneView, kinds: Int, widthDp: Float, heightDp: Float) {
+private fun TileContent(view: ZoneView, kinds: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float) {
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (widthDp >= 72) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
             Text(view.zone.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (heightDp >= 76 && view.plants.isNotEmpty()) {
+        // The next watering takes a line, so what comes after it needs that much more room.
+        val watering = next?.takeIf { heightDp >= 56 }
+        val room = if (watering != null) heightDp - WATERING_ROW_DP else heightDp
+        if (watering != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(painterResource(watering.first.icon()), contentDescription = null, modifier = Modifier.size(14.dp))
+                Text(watering.second, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        if (room >= 76 && view.plants.isNotEmpty()) {
             val fit = ((widthDp - 16) / 34).toInt().coerceAtLeast(1)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 // A light disc keeps each plant visible on any tile colour.
@@ -269,10 +290,10 @@ private fun TileContent(view: ZoneView, kinds: Int, widthDp: Float, heightDp: Fl
                 }
             }
         }
-        if (heightDp >= 116 && view.badges.isNotEmpty()) {
+        if (room >= 116 && view.badges.isNotEmpty()) {
             IconBadges(view.badges.map { BadgeItem(it.icon, stringResource(it.label), it.tone) }, size = 24.dp)
         }
-        if (heightDp >= 148 && kinds > 0) {
+        if (room >= 148 && kinds > 0) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Icon(painterResource(R.drawable.ic_raven), contentDescription = null, modifier = Modifier.size(16.dp))
                 Text(pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -280,6 +301,9 @@ private fun TileContent(view: ZoneView, kinds: Int, widthDp: Float, heightDp: Fl
         }
     }
 }
+
+/** The height of the next watering's line on a tile, with the space after it. */
+private const val WATERING_ROW_DP = 22f
 
 @Composable
 private fun kindColours(kind: ZoneKind): Pair<Color, Color> {
