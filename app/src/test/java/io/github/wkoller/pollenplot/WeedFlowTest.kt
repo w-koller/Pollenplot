@@ -131,6 +131,8 @@ class WeedFlowTest {
             app.container.weeds.data.first { it.councilWeeds.isNotEmpty() }
         }
         show()
+        // The Plot fills in from the database, which can take a moment on a busy machine.
+        waitFor(hasText("Weeds near your garden"))
         compose.onNodeWithText("Weeds near your garden").performClick()
         waitFor(hasText("Recorded near your garden"))
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Weed finder"))
