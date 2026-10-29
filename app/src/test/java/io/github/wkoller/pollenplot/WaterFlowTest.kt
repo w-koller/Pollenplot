@@ -182,7 +182,7 @@ class WaterFlowTest {
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Veg Patch"))
         waitFor(hasText("Water today at 5:00 am, about", substring = true))
         compose.onNodeWithText("Veg Patch").performClick()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("This zone is watered by hand."))
+        scrollTo(hasText("This zone is watered by hand."))
         compose.onAllNodesWithText("Water today at 5:00 am, about", substring = true).onFirst().assertExists()
         compose.onNodeWithText("See the watering plan").assertExists()
     }
@@ -252,6 +252,14 @@ class WaterFlowTest {
             PollenplotTheme(settings) {
                 Surface { AppRoot(app.container) }
             }
+        }
+    }
+
+    /** Scrolls to [matcher] once the screen holding it has opened, which can take a moment on a busy machine. */
+    private fun scrollTo(matcher: SemanticsMatcher) {
+        compose.waitUntil(WAIT_MS) {
+            val scrollers = compose.onAllNodes(hasScrollToNodeAction())
+            (0 until scrollers.fetchSemanticsNodes().size).any { runCatching { scrollers[it].performScrollToNode(matcher) }.isSuccess }
         }
     }
 

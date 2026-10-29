@@ -51,6 +51,7 @@ class PlotScreenFlowTest {
         shot("plot_canvas")
 
         compose.onNodeWithContentDescription("Show as a list").performClick()
+        waitFor(hasText("Back Citrus Patch"))
         compose.onNodeWithText("Back Citrus Patch").assertIsDisplayed()
         shot("plot_list")
 
@@ -79,6 +80,8 @@ class PlotScreenFlowTest {
         shot("plant_grevillea_full")
         compose.onNodeWithContentDescription("Back").performClick()
         compose.onNodeWithContentDescription("Back").performClick()
+        // Back on the Plot's list, which takes a moment to come back on a busy machine.
+        waitFor(hasText("Back Citrus Patch"))
         compose.onNodeWithText("Back Citrus Patch").performClick()
         waitFor(hasText("Mixed thirst"))
         shot("zone_citrus_mixed_thirst")
@@ -93,6 +96,7 @@ class PlotScreenFlowTest {
         show()
         compose.onNodeWithContentDescription("Open the add menu").performClick()
         compose.onNodeWithText("Add a plant by name").performClick()
+        waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("bottle")
         waitFor(hasText("Weeping bottlebrush"))
         shot("add_plant_search")
