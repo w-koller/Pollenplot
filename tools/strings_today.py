@@ -8,6 +8,7 @@ STRINGS = {
     "today_kind_brood": "a brood check",
     "today_kind_mites": "a mite check",
     "today_clean_hotel": "%1$s is worth cleaning out this spring.",
+    "today_pots_heat": "Please water the pots in %1$s deeply today, because tomorrow is forecast to reach %2$s °C.",
 }
 
 PLURALS = {

@@ -154,6 +154,9 @@
 - A spray or sprinkler line that puts water on faster than its soil takes it in, by FAO's figures for loam and clay,
   says so. Once you time how long it runs before water pools, its plan splits each run into shorter runs with 30
   minutes to an hour between them, as the US EPA's WaterSense programme describes.
+- Pots before a hot day: when tomorrow is forecast to reach 35 °C or more, the Water tab, the Today card and the
+  morning's reminder say to water the pots deeply that morning, until water runs out of the bottom, as the
+  University of California's Agriculture and Natural Resources advises. The 35 °C is Pollenplot's own figure.
 - The Plot's zones show when each is next watered, and a zone's page says which line waters it, when it is next
   watered and which of its plants get far more than they need.
 - The Today card, at the top of the Plot: the waterings due today, honey bee hive checks due or overdue, a hot day

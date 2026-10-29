@@ -29,6 +29,7 @@ import io.github.wkoller.pollenplot.domain.irrigation.PlanReason
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
 import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
 import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
+import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.Soil
@@ -207,6 +208,29 @@ class WaterFlowTest {
         val cycles = runBlocking { app.container.waterViews.state.first { state -> state.lines.single().runoff?.cycles != null } }.lines.single().runoff!!.cycles!!
         assertTrue(cycles.size > 1 && cycles.all { it <= 5 })
         waitFor(hasText("Please run it as ${cycles.size} runs of", substring = true))
+    }
+
+    @Test
+    fun potsAreWateredDeeplyBeforeAHotDay() {
+        shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        runBlocking {
+            val pots = app.container.garden.addZone("Pots by the door", ZoneKind.POTS)
+            app.container.garden.addPlant("Salvia rosmarinus", null, pots.id)
+            water.refreshWeather(app.container.settingsStore.current().gardenPlace!!)
+        }
+        // The recorded forecast has 39.4 °C for tomorrow.
+        val warning = runBlocking { app.container.waterViews.state.first { it.potsBeforeHeat != null }.potsBeforeHeat!! }
+        assertEquals(394, warning.maxTenthsC)
+        assertEquals(listOf("Pots by the door"), warning.zones.map { it.name })
+
+        runBlocking { app.container.waterPlan.run() }
+        val body = shadowOf(app.getSystemService(NotificationManager::class.java)).allNotifications.single().extras.getString(Notification.EXTRA_TEXT)!!
+        assertTrue(body, body.contains("Pots by the door, deeply, before tomorrow's heat"))
+
+        show()
+        waitFor(hasText("Please water the pots in Pots by the door deeply today, because tomorrow is forecast to reach 39.4 °C."))
+        compose.onNodeWithText("Water").performClick()
+        waitFor(hasText("Tomorrow is forecast to reach 39.4 °C. Please water the pots in Pots by the door deeply this morning", substring = true))
     }
 
     @Test

@@ -72,7 +72,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `irrigation/`: `WaterPlanner` (a line's daily soil-water account, after FAO 56: when watering is due and how much,
     and with `week` the waterings the forecast holds), `WateringWindow` (the hours to water in, which the user sets),
     `Runoff` (a spray or sprinkler line faster than its soil's basic infiltration rate, from FAO's irrigation manual,
-    and the cycle-and-soak split that the US EPA's WaterSense programme describes),
+    and the cycle-and-soak split that the US EPA's WaterSense programme describes), `PotsBeforeHeat` (pot zones to
+    water deeply the morning before a day of 35 °C or more, after UC Agriculture and Natural Resources; the
+    temperature is Pollenplot's choice),
     `SoilWater` (readily available water by soil, from the Tasmanian Institute of Agriculture, and root depths,
     Pollenplot's estimates), `Pairing` (plants of very different thirst on one line) and the line and weather types.
     `weather/OpenMeteoForecast` makes the forecast and weather requests and reads their answers.

@@ -59,6 +59,9 @@ STRINGS = {
     "notify_water_title_one": "%1$s is due for watering",
     "notify_water_litres": "%1$s, about %2$s L in all",
     "notify_water_window": "Please water between %1$s and %2$s.",
+    "notify_water_pots": "%1$s, deeply, before tomorrow's heat",
+    "water_pots_heat": "Tomorrow is forecast to reach %1$s °C. Please water the pots in %2$s deeply this morning, until "
+    "water runs out of the bottom of each pot.",
 
     "water_new_line": "New watering line",
     "water_line": "Watering line",

@@ -92,6 +92,11 @@ fun TodayCard(
                         onClick = onHeat,
                     )
                     is TodayItem.CleanHotel -> Line(R.drawable.ic_cottage, stringResource(R.string.today_clean_hotel, item.hotel), onClick = onBees)
+                    is TodayItem.PotsBeforeHeat -> Line(
+                        R.drawable.ic_potted_plant,
+                        stringResource(R.string.today_pots_heat, UiFormat.joinAnd(item.zones, listWords()), degrees(item.maxTenthsC)),
+                        onClick = onWater,
+                    )
                 }
             }
             if (state.reviews > 0) Line(R.drawable.ic_rate_review, pluralStringResource(R.plurals.review_waiting, state.reviews, state.reviews), onClick = onReview)

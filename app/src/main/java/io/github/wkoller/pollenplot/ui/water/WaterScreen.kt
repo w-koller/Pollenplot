@@ -59,6 +59,7 @@ import io.github.wkoller.pollenplot.domain.irrigation.WaterPlant
 import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.ui.UiFormat
+import io.github.wkoller.pollenplot.ui.bees.degrees
 import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
@@ -127,6 +128,11 @@ fun WaterScreen(
                         Text(stringResource(R.string.water_weather_credit), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (loaded.hasPlace) TextButton(onClick = { refresh() }) { Text(stringResource(R.string.water_update)) }
+                }
+            }
+            loaded.potsBeforeHeat?.let { warning ->
+                item(key = "pots") {
+                    PotsNotice(stringResource(R.string.water_pots_heat, degrees(warning.maxTenthsC), UiFormat.joinAnd(warning.zones.map { it.name }, listWords())))
                 }
             }
             if (loaded.lines.isNotEmpty()) {
@@ -329,6 +335,22 @@ private fun aheadText(watering: PlannedWatering, byHand: Boolean, window: Wateri
         watering.rainLikely -> stringResource(R.string.water_ahead_rain, day)
         !byHand && minutes != null -> pluralStringResource(R.plurals.water_ahead_minutes, minutes, day, at, minutes)
         else -> stringResource(R.string.water_ahead_litres, day, at, litres(watering.applyMl))
+    }
+}
+
+/** The day before a hot day: water the pots deeply this morning, shown with a warning icon and in words. */
+@Composable
+private fun PotsNotice(text: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+    ) {
+        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(painterResource(R.drawable.ic_warning), contentDescription = null)
+            Text(text, style = MaterialTheme.typography.bodyLarge)
+        }
     }
 }
 

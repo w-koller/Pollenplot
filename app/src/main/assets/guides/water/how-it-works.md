@@ -11,6 +11,7 @@ sources:
   - Infiltration rate and infiltration test, annex 2 of FAO Irrigation Water Management, Training manual no. 5 | https://www.fao.org/4/s8684e/s8684e0a.htm
   - Sprinkler irrigation, chapter 5 of FAO Irrigation Water Management, Training manual no. 5 | https://www.fao.org/4/s8684e/s8684e06.htm
   - Cycle-and-Soak Saves Water Outdoors, US EPA WaterSense | https://www.epa.gov/system/files/documents/2022-03/ws-outdoor-cycle-and-soak-brochure.pdf
+  - Caring for Container Plants During Heatwaves, University of California Agriculture and Natural Resources | https://ucanr.edu/blog/under-solano-sun/article/caring-container-plants-during-heatwaves
 ---
 
 Pollenplot keeps a daily soil-water account for each watering line and each zone watered by hand, the way FAO Irrigation and Drainage Paper 56 describes. The plants draw water out each day, rain puts some back, and watering is due once the plants have used the water their roots can readily reach.
@@ -53,3 +54,11 @@ Sprays and sprinklers spread water over an area, and soil can only take it in so
 - When a line is faster than the top of that range for the slowest soil it waters, the plan says so.
 - The US EPA's WaterSense programme describes cycle-and-soak for such a line: time how long the line runs before water starts to pool, run it in cycles no longer than that, and leave 30 minutes to an hour between them.
 - Once you add that time to the line, the plan splits each run that way.
+
+## Pots before a hot day
+
+Pots dry out quickly in heat. The University of California's Agriculture and Natural Resources advises watching the forecast and watering container plants deeply in the early morning of the day before the heat starts, until water runs out of the bottom of the pot.
+
+- A zone of pots, or a zone whose soil is potting mix, counts as pots.
+- A day forecast to reach 35 °C or more counts as hot. That figure is Pollenplot's own choice, because the advice gives none.
+- On the day before, the Water tab, the Today card and the morning's reminder say to water the pots deeply.

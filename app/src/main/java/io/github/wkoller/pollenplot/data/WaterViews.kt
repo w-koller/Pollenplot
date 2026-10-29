@@ -6,6 +6,7 @@ import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.irrigation.Pairing
 import io.github.wkoller.pollenplot.domain.irrigation.PairingNote
 import io.github.wkoller.pollenplot.domain.irrigation.PlannedWatering
+import io.github.wkoller.pollenplot.domain.irrigation.PotsBeforeHeat
 import io.github.wkoller.pollenplot.domain.irrigation.Runoff
 import io.github.wkoller.pollenplot.domain.irrigation.RunoffCheck
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
@@ -38,6 +39,9 @@ data class LinePlanView(
 /** A zone with plants and no line, watered by hand, with its plan and the waterings the forecast holds. */
 data class HandPlanView(val zone: Zone, val plants: List<WaterPlant>, val plan: WaterPlan, val week: List<PlannedWatering>, val lastWatered: LocalDate?)
 
+/** Pot zones to water deeply this morning, because tomorrow is forecast to reach [maxTenthsC]. */
+data class PotsWarning(val zones: List<Zone>, val maxTenthsC: Int)
+
 /**
  * How a zone is watered and when next, for the Plot and the zone's page: its [line], or null when it is watered by
  * hand, the next watering the forecast holds, and the plants on its line that pairing flags.
@@ -56,6 +60,8 @@ data class WaterState(
     val window: WateringWindow = WateringWindow.DEFAULT,
     /** Each zone with plants or a line, by its id. */
     val zones: Map<String, ZoneWatering> = emptyMap(),
+    /** Set on the day before a hot day, while there are plants in pots. */
+    val potsBeforeHeat: PotsWarning? = null,
 ) {
     val hasPlants: Boolean get() = lines.any { it.plants.isNotEmpty() } || byHand.isNotEmpty()
 }
@@ -124,6 +130,10 @@ class WaterViews(water: WaterRepository, views: GardenViews, garden: GardenRepos
             weatherFetchedAt = records.fetchedAt,
             window = current.wateringWindow,
             zones = zoneWatering,
+            potsBeforeHeat = PotsBeforeHeat.hotTomorrow(records.weather, today)?.let { max ->
+                val potted = growing.mapNotNull { it.plant.zoneId }.toSet()
+                zones.filter { it.id in potted && PotsBeforeHeat.isPots(it.kind, it.soil) }.takeIf { it.isNotEmpty() }?.let { PotsWarning(it, max) }
+            },
         )
     }
 

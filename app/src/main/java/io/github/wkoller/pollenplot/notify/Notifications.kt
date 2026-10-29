@@ -158,8 +158,11 @@ class Notifications(private val context: Context) {
     fun showWatering(due: List<DueWatering>, window: WateringWindow): Boolean {
         if (due.isEmpty() || !allowed) return false
         val res = context.resources
-        fun line(item: DueWatering): String = item.minutes?.let { res.getQuantityString(R.plurals.notify_water_minutes, it, item.name, it) }
-            ?: res.getString(R.string.notify_water_litres, item.name, item.litres.toString())
+        fun line(item: DueWatering): String = when {
+            item.beforeHeat -> res.getString(R.string.notify_water_pots, item.name)
+            item.minutes != null -> res.getQuantityString(R.plurals.notify_water_minutes, item.minutes, item.name, item.minutes)
+            else -> res.getString(R.string.notify_water_litres, item.name, item.litres.toString())
+        }
         val (title, lines) = if (due.size == 1) {
             res.getString(R.string.notify_water_title_one, due.single().name) to line(due.single())
         } else {
