@@ -5,6 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 /** The guide pages the app ships, read as the app reads them, so a mistake in one fails the build. */
 class GuideFilesTest {
@@ -30,8 +31,11 @@ class GuideFilesTest {
 
     @Test
     fun `each page was checked against its sources on a day that has passed`() {
+        // A page is checked on a day in Australia, which can still be the day before where the build runs. No place
+        // is ahead of UTC+14, so a date after that day's is a mistake wherever the test runs.
+        val latestToday = LocalDate.now(ZoneOffset.ofHours(14))
         pages.forEach { (file, guide) ->
-            assertTrue(file.path, !guide.lastChecked.isAfter(LocalDate.now()))
+            assertTrue(file.path, !guide.lastChecked.isAfter(latestToday))
             assertTrue("${file.path} needs a summary that is a sentence", guide.summary.endsWith("."))
         }
     }
