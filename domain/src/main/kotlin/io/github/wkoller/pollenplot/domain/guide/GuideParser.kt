@@ -6,7 +6,7 @@ import java.time.format.DateTimeParseException
 
 /**
  * Reads a guide page: front matter between two `---` lines, then a small part of Markdown. The front matter holds
- * `title`, `summary`, `section` (honey, native or hotels), `order`, `lastChecked` (a date such as 2026-10-29),
+ * `title`, `summary`, `section` (honey, native, hotels or water), `order`, `lastChecked` (a date such as 2026-10-29),
  * `sources`, one per line as `  - Title | https://…`, and, for a page about one state's rules, `states`, such as qld. The text has `## ` headings, paragraphs, `- ` bullets, `1. `
  * steps and `> ` notes, separated by blank lines, with `**bold**`, `*italic*` and `[links](https://…)` inside them.
  * Anything else is refused with the line it is on, so a mistake fails the build instead of showing on a phone.
@@ -48,7 +48,7 @@ object GuideParser {
         }
         fun field(name: String): String = fields[name]?.takeIf { it.isNotBlank() } ?: fail(id, 1, "the front matter has no $name")
         val section = GuideSection.entries.firstOrNull { it.name.equals(field("section"), ignoreCase = true) }
-            ?: fail(id, 1, "section must be honey, native or hotels")
+            ?: fail(id, 1, "section must be honey, native, hotels or water")
         val order = field("order").toIntOrNull() ?: fail(id, 1, "order must be a whole number")
         val lastChecked = try {
             LocalDate.parse(field("lastChecked"))

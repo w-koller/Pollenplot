@@ -39,6 +39,7 @@ class HiveReminderWorker(context: Context, params: WorkerParameters) : Coroutine
         val container = (applicationContext as PollenplotApp).container
         container.hiveReminders.run()
         container.heatAlerts.run()
+        container.waterPlan.run()
         return Result.success()
     }
 
@@ -49,8 +50,8 @@ class HiveReminderWorker(context: Context, params: WorkerParameters) : Coroutine
         private val MORNING: LocalTime = LocalTime.of(7, 0)
 
         /**
-         * Looks at the hives each morning while [on], for honey bee checks due and hot days ahead for native bees, and
-         * stops otherwise. Robolectric tests set up WorkManager in each test, after the app has started, so there is
+         * Looks at the garden each morning while [on], for honey bee checks due, hot days ahead for native bees and
+         * watering due, and stops otherwise. Robolectric tests set up WorkManager in each test, after the app has started, so there is
          * none to schedule with until then.
          */
         fun update(context: Context, on: Boolean, clock: Clock) {

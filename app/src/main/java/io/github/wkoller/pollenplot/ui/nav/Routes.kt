@@ -77,7 +77,10 @@ import kotlinx.serialization.Serializable
 /** Upkeep of a bee hotel. */
 @Serializable data class HotelUpkeepRoute(val hotelId: String)
 
-/** A page of a bee guide, by its id, such as `honey/varroa`. */
+/** A new watering line, or a line's details to change. */
+@Serializable data class LineEditRoute(val id: String? = null)
+
+/** A page of a guide, by its id, such as `honey/varroa`. */
 @Serializable data class GuideRoute(val id: String)
 
 /** Questions to Gemma 4 about a plant in the garden, a kind of animal, or, with neither, the whole garden. */

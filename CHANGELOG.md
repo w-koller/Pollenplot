@@ -139,6 +139,15 @@
 - This month, at the top of the Rhythms tab: the rich nectar flowering for those who keep honey bees, what stingless
   bees are foraging on for those who keep them, pollinators seen on the garden's flowers in the last month, and
   plants that flowered at least a week earlier or later than last year.
+- Watering, the Water tab: watering lines, each with how it waters, its zones and its flow, and the zones watered by
+  hand. Each gets a plan from Open-Meteo's weather for the last week and the next: when watering is due, for how many
+  minutes or how many litres, and how much of the water the plants' roots can readily reach they have used. The plan
+  keeps a daily soil-water account as FAO Irrigation and Drainage Paper 56 describes, with readily available water by
+  soil from the Tasmanian Institute of Agriculture, and its page says which figures are Pollenplot's own estimates.
+  I watered today records a watering. The weather is kept for when the phone is offline.
+- A line that waters plants of very different thirst says which plant would get several times what it needs from
+  drippers of the same size, and suggests a smaller dripper or capping it.
+- A notification on the new Watering channel on the mornings when a line or a zone is due for watering.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood

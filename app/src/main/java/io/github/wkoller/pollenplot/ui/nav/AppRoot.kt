@@ -85,6 +85,7 @@ import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
 import io.github.wkoller.pollenplot.ui.settings.ModelsScreen
 import io.github.wkoller.pollenplot.ui.settings.ScanSettingsScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
+import io.github.wkoller.pollenplot.ui.water.LineEditorScreen
 import io.github.wkoller.pollenplot.ui.water.WaterScreen
 import io.github.wkoller.pollenplot.ui.weeds.CompareScreen
 import io.github.wkoller.pollenplot.ui.weeds.WeedFinderScreen
@@ -145,6 +146,7 @@ fun AppRoot(
             open == MainActivity.OPEN_WEEDS -> navController.navigate(WeedsRoute) { launchSingleTop = true }
             // A tab opens as if it were chosen in the navigation bar.
             open == MainActivity.OPEN_BEES -> openTab(TopLevelTab.BEES)
+            open == MainActivity.OPEN_WATER -> openTab(TopLevelTab.WATER)
             open != null && open.startsWith(MainActivity.OPEN_GUIDE) -> navController.navigate(GuideRoute(open.removePrefix(MainActivity.OPEN_GUIDE)))
             else -> return@LaunchedEffect
         }
@@ -503,7 +505,19 @@ fun AppRoot(
                     val route = entry.toRoute<HoneyRecordRoute>()
                     HoneyRecordScreen(HoneyRecordKind.valueOf(route.kind), route.hiveId, container.bees, container.settingsStore, container.beeViews.today(), onBack = back)
                 }
-                composable<WaterRoute> { WaterScreen(onOpenSettings = openSettings) }
+                composable<WaterRoute> {
+                    WaterScreen(
+                        views = container.waterViews,
+                        water = container.water,
+                        settings = container.settingsStore,
+                        notifications = container.notifications,
+                        onOpenSettings = openSettings,
+                        onAddLine = { navController.navigate(LineEditRoute()) },
+                        onEditLine = { navController.navigate(LineEditRoute(it)) },
+                        onOpenGuide = { navController.navigate(GuideRoute(it)) },
+                    )
+                }
+                composable<LineEditRoute> { entry -> LineEditorScreen(container.water, container.views, entry.toRoute<LineEditRoute>().id, onBack = back) }
                 composable<SettingsRoute> {
                     SettingsScreen(
                         store = container.settingsStore,

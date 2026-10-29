@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         SightingEntity::class, CareDraftEntity::class, ApiaryEntity::class, HoneyHiveEntity::class, InspectionEntity::class,
         VarroaCheckEntity::class, TreatmentEntity::class, FeedingEntity::class, HarvestEntity::class, ColonyEventEntity::class,
         NativeHiveEntity::class, NativeLogEntity::class, HotelEntity::class, HotelSectionEntity::class, HotelObservationEntity::class,
-        HotelUpkeepEntity::class,
+        HotelUpkeepEntity::class, WateringLineEntity::class, WateringEventEntity::class, WeatherDayEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -36,6 +36,7 @@ abstract class PollenplotDatabase : RoomDatabase() {
     abstract fun honeyDao(): HoneyDao
     abstract fun nativeBeeDao(): NativeBeeDao
     abstract fun hotelDao(): HotelDao
+    abstract fun waterDao(): WaterDao
 
     companion object {
         const val FILE_NAME = "pollenplot.db"

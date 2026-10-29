@@ -13,6 +13,8 @@ import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.RhythmsViews
+import io.github.wkoller.pollenplot.data.WaterRepository
+import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
@@ -33,6 +35,7 @@ import io.github.wkoller.pollenplot.notify.HeatAlertCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
+import io.github.wkoller.pollenplot.notify.WaterPlanCheck
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PhoneLocation
 import io.github.wkoller.pollenplot.place.PlaceFinder
@@ -109,6 +112,8 @@ class AppContainer(
     val guides = GuideLibrary(appContext)
     val rhythms = RhythmsViews(garden, views, bees, nativeBees, knowledge, settingsStore, clock)
     val places = PlaceFinder(this.web) { weeds.sources }
+    val water = WaterRepository(this.database, this.web, clock)
+    val waterViews = WaterViews(water, views, garden, settingsStore, clock)
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
     val weedPhotos = WeedPhotos(this.web) { weeds.sources }
@@ -130,6 +135,7 @@ class AppContainer(
     val notifications = Notifications(appContext)
     val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
+    val waterPlan = WaterPlanCheck(water, waterViews, settingsStore, notifications)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
@@ -164,9 +170,10 @@ class AppContainer(
         // The hives are looked at each morning for honey bee checks that have fallen due and hot days ahead for native
         // bees, while there is a hive to remind or warn about.
         scope.launch {
-            combine(settingsStore.settings, bees.hives, nativeBees.hives) { settings, honey, natives ->
+            combine(settingsStore.settings, bees.hives, nativeBees.hives, garden.plantList) { settings, honey, natives, plants ->
                 (settings.hiveReminders && honey.isNotEmpty()) ||
-                    (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE })
+                    (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE }) ||
+                    (settings.waterReminders && settings.gardenPlace != null && plants.isNotEmpty())
             }
                 .distinctUntilChanged()
                 .collect { HiveReminderWorker.update(appContext, it, clock) }

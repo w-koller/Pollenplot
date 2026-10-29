@@ -55,6 +55,10 @@ data class Settings(
     val heatAlertTenthsC: Int = HeatAlerts.DEFAULT_TENTHS_C,
     /** The hot days already warned about, as ISO dates. */
     val heatToldDays: Set<String> = emptySet(),
+    /** Send a notification on a morning when watering is due. */
+    val waterReminders: Boolean = true,
+    /** The day a notification last told what watering was due, as an ISO date. */
+    val waterToldOn: String? = null,
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
@@ -93,6 +97,8 @@ class SettingsStore(context: Context) {
         val heatAlerts = booleanPreferencesKey("heat_alerts")
         val heatAlertTenthsC = intPreferencesKey("heat_alert_tenths_c")
         val heatToldDays = stringSetPreferencesKey("heat_told_days")
+        val waterReminders = booleanPreferencesKey("water_reminders")
+        val waterToldOn = stringPreferencesKey("water_told_on")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -125,6 +131,8 @@ class SettingsStore(context: Context) {
             heatAlerts = this[Keys.heatAlerts] ?: defaults.heatAlerts,
             heatAlertTenthsC = this[Keys.heatAlertTenthsC]?.takeIf { it in HeatAlerts.CHOICES } ?: defaults.heatAlertTenthsC,
             heatToldDays = this[Keys.heatToldDays] ?: defaults.heatToldDays,
+            waterReminders = this[Keys.waterReminders] ?: defaults.waterReminders,
+            waterToldOn = this[Keys.waterToldOn],
         )
     }
 
@@ -149,6 +157,8 @@ class SettingsStore(context: Context) {
         this[Keys.heatAlerts] = settings.heatAlerts
         this[Keys.heatAlertTenthsC] = settings.heatAlertTenthsC
         this[Keys.heatToldDays] = settings.heatToldDays
+        this[Keys.waterReminders] = settings.waterReminders
+        setOrRemove(Keys.waterToldOn, settings.waterToldOn)
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

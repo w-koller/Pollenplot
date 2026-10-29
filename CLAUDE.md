@@ -66,6 +66,10 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     `OpenMeteoForecast`, and `wildlife/NativeBeesSeen` the native bees seen in a year.
   - `hotels/`: `BeeHotels` (hotels, their sections, looks and upkeep), `SealGuide` (who a nest's seal says is likely
     inside) and `HotelCare` (a hotel worth cleaning out in spring).
+  - `irrigation/`: `WaterPlanner` (a line's daily soil-water account, after FAO 56: when watering is due and how much),
+    `SoilWater` (readily available water by soil, from the Tasmanian Institute of Agriculture, and root depths,
+    Pollenplot's estimates), `Pairing` (plants of very different thirst on one line) and the line and weather types.
+    `weather/OpenMeteoForecast` makes the forecast and weather requests and reads their answers.
   - `rhythms/`: `RhythmsEngine` (each bee group's forage points and level per month, its gaps, and plants that would
     fill them; the measure is described in its KDoc and on the screen) and `RhythmsFeed` (this month's cards).
   - `guide/`: `Guide` and `GuideParser`, which reads a bee guide page (see Guides below).
@@ -78,7 +82,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), `BeeRepository` (the honey bee records), `NativeBeeRepository` (stingless bee hives and logs),
   `HotelRepository` (bee hotels and their records), `BeeViews` (hives and hotels with their zones, and what each
-  honey bee hive is due for today), `RhythmsViews` (the Rhythms tab's lanes and suggestions), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
+  honey bee hive is due for today), `RhythmsViews` (the Rhythms tab's lanes and suggestions), `WaterRepository`
+  (watering lines, waterings recorded and the weather kept) and `WaterViews` (each line's and zone's plan), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on
@@ -104,8 +109,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   WorkManager jobs: `AddPhotosWorker`, `LibraryScanWorker` (stops after eight minutes and queues the rest),
   `LibraryWatchWorker` (a content-URI trigger that re-arms itself) and `ScanScheduler`, which matches them to the
   settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which runs at about seven each
-  morning while there is a hive to remind or warn about: `HiveReminderCheck` for honey bee checks due and
-  `HeatAlertCheck` for hot days ahead of stingless bee hives.
+  morning while there is something to remind or warn about: `HiveReminderCheck` for honey bee checks due,
+  `HeatAlertCheck` for hot days ahead of stingless bee hives and `WaterPlanCheck` for watering due.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
@@ -138,6 +143,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   of Living Australia and Brisbane City Council in `app/src/test/resources/web`, and a `FixedLocation` in Taringa.
   Tests never reach the real services. WorkManager is not set up when a Robolectric app starts, so the container's
   schedules wait for a test to set it up, and an update the test needs is run directly with `weedSync.update()`.
+- `WaterTestApp` gives the container a `RecordedWeb`, whose recorded Open-Meteo weather covers the week before and
+  after the fixed day of 28 October 2026, and that fixed clock.
 - `SettingsStore` makes its DataStore itself, and DataStore allows one store per file in a process, so tests use the
   app's store (`app.container.settingsStore`) rather than making another.
 

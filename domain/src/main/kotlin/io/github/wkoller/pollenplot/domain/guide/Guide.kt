@@ -3,8 +3,8 @@ package io.github.wkoller.pollenplot.domain.guide
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import java.time.LocalDate
 
-/** The three bee sections, each with its own guide. */
-enum class GuideSection { HONEY, NATIVE, HOTELS }
+/** The guides: the three bee sections' and the Water tab's. */
+enum class GuideSection { HONEY, NATIVE, HOTELS, WATER }
 
 /** A page a guide's facts come from. */
 data class GuideSource(val title: String, val url: String)

@@ -840,6 +840,51 @@
     <string name="water_subtitle">Watering plans for your zones</string>
     <string name="water_empty_title">No watering lines have been set up yet.</string>
     <string name="water_empty_body">Once your zones and plants are in place, this page recommends when to water and how much, based on the weather and on what each plant needs.</string>
+    <string name="water_et0">Today\'s reference evapotranspiration (ET₀) is %1$s mm.</string>
+    <string name="water_rain_week">%1$s mm of rain counted in the last week.</string>
+    <string name="water_weather_credit">Weather data by Open-Meteo.com.</string>
+    <string name="water_weather_updated">The weather was last updated at %1$s.</string>
+    <string name="water_update">Update the weather</string>
+    <string name="water_no_place">Please set your garden\'s location in Settings › Garden location to get a watering plan.</string>
+    <string name="water_no_weather">There is no weather yet. Pollenplot will fetch it when the phone is online.</string>
+    <string name="water_lines">Watering lines</string>
+    <string name="water_add_line">Add a watering line</string>
+    <string name="water_by_hand">Watered by hand</string>
+    <string name="water_due">Please water today, about %1$s L in all.</string>
+    <string name="water_wait">Watering is due, but %1$s mm of rain is likely tomorrow, so it can wait a day.</string>
+    <string name="water_next">The next watering is due on %1$s.</string>
+    <string name="water_not_this_week">No watering is needed in the coming week.</string>
+    <string name="water_nothing">None of the plants here has a recorded water need and size, so Pollenplot cannot work out a plan.</string>
+    <string name="water_no_weather_plan">A plan needs the weather first.</string>
+    <string name="water_uncounted">%1$s are not counted, because their water need or size is not recorded.</string>
+    <string name="water_used">The plants have used %1$d%% of the water their roots can readily reach.</string>
+    <string name="water_per_plant">%1$s, about %2$s L</string>
+    <string name="water_last">Last watered on %1$s</string>
+    <string name="water_never">No watering recorded yet</string>
+    <string name="water_watered">I watered today</string>
+    <string name="water_how">How the plan is worked out</string>
+    <string name="water_reminders">Remind me when watering is due</string>
+    <string name="water_reminders_body">Pollenplot looks at the weather each morning and sends a notification when a line or a zone is due for watering.</string>
+    <string name="water_reminders_off">Notifications are off, so Pollenplot cannot remind you when watering is due. Please allow them to get reminders.</string>
+    <string name="notify_water_channel">Watering</string>
+    <string name="notify_water_channel_description">Reminders on the mornings a watering line or a zone is due for watering.</string>
+    <string name="notify_water_title_one">%1$s is due for watering</string>
+    <string name="notify_water_litres">%1$s, about %2$s L in all</string>
+    <string name="water_new_line">New watering line</string>
+    <string name="water_line">Watering line</string>
+    <string name="water_edit_line">Edit line</string>
+    <string name="water_method">How it waters</string>
+    <string name="water_method_drip_line">Drip line</string>
+    <string name="water_method_drippers">Drippers</string>
+    <string name="water_method_sprays">Micro-sprays</string>
+    <string name="water_method_sprinkler">Sprinkler</string>
+    <string name="water_method_hose">Hose</string>
+    <string name="water_method_can">Watering can</string>
+    <string name="water_zones">Zones it waters</string>
+    <string name="water_flow">Flow of the whole line in litres an hour</string>
+    <string name="water_flow_hint">Please add up the drippers\' rates, such as 10 drippers at 4 L an hour for 40 L an hour.</string>
+    <string name="water_delete_title">Delete this line?</string>
+    <string name="water_delete_body">The line and the waterings recorded for it will be removed.</string>
     <string name="settings_location">Garden location</string>
     <string name="settings_location_not_set">Not set yet. Please set it to see your council\'s weed list and the plants recorded near your garden.</string>
     <string name="settings_location_state_only">%1$s. Please add your suburb to see your council\'s weed list and the plants recorded near your garden.</string>
@@ -1215,6 +1260,22 @@
     <plurals name="rhythms_days">
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="notify_water_title">
+        <item quantity="one">%d watering is due today</item>
+        <item quantity="other">%d waterings are due today</item>
+    </plurals>
+    <plurals name="notify_water_minutes">
+        <item quantity="one">%1$s, for %2$d minute</item>
+        <item quantity="other">%1$s, for %2$d minutes</item>
+    </plurals>
+    <plurals name="water_due_minutes">
+        <item quantity="one">Please water today, for %1$d minute, which puts on about %2$s L.</item>
+        <item quantity="other">Please water today, for %1$d minutes, which puts on about %2$s L.</item>
+    </plurals>
+    <plurals name="water_pairing">
+        <item quantity="one">%1$s needs much less water than %2$s. With drippers of the same size it would get about %3$d time what it needs, so please give it a smaller dripper or cap its dripper.</item>
+        <item quantity="other">%1$s needs much less water than %2$s. With drippers of the same size it would get about %3$d times what it needs, so please give it a smaller dripper or cap its dripper.</item>
     </plurals>
     <plurals name="notify_weeds_title">
         <item quantity="one">A weed has been recorded near your garden.</item>

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import io.github.wkoller.pollenplot.domain.weather.OpenMeteoForecast
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PlaceFinder
 import io.github.wkoller.pollenplot.web.Web
@@ -23,6 +24,13 @@ class WeedTestApp : PollenplotApp() {
     val location = FixedLocation(-27.4906, 152.9786)
 
     override fun createContainer(): AppContainer = AppContainer(this, web = web, location = location)
+}
+
+/** The app with recorded web answers, on the fixed spring morning of 28 October 2026 in Brisbane, for the watering plan. */
+class WaterTestApp : PollenplotApp() {
+    val web = RecordedWeb()
+
+    override fun createContainer(): AppContainer = AppContainer(this, web = web, fixedClock = DemoWildlife.clock)
 }
 
 /** Stands in for the phone's location service. */
@@ -52,6 +60,7 @@ class RecordedWeb : Web {
         asked += url
         if (offline) throw IOException("No connection")
         val file = when {
+            url.startsWith(OpenMeteoForecast.FORECAST) -> "open_meteo_weather.json"
             url.startsWith(PlaceFinder.SEARCH) -> if ("name=4068" in url || "name=Taringa" in url) "open_meteo_4068.json" else "open_meteo_none.json"
             "spatial.ala.org.au/ws/intersect/" in url -> "ala_intersect.json"
             "data.brisbane.qld.gov.au" in url -> "brisbane_weeds.json"

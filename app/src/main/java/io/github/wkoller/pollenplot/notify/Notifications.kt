@@ -39,6 +39,10 @@ class Notifications(private val context: Context) {
                 .apply { description = context.getString(R.string.notify_weeds_channel_description) },
         )
         system.createNotificationChannel(
+            NotificationChannel(WATERING_CHANNEL, context.getString(R.string.notify_water_channel), NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { description = context.getString(R.string.notify_water_channel_description) },
+        )
+        system.createNotificationChannel(
             NotificationChannel(HIVES_CHANNEL, context.getString(R.string.notify_hive_channel), NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { description = context.getString(R.string.notify_hive_channel_description) },
         )
@@ -149,6 +153,21 @@ class Notifications(private val context: Context) {
         return true
     }
 
+    /** Tells what watering is due today, and opens the Water tab when tapped. Returns whether it could be shown. */
+    fun showWatering(due: List<DueWatering>): Boolean {
+        if (due.isEmpty() || !allowed) return false
+        val res = context.resources
+        fun line(item: DueWatering): String = item.minutes?.let { res.getQuantityString(R.plurals.notify_water_minutes, it, item.name, it) }
+            ?: res.getString(R.string.notify_water_litres, item.name, item.litres.toString())
+        val (title, body) = if (due.size == 1) {
+            res.getString(R.string.notify_water_title_one, due.single().name) to line(due.single())
+        } else {
+            res.getQuantityString(R.plurals.notify_water_title, due.size, due.size) to due.joinToString("\n") { line(it) }
+        }
+        show(WATERING, title, body, channel = WATERING_CHANNEL, open = MainActivity.OPEN_WATER, icon = R.drawable.ic_water_drop)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -180,11 +199,13 @@ class Notifications(private val context: Context) {
         const val SCANS_CHANNEL = "plant_scans"
         const val WEEDS_CHANNEL = "weeds_nearby"
         const val HIVES_CHANNEL = "hive_tasks"
+        const val WATERING_CHANNEL = "watering"
         const val SCAN_RESULT = 1
         const val ADDED_RESULT = 2
         const val WEEDS_NEARBY = 3
         const val HIVE_TASKS = 4
         const val HEAT = 5
+        const val WATERING = 6
 
         /** The guide page on caring for a stingless bee hive, which says how to cool one. */
         const val HEAT_GUIDE = "native/hive-care"
