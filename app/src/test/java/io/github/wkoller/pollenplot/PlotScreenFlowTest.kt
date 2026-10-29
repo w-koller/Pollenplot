@@ -68,6 +68,7 @@ class PlotScreenFlowTest {
     fun plantPagesInFull() {
         seed()
         show()
+        waitFor(hasContentDescription("Show as a list"))
         compose.onNodeWithContentDescription("Show as a list").performClick()
         waitFor(hasText("Front Native Strip"))
         compose.onNodeWithText("Front Native Strip").performClick()

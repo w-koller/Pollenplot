@@ -8,6 +8,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -175,6 +176,8 @@ class WaterFlowTest {
             water.refreshWeather(app.container.settingsStore.current().gardenPlace!!)
         }
         show()
+        // The button is there once the zones have loaded, which a busy machine takes a moment over.
+        waitFor(hasContentDescription("Show as a list"))
         compose.onNodeWithContentDescription("Show as a list").performClick()
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Veg Patch"))
         waitFor(hasText("Water today at 5:00 am, about", substring = true))
