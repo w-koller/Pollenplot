@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -43,6 +44,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.TodayViews
+import io.github.wkoller.pollenplot.data.TodayState
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.ui.components.AddMenu
@@ -53,6 +56,7 @@ import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.plants.ZoneCard
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * The home tab: the backyard canvas of zones, or the same garden as a list. Edit layout turns on a floating toolbar for
@@ -70,8 +74,13 @@ fun PlotScreen(
     onSearch: () -> Unit,
     onReview: () -> Unit,
     onWeeds: () -> Unit,
+    today: TodayViews? = null,
+    onOpenWater: () -> Unit = {},
+    onOpenBees: () -> Unit = {},
+    onOpenGuide: (String) -> Unit = {},
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
+    val todayState by remember(today) { today?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waiting by garden.pendingReviewCount.collectAsStateWithLifecycle(initialValue = 0)
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = null)
     var listMode by rememberSaveable { mutableStateOf(false) }
@@ -156,7 +165,9 @@ fun PlotScreen(
         when {
             loadedZones == null || loadedPlants == null -> Unit
             !hasZones && loadedPlants.isEmpty() -> EmptyPlot(padding, onAddZone = { addingZone = true }, onAddPlant = { onAdd(AddAction.PLANT) }, onWeeds = onWeeds)
-            showCanvas -> Box(Modifier.padding(padding).fillMaxSize()) {
+            showCanvas -> Column(Modifier.padding(padding).fillMaxSize()) {
+                if (!editing) todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
+                Box(Modifier.weight(1f).fillMaxWidth()) {
                 PlotCanvas(
                     zones = loadedZones,
                     editing = editing,
@@ -174,8 +185,12 @@ fun PlotScreen(
                         Text(stringResource(R.string.plot_edit_hint), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp))
                     }
                 }
+                }
             }
-            else -> PlotList(loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds)
+            else -> PlotList(
+                loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds,
+                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } },
+            )
         }
     }
 
@@ -231,6 +246,7 @@ private fun PlotList(
     onOpenPlant: (String) -> Unit,
     onAddZone: () -> Unit,
     onWeeds: () -> Unit,
+    header: @Composable () -> Unit = {},
 ) {
     val unzoned = plants.filter { it.plant.zoneId == null && it.isGrowing }
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
@@ -239,6 +255,7 @@ private fun PlotList(
         contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        item(key = "today") { header() }
         if (zones.isEmpty()) {
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -288,3 +305,19 @@ private fun EditToolbar(hasSelection: Boolean, onAddZone: () -> Unit, onAdjust: 
     }
 }
 
+/** The Today card as the Plot shows it, with a hot day opening the guide's page on cooling a hive. */
+@Composable
+private fun TodayOnPlot(
+    state: TodayState,
+    onWater: () -> Unit,
+    onBees: () -> Unit,
+    onGuide: (String) -> Unit,
+    onReview: () -> Unit,
+    onWeeds: () -> Unit,
+    modifier: Modifier,
+) {
+    TodayCard(state, modifier, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds)
+}
+
+/** The guide page on caring for a stingless bee hive, which says how to cool one. */
+private const val HEAT_GUIDE = "native/hive-care"

@@ -13,6 +13,7 @@ import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.RhythmsViews
+import io.github.wkoller.pollenplot.data.TodayViews
 import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
@@ -144,6 +145,7 @@ class AppContainer(
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
     val waterPlan = WaterPlanCheck(water, waterViews, settingsStore, notifications)
     val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock)
+    val today = TodayViews(water, waterViews, beeViews, garden, views, settingsStore, clock)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->

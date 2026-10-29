@@ -148,6 +148,9 @@
 - A line that waters plants of very different thirst says which plant would get several times what it needs from
   drippers of the same size, and suggests a smaller dripper or capping it.
 - A notification on the new Watering channel on the mornings when a line or a zone is due for watering.
+- The Today card, at the top of the Plot: the waterings due today, honey bee hive checks due or overdue, a hot day
+  for stingless bees, bee hotels worth cleaning out this spring, the finds waiting for review and the weeds in the
+  garden. Each line opens where it is done.
 - The garden report, in Settings › Export data: zones and plants, wildlife, Pollen Rhythms, honey bees, native bees,
   bee hotels and watering, for the last month, 3 months or 12 months, saved as a PDF on A4 pages or as an Excel
   spreadsheet with a sheet for each table, its header row fixed with filters, and numbers and days that sort.

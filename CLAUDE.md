@@ -86,7 +86,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   review), `BeeRepository` (the honey bee records), `NativeBeeRepository` (stingless bee hives and logs),
   `HotelRepository` (bee hotels and their records), `BeeViews` (hives and hotels with their zones, and what each
   honey bee hive is due for today), `RhythmsViews` (the Rhythms tab's lanes and suggestions), `WaterRepository`
-  (watering lines, waterings recorded and the weather kept) and `WaterViews` (each line's and zone's plan), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
+  (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
+  `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on

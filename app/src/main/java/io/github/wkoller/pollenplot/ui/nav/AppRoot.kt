@@ -215,6 +215,10 @@ fun AppRoot(
                         onSearch = { navController.navigate(SearchRoute) },
                         onReview = { navController.navigate(ReviewRoute) },
                         onWeeds = { navController.navigate(WeedsRoute) },
+                        today = container.today,
+                        onOpenWater = { openTab(TopLevelTab.WATER) },
+                        onOpenBees = { openTab(TopLevelTab.BEES) },
+                        onOpenGuide = { navController.navigate(GuideRoute(it)) },
                     )
                 }
                 composable<ZoneRoute> { entry ->

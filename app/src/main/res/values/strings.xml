@@ -940,6 +940,14 @@
     <string name="water_subtitle">Watering plans for your zones</string>
     <string name="water_empty_title">No watering lines have been set up yet.</string>
     <string name="water_empty_body">Once your zones and plants are in place, this page recommends when to water and how much, based on the weather and on what each plant needs.</string>
+    <string name="today_title">Today</string>
+    <string name="today_water_litres">Please water %1$s, about %2$s L in all.</string>
+    <string name="today_overdue">Overdue</string>
+    <string name="today_hive_due">%1$s is due for %2$s</string>
+    <string name="today_kind_inspect">an inspection</string>
+    <string name="today_kind_brood">a brood check</string>
+    <string name="today_kind_mites">a mite check</string>
+    <string name="today_clean_hotel">%1$s is worth cleaning out this spring.</string>
     <string name="water_et0">Today\'s reference evapotranspiration (ET₀) is %1$s mm.</string>
     <string name="water_rain_week">%1$s mm of rain counted in the last week.</string>
     <string name="water_weather_credit">Weather data by Open-Meteo.com.</string>
@@ -1360,6 +1368,10 @@
     <plurals name="rhythms_days">
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="today_water_minutes">
+        <item quantity="one">Please water %1$s, for %2$d minute.</item>
+        <item quantity="other">Please water %1$s, for %2$d minutes.</item>
     </plurals>
     <plurals name="notify_water_title">
         <item quantity="one">%d watering is due today</item>
