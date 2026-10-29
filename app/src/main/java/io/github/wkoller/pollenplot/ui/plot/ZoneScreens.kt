@@ -64,6 +64,8 @@ import io.github.wkoller.pollenplot.ui.plants.tone
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import io.github.wkoller.pollenplot.ui.wildlife.SightingRow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 /** A zone's own page: what kind of area it is, its size and conditions, its badges and its plants. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -248,7 +250,8 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
                         if (!nameError && !areaError) {
                             scope.launch {
                                 garden.updateZone(zone.copy(name = name.trim(), kind = kind, sun = sun, soil = soil, mulched = mulched, measuredAreaCm2 = measured, notes = notes.trim()))
-                                onBack()
+                                // The database finishes on its own thread; going back has to happen on the main one.
+                                withContext(Dispatchers.Main) { onBack() }
                             }
                         }
                     },
@@ -273,7 +276,7 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
                     confirmRemove = false
                     scope.launch {
                         garden.deleteZone(zone.id)
-                        onRemoved()
+                        withContext(Dispatchers.Main) { onRemoved() }
                     }
                 }) { Text(stringResource(R.string.zone_remove)) }
             },

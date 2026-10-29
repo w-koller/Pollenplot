@@ -48,7 +48,9 @@ import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Adds a plant by searching the knowledge base. A plant it does not know can be added under its own name and matched
@@ -125,7 +127,11 @@ fun AddPlantScreen(
                 val name = if (species == null) customName else nickname
                 chosenSpecies = null
                 customName = null
-                scope.launch { onAdded(garden.addPlant(speciesName, name, zoneId, quantity).id) }
+                scope.launch {
+                    val id = garden.addPlant(speciesName, name, zoneId, quantity).id
+                    // The database finishes on its own thread; going on to the plant has to happen on the main one.
+                    withContext(Dispatchers.Main) { onAdded(id) }
+                }
             },
         )
     }

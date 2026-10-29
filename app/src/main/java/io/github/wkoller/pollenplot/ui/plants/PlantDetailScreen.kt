@@ -78,6 +78,8 @@ import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import io.github.wkoller.pollenplot.ui.weeds.WeedCard
 import io.github.wkoller.pollenplot.ui.wildlife.PlantAnimalsCard
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import java.time.Month
 import java.time.format.TextStyle
 
@@ -194,7 +196,8 @@ fun PlantDetailScreen(
                     confirmRemove = false
                     scope.launch {
                         garden.deletePlant(loaded.plant.id)
-                        onBack()
+                        // The database finishes on its own thread; going back has to happen on the main one.
+                        withContext(Dispatchers.Main) { onBack() }
                     }
                 }) { Text(stringResource(R.string.plant_remove_confirm)) }
             },
