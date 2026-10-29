@@ -23,6 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -165,7 +168,7 @@ fun AppRoot(
                         selected = tab == currentTab,
                         onClick = { openTab(tab) },
                         icon = { Icon(painterResource(if (tab == currentTab) tab.selectedIcon else tab.icon), contentDescription = null) },
-                        label = { Text(stringResource(tab.label)) },
+                        label = { TabLabel(stringResource(tab.label)) },
                         railExpanded = false,
                     )
                 }
@@ -182,7 +185,7 @@ fun AppRoot(
                                 selected = tab == currentTab,
                                 onClick = { openTab(tab) },
                                 icon = { Icon(painterResource(if (tab == currentTab) tab.selectedIcon else tab.icon), contentDescription = null) },
-                                label = { Text(stringResource(tab.label)) },
+                                label = { TabLabel(stringResource(tab.label)) },
                             )
                         }
                     }
@@ -613,4 +616,21 @@ fun AppRoot(
             }
         }
     }
+}
+
+/**
+ * A tab's name on one line. With large text the name shrinks only as far as it must to fit beside the others, and
+ * never below its size with standard text, so it never breaks inside a word.
+ */
+@Composable
+private fun TabLabel(text: String) {
+    val size = LocalTextStyle.current.fontSize
+    val scale = LocalDensity.current.fontScale
+    Text(
+        text,
+        maxLines = 1,
+        autoSize = if (scale > 1f) TextAutoSize.StepBased(minFontSize = (size.value / scale).sp, maxFontSize = size, stepSize = 0.5.sp) else null,
+        // Shrunk to fit, two names would otherwise touch and read as one.
+        modifier = Modifier.padding(horizontal = 2.dp),
+    )
 }

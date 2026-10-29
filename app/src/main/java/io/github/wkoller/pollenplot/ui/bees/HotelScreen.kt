@@ -93,7 +93,7 @@ fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBac
                 }
             }
             item(key = "latest-heading") {
-                SectionHeading(latest?.let { stringResource(R.string.hotel_latest, UiFormat.longDate(it.date)) } ?: stringResource(R.string.hotel_looks))
+                SectionHeading(latest?.let { stringResource(R.string.hotel_latest, UiFormat.longDate(it.date)) } ?: stringResource(R.string.hotel_latest_none))
             }
             item(key = "latest") {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

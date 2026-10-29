@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
@@ -52,6 +53,7 @@ import io.github.wkoller.pollenplot.domain.season.MonthSet
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
+import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.listWords
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.time.Month
@@ -259,11 +261,15 @@ private fun Calendar(state: RhythmsState) {
 
 private val NAME_WIDTH = 96.dp
 
+/** The width of the names beside each row of months, or none when large text puts the names above. */
+@Composable
+private fun nameWidth(): Dp = if (largeText()) 0.dp else NAME_WIDTH
+
 @Composable
 private fun MonthHeader(current: Month, modifier: Modifier = Modifier) {
     val locale = locale()
     Row(modifier.fillMaxWidth().clearAndSetSemantics {}) {
-        Spacer(Modifier.width(NAME_WIDTH))
+        Spacer(Modifier.width(nameWidth()))
         Month.entries.forEach { month ->
             Text(
                 month.getDisplayName(TextStyle.NARROW, locale),
@@ -288,9 +294,19 @@ private fun LaneRow(lane: Lane, current: Month) {
         if (months.isNotEmpty() && lane.fed) parts += stringResource(R.string.rhythms_level_in, stringResource(level.label), UiFormat.months(MonthSet.of(months), words, locale))
     }
     val summary = stringResource(R.string.rhythms_lane_summary, group, if (lane.fed) parts.joinToString(". ") else stringResource(R.string.rhythms_lane_unfed))
-    Row(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = summary }, verticalAlignment = Alignment.CenterVertically) {
-        Text(group, style = MaterialTheme.typography.bodyMedium, maxLines = 2, modifier = Modifier.width(NAME_WIDTH))
+    val cells: @Composable RowScope.() -> Unit = {
         Month.entries.forEach { month -> LevelCell(lane.level(month), current = month == current, modifier = Modifier.weight(1f).height(32.dp).padding(1.dp)) }
+    }
+    if (largeText()) {
+        Column(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = summary }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(group, style = MaterialTheme.typography.bodyMedium)
+            Row(Modifier.fillMaxWidth(), content = cells)
+        }
+    } else {
+        Row(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = summary }, verticalAlignment = Alignment.CenterVertically) {
+            Text(group, style = MaterialTheme.typography.bodyMedium, maxLines = 2, modifier = Modifier.width(NAME_WIDTH))
+            cells()
+        }
     }
 }
 
@@ -328,12 +344,20 @@ private fun PlantRow(plant: RhythmPlant, current: Month) {
     val expected = if (plant.flowering.isEmpty) stringResource(R.string.rhythms_not_recorded) else stringResource(R.string.rhythms_expected_in, UiFormat.months(plant.flowering, words, locale))
     val seen = if (plant.seenFlowering.isEmpty) "" else ", " + stringResource(R.string.rhythms_seen_in, UiFormat.months(plant.seenFlowering, words, locale))
     val summary = stringResource(R.string.rhythms_plant_summary, plant.title, expected + seen)
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp).clearAndSetSemantics { contentDescription = summary },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(plant.title, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(NAME_WIDTH).padding(end = 4.dp))
+    val cells: @Composable RowScope.() -> Unit = {
         Month.entries.forEach { month -> FloweringCell(month in plant.flowering, month in plant.peak, month in plant.seenFlowering, month == current) }
+    }
+    val modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp).clearAndSetSemantics { contentDescription = summary }
+    if (largeText()) {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(plant.title, style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth(), content = cells)
+        }
+    } else {
+        Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+            Text(plant.title, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(NAME_WIDTH).padding(end = 4.dp))
+            cells()
+        }
     }
 }
 

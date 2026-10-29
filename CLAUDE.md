@@ -19,7 +19,10 @@ export JAVA_HOME=~/.local/opt/jdk-17 ANDROID_HOME=~/Android/Sdk
 ./gradlew :app:lintDebug :app:assembleDebug
 ```
 
-Screen tests save pictures to `app/build/screenshots/`. Look at them after UI changes: there are light, dark and
+`AccessibilityFlowTest` walks the main screens of the demo yard. It fails when a pressable control has no words
+for a screen reader (read from the semantics tree, because Google's Accessibility Test Framework sees nothing of
+Compose under Robolectric), and with text at twice its size it saves each screen as `large_*.png`. Screen tests save
+pictures to `app/build/screenshots/`. Look at them after UI changes: there are light, dark and
 wide-window versions, and `PlotScreenFlowTest` drives a demo yard (`DemoGarden`) through the Plot, zones, plants and
 search. Screens fed by Room flows use the classic `createComposeRule`, because the v2 rule's standard test dispatcher
 does not pick up database emissions while a test waits. Even so, a screen whose first data came only from a Room flow
@@ -251,7 +254,9 @@ Copy follows the product-UI rules in `/home/william/informed-trader/VOICE.md`:
 - Use Australian spelling everywhere (recognise, colour, organise, towards).
 - Inside the app it is fine to name the models ("Gemma 4", "BioCAP") and their state ("Loading the model.").
 
-Status is always shown with an icon and a word, never colour alone, and no action is gesture-only.
+Status is always shown with an icon and a word, never colour alone, and no action is gesture-only. With large text
+(`largeText()` in `ui/components`, a font scale of 1.3 or more), a label moves above or below what it names rather
+than being squeezed beside it, and `ConnectedChoice` stacks its options when a label would be cut short.
 
 ## Icons and licences
 

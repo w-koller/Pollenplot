@@ -56,6 +56,7 @@ STRINGS = {
     "hotel_height": "%1$s cm off the ground",
     "hotel_installed": "Put up on %1$s",
     "hotel_latest": "Latest look, on %1$s",
+    "hotel_latest_none": "Latest look",
     "hotel_no_looks": "Nothing has been recorded yet.",
     "hotel_spring_clean": "Spring is the time to clean out old nest material and put in new paper liners, once the bees "
     "have come out. This hotel has not been cleaned in the last six months.",

@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -412,8 +413,16 @@ fun FactCard(@DrawableRes icon: Int, title: String, level: FactLevel? = null, co
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).semantics { heading() })
-                if (level == FactLevel.GENUS || level == FactLevel.FAMILY) LevelTag(level)
+                // The tag goes under the heading when there is no room beside it, rather than squeezing a word apart.
+                FlowRow(
+                    Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
+                    if (level == FactLevel.GENUS || level == FactLevel.FAMILY) LevelTag(level)
+                }
             }
             content()
         }
@@ -433,8 +442,12 @@ private fun Line(text: String?, strong: Boolean = false, level: FactLevel? = nul
         )
     }
     if (level == FactLevel.GENUS || level == FactLevel.FAMILY) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            content(Modifier.weight(1f, fill = false))
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            content(Modifier)
             LevelTag(level)
         }
     } else {

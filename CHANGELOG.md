@@ -156,6 +156,11 @@
   spreadsheet with a sheet for each table, its header row fixed with filters, and numbers and days that sort.
 - Settings › Export data saves a copy of your records as files: all of them as JSON-LD, and the sightings as a Darwin
   Core table that biodiversity portals take in, with the garden's place rounded to about 1 km.
+- Large text: with the phone's text at up to twice its size, tab names stay whole, choices such as the Bees
+  sections stand one above the other rather than being cut short, plant names in lists keep the width with their
+  badges under them, Pollen Rhythms puts each name above its months, and a fact's genus or family tag moves under its
+  heading. Above the canvas, the Today card takes part of the Plot at most and scrolls inside.
+- Every button and control on the main screens has words for a screen reader, and a test checks it.
 - Settings › Backup and restore: one file that holds every record, the photos and cut-outs they show, the garden's
   settings and all the records as JSON-LD. With a password, the file is encrypted with AES-256-GCM under a key made
   from the password, and a backup that has been changed or cut short is refused. Restoring reads and checks the whole

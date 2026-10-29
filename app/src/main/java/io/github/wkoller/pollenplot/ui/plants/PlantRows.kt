@@ -32,6 +32,7 @@ import io.github.wkoller.pollenplot.ui.components.IconBadges
 import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.PollenShapes
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
+import io.github.wkoller.pollenplot.ui.components.largeText
 import androidx.compose.foundation.background
 
 /** A plant in a list: its picture, names, zone and first badges. */
@@ -43,26 +44,43 @@ fun PlantRow(view: PlantView, onClick: () -> Unit, showZone: Boolean = true) {
         if (count > 1) pluralStringResource(R.plurals.plant_count, count, count) else null,
         if (showZone) view.zoneName?.let { stringResource(R.string.plant_zone, it) } else null,
     )
+    // With large text, badges beside the name would leave it a few letters, so they go under the details.
+    val large = largeText()
     ListItem(
         onClick = onClick,
         leadingContent = { PlantAvatar(view.species?.form, 48.dp, thumbnail = view.plant.thumbnail) },
-        supportingContent = if (details.isEmpty()) null else { { Text(details.joinToString(" · "), maxLines = 2, overflow = TextOverflow.Ellipsis) } },
-        trailingContent = { RoleIcons(view.roles, max = 2, size = 24.dp) },
+        supportingContent = if (details.isEmpty() && !(large && view.roles.isNotEmpty())) {
+            null
+        } else {
+            {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (details.isNotEmpty()) Text(details.joinToString(" · "), maxLines = if (large) 4 else 2, overflow = TextOverflow.Ellipsis)
+                    if (large) RoleIcons(view.roles, max = 2, size = 24.dp)
+                }
+            }
+        },
+        trailingContent = if (large) null else { { RoleIcons(view.roles, max = 2, size = 24.dp) } },
     ) {
-        Text(view.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(view.title, maxLines = if (large) 3 else 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 /** A species from the knowledge base in a list, for adding it to the garden. */
 @Composable
 fun SpeciesRow(species: Species, roles: List<io.github.wkoller.pollenplot.domain.plants.EcoRole>, onClick: () -> Unit) {
+    val large = largeText()
     ListItem(
         onClick = onClick,
         leadingContent = { PlantAvatar(species.form, 44.dp) },
-        supportingContent = { Text(species.name, fontStyle = FontStyle.Italic, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        trailingContent = { RoleIcons(roles, max = 2, size = 24.dp) },
+        supportingContent = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(species.name, fontStyle = FontStyle.Italic, maxLines = if (large) 3 else 1, overflow = TextOverflow.Ellipsis)
+                if (large) RoleIcons(roles, max = 2, size = 24.dp)
+            }
+        },
+        trailingContent = if (large) null else { { RoleIcons(roles, max = 2, size = 24.dp) } },
     ) {
-        Text(species.displayName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(species.displayName, maxLines = if (large) 3 else 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

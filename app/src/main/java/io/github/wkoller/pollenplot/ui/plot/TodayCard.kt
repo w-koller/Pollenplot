@@ -1,6 +1,8 @@
 package io.github.wkoller.pollenplot.ui.plot
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.TodayItem
 import io.github.wkoller.pollenplot.data.TodayState
@@ -39,6 +43,8 @@ import io.github.wkoller.pollenplot.ui.listWords
 fun TodayCard(
     state: TodayState,
     modifier: Modifier = Modifier,
+    /** The most height the card may take, beyond which its lines scroll inside it. */
+    maxHeight: Dp = Dp.Unspecified,
     onWater: () -> Unit,
     onBees: () -> Unit,
     onHeat: () -> Unit,
@@ -50,9 +56,9 @@ fun TodayCard(
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         shape = RoundedCornerShape(24.dp),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().heightIn(max = maxHeight),
     ) {
-        Column(Modifier.padding(vertical = 8.dp)) {
+        Column(Modifier.then(if (maxHeight.isSpecified) Modifier.verticalScroll(rememberScrollState()) else Modifier).padding(vertical = 8.dp)) {
             Text(
                 stringResource(R.string.today_title),
                 style = MaterialTheme.typography.titleMedium,

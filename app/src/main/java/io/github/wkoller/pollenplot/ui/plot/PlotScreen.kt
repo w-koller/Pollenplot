@@ -3,6 +3,7 @@ package io.github.wkoller.pollenplot.ui.plot
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
@@ -165,26 +167,35 @@ fun PlotScreen(
         when {
             loadedZones == null || loadedPlants == null -> Unit
             !hasZones && loadedPlants.isEmpty() -> EmptyPlot(padding, onAddZone = { addingZone = true }, onAddPlant = { onAdd(AddAction.PLANT) }, onWeeds = onWeeds)
-            showCanvas -> Column(Modifier.padding(padding).fillMaxSize()) {
-                if (!editing) todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
-                Box(Modifier.weight(1f).fillMaxWidth()) {
-                PlotCanvas(
-                    zones = loadedZones,
-                    editing = editing,
-                    selectedId = selectedId,
-                    onTapZone = { id -> if (editing) selectedId = id else onOpenZone(id) },
-                    onChangeZone = { id, rect -> scope.launch { garden.moveZone(id, rect) } },
-                )
-                if (editing && selectedZone == null) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.inverseSurface,
-                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        shape = MaterialTheme.shapes.medium,
-                        modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
-                    ) {
-                        Text(stringResource(R.string.plot_edit_hint), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp))
+            showCanvas -> BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
+                // With large text the card could fill the screen and push the canvas away, so it takes part of the
+                // height at most and scrolls inside.
+                val cardLimit = maxHeight * TODAY_SHARE
+                Column(Modifier.fillMaxSize()) {
+                    if (!editing) {
+                        todayState?.let {
+                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), cardLimit)
+                        }
                     }
-                }
+                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                        PlotCanvas(
+                            zones = loadedZones,
+                            editing = editing,
+                            selectedId = selectedId,
+                            onTapZone = { id -> if (editing) selectedId = id else onOpenZone(id) },
+                            onChangeZone = { id, rect -> scope.launch { garden.moveZone(id, rect) } },
+                        )
+                        if (editing && selectedZone == null) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.inverseSurface,
+                                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
+                            ) {
+                                Text(stringResource(R.string.plot_edit_hint), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp))
+                            }
+                        }
+                    }
                 }
             }
             else -> PlotList(
@@ -315,9 +326,13 @@ private fun TodayOnPlot(
     onReview: () -> Unit,
     onWeeds: () -> Unit,
     modifier: Modifier,
+    maxHeight: Dp = Dp.Unspecified,
 ) {
-    TodayCard(state, modifier, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds)
+    TodayCard(state, modifier, maxHeight, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds)
 }
+
+/** The most of the Plot's height the Today card takes above the canvas. */
+private const val TODAY_SHARE = 0.4f
 
 /** The guide page on caring for a stingless bee hive, which says how to cool one. */
 private const val HEAT_GUIDE = "native/hive-care"
