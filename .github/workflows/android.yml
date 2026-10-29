@@ -3,7 +3,7 @@ name: Android CI
 on:
   push:
     branches: ["**"]
-    # A tag such as v1.0.0 also publishes the signed APK as a GitHub Release.
+    # A tag such as v1.0.0 also publishes the signed APK as a GitHub Release, and v1.0.0-rc.1 as a pre-release.
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
@@ -106,5 +106,13 @@ jobs:
           apk="pollenplot-$VERSION.apk"
           mv apk/*.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
-          awk -v heading="## $VERSION" 'index($0, heading) == 1 { found = 1; next } /^## / { found = 0 } found' CHANGELOG.md > notes.md
-          gh release create "$GITHUB_REF_NAME" "$apk" "$apk.sha256" --title "Pollenplot $VERSION" --notes-file notes.md
+          # The notes are the section whose heading is exactly the version, so 1.0.0 does not pick up 1.0.0-rc.1's.
+          awk -v heading="## $VERSION" '$0 == heading { found = 1; next } /^## / { found = 0 } found' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "CHANGELOG.md has no section headed \"## $VERSION\"."
+            exit 1
+          fi
+          # A version with a suffix, such as 1.0.0-rc.1, is published as a pre-release.
+          prerelease=""
+          case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" "$apk" "$apk.sha256" --title "Pollenplot $VERSION" --notes-file notes.md $prerelease
