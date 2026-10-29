@@ -83,7 +83,7 @@ class MeaningFlowTest {
 
     private fun waitFor(matcher: SemanticsMatcher) {
         try {
-            compose.waitUntil(30_000) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+            compose.waitUntil(WAIT_MS) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
         } catch (e: ComposeTimeoutException) {
             println(compose.onRoot(useUnmergedTree = true).printToString())
             throw e

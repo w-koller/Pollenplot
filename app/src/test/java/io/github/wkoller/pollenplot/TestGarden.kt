@@ -252,3 +252,9 @@ object TestPhotos {
         return Color.rgb((Color.red(colour) * f).toInt().coerceAtMost(255), (Color.green(colour) * f).toInt().coerceAtMost(255), (Color.blue(colour) * f).toInt().coerceAtMost(255))
     }
 }
+
+/**
+ * How long a screen test waits for something to appear. A wait ends as soon as it is met, so this only matters on a
+ * slow machine, such as CI running the tests beside lint and the build.
+ */
+const val WAIT_MS = 30_000L

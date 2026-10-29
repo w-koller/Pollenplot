@@ -69,7 +69,10 @@ class PlotScreenFlowTest {
         seed()
         show()
         compose.onNodeWithContentDescription("Show as a list").performClick()
+        waitFor(hasText("Front Native Strip"))
         compose.onNodeWithText("Front Native Strip").performClick()
+        // The zone's plants come from the database, which can take a moment on a busy machine.
+        waitFor(hasText("Grevillea Robyn Gordon"))
         compose.onNodeWithText("Grevillea Robyn Gordon").performClick()
         waitFor(hasText("Low-phosphorus native food only"))
         shot("plant_grevillea_full")
@@ -147,7 +150,7 @@ class PlotScreenFlowTest {
     }
 
     private fun waitFor(matcher: androidx.compose.ui.test.SemanticsMatcher) {
-        compose.waitUntil(10_000) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
     private fun shot(name: String) {

@@ -137,7 +137,7 @@ class HoneyFlowTest {
         scrollTo("Queensland asks beekeepers to check their hives for Varroa mite every month", substring = true)
         scrollTo("Remind me to check for mites every month")
         compose.onNodeWithText("Remind me to check for mites every month").performClick()
-        compose.waitUntil(10_000) { runBlocking { app.container.settingsStore.current().monthlyMiteChecks } == false }
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.current().monthlyMiteChecks } == false }
         scrollTo("Open the registration page")
         scrollTo("Due by 28 February 2027")
     }
@@ -159,7 +159,7 @@ class HoneyFlowTest {
         compose.onNodeWithText("Queenless").performClick()
         compose.onNodeWithText("Save").performScrollTo().performClick()
         // The editor shows the status too, so this waits for it to close.
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Save").fetchSemanticsNodes().isEmpty() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Save").fetchSemanticsNodes().isEmpty() }
         compose.onNodeWithText("Queenless").assertExists()
         compose.onNodeWithText("Queen from 2026, marked white").assertExists()
         assertEquals(HiveStatus.QUEENLESS, runBlocking { bees.hives.first().single().status })
@@ -207,12 +207,12 @@ class HoneyFlowTest {
 
         scrollTo("Every week")
         compose.onNodeWithText("Every week").performClick()
-        compose.waitUntil(10_000) { runBlocking { app.container.settingsStore.current().inspectEveryDays } == 7 }
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.current().inspectEveryDays } == 7 }
         scrollTo("Due by 1 November 2026")
 
         scrollTo("Remind me when a hive check is due")
         compose.onNodeWithText("Remind me when a hive check is due").performClick()
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Allow notifications").fetchSemanticsNodes().isEmpty() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Allow notifications").fetchSemanticsNodes().isEmpty() }
         assertEquals(false, runBlocking { app.container.settingsStore.current().hiveReminders })
     }
 
@@ -283,7 +283,7 @@ class HoneyFlowTest {
     }
 
     private fun waitFor(matcher: SemanticsMatcher) {
-        compose.waitUntil(10_000) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
     private fun shot(name: String) {

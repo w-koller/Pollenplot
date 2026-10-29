@@ -59,7 +59,7 @@ class ExportTest {
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Export data"))
         compose.onNodeWithText("Export data").performClick()
-        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Garden report")).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasText("Garden report")).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Save as a PDF").assertExists()
         compose.onNodeWithText("Save as a spreadsheet").assertExists()
         compose.onNodeWithText("Last 3 months").assertExists()

@@ -299,6 +299,3 @@ class IdentifyFlowTest {
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 }
-
-/** Generous, because Gradle may be running lint and packaging the app on the same cores while these tests run. */
-private const val WAIT_MS = 30_000L

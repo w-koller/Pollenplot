@@ -128,7 +128,7 @@ class RhythmsFlowTest {
     }
 
     private fun waitFor(matcher: SemanticsMatcher) {
-        compose.waitUntil(10_000) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
     private fun shot(name: String) {

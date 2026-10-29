@@ -68,16 +68,21 @@ class ShellScreenFlowTest {
         shot("shell_wildlife")
 
         tab("Bees").performClick()
+        // Each section shows once its records have come from the database.
+        waitFor(hasText("You have no honey bee hives yet."))
         compose.onNodeWithText("You have no honey bee hives yet.").assertIsDisplayed()
         shot("shell_bees_honey")
         compose.onNodeWithText("Native bees").performClick()
+        waitFor(hasText("You have no native bee hives yet."))
         compose.onNodeWithText("You have no native bee hives yet.").assertIsDisplayed()
         shot("shell_bees_native")
         compose.onNodeWithText("Bee hotels").performClick()
+        waitFor(hasText("You have no bee hotels yet."))
         compose.onNodeWithText("You have no bee hotels yet.").assertIsDisplayed()
         shot("shell_bees_hotels")
 
         tab("Water").performClick()
+        waitFor(hasText("No watering lines have been set up yet."))
         compose.onNodeWithText("No watering lines have been set up yet.").assertIsDisplayed()
         shot("shell_water")
     }
@@ -100,7 +105,7 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("Licences").performClick()
         shot("licences")
         compose.onNodeWithText("Android Jetpack and Jetpack Compose").performClick()
-        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Apache License", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasText("Apache License", substring = true)).fetchSemanticsNodes().isNotEmpty() }
         shot("licence_text")
     }
 
@@ -140,5 +145,9 @@ class ShellScreenFlowTest {
         val dir = File(System.getProperty("screenshots.dir") ?: "build/screenshots").apply { mkdirs() }
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    private fun waitFor(matcher: SemanticsMatcher) {
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
     }
 }
