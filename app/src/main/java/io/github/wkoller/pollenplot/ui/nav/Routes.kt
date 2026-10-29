@@ -80,6 +80,9 @@ import kotlinx.serialization.Serializable
 /** Exporting the garden's records as files. */
 @Serializable data object ExportRoute
 
+/** Saving a backup of everything, and restoring one. */
+@Serializable data object BackupRoute
+
 /** A new watering line, or a line's details to change. */
 @Serializable data class LineEditRoute(val id: String? = null)
 

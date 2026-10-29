@@ -76,6 +76,11 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `report/`: `Report` (sections of paragraphs and tables of text, numbers and days) and `XlsxWriter`, an Excel
     writer on `java.util.zip` alone. `app/report` builds a report from the records (`ReportBuilder`) and draws it on
     A4 pages through a `PageSink` (`PdfReportWriter`), so `ReportTest` draws the pages as pictures.
+  - `backup/`: `BackupArchive` (a backup file is a zip of its manifest, the garden's settings, every record as
+    JSON-LD, the database and the photos and cut-outs, and only `files/photos/` and `files/thumbs/` entries with plain
+    names are restored) and `BackupSeal`, which encrypts a backup with a password as a stream: PBKDF2-HMAC-SHA256,
+    then AES-256-GCM in 64 KiB segments (the STREAM construction, as Tink uses), with a password check in the header
+    so a wrong password is told from a damaged file.
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
   Android runtime matches; the app brings the Android one. `TextEmbedderTest` compares tokens and vectors with
@@ -108,6 +113,12 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   in the `embeddings` table and refreshed by `MeaningIndexWorker` after edits). Meaning matches come after keyword
   matches, at most three and only above `MeaningMatch.MIN_SCORE`, because this small model scores unrelated text
   about 0.5. `app/download` holds `VerifiedDownload`, the download manager with a SHA-256 check.
+- `app/backup`: `BackupService` writes a backup (the database copied by SQLite's `VACUUM INTO`, and the photos and
+  cut-outs its records show) and restores one in two steps. `read` checks the whole file and keeps it aside; it opens
+  the database through Room, which brings an older backup up to date with `PollenplotDatabase.MIGRATIONS` and refuses
+  one whose tables differ from the app's. `restore` replaces every table but the search index in one transaction, then
+  the photo folders, and the container rebuilds the index. `BackupSettings` holds the settings that go with the garden;
+  photo scanning, the notifications already shown and the models stay with the phone.
 - `app/scan`: the phone's gallery behind the `Gallery` interface (`MediaStoreGallery`), `PhotoScanner` (gallery and
   added photos through the analysis, each gallery photo recorded in `scanned_media` so it is looked at once), and the
   WorkManager jobs: `AddPhotosWorker`, `LibraryScanWorker` (stops after eight minutes and queues the rest),
@@ -149,6 +160,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   schedules wait for a test to set it up, and an update the test needs is run directly with `weedSync.update()`.
 - `WaterTestApp` gives the container a `RecordedWeb`, whose recorded Open-Meteo weather covers the week before and
   after the fixed day of 28 October 2026, and that fixed clock.
+- Screens that open the system's file picker are tested with a stand-in `ActivityResultRegistry` given through
+  `LocalActivityResultRegistryOwner`, and the chosen URI's streams registered with `shadowOf(contentResolver)`, as in
+  `BackupFlowTest`.
 - `SettingsStore` makes its DataStore itself, and DataStore allows one store per file in a process, so tests use the
   app's store (`app.container.settingsStore`) rather than making another.
 
@@ -213,9 +227,11 @@ through `ui/components/PollenShapes.kt` and other components, so an API change t
   coordinates in degrees × 10⁷.
 - Every user record has a UUID string key, which is also its IRI (`urn:uuid:…`) in the semantic layer.
 - The user database stays at schema version 1 until the first tagged release. After that, every change needs a
-  migration and a schema committed in `app/schemas/`, and there is no destructive migration fallback. The read-only
+  migration in `PollenplotDatabase.MIGRATIONS`, which restored backups go through too, and a schema committed in
+  `app/schemas/`, and there is no destructive migration fallback. The read-only
   knowledge database is rebuilt from `app/src/main/assets/kb/` whenever its version changes.
-- Garden locations sent to online services (weather, ALA) are rounded to about 1 km. Photos never leave the phone.
+- Garden locations sent to online services (weather, ALA) are rounded to about 1 km. Photos never leave the phone,
+  except in a backup file the user saves.
 - Every write goes through `GardenRepository`, which also updates the FTS4 search index and links, or through
   `BeeRepository`, `NativeBeeRepository` and `HotelRepository` for bee records, which put hives and hotels in the
   same index. Room supports FTS4 but not FTS5, so the index

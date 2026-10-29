@@ -85,6 +85,8 @@ import io.github.wkoller.pollenplot.ui.settings.LicenceTextScreen
 import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
 import io.github.wkoller.pollenplot.ui.settings.ModelsScreen
 import io.github.wkoller.pollenplot.ui.settings.ScanSettingsScreen
+import io.github.wkoller.pollenplot.ui.settings.BackupModel
+import io.github.wkoller.pollenplot.ui.settings.BackupScreen
 import io.github.wkoller.pollenplot.ui.settings.ExportScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
 import io.github.wkoller.pollenplot.ui.water.LineEditorScreen
@@ -532,6 +534,7 @@ fun AppRoot(
                         onOpenScanning = { navController.navigate(ScanSettingsRoute) },
                         onOpenModels = { navController.navigate(ModelsRoute) },
                         onOpenExport = { navController.navigate(ExportRoute) },
+                        onOpenBackup = { navController.navigate(BackupRoute) },
                         onOpenAbout = { navController.navigate(AboutRoute) },
                     )
                 }
@@ -545,6 +548,11 @@ fun AppRoot(
                         darwinCore = { container.exportDarwinCore(stateName) },
                         onBack = back,
                     )
+                }
+                composable<BackupRoute> {
+                    val model = viewModel { BackupModel(container.backups, context.contentResolver) }
+                    val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
+                    BackupScreen(model, current?.lastBackupAt, container.clock.zone, onBack = back)
                 }
                 composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, container.gemma, onBack = back) }
                 composable<GardenLocationRoute> {

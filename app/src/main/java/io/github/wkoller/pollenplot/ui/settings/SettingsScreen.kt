@@ -39,8 +39,10 @@ import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.ui.components.ConnectedChoice
+import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 @Composable
 fun SettingsScreen(
@@ -50,6 +52,7 @@ fun SettingsScreen(
     onOpenScanning: () -> Unit,
     onOpenModels: () -> Unit,
     onOpenExport: () -> Unit,
+    onOpenBackup: () -> Unit,
     onOpenAbout: () -> Unit,
 ) {
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
@@ -98,6 +101,18 @@ fun SettingsScreen(
                     leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
                     supportingContent = { Text(stringResource(R.string.export_body)) },
                 ) { Text(stringResource(R.string.export_title)) }
+            }
+            item {
+                ListItem(
+                    onClick = onOpenBackup,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_settings_backup_restore), contentDescription = null) },
+                    supportingContent = {
+                        Text(
+                            settings.lastBackupAt?.let { stringResource(R.string.settings_backup_last, UiFormat.longDate(Instant.ofEpochMilli(it))) }
+                                ?: stringResource(R.string.settings_backup_never),
+                        )
+                    },
+                ) { Text(stringResource(R.string.backup_title)) }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_appearance)) }

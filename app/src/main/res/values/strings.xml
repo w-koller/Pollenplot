@@ -52,6 +52,46 @@
     <string name="fixed_wildlife_no_state">Please contact a local wildlife rescue group or a vet for advice about the animal.</string>
     <string name="fixed_wildlife_care">Until then, please keep it somewhere warm, dark and quiet, and please don\'t give it food or water. Please don\'t touch a bat or flying-fox at all, because they can carry lyssavirus.</string>
     <string name="fixed_source">The official page</string>
+    <string name="backup_title">Backup and restore</string>
+    <string name="settings_backup_never">No backup has been saved on this phone yet.</string>
+    <string name="settings_backup_last">The last backup was saved on %1$s.</string>
+    <string name="backup_body">A backup is one file that holds everything you have recorded in Pollenplot, from zones, plants and photos to sightings, hives, hotels and watering, with the settings that go with them. Please keep it somewhere other than this phone, such as a computer or cloud storage.</string>
+    <string name="backup_save_heading">Saving a backup</string>
+    <string name="backup_password">Password (optional)</string>
+    <string name="backup_password_body">With a password, the backup is encrypted and opens only with that password. Please keep the password somewhere safe, because nobody can recover it.</string>
+    <string name="backup_password_repeat">Type the password again</string>
+    <string name="backup_password_mismatch">The two passwords are not the same. Please type them again.</string>
+    <string name="backup_show_password">Show the password</string>
+    <string name="backup_hide_password">Hide the password</string>
+    <string name="backup_save">Save a backup</string>
+    <string name="backup_saving">Saving the backup.</string>
+    <string name="backup_saved">The backup was saved.</string>
+    <string name="backup_save_failed">The backup could not be saved. Please try again.</string>
+    <string name="backup_restore_heading">Restoring a backup</string>
+    <string name="backup_restore_body">Restoring replaces the records and photos on this phone with those in the backup. The models you have downloaded and the photo scanning settings stay as they are on this phone.</string>
+    <string name="backup_choose">Choose a backup file</string>
+    <string name="backup_reading">Reading the backup.</string>
+    <string name="backup_needs_password">This backup is encrypted. Please enter its password.</string>
+    <string name="backup_wrong_password">The password does not open this backup. Please check it and try again.</string>
+    <string name="backup_unlock_password">Password</string>
+    <string name="backup_open">Open the backup</string>
+    <string name="backup_found">Backup saved on %1$s</string>
+    <string name="backup_holds">It holds %1$s.</string>
+    <string name="backup_holds_nothing">It holds no records.</string>
+    <string name="backup_list_and">%1$s and %2$s</string>
+    <string name="backup_restore">Restore</string>
+    <string name="backup_confirm_title">Replace the records on this phone?</string>
+    <string name="backup_confirm_body">Everything recorded on this phone will be replaced with the records and photos in this backup. This cannot be undone. Please save a backup of this phone first if you want to keep its records.</string>
+    <string name="backup_replace">Replace</string>
+    <string name="backup_restoring">Restoring the backup.</string>
+    <string name="backup_restored">The backup was restored.</string>
+    <string name="backup_restore_failed">The backup could not be restored. The records on this phone have not changed.</string>
+    <string name="backup_photos_failed">The records were restored, but some photos could not be put in place. Please restore the backup again.</string>
+    <string name="backup_not_a_backup">This file is not a Pollenplot backup. Please choose another file.</string>
+    <string name="backup_damaged">This backup is damaged or incomplete, so it cannot be restored. The records on this phone have not changed.</string>
+    <string name="backup_newer">This backup was made by a newer version of Pollenplot. Please update the app, then try again.</string>
+    <string name="backup_no_space">There is not enough free space on the phone to restore this backup. Please free up some space, then try again.</string>
+    <string name="backup_unreadable">The file could not be read. Please try again.</string>
     <string name="app_name">Pollenplot</string>
     <string name="app_tagline">Ecosystem Management for Your Backyard</string>
     <string name="back">Back</string>
@@ -1265,6 +1305,34 @@
     <string name="animal_search_label">Name of the animal or fungus</string>
     <string name="animal_search_none">Pollenplot\'s animal list has nothing called “%1$s” yet.</string>
     <string name="animal_search_use">Use “%1$s”</string>
+    <plurals name="backup_zones">
+        <item quantity="one">%d zone</item>
+        <item quantity="other">%d zones</item>
+    </plurals>
+    <plurals name="backup_plants">
+        <item quantity="one">%d plant</item>
+        <item quantity="other">%d plants</item>
+    </plurals>
+    <plurals name="backup_photos">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+    <plurals name="backup_sightings">
+        <item quantity="one">%d sighting</item>
+        <item quantity="other">%d sightings</item>
+    </plurals>
+    <plurals name="backup_hives">
+        <item quantity="one">%d hive</item>
+        <item quantity="other">%d hives</item>
+    </plurals>
+    <plurals name="backup_hotels">
+        <item quantity="one">%d bee hotel</item>
+        <item quantity="other">%d bee hotels</item>
+    </plurals>
+    <plurals name="backup_lines">
+        <item quantity="one">%d watering line</item>
+        <item quantity="other">%d watering lines</item>
+    </plurals>
     <plurals name="notify_hive_many_title">
         <item quantity="one">%d hive check is due</item>
         <item quantity="other">%d hive checks are due</item>

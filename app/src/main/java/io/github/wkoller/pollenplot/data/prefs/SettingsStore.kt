@@ -59,6 +59,8 @@ data class Settings(
     val waterReminders: Boolean = true,
     /** The day a notification last told what watering was due, as an ISO date. */
     val waterToldOn: String? = null,
+    /** When a backup file was last saved on this phone, or the newest backup restored here, in epoch milliseconds. */
+    val lastBackupAt: Long? = null,
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
@@ -99,6 +101,7 @@ class SettingsStore(context: Context) {
         val heatToldDays = stringSetPreferencesKey("heat_told_days")
         val waterReminders = booleanPreferencesKey("water_reminders")
         val waterToldOn = stringPreferencesKey("water_told_on")
+        val lastBackupAt = longPreferencesKey("last_backup_at")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -133,6 +136,7 @@ class SettingsStore(context: Context) {
             heatToldDays = this[Keys.heatToldDays] ?: defaults.heatToldDays,
             waterReminders = this[Keys.waterReminders] ?: defaults.waterReminders,
             waterToldOn = this[Keys.waterToldOn],
+            lastBackupAt = this[Keys.lastBackupAt],
         )
     }
 
@@ -159,6 +163,7 @@ class SettingsStore(context: Context) {
         this[Keys.heatToldDays] = settings.heatToldDays
         this[Keys.waterReminders] = settings.waterReminders
         setOrRemove(Keys.waterToldOn, settings.waterToldOn)
+        setOrRemove(Keys.lastBackupAt, settings.lastBackupAt)
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

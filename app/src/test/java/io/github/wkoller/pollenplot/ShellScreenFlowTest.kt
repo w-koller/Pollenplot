@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.wkoller.pollenplot.data.prefs.Settings
@@ -99,6 +101,7 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("Garden assistant").assertIsDisplayed()
         shot("models")
         compose.onNodeWithContentDescription("Back").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("About Pollenplot"))
         compose.onNodeWithText("About Pollenplot").performClick()
         compose.onNodeWithText("Ecosystem Management for Your Backyard").assertIsDisplayed()
         shot("about")

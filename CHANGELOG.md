@@ -156,6 +156,12 @@
   spreadsheet with a sheet for each table, its header row fixed with filters, and numbers and days that sort.
 - Settings › Export data saves a copy of your records as files: all of them as JSON-LD, and the sightings as a Darwin
   Core table that biodiversity portals take in, with the garden's place rounded to about 1 km.
+- Settings › Backup and restore: one file that holds every record, the photos and cut-outs they show, the garden's
+  settings and all the records as JSON-LD. With a password, the file is encrypted with AES-256-GCM under a key made
+  from the password, and a backup that has been changed or cut short is refused. Restoring reads and checks the whole
+  file first and says what it holds, then replaces the phone's records only once you confirm; if they cannot all be
+  written, the phone keeps its own. The downloaded models and the photo scanning settings stay as they are on the
+  phone.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood

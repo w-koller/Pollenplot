@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 
 /**
  * The user's garden records. It stays at version 1 until the first tagged release; after that every change needs a
@@ -41,8 +42,14 @@ abstract class PollenplotDatabase : RoomDatabase() {
     companion object {
         const val FILE_NAME = "pollenplot.db"
 
+        /**
+         * Every migration since the first tagged release. The app's own database and a restored backup from an older
+         * version are both brought up to date with these.
+         */
+        val MIGRATIONS: Array<Migration> = emptyArray()
+
         fun create(context: Context): PollenplotDatabase =
-            Room.databaseBuilder(context, PollenplotDatabase::class.java, FILE_NAME).build()
+            Room.databaseBuilder(context, PollenplotDatabase::class.java, FILE_NAME).addMigrations(*MIGRATIONS).build()
 
         /** A database in memory, for tests. */
         fun inMemory(context: Context): PollenplotDatabase =

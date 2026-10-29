@@ -6,6 +6,7 @@ import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
 import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.ai.SecondOpinionWorker
+import io.github.wkoller.pollenplot.backup.BackupService
 import io.github.wkoller.pollenplot.data.BeeRepository
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.GardenRepository
@@ -151,8 +152,11 @@ class AppContainer(
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
         Log.w("GardenAssistant", "Gemma 4 could not answer", error)
     }
+    val backups = BackupService(appContext, this.database, settingsStore, clock, ::exportJsonLd, ::afterRestore, scope)
 
     init {
+        // A restore that was read but not finished, or stopped part way, leaves files behind until the next start.
+        scope.launch { backups.tidy() }
         // Finds already waiting for review get Gemma 4's second opinion once it is on the phone.
         scope.launch {
             gemma.state.first { it == DownloadState.Complete }
@@ -199,6 +203,26 @@ class AppContainer(
                 .filter { it == DownloadState.Complete }
                 .collect { MeaningIndexWorker.enqueue(appContext) }
         }
+    }
+
+    /**
+     * After a backup is restored, the search index is rebuilt from its records, and the finds it brings that are
+     * waiting for review get the accurate pack's and Gemma 4's look when they are on the phone. Everything else follows
+     * the records and settings by itself, from the weed lists for a garden that moved to the morning reminders.
+     */
+    private suspend fun afterRestore() {
+        try {
+            knowledge.await()
+            garden.reindexAll()
+            bees.reindex()
+            nativeBees.reindex()
+            hotels.reindex()
+        } catch (e: RuntimeException) {
+            // The index is rebuilt again when the app next starts, so search catches up then.
+            Log.w("Backup", "The search index could not be rebuilt after a restore", e)
+        }
+        if (accurate.state.value == PackState.Ready) AccurateScanWorker.enqueue(appContext)
+        if (gemma.state.value == DownloadState.Complete) SecondOpinionWorker.enqueue(appContext)
     }
 
     /** Every record, the garden's and the bees', as one JSON-LD document for backups and "Export data". */
