@@ -2,7 +2,7 @@
 title: Exotic mites to report
 summary: Two mites that harm honey bees overseas are not in Australia, and this page says how to recognise one and whom to call.
 section: honey
-order: 5
+order: 11
 lastChecked: 2026-10-29
 sources:
   - Tropilaelaps mites fact sheet, Plant Health Australia | https://www.planthealthaustralia.com.au/wp-content/uploads/2024/02/Tropilaelaps-mites-FS.pdf

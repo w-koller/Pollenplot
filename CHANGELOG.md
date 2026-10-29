@@ -57,7 +57,7 @@
 - Identify animals with the camera: choose what you are photographing, such as a bird, insect, spider, frog or
   fungus. AIY Birds V1 and AIY Insects V1 run on the phone for live suggestions of birds and insects, checked against
   their published SHA-256 when the app is built.
-- An animal knowledge base of 76 animals and fungi found in Australian backyards: what each does in a garden, the
+- An animal knowledge base of 82 animals and fungi found in Australian backyards: what each does in a garden, the
   plants it uses, what it needs, what to know before going near it and, where the law asks something, what to do,
   with the official page. Fire ants must be reported in Queensland and New South Wales, for example.
 - Sightings: an animal found in a photo is added as a sighting, with its zone, the plant it was on and what it was
@@ -182,7 +182,12 @@
   phone.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
-- The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood
-  diseases, small hive beetle and wax moth, exotic mites to report and, for gardens in Queensland, keeping bees there.
-  Each page says when its facts were last checked and links the pages they come from: the Code of Practice, BeeAware,
-  Business Queensland and Plant Health Australia.
+- The honey bee guide, in the honey bee section: what every beekeeper must do, setting up a hive, working a hive,
+  the beekeeping year, swarms, feeding bees, taking honey, checking for Varroa mite, brood diseases, small hive beetle
+  and wax moth, exotic mites to report and, for gardens in Queensland, keeping bees there. Each page says when its
+  facts were last checked and links the pages they come from: the Code of Practice, BeeAware, Business Queensland,
+  Agriculture Victoria, Plant Health Australia, the Professional Beekeepers pages on Extension AUS and the Food
+  Standards Code.
+- Six more native bees in the animal knowledge base, from the Australian Museum: the peacock carpenter bee, the
+  feathery Leioproctus bee, and the leafcutter, masked, Nomia and furrow bees. They count among the native bees seen
+  in the yard.

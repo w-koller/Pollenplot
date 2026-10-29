@@ -2,7 +2,7 @@
 title: Checking for Varroa mite
 summary: What Varroa mite is, how often to check for it, how to do an alcohol wash, and what to do with the result.
 section: honey
-order: 2
+order: 8
 lastChecked: 2026-10-29
 sources:
   - The Australian Honey Bee Industry Biosecurity Code of Practice, version 2.1 | https://honeybee.org.au/wp-content/uploads/2026/04/260421-Code-of-Practice.pdf

@@ -2,7 +2,7 @@
 title: Keeping bees in Queensland
 summary: What Queensland's laws ask of beekeepers, and how Business Queensland suggests keeping hives in a backyard.
 section: honey
-order: 6
+order: 12
 states: qld
 lastChecked: 2026-10-29
 sources:

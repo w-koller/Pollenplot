@@ -2,7 +2,7 @@
 title: Small hive beetle and wax moth
 summary: How to recognise small hive beetle and wax moth, and how to keep them out of hives and stored comb.
 section: honey
-order: 4
+order: 10
 lastChecked: 2026-10-29
 sources:
   - Small hive beetle, BeeAware | https://beeaware.org.au/archive-pest/small-hive-beetle/

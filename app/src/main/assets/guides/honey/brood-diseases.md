@@ -2,7 +2,7 @@
 title: Brood diseases
 summary: The signs of American foulbrood, European foulbrood, chalkbrood and sacbrood, and what to do about each.
 section: honey
-order: 3
+order: 9
 lastChecked: 2026-10-29
 sources:
   - American foulbrood, BeeAware | https://beeaware.org.au/archive-pest/american-foulbrood/
