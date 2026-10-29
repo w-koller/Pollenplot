@@ -536,6 +536,7 @@ fun AppRoot(
                     val stateName = current?.gardenState?.let { stringResource(it.label) }
                     ExportScreen(
                         today = container.beeViews.today(),
+                        report = { parts, from, to, pdf, out -> container.writeReport(parts, from, to, pdf, out) },
                         jsonLd = { container.exportJsonLd() },
                         darwinCore = { container.exportDarwinCore(stateName) },
                         onBack = back,

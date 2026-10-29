@@ -30,9 +30,13 @@ import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
+import io.github.wkoller.pollenplot.domain.report.XlsxWriter
 import io.github.wkoller.pollenplot.domain.semantic.DarwinCore
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.notify.HeatAlertCheck
+import io.github.wkoller.pollenplot.report.ReportPart
+import io.github.wkoller.pollenplot.report.ReportBuilder
+import io.github.wkoller.pollenplot.report.PdfReportWriter
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
@@ -67,7 +71,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.OutputStream
 import java.time.Clock
+import java.time.LocalDate
 
 /**
  * Builds the app's shared objects once. Screens and workers reach it through [PollenplotApp]. Tests pass an in-memory
@@ -137,6 +143,7 @@ class AppContainer(
     val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
     val waterPlan = WaterPlanCheck(water, waterViews, settingsStore, notifications)
+    val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
@@ -200,6 +207,14 @@ class AppContainer(
         val fauna = knowledge.awaitFauna()
         val sightings = garden.sightingList.first().map { it to fauna.animal(it.speciesName ?: it.label) }
         return DarwinCore.csv(sightings, settingsStore.current().gardenPlace, stateName, clock.zone)
+    }
+
+    /** A garden report of [parts] for the records from [from] to [to], written to [out] as a PDF or a spreadsheet. */
+    suspend fun writeReport(parts: Set<ReportPart>, from: LocalDate, to: LocalDate, pdf: Boolean, out: OutputStream) {
+        val report = reports.build(parts, from, to)
+        withContext(Dispatchers.IO) {
+            if (pdf) PdfReportWriter(appContext.getString(R.string.report_footer)).write(report, out) else XlsxWriter.write(report, out)
+        }
     }
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */

@@ -59,7 +59,11 @@ class ExportTest {
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Export data"))
         compose.onNodeWithText("Export data").performClick()
-        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Sightings as Darwin Core")).fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("All records as JSON-LD").assertExists()
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Garden report")).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Save as a PDF").assertExists()
+        compose.onNodeWithText("Save as a spreadsheet").assertExists()
+        compose.onNodeWithText("Last 3 months").assertExists()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Sightings as Darwin Core"))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("All records as JSON-LD"))
     }
 }

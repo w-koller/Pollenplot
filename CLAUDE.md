@@ -72,7 +72,10 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     `weather/OpenMeteoForecast` makes the forecast and weather requests and reads their answers.
   - `rhythms/`: `RhythmsEngine` (each bee group's forage points and level per month, its gaps, and plants that would
     fill them; the measure is described in its KDoc and on the screen) and `RhythmsFeed` (this month's cards).
-  - `guide/`: `Guide` and `GuideParser`, which reads a bee guide page (see Guides below).
+  - `guide/`: `Guide` and `GuideParser`, which reads a guide page (see Guides below).
+  - `report/`: `Report` (sections of paragraphs and tables of text, numbers and days) and `XlsxWriter`, an Excel
+    writer on `java.util.zip` alone. `app/report` builds a report from the records (`ReportBuilder`) and draws it on
+    A4 pages through a `PageSink` (`PdfReportWriter`), so `ReportTest` draws the pages as pictures.
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
   Android runtime matches; the app brings the Android one. `TextEmbedderTest` compares tokens and vectors with
