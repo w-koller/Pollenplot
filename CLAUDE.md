@@ -83,7 +83,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `guide/`: `Guide` and `GuideParser`, which reads a guide page (see Guides below).
   - `report/`: `Report` (sections of paragraphs and tables of text, numbers and days) and `XlsxWriter`, an Excel
     writer on `java.util.zip` alone. `app/report` builds a report from the records (`ReportBuilder`) and draws it on
-    A4 pages through a `PageSink` (`PdfReportWriter`), so `ReportTest` draws the pages as pictures.
+    A4 pages through a `PageSink` (`PdfReportWriter`), so `ReportTest` draws the pages as pictures. A section's
+    `ReportFigure`s (the Plot to scale, the plants' cut-outs) are drawn in the PDF and left out of the spreadsheet.
   - `backup/`: `BackupArchive` (a backup file is a zip of its manifest, the garden's settings, every record as
     JSON-LD, the database and the photos and cut-outs, and only `files/photos/` and `files/thumbs/` entries with plain
     names are restored) and `BackupSeal`, which encrypts a backup with a password as a stream: PBKDF2-HMAC-SHA256,

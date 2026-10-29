@@ -1,16 +1,21 @@
 package io.github.wkoller.pollenplot.report
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.text.TextUtils
 import androidx.core.graphics.withTranslation
 import io.github.wkoller.pollenplot.domain.report.Report
 import io.github.wkoller.pollenplot.domain.report.ReportCell
+import io.github.wkoller.pollenplot.domain.report.ReportFigure
 import io.github.wkoller.pollenplot.domain.report.ReportTable
 import io.github.wkoller.pollenplot.ui.UiFormat
 import java.io.OutputStream
@@ -34,7 +39,22 @@ private class PdfSink(private val document: PdfDocument) : PageSink {
     }
 }
 
-/** Writes a garden report as an A4 PDF: its title and lines, then each section's paragraphs and tables. */
+/** The tallest the Plot is drawn, in points, so a long narrow yard leaves room on its page. */
+private const val PLOT_MAX_HEIGHT = 300f
+
+/** How many pictures go in a row. */
+private const val PER_ROW = 4
+
+/** The space a table cell keeps around its words, 3 points on each side. */
+private const val CELL_PADDING = 6f
+
+/** The most of the page's width one column takes when others need room too. */
+private const val MAX_COLUMN_SHARE = 0.35f
+
+/**
+ * Writes a garden report as an A4 PDF: its title and lines, then each section's paragraphs, the Plot drawn to scale,
+ * its tables and its pictures.
+ */
 class PdfReportWriter(private val footer: String) {
     fun write(report: Report, out: OutputStream) {
         val document = PdfDocument()
@@ -52,7 +72,10 @@ class PdfReportWriter(private val footer: String) {
             writer.keepTogether(60f)
             writer.text(section.title, writer.heading)
             section.paragraphs.forEach { writer.text(it, writer.body) }
+            // The Plot gives the overview before the tables, and the pictures come after them.
+            section.figures.filterIsInstance<ReportFigure.Plot>().forEach { writer.plot(it) }
             section.tables.forEach { table -> writer.table(table) }
+            section.figures.filterIsInstance<ReportFigure.Pictures>().forEach { writer.pictures(it) }
         }
         writer.finish()
     }
@@ -76,6 +99,18 @@ class PdfReportWriter(private val footer: String) {
         private val smallBold = paint(8f, bold = true)
         private val subheading = paint(10.5f, bold = true)
         private val line = Paint().apply { color = Color.rgb(120, 120, 120); strokeWidth = 0.6f }
+        private val zoneFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(232, 240, 224) }
+        private val zoneEdge = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(90, 110, 80)
+            style = Paint.Style.STROKE
+            strokeWidth = 0.8f
+        }
+        private val frame = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(160, 160, 160)
+            style = Paint.Style.STROKE
+            strokeWidth = 0.6f
+        }
+        private val picturePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
         init {
             newPage()
@@ -116,8 +151,12 @@ class PdfReportWriter(private val footer: String) {
             if (y + space > bottom) newPage()
         }
 
-        private fun layout(text: String, paint: TextPaint, width: Int): StaticLayout =
-            StaticLayout.Builder.obtain(text, 0, text.length, paint, width).setAlignment(Layout.Alignment.ALIGN_NORMAL).build()
+        private fun layout(text: String, paint: TextPaint, width: Int, maxLines: Int = Int.MAX_VALUE): StaticLayout =
+            StaticLayout.Builder.obtain(text, 0, text.length, paint, width)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setMaxLines(maxLines)
+                .setEllipsize(if (maxLines == Int.MAX_VALUE) null else TextUtils.TruncateAt.END)
+                .build()
 
         fun text(text: String, paint: TextPaint) {
             val layout = layout(text, paint, contentWidth.toInt())
@@ -132,15 +171,7 @@ class PdfReportWriter(private val footer: String) {
             keepTogether(48f)
             text(table.title, subheading)
             val cells = table.rows.map { row -> row.map(::cellText) }
-            // Each column's share follows its longest text, up to a limit, and is never narrower than its longest word, so
-            // words wrap between them rather than inside them.
-            val weights = table.columns.indices.map { i ->
-                val texts = listOf(table.columns[i]) + cells.map { it[i] }
-                val longestWord = texts.flatMap { it.split(' ') }.maxOf { it.length } + 1
-                max(longestWord, texts.maxOf { it.length }.coerceAtMost(40)).toFloat()
-            }
-            val total = weights.sum()
-            val widths = weights.map { it / total * contentWidth }
+            val widths = columnWidths(table.columns, cells)
             fun drawRow(row: List<String>, paint: TextPaint) {
                 val layouts = row.mapIndexed { i, text -> layout(text, paint, (widths[i] - 6f).toInt().coerceAtLeast(10)) }
                 val rowHeight = max(layouts.maxOf { it.height }.toFloat(), paint.textSize) + 6f
@@ -158,6 +189,108 @@ class PdfReportWriter(private val footer: String) {
             drawRow(table.columns, smallBold)
             cells.forEach { drawRow(it, small) }
             y += 8f
+        }
+
+        /** The Plot to scale, as wide as the page and no taller than [PLOT_MAX_HEIGHT], each zone with its name. */
+        fun plot(plot: ReportFigure.Plot) {
+            val left = plot.zones.minOf { it.xCm }
+            val top = plot.zones.minOf { it.yCm }
+            val spanX = (plot.zones.maxOf { it.xCm + it.widthCm } - left).coerceAtLeast(1)
+            val spanY = (plot.zones.maxOf { it.yCm + it.heightCm } - top).coerceAtLeast(1)
+            val scale = minOf(contentWidth / spanX, PLOT_MAX_HEIGHT / spanY)
+            val height = spanY * scale
+            keepTogether(height + 32f)
+            text(plot.title, subheading)
+            val originY = y
+            plot.zones.forEach { zone ->
+                val box = RectF(
+                    margin + (zone.xCm - left) * scale,
+                    originY + (zone.yCm - top) * scale,
+                    margin + (zone.xCm - left + zone.widthCm) * scale,
+                    originY + (zone.yCm - top + zone.heightCm) * scale,
+                )
+                canvas.drawRoundRect(box, 6f, 6f, zoneFill)
+                canvas.drawRoundRect(box, 6f, 6f, zoneEdge)
+                val inner = (box.width() - 8f).toInt()
+                if (inner >= 12) {
+                    val name = layout(zone.name, small, inner, maxLines = ((box.height() - 8f) / small.fontSpacing).toInt().coerceAtLeast(1))
+                    canvas.withTranslation(box.left + 4f, box.top + 4f) { name.draw(this) }
+                }
+            }
+            y = originY + height + 10f
+        }
+
+        /** Pictures in rows of [PER_ROW], each fitted into a square with its caption under it. */
+        fun pictures(figure: ReportFigure.Pictures) {
+            val cell = contentWidth / PER_ROW
+            val side = cell - 12f
+            keepTogether(side + 64f)
+            text(figure.title, subheading)
+            figure.items.chunked(PER_ROW).forEach { row ->
+                val captions = row.map { layout(it.caption, small, side.toInt(), maxLines = 2) }
+                val rowHeight = side + 4f + captions.maxOf { it.height } + 10f
+                ensure(rowHeight)
+                row.forEachIndexed { i, item ->
+                    val x = margin + i * cell
+                    picture(item.path, RectF(x, y, x + side, y + side))
+                    canvas.withTranslation(x, y + side + 4f) { captions[i].draw(this) }
+                }
+                y += rowHeight
+            }
+            y += 4f
+        }
+
+        /** A picture fitted into [box]; a file that cannot be read leaves an empty frame. */
+        private fun picture(path: String, box: RectF) {
+            // Twice the size it is drawn at keeps it sharp in print without making the PDF large.
+            val bitmap = decode(path, (box.width() * 2).toInt())
+            if (bitmap == null) {
+                canvas.drawRect(box, frame)
+                return
+            }
+            val fit = minOf(box.width() / bitmap.width, box.height() / bitmap.height)
+            val width = bitmap.width * fit
+            val height = bitmap.height * fit
+            canvas.drawBitmap(bitmap, null, RectF(box.centerX() - width / 2, box.centerY() - height / 2, box.centerX() + width / 2, box.centerY() + height / 2), picturePaint)
+            bitmap.recycle()
+        }
+
+        /** A picture decoded at no less than [maxSide] pixels across, halved while it stays larger; null if it cannot be read. */
+        private fun decode(path: String, maxSide: Int): Bitmap? {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, bounds)
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+            var sample = 1
+            while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxSide) sample *= 2
+            return BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sample })
+        }
+
+        /**
+         * Each column at least as wide as its longest word, measured in the font it is drawn in, so words wrap between
+         * them rather than inside them. The width left over goes to the columns whose text wants more, up to
+         * [MAX_COLUMN_SHARE] of the page each. Only when the words alone are wider than the page are they squeezed.
+         */
+        private fun columnWidths(columns: List<String>, cells: List<List<String>>): List<Float> {
+            fun longestWord(text: String, paint: TextPaint) = text.split(' ').maxOf { paint.measureText(it) }
+            val least = columns.indices.map { i ->
+                maxOf(longestWord(columns[i], smallBold), cells.maxOfOrNull { longestWord(it[i], small) } ?: 0f) + CELL_PADDING
+            }
+            val wanted = columns.indices.map { i ->
+                val whole = maxOf(smallBold.measureText(columns[i]), cells.maxOfOrNull { small.measureText(it[i]) } ?: 0f) + CELL_PADDING
+                maxOf(least[i], minOf(whole, contentWidth * MAX_COLUMN_SHARE))
+            }
+            val leastTotal = least.sum()
+            if (leastTotal >= contentWidth) return least.map { it / leastTotal * contentWidth }
+            val room = contentWidth - leastTotal
+            val more = wanted.zip(least) { want, min -> want - min }
+            val moreTotal = more.sum()
+            return if (moreTotal <= room) {
+                // Every column gets what it wants, and what is still left is shared out by width.
+                val spare = room - moreTotal
+                wanted.map { it + spare * it / wanted.sum() }
+            } else {
+                least.mapIndexed { i, min -> min + room * more[i] / moreTotal }
+            }
         }
 
         private fun cellText(cell: ReportCell): String = when (cell) {

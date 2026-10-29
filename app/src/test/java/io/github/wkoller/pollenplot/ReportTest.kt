@@ -10,9 +10,11 @@ import io.github.wkoller.pollenplot.domain.bees.honey.HiveType
 import io.github.wkoller.pollenplot.domain.bees.honey.VarroaCheck
 import io.github.wkoller.pollenplot.domain.bees.honey.VarroaMethod
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.report.ReportFigure
 import io.github.wkoller.pollenplot.report.PageSink
 import io.github.wkoller.pollenplot.report.PdfReportWriter
 import io.github.wkoller.pollenplot.report.ReportPart
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -73,6 +75,9 @@ class ReportTest {
         val plants = report.tables.single { it.title == "Plants" }
         assertTrue("Every plant in the demo yard is listed", plants.rows.size >= 12)
         assertTrue("A weed is marked", plants.rows.any { row -> (row[0] as io.github.wkoller.pollenplot.domain.report.ReportCell.Text).text == "Lantana" && (row[7] as io.github.wkoller.pollenplot.domain.report.ReportCell.Text).text == "Yes" })
+        val plot = report.sections.first().figures.filterIsInstance<ReportFigure.Plot>().single()
+        assertEquals("The demo yard's four zones, in their places", 4, plot.zones.size)
+        assertTrue("No plant has a cut-out yet", report.sections.first().figures.none { it is ReportFigure.Pictures })
         val onlyBees = app.container.reports.build(setOf(ReportPart.HONEY), today.minusMonths(1), today)
         assertEquals(listOf("Honey bees"), onlyBees.sections.map { it.title })
         assertEquals("A part with nothing recorded says so", listOf("Nothing was recorded in this period."), report.sections.single { it.title == "Bee hotels" }.paragraphs)
@@ -90,6 +95,26 @@ class ReportTest {
             }
         }
         assertEquals("Zones and plants, then hives, inspections, mite checks, treatments and harvests", 7, sheets.size)
+    }
+
+    @Test
+    fun `a plant's cut-out goes in the PDF unless pictures are left out`() = runBlocking {
+        val lemon = app.container.garden.plantList.first().single { it.customName == "Mum's lemon" }
+        val cut = app.container.photos.saveThumbnail(TestPhotos.paintedPlant(TestPhotos.bottlebrush, 256))
+        app.container.garden.updatePlant(lemon.copy(thumbnail = cut))
+        val with = app.container.reports.build(setOf(ReportPart.GARDEN), today.minusMonths(3), today)
+        val pictures = with.sections.single().figures.filterIsInstance<ReportFigure.Pictures>().single()
+        assertEquals(listOf("Mum's lemon"), pictures.items.map { it.caption })
+        assertTrue(File(pictures.items.single().path).isFile)
+        val without = app.container.reports.build(setOf(ReportPart.GARDEN), today.minusMonths(3), today, pictures = false)
+        assertTrue(without.sections.single().figures.none { it is ReportFigure.Pictures })
+
+        val sink = PictureSink()
+        PdfReportWriter("Pollenplot garden report").render(with, sink)
+        val dir = File(System.getProperty("screenshots.dir") ?: "build/screenshots").apply { mkdirs() }
+        sink.pages.forEachIndexed { index, page ->
+            File(dir, "report_garden_page${index + 1}.png").outputStream().use { page.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
     }
 
     @Test

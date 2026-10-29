@@ -165,6 +165,8 @@
 - The garden report, in Settings › Export data: zones and plants, wildlife, Pollen Rhythms, honey bees, native bees,
   bee hotels and watering, for the last month, 3 months or 12 months, saved as a PDF on A4 pages or as an Excel
   spreadsheet with a sheet for each table, its header row fixed with filters, and numbers and days that sort.
+- The garden report's PDF draws the Plot to scale and shows each plant's cut-out with its name, unless you leave the
+  pictures out, and its table columns are never narrower than their longest word.
 - Settings › Export data saves a copy of your records as files: all of them as JSON-LD, and the sightings as a Darwin
   Core table that biodiversity portals take in, with the garden's place rounded to about 1 km.
 - Large text: with the phone's text at up to twice its size, tab names stay whole, choices such as the Bees

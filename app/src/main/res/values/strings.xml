@@ -747,6 +747,9 @@
     <string name="state_wa">Western Australia</string>
     <string name="state_nt">Northern Territory</string>
     <string name="state_act">Australian Capital Territory</string>
+    <string name="report_plot">The Plot</string>
+    <string name="report_pictures">The plants</string>
+    <string name="report_with_pictures">Show the plants\' pictures in the PDF</string>
     <string name="report">Garden report</string>
     <string name="report_body">A report of your garden\'s records for a period, as a PDF to read or print, or as a spreadsheet to work with.</string>
     <string name="report_period">Period</string>

@@ -11,8 +11,11 @@ import io.github.wkoller.pollenplot.data.RhythmsViews
 import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
+import io.github.wkoller.pollenplot.domain.report.PlotZone
 import io.github.wkoller.pollenplot.domain.report.Report
 import io.github.wkoller.pollenplot.domain.report.ReportCell
+import io.github.wkoller.pollenplot.domain.report.ReportFigure
+import io.github.wkoller.pollenplot.domain.report.ReportPicture
 import io.github.wkoller.pollenplot.domain.report.ReportSection
 import io.github.wkoller.pollenplot.domain.report.ReportTable
 import io.github.wkoller.pollenplot.domain.rhythms.BeeGroup
@@ -22,13 +25,14 @@ import io.github.wkoller.pollenplot.ui.bees.label
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.water.label
 import io.github.wkoller.pollenplot.ui.wildlife.label
-import kotlinx.coroutines.flow.first
+import java.io.File
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlinx.coroutines.flow.first
 
 /** The parts of the garden a report can cover. */
 enum class ReportPart(@StringRes val label: Int) {
@@ -69,7 +73,8 @@ class ReportBuilder(
 
     private fun table(@StringRes title: Int, columns: List<Int>, rows: List<List<ReportCell>>) = ReportTable(s(title), columns.map { s(it) }, rows)
 
-    suspend fun build(parts: Set<ReportPart>, from: LocalDate, to: LocalDate): Report {
+    /** The report of [parts] for the records from [from] to [to], with the plants' cut-outs when [pictures] is set. */
+    suspend fun build(parts: Set<ReportPart>, from: LocalDate, to: LocalDate, pictures: Boolean = true): Report {
         val today = LocalDate.now(clock)
         val place = settings.current().gardenPlace
         val lines = listOfNotNull(
@@ -80,7 +85,7 @@ class ReportBuilder(
         fun inPeriod(date: LocalDate) = !date.isBefore(from) && !date.isAfter(to)
         val sections = ReportPart.entries.filter { it in parts }.map { part ->
             when (part) {
-                ReportPart.GARDEN -> garden()
+                ReportPart.GARDEN -> garden(pictures)
                 ReportPart.WILDLIFE -> wildlife(::inPeriod)
                 ReportPart.RHYTHMS -> rhythms()
                 ReportPart.HONEY -> honey(::inPeriod)
@@ -90,15 +95,28 @@ class ReportBuilder(
             }
         }
         // A part with nothing recorded says so, rather than showing a heading with nothing under it.
-        val said = sections.map { section ->
-            if (section.paragraphs.isEmpty() && section.tables.all { it.rows.isEmpty() }) section.copy(paragraphs = listOf(s(R.string.report_none))) else section
-        }
+        val said = sections.map { section -> if (section.isEmpty) section.copy(paragraphs = listOf(s(R.string.report_none))) else section }
         return Report(s(R.string.report_title), lines, said)
     }
 
-    private suspend fun garden(): ReportSection {
+    private suspend fun garden(pictures: Boolean): ReportSection {
         val zones = views.zones.first()
         val plants = views.plants.first()
+        val plot = ReportFigure.Plot(
+            s(R.string.report_plot),
+            zones.map { view -> view.zone.rect.let { PlotZone(view.zone.name, it.xCm, it.yCm, it.widthCm, it.heightCm) } },
+        )
+        val cutOuts = if (!pictures) {
+            emptyList()
+        } else {
+            plants.filter { it.isGrowing }.sortedBy { it.title.lowercase() }.mapNotNull { view ->
+                view.plant.thumbnail?.let { File(context.filesDir, it) }?.takeIf { it.isFile }?.let { ReportPicture(it.path, view.title) }
+            }
+        }
+        val figures = listOfNotNull(
+            plot.takeIf { it.zones.isNotEmpty() },
+            cutOuts.takeIf { it.isNotEmpty() }?.let { ReportFigure.Pictures(s(R.string.report_pictures), it) },
+        )
         val zoneTable = table(
             R.string.report_zones,
             listOf(R.string.col_zone, R.string.col_kind, R.string.col_sun, R.string.col_soil, R.string.col_area, R.string.col_plants),
@@ -124,7 +142,7 @@ class ReportBuilder(
                 )
             },
         )
-        return ReportSection(s(R.string.report_part_garden), emptyList(), listOf(zoneTable, plantTable))
+        return ReportSection(s(R.string.report_part_garden), emptyList(), listOf(zoneTable, plantTable), figures)
     }
 
     private suspend fun wildlife(inPeriod: (LocalDate) -> Boolean): ReportSection {

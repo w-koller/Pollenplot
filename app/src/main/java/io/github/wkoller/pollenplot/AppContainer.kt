@@ -235,9 +235,12 @@ class AppContainer(
         return DarwinCore.csv(sightings, settingsStore.current().gardenPlace, stateName, clock.zone)
     }
 
-    /** A garden report of [parts] for the records from [from] to [to], written to [out] as a PDF or a spreadsheet. */
-    suspend fun writeReport(parts: Set<ReportPart>, from: LocalDate, to: LocalDate, pdf: Boolean, out: OutputStream) {
-        val report = reports.build(parts, from, to)
+    /**
+     * A garden report of [parts] for the records from [from] to [to], written to [out] as a PDF or a spreadsheet. A PDF
+     * shows the plants' cut-outs when [pictures] is set; a spreadsheet has no place for them.
+     */
+    suspend fun writeReport(parts: Set<ReportPart>, from: LocalDate, to: LocalDate, pdf: Boolean, out: OutputStream, pictures: Boolean = true) {
+        val report = reports.build(parts, from, to, pictures = pdf && pictures)
         withContext(Dispatchers.IO) {
             if (pdf) PdfReportWriter(appContext.getString(R.string.report_footer)).write(report, out) else XlsxWriter.write(report, out)
         }

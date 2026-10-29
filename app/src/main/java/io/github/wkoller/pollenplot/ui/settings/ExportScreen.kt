@@ -4,11 +4,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -19,20 +22,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.report.ReportPart
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.OutputStream
 import java.time.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** How far back a report reaches. */
 private enum class ReportPeriod(val months: Long, val label: Int) {
@@ -48,7 +53,7 @@ private enum class ReportPeriod(val months: Long, val label: Int) {
 @Composable
 fun ExportScreen(
     today: LocalDate,
-    report: suspend (Set<ReportPart>, LocalDate, LocalDate, Boolean, OutputStream) -> Unit,
+    report: suspend (Set<ReportPart>, LocalDate, LocalDate, Boolean, Boolean, OutputStream) -> Unit,
     jsonLd: suspend () -> String,
     darwinCore: suspend () -> String,
     onBack: () -> Unit,
@@ -57,6 +62,7 @@ fun ExportScreen(
     val scope = rememberCoroutineScope()
     var period by rememberSaveable { mutableStateOf(ReportPeriod.QUARTER) }
     var parts by rememberSaveable { mutableStateOf(ReportPart.entries.toSet()) }
+    var pictures by rememberSaveable { mutableStateOf(true) }
     var reportSaved by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var jsonLdSaved by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var darwinCoreSaved by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -77,7 +83,7 @@ fun ExportScreen(
         }
     }
     fun text(content: suspend () -> String): suspend (OutputStream) -> Unit = { out -> out.write(content().toByteArray()) }
-    fun reportTo(pdf: Boolean): suspend (OutputStream) -> Unit = { out -> report(parts, today.minusMonths(period.months), today, pdf, out) }
+    fun reportTo(pdf: Boolean): suspend (OutputStream) -> Unit = { out -> report(parts, today.minusMonths(period.months), today, pdf, pictures, out) }
 
     val savePdf = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         save(uri, reportTo(pdf = true)) { reportSaved = it }
@@ -108,6 +114,16 @@ fun ExportScreen(
                             ReportPart.entries.forEach { part ->
                                 FilterChip(selected = part in parts, onClick = { parts = if (part in parts) parts - part else parts + part }, label = { Text(stringResource(part.label)) })
                             }
+                        }
+                    }
+                    if (ReportPart.GARDEN in parts) {
+                        Row(
+                            Modifier.toggleable(value = pictures, role = Role.Checkbox, onValueChange = { pictures = it }).padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(checked = pictures, onCheckedChange = null)
+                            Text(stringResource(R.string.report_with_pictures), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

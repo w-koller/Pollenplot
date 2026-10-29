@@ -1,5 +1,8 @@
 # Copy for the garden report, written as a PDF or an Excel workbook from the same contents.
 STRINGS = {
+    "report_plot": "The Plot",
+    "report_pictures": "The plants",
+    "report_with_pictures": "Show the plants' pictures in the PDF",
     "report": "Garden report",
     "report_body": "A report of your garden's records for a period, as a PDF to read or print, or as a spreadsheet to "
     "work with.",
