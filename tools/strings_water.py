@@ -73,6 +73,14 @@ STRINGS = {
     "water_zones": "Zones it waters",
     "water_flow": "Flow of the whole line in litres an hour",
     "water_flow_hint": "Please add up the drippers' rates, such as 10 drippers at 4 L an hour for 40 L an hour.",
+    "water_pooling": "Minutes before water pools",
+    "water_pooling_hint": "Please run the line and time how long it takes for water to start pooling. Pollenplot then "
+    "splits longer runs into shorter ones with a break between them.",
+    "water_runoff": "This line puts on about %1$s mm an hour, faster than %2$s soaks it in, which FAO puts at %3$s to "
+    "%4$s mm an hour, so water may pool and run off.",
+    "water_runoff_time_it": "To split each run so the water soaks in, please time how long the line runs before water "
+    "starts to pool, and add that to the line.",
+    "water_runoff_whole": "Water takes longer to pool than the line runs, so each run can stay whole.",
     "water_delete_title": "Delete this line?",
     "water_delete_body": "The line and the waterings recorded for it will be removed.",
 }
@@ -86,6 +94,17 @@ PLURALS = {
     },
     "water_next_minutes": {"one": "Water %1$s at %2$s, for %3$d minute.", "other": "Water %1$s at %2$s, for %3$d minutes."},
     "water_ahead_minutes": {"one": "%1$s at %2$s, for %3$d minute", "other": "%1$s at %2$s, for %3$d minutes"},
+    "water_cycles_even": {
+        "one": "Please run it as %1$d run of %2$d minutes, with 30 minutes to an hour between runs, so the water soaks in.",
+        "other": "Please run it as %1$d runs of %2$d minutes, with 30 minutes to an hour between them, so the water "
+        "soaks in.",
+    },
+    "water_cycles_uneven": {
+        "one": "Please run it as %1$d run of %2$d to %3$d minutes, with 30 minutes to an hour between runs, so the water "
+        "soaks in.",
+        "other": "Please run it as %1$d runs of %2$d to %3$d minutes, with 30 minutes to an hour between them, so the "
+        "water soaks in.",
+    },
     "water_pairing": {
         "one": "%1$s needs much less water than %2$s. With drippers of the same size it would get about %3$d time what "
         "it needs, so please give it a smaller dripper or cap its dripper.",

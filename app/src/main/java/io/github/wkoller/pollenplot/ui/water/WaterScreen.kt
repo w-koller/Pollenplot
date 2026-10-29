@@ -36,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -51,6 +52,7 @@ import io.github.wkoller.pollenplot.data.Watering
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.irrigation.PlanReason
 import io.github.wkoller.pollenplot.domain.irrigation.PlannedWatering
+import io.github.wkoller.pollenplot.domain.irrigation.RunoffCheck
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
 import io.github.wkoller.pollenplot.domain.irrigation.WaterPlan
 import io.github.wkoller.pollenplot.domain.irrigation.WaterPlant
@@ -62,6 +64,7 @@ import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.components.rememberNotificationAccess
 import io.github.wkoller.pollenplot.ui.listWords
+import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -141,6 +144,7 @@ fun WaterScreen(
                         today = loaded.today,
                         notes = buildList {
                             for (note in view.pairing) add(pluralStringResource(R.plurals.water_pairing, note.timesNeeded, note.plant.title, note.thirstiest.title, note.timesNeeded))
+                            view.runoff?.let { addAll(runoffText(it)) }
                         },
                         onEdit = { onEditLine(view.line.id) },
                         onWatered = { scope.launch { water.recordWatering(Watering(water.newId(), view.line.id, null, loaded.today)) } },
@@ -289,6 +293,30 @@ private fun planText(plan: WaterPlan, byHand: Boolean, window: WateringWindow): 
     PlanReason.NOT_YET -> plan.dueOn?.let { stringResource(R.string.water_next, UiFormat.longDate(it)) } ?: stringResource(R.string.water_not_this_week)
     PlanReason.NOTHING_TO_COUNT -> stringResource(R.string.water_nothing)
     PlanReason.NO_WEATHER -> stringResource(R.string.water_no_weather_plan)
+}
+
+/**
+ * A line that spreads water faster than its soil takes it in: the two rates, then the cycles to run it in, or how to
+ * find them.
+ */
+@Composable
+private fun runoffText(check: RunoffCheck): List<String> {
+    val soil = stringResource(check.soil.label).lowercase(LocalConfiguration.current.locales[0])
+    val rates = stringResource(
+        R.string.water_runoff,
+        millimetres(check.rateUmPerHour),
+        soil,
+        millimetres(check.soilUmPerHour.first),
+        millimetres(check.soilUmPerHour.last),
+    )
+    val cycles = check.cycles
+    val next = when {
+        cycles == null -> stringResource(R.string.water_runoff_time_it)
+        cycles.size == 1 -> stringResource(R.string.water_runoff_whole)
+        cycles.distinct().size == 1 -> pluralStringResource(R.plurals.water_cycles_even, cycles.size, cycles.size, cycles.first())
+        else -> pluralStringResource(R.plurals.water_cycles_uneven, cycles.size, cycles.size, cycles.min(), cycles.max())
+    }
+    return listOf(rates, next)
 }
 
 /** A watering in the days ahead, such as "Thursday 29 October at 5:00 am, for 12 minutes". */

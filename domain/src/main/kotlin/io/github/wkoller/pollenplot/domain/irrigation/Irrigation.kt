@@ -4,12 +4,15 @@ import io.github.wkoller.pollenplot.domain.plants.GrowthForm
 import io.github.wkoller.pollenplot.domain.plants.Soil
 import java.time.LocalDate
 
-/** How a line or a zone is watered. Each method loses some water on the way, which its efficiency allows for. */
-enum class WaterMethod(val efficiencyBp: Int, val byHand: Boolean) {
+/**
+ * How a line or a zone is watered. Each method loses some water on the way, which its efficiency allows for. Sprays and
+ * sprinklers [spreads] water over an area, so their rate can be compared with the soil's (see [Runoff]).
+ */
+enum class WaterMethod(val efficiencyBp: Int, val byHand: Boolean, val spreads: Boolean = false) {
     DRIP_LINE(9_000, false),
     DRIPPERS(9_000, false),
-    MICRO_SPRAYS(7_500, false),
-    SPRINKLER(7_000, false),
+    MICRO_SPRAYS(7_500, false, spreads = true),
+    SPRINKLER(7_000, false, spreads = true),
     HOSE(8_000, true),
     WATERING_CAN(9_000, true),
 }
@@ -25,6 +28,8 @@ data class WateringLine(
     val zoneIds: Set<String>,
     val flowMlPerHour: Int?,
     val notes: String = "",
+    /** How long the line runs before water starts to pool, as the user timed it, for splitting longer runs. */
+    val poolingMinutes: Int? = null,
 )
 
 /** A day's weather for the garden: reference evapotranspiration (ET₀) and rain, both in µm, and the chance of rain. */

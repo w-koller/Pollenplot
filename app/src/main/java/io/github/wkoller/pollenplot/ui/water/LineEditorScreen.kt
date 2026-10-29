@@ -59,6 +59,7 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
     var method by rememberSaveable { mutableStateOf(WaterMethod.DRIPPERS) }
     var zoneIds by rememberSaveable { mutableStateOf(emptySet<String>()) }
     var flow by rememberSaveable { mutableStateOf("") }
+    var pooling by rememberSaveable { mutableStateOf("") }
     var notes by rememberSaveable { mutableStateOf("") }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
@@ -69,6 +70,7 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
         method = line.method
         zoneIds = line.zoneIds
         flow = line.flowMlPerHour?.let { (it / 1000).toString() }.orEmpty()
+        pooling = line.poolingMinutes?.toString().orEmpty()
         notes = line.notes
         started = true
     }
@@ -109,13 +111,25 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
+            if (method.spreads) {
+                OutlinedTextField(
+                    value = pooling,
+                    onValueChange = { text -> pooling = text.filter(Char::isDigit).take(3) },
+                    label = { Text(stringResource(R.string.water_pooling)) },
+                    supportingText = { Text(stringResource(R.string.water_pooling_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
                 enabled = name.isNotBlank() && zoneIds.isNotEmpty(),
                 onClick = {
                     scope.launch {
                         val flowMl = if (method.byHand) null else flow.toIntOrNull()?.times(1000)
-                        water.saveLine(WateringLine(lineId ?: water.newId(), name, method, zoneIds, flowMl, notes))
+                        val poolingMinutes = if (method.spreads) pooling.toIntOrNull()?.takeIf { it > 0 } else null
+                        water.saveLine(WateringLine(lineId ?: water.newId(), name, method, zoneIds, flowMl, notes, poolingMinutes))
                         withContext(Dispatchers.Main) { onBack() }
                     }
                 },

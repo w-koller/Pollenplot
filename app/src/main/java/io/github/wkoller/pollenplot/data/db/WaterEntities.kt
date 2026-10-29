@@ -18,6 +18,8 @@ data class WateringLineEntity(
     val notes: String,
     val createdAt: Long,
     val updatedAt: Long,
+    /** How long the line runs before water starts to pool, as the user timed it. */
+    val poolingMinutes: Int? = null,
 )
 
 /** A watering someone said they did, for a line or for a zone watered by hand. */

@@ -31,7 +31,7 @@ class WaterRepository(private val db: PollenplotDatabase, private val web: Web, 
     private fun now() = clock.millis()
 
     val lines: Flow<List<WateringLine>> = dao.observeLines().map { list ->
-        list.map { WateringLine(it.id, it.name, WaterMethod.valueOf(it.method), it.zoneIds.split(',').filter(String::isNotBlank).toSet(), it.flowMlPerHour, it.notes) }
+        list.map { WateringLine(it.id, it.name, WaterMethod.valueOf(it.method), it.zoneIds.split(',').filter(String::isNotBlank).toSet(), it.flowMlPerHour, it.notes, it.poolingMinutes) }
     }
 
     val waterings: Flow<List<Watering>> = dao.observeEvents().map { list ->
@@ -49,7 +49,12 @@ class WaterRepository(private val db: PollenplotDatabase, private val web: Web, 
 
     suspend fun saveLine(line: WateringLine) {
         val createdAt = dao.line(line.id)?.createdAt ?: now()
-        dao.upsertLine(WateringLineEntity(line.id, line.name.trim(), line.method.name, line.zoneIds.sorted().joinToString(","), line.flowMlPerHour, line.notes.trim(), createdAt, now()))
+        dao.upsertLine(
+            WateringLineEntity(
+                line.id, line.name.trim(), line.method.name, line.zoneIds.sorted().joinToString(","), line.flowMlPerHour, line.notes.trim(), createdAt, now(),
+                line.poolingMinutes?.takeIf { line.method.spreads && it > 0 },
+            ),
+        )
     }
 
     suspend fun deleteLine(id: String) = db.withTransaction {

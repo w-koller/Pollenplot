@@ -6,6 +6,8 @@ import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.irrigation.Pairing
 import io.github.wkoller.pollenplot.domain.irrigation.PairingNote
 import io.github.wkoller.pollenplot.domain.irrigation.PlannedWatering
+import io.github.wkoller.pollenplot.domain.irrigation.Runoff
+import io.github.wkoller.pollenplot.domain.irrigation.RunoffCheck
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
 import io.github.wkoller.pollenplot.domain.irrigation.WaterPlan
 import io.github.wkoller.pollenplot.domain.irrigation.WaterPlanner
@@ -29,6 +31,8 @@ data class LinePlanView(
     val week: List<PlannedWatering>,
     val pairing: List<PairingNote>,
     val lastWatered: LocalDate?,
+    /** Set when the line spreads water faster than its slowest soil takes it in. */
+    val runoff: RunoffCheck? = null,
 )
 
 /** A zone with plants and no line, watered by hand, with its plan and the waterings the forecast holds. */
@@ -82,14 +86,17 @@ class WaterViews(water: WaterRepository, views: GardenViews, garden: GardenRepos
         val lines = records.lines.map { line ->
             val linePlants = waterPlants(line.zoneIds)
             val last = records.waterings.filter { it.lineId == line.id }.maxOfOrNull { it.date }
+            val lineZones = line.zoneIds.mapNotNull(byZone::get)
+            val plan = WaterPlanner.plan(line.method, line.flowMlPerHour, linePlants, records.weather, today, last)
             LinePlanView(
                 line = line,
-                zoneNames = line.zoneIds.mapNotNull { byZone[it]?.name }.sorted(),
+                zoneNames = lineZones.map { it.name }.sorted(),
                 plants = linePlants,
-                plan = WaterPlanner.plan(line.method, line.flowMlPerHour, linePlants, records.weather, today, last),
+                plan = plan,
                 week = WaterPlanner.week(line.method, line.flowMlPerHour, linePlants, records.weather, today, last),
                 pairing = if (line.method.byHand) emptyList() else Pairing.check(linePlants),
                 lastWatered = last,
+                runoff = Runoff.check(line.method, line.flowMlPerHour, lineZones.sumOf { it.areaCm2 }, lineZones.map { it.soil }, plan.minutes, line.poolingMinutes),
             )
         }
         val onLines = records.lines.flatMap { it.zoneIds }.toSet()

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1f6a7a1c18e819cb1cfa5b6bdc8fa5f1",
+    "identityHash": "2074d87a72b6fbaa858a937e0aca22c7",
     "entities": [
       {
         "tableName": "zones",
@@ -2200,7 +2200,7 @@
       },
       {
         "tableName": "watering_lines",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `method` TEXT NOT NULL, `zoneIds` TEXT NOT NULL, `flowMlPerHour` INTEGER, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `method` TEXT NOT NULL, `zoneIds` TEXT NOT NULL, `flowMlPerHour` INTEGER, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `poolingMinutes` INTEGER, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -2248,6 +2248,11 @@
             "columnName": "updatedAt",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "poolingMinutes",
+            "columnName": "poolingMinutes",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -2352,7 +2357,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1f6a7a1c18e819cb1cfa5b6bdc8fa5f1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2074d87a72b6fbaa858a937e0aca22c7')"
     ]
   }
 }

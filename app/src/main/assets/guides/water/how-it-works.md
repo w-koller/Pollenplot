@@ -8,6 +8,9 @@ sources:
   - Crop evapotranspiration, chapter 8, FAO Irrigation and Drainage Paper 56 | https://www.fao.org/4/x0490e/x0490e0e.htm
   - Soil Water – Tasmania, Soil Quality factsheet | https://www.soilquality.org.au/factsheets/soil-water-tasmania
   - Weather forecast API, Open-Meteo | https://open-meteo.com/en/docs
+  - Infiltration rate and infiltration test, annex 2 of FAO Irrigation Water Management, Training manual no. 5 | https://www.fao.org/4/s8684e/s8684e0a.htm
+  - Sprinkler irrigation, chapter 5 of FAO Irrigation Water Management, Training manual no. 5 | https://www.fao.org/4/s8684e/s8684e06.htm
+  - Cycle-and-Soak Saves Water Outdoors, US EPA WaterSense | https://www.epa.gov/system/files/documents/2022-03/ws-outdoor-cycle-and-soak-brochure.pdf
 ---
 
 Pollenplot keeps a daily soil-water account for each watering line and each zone watered by hand, the way FAO Irrigation and Drainage Paper 56 describes. The plants draw water out each day, rain puts some back, and watering is due once the plants have used the water their roots can readily reach.
@@ -40,3 +43,13 @@ A zone with no soil recorded is taken as loam, and potting mix as sand, which ho
 ## Lines with plants of different thirst
 
 Every emitter on a line runs for the same time. A plant that needs a third as much water as the thirstiest plant on its line, or less, gets several times what it needs from drippers of the same size, so the plan suggests a smaller dripper or capping its dripper.
+
+## Clay and runoff
+
+Sprays and sprinklers spread water over an area, and soil can only take it in so fast. Pollenplot works out a line's rate as its flow over the zones it waters, its own estimate.
+
+- FAO's irrigation manual gives how fast each soil takes water in once it is wet, its basic infiltration rate: 10 to 20 mm an hour for loam, and 1 to 5 mm an hour for clay.
+- It says a sprinkler should put water on more slowly than that, so that water does not pool and run off.
+- When a line is faster than the top of that range for the slowest soil it waters, the plan says so.
+- The US EPA's WaterSense programme describes cycle-and-soak for such a line: time how long the line runs before water starts to pool, run it in cycles no longer than that, and leave 30 minutes to an hour between them.
+- Once you add that time to the line, the plan splits each run that way.

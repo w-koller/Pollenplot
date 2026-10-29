@@ -71,6 +71,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     inside) and `HotelCare` (a hotel worth cleaning out in spring).
   - `irrigation/`: `WaterPlanner` (a line's daily soil-water account, after FAO 56: when watering is due and how much,
     and with `week` the waterings the forecast holds), `WateringWindow` (the hours to water in, which the user sets),
+    `Runoff` (a spray or sprinkler line faster than its soil's basic infiltration rate, from FAO's irrigation manual,
+    and the cycle-and-soak split that the US EPA's WaterSense programme describes),
     `SoilWater` (readily available water by soil, from the Tasmanian Institute of Agriculture, and root depths,
     Pollenplot's estimates), `Pairing` (plants of very different thirst on one line) and the line and weather types.
     `weather/OpenMeteoForecast` makes the forecast and weather requests and reads their answers.

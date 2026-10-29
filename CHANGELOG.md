@@ -151,6 +151,9 @@
 - Watering times, in the Water tab: the hours watering is planned for, from 5:00 am to 9:00 am until you choose
   others to suit your water authority's rules. Plans and reminders say when to water, and each line and zone lists the
   waterings coming up in the forecast, marking the ones good rain may do instead.
+- A spray or sprinkler line that puts water on faster than its soil takes it in, by FAO's figures for loam and clay,
+  says so. Once you time how long it runs before water pools, its plan splits each run into shorter runs with 30
+  minutes to an hour between them, as the US EPA's WaterSense programme describes.
 - The Plot's zones show when each is next watered, and a zone's page says which line waters it, when it is next
   watered and which of its plants get far more than they need.
 - The Today card, at the top of the Plot: the waterings due today, honey bee hive checks due or overdue, a hot day

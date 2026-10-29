@@ -27,6 +27,7 @@ import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.irrigation.PlanReason
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
+import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
 import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
@@ -180,6 +181,32 @@ class WaterFlowTest {
         compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("This zone is watered by hand."))
         compose.onAllNodesWithText("Water today at 5:00 am, about", substring = true).onFirst().assertExists()
         compose.onNodeWithText("See the watering plan").assertExists()
+    }
+
+    @Test
+    fun aSprinklerFasterThanClayRunsInCycles() {
+        val line = runBlocking {
+            val citrus = app.container.garden.zoneList.first().single { it.name == "Back Citrus Patch" }
+            app.container.garden.updateZone(citrus.copy(soil = Soil.CLAY))
+            water.refreshWeather(app.container.settingsStore.current().gardenPlace!!)
+            // 400 L an hour over the patch's 35.75 m² is about 11.2 mm an hour; clay takes in 1 to 5.
+            WateringLine(water.newId(), "Citrus sprinkler", WaterMethod.SPRINKLER, setOf(citrus.id), 400_000).also { water.saveLine(it) }
+        }
+        val first = runBlocking { app.container.waterViews.state.first { state -> state.lines.any { it.runoff != null } }.lines.single() }
+        assertEquals(11_188, first.runoff!!.rateUmPerHour)
+        assertEquals(Soil.CLAY, first.runoff!!.soil)
+        assertEquals("The cycles wait for the line's pooling time", null, first.runoff!!.cycles)
+
+        show()
+        compose.onNodeWithText("Water").performClick()
+        waitFor(hasText("This line puts on about 11.2 mm an hour", substring = true))
+        compose.onNodeWithText("which FAO puts at 1 to 5 mm an hour, so water may pool and run off.", substring = true).assertExists()
+        compose.onNodeWithText("please time how long the line runs before water starts to pool", substring = true).assertExists()
+
+        runBlocking { water.saveLine(line.copy(poolingMinutes = 5)) }
+        val cycles = runBlocking { app.container.waterViews.state.first { state -> state.lines.single().runoff?.cycles != null } }.lines.single().runoff!!.cycles!!
+        assertTrue(cycles.size > 1 && cycles.all { it <= 5 })
+        waitFor(hasText("Please run it as ${cycles.size} runs of", substring = true))
     }
 
     @Test
