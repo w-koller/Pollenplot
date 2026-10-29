@@ -103,7 +103,7 @@ class WildlifeFlowTest {
         show()
         compose.onNodeWithText("Wildlife").performClick()
         waitFor(hasText("9 species seen in your yard this year"))
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Noisy miner"))
+        compose.scrollTo(hasText("Noisy miner"))
         compose.onAllNodesWithText("Noisy miner").onFirst().performClick()
         waitFor(hasText("Seen 3 times, most recently on 12 October 2026."))
         compose.onNodeWithText("First seen on 20 November 2025.").assertExists()
@@ -215,7 +215,7 @@ class WildlifeFlowTest {
         show()
         compose.onNodeWithText("Wildlife").performClick()
         waitFor(hasText("1 species seen in your yard this year"))
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("No reptiles have been recorded this year", substring = true))
+        compose.scrollTo(hasText("No reptiles have been recorded this year", substring = true))
         compose.onNodeWithText("Ideas for your yard").assertExists()
         compose.onNodeWithText("No frogs have been recorded this year", substring = true).assertExists()
         compose.onNodeWithText("No reptiles have been recorded this year", substring = true).assertExists()
@@ -234,7 +234,7 @@ class WildlifeFlowTest {
             }
         }
         waitFor(hasText("Mum's lemon"))
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Bronze orange bug"))
+        compose.scrollTo(hasText("Bronze orange bug"))
         compose.onNodeWithText("Animals on this plant").assertExists()
         compose.onNodeWithText("Orchard swallowtail").assertExists()
         compose.onNodeWithText("Bronze orange bug").assertExists()

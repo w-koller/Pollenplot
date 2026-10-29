@@ -101,7 +101,7 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("Garden assistant").assertIsDisplayed()
         shot("models")
         compose.onNodeWithContentDescription("Back").performClick()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("About Pollenplot"))
+        compose.scrollTo(hasText("About Pollenplot"))
         compose.onNodeWithText("About Pollenplot").performClick()
         compose.onNodeWithText("Ecosystem Management for Your Backyard").assertIsDisplayed()
         shot("about")

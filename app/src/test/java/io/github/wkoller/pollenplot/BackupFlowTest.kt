@@ -95,7 +95,7 @@ class BackupFlowTest {
             }
         }
         compose.onNodeWithContentDescription("Settings").performClick()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Backup and restore"))
+        compose.scrollTo(hasText("Backup and restore"))
         compose.onNodeWithText("Backup and restore").performClick()
         waitFor(hasText("Choose a backup file"))
     }
@@ -120,7 +120,7 @@ class BackupFlowTest {
 
         // The garden changes after the backup.
         runBlocking { app.container.garden.deleteZone(app.container.garden.zoneList.first().single { it.name == "Veg Patch" }.id) }
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Choose a backup file"))
+        compose.scrollTo(hasText("Choose a backup file"))
         button("Choose a backup file").performClick()
         waitFor(hasText("This backup is encrypted. Please enter its password."))
         field("Password").performTextInput("wollemi")
@@ -130,7 +130,7 @@ class BackupFlowTest {
         button("Open the backup").performClick()
         waitFor(hasText("Backup saved on 28 October 2026"))
         compose.onNodeWithText("It holds 4 zones and 15 plants.").assertExists()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Restore"))
+        compose.scrollTo(hasText("Restore"))
         shot("backup_found")
         button("Restore").performClick()
         waitFor(hasText("Replace the records on this phone?"))

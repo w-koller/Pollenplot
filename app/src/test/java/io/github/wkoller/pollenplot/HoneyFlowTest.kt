@@ -280,7 +280,7 @@ class HoneyFlowTest {
 
     /** Scrolls the screen's list until a row with [text] is shown. */
     private fun scrollTo(text: String, substring: Boolean = false) {
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText(text, substring = substring))
+        compose.scrollTo(hasText(text, substring = substring))
     }
 
     private fun waitFor(matcher: SemanticsMatcher) {

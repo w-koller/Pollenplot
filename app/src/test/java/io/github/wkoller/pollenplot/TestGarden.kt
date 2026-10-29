@@ -6,6 +6,10 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.performScrollToNode
 import io.github.wkoller.pollenplot.ai.AskSubject
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.AssistantReply
@@ -24,12 +28,12 @@ import io.github.wkoller.pollenplot.scan.Album
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.scan.GalleryPhoto
+import java.time.Instant
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import java.time.Instant
 
 /**
  * The app with a gallery of painted photos and a stand-in for the models, for tests of scanning and review. Tests that
@@ -258,3 +262,14 @@ object TestPhotos {
  * slow machine, such as CI running the tests beside lint and the build.
  */
 const val WAIT_MS = 30_000L
+
+/**
+ * Scrolls to [matcher] once a screen holding it has opened. Right after a press, the screen it opens may not be there
+ * yet on a busy machine, so the scroll is tried again until it works or [WAIT_MS] runs out.
+ */
+fun ComposeContentTestRule.scrollTo(matcher: SemanticsMatcher) {
+    waitUntil(WAIT_MS) {
+        val scrollers = onAllNodes(hasScrollToNodeAction())
+        (0 until scrollers.fetchSemanticsNodes().size).any { runCatching { scrollers[it].performScrollToNode(matcher) }.isSuccess }
+    }
+}

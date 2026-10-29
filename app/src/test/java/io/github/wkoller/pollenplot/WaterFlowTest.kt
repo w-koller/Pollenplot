@@ -127,7 +127,7 @@ class WaterFlowTest {
         val line = runBlocking { water.lines.first().single() }
         assertEquals(WaterMethod.DRIPPERS, line.method)
         assertEquals(40_000, line.flowMlPerHour)
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Citrus line"))
+        compose.scrollTo(hasText("Citrus line"))
         compose.onAllNodesWithText("I watered today").onFirst().performClick()
         waitFor(hasText("Last watered on 28 October 2026"))
         assertEquals(LocalDate.of(2026, 10, 28), runBlocking { water.waterings.first().single().date })
@@ -151,10 +151,10 @@ class WaterFlowTest {
         show()
         compose.onNodeWithText("Water").performClick()
         waitFor(hasText("Please water today between 5:00 am and 9:00 am", substring = true))
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Coming up"))
+        compose.scrollTo(hasText("Coming up"))
         val next = veg.week[1]
         compose.onNodeWithText(next.date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH), substring = true).assertExists()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Watering times"))
+        compose.scrollTo(hasText("Watering times"))
         compose.onNodeWithText("Pollenplot plans watering between 5:00 am and 9:00 am", substring = true).assertExists()
         // The clock opens, and setting the time it shows keeps the hours as they are.
         compose.onNodeWithText("Start at 5:00 am").performClick()
@@ -164,7 +164,7 @@ class WaterFlowTest {
 
         runBlocking { app.container.settingsStore.update { it.copy(wateringWindow = WateringWindow(18 * 60, 20 * 60)) } }
         waitFor(hasText("Pollenplot plans watering between 6:00 pm and 8:00 pm", substring = true))
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Please water today between 6:00 pm and 8:00 pm", substring = true))
+        compose.scrollTo(hasText("Please water today between 6:00 pm and 8:00 pm", substring = true))
         shot("water_week")
     }
 
@@ -179,10 +179,10 @@ class WaterFlowTest {
         // The button is there once the zones have loaded, which a busy machine takes a moment over.
         waitFor(hasContentDescription("Show as a list"))
         compose.onNodeWithContentDescription("Show as a list").performClick()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Veg Patch"))
+        compose.scrollTo(hasText("Veg Patch"))
         waitFor(hasText("Water today at 5:00 am, about", substring = true))
         compose.onNodeWithText("Veg Patch").performClick()
-        scrollTo(hasText("This zone is watered by hand."))
+        compose.scrollTo(hasText("This zone is watered by hand."))
         compose.onAllNodesWithText("Water today at 5:00 am, about", substring = true).onFirst().assertExists()
         compose.onNodeWithText("See the watering plan").assertExists()
     }
@@ -241,7 +241,7 @@ class WaterFlowTest {
         show(Settings(theme = ThemeChoice.DARK))
         compose.onNodeWithText("Water").performClick()
         waitFor(hasText("Watered by hand"))
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("How the plan is worked out"))
+        compose.scrollTo(hasText("How the plan is worked out"))
         compose.onNodeWithText("How the plan is worked out").performClick()
         waitFor(hasText("What the soil holds"))
         shot("water_how_dark")
@@ -252,14 +252,6 @@ class WaterFlowTest {
             PollenplotTheme(settings) {
                 Surface { AppRoot(app.container) }
             }
-        }
-    }
-
-    /** Scrolls to [matcher] once the screen holding it has opened, which can take a moment on a busy machine. */
-    private fun scrollTo(matcher: SemanticsMatcher) {
-        compose.waitUntil(WAIT_MS) {
-            val scrollers = compose.onAllNodes(hasScrollToNodeAction())
-            (0 until scrollers.fetchSemanticsNodes().size).any { runCatching { scrollers[it].performScrollToNode(matcher) }.isSuccess }
         }
     }
 

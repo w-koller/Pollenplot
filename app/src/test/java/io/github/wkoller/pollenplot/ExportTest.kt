@@ -57,13 +57,13 @@ class ExportTest {
     fun `the export is reached from Settings`() {
         compose.setContent { PollenplotTheme(Settings()) { Surface { AppRoot(app.container) } } }
         compose.onNodeWithContentDescription("Settings").performClick()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Export data"))
+        compose.scrollTo(hasText("Export data"))
         compose.onNodeWithText("Export data").performClick()
         compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasText("Garden report")).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Save as a PDF").assertExists()
         compose.onNodeWithText("Save as a spreadsheet").assertExists()
         compose.onNodeWithText("Last 3 months").assertExists()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Sightings as Darwin Core"))
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("All records as JSON-LD"))
+        compose.scrollTo(hasText("Sightings as Darwin Core"))
+        compose.scrollTo(hasText("All records as JSON-LD"))
     }
 }
