@@ -20,11 +20,16 @@ import io.github.wkoller.pollenplot.domain.bees.honey.VarroaCheck
 import io.github.wkoller.pollenplot.domain.bees.honey.VarroaMethod
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.weeds.WeedData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -79,6 +84,22 @@ class BeeRepositoryTest {
         assertTrue(bees.checks.first().isEmpty())
         assertTrue(bees.events.first().isEmpty())
         assertTrue("Gone from search", garden.search("hive").none { it.recordId == hive.id })
+    }
+
+    @Test
+    fun `the records go into the linked data with the garden's`() = runBlocking {
+        val corner = garden.addZone("Hive Corner", ZoneKind.HIVE_CORNER)
+        val hive = bees.addHive("Hive 1", HiveType.LANGSTROTH_8, corner.id, null, queenYear = 2025, startedOn = LocalDate.of(2025, 9, 1))
+        val check = VarroaCheck(bees.newRecordId(), hive.id, LocalDate.of(2026, 10, 20), VarroaMethod.ALCOHOL_WASH, 300, 4, null)
+        bees.saveCheck(check)
+        val nodes = Json.parseToJsonElement(JsonLd.document(garden.triples() + bees.triples()).toString()).jsonObject["@graph"]!!.jsonArray.map { it.jsonObject }
+        fun node(id: String) = nodes.single { it["@id"]!!.jsonPrimitive.content == "urn:uuid:$id" }
+        assertEquals("pp:HoneyBeeHive", node(hive.id)["@type"]!!.jsonPrimitive.content)
+        assertEquals("urn:uuid:${corner.id}", node(hive.id)["schema:containedInPlace"]!!.jsonObject["@id"]!!.jsonPrimitive.content)
+        val observation = node(check.id)
+        assertEquals("urn:uuid:${hive.id}", observation["sosa:hasFeatureOfInterest"]!!.jsonObject["@id"]!!.jsonPrimitive.content)
+        assertEquals("1.3", observation["pp:mitesPer100Bees"]!!.jsonObject["@value"]!!.jsonPrimitive.content)
+        assertTrue("The zone is there too", nodes.any { it["@id"]!!.jsonPrimitive.content == "urn:uuid:${corner.id}" })
     }
 
     @Test

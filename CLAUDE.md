@@ -45,8 +45,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (species, then
     genus, then family), `EcoRoles` (the badges) and `Companions`.
   - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid and tidy placement) and `ZoneBadges`.
-  - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `JsonLd`
-    and `SearchText` (what the search index holds for each record).
+  - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `HoneyGraph`
+    (honey bee records, with mite checks as SOSA observations), `JsonLd` and `SearchText` (what the search index
+    holds for each record).
   - `wildlife/`: `LifeGroup`, the animal knowledge base (`FaunaBase`, with each state's rules and their official
     pages), `Sighting` and `Biodiversity` (a year of sightings for the Wildlife tab: each kind seen, the months, and
     notices for animals that are venomous or that the law in the garden's state asks about).
@@ -65,7 +66,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
   Android runtime matches; the app brings the Android one. `TextEmbedderTest` compares tokens and vectors with
   `ml/src/test/resources/bge_reference.json`, made with Hugging Face's tokenizers and ONNX Runtime in Python.
-- `app/data`: `GardenRepository` (records, detections, the search index and JSON-LD export), `GardenViews` (records
+- `app/data`: `GardenRepository` (records, detections, the search index and their triples, which
+  `AppContainer.exportJsonLd` joins with `BeeRepository`'s into one JSON-LD document), `GardenViews` (records
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), `BeeRepository` (the honey bee records) and `BeeViews` (hives with their zone, apiary and what each is due
   for today), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and

@@ -113,6 +113,8 @@
   hives until you have spoken with your state or territory.
 - The honey bee section links to the Code of Practice and to your state or territory's beekeeper registration page,
   and hives can be found in search.
+- The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
+  of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood
   diseases, small hive beetle and wax moth, and exotic mites to report. Each page says when its facts were last checked
   and links the pages they come from: the Code of Practice, BeeAware, Business Queensland and Plant Health Australia.

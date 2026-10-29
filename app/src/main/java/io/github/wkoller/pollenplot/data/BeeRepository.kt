@@ -28,8 +28,11 @@ import io.github.wkoller.pollenplot.domain.bees.honey.Temperament
 import io.github.wkoller.pollenplot.domain.bees.honey.Treatment
 import io.github.wkoller.pollenplot.domain.bees.honey.VarroaCheck
 import io.github.wkoller.pollenplot.domain.bees.honey.VarroaMethod
+import io.github.wkoller.pollenplot.domain.semantic.HoneyGraph
 import io.github.wkoller.pollenplot.domain.semantic.SearchText
+import io.github.wkoller.pollenplot.domain.semantic.Triple
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Clock
 import java.time.LocalDate
@@ -155,6 +158,18 @@ class BeeRepository(private val db: PollenplotDatabase, private val clock: Clock
 
     /** A new record's key, for a form that saves a new record. */
     fun newRecordId(): String = newId()
+
+    /** Every honey bee record as linked data, as the Biosecurity Code of Practice asks beekeepers to keep them. */
+    suspend fun triples(): List<Triple> = buildList {
+        apiaries.first().forEach { addAll(HoneyGraph.apiary(it)) }
+        hives.first().forEach { addAll(HoneyGraph.hive(it)) }
+        inspections.first().forEach { addAll(HoneyGraph.inspection(it)) }
+        checks.first().forEach { addAll(HoneyGraph.check(it)) }
+        treatments.first().forEach { addAll(HoneyGraph.treatment(it)) }
+        feedings.first().forEach { addAll(HoneyGraph.feeding(it)) }
+        harvests.first().forEach { addAll(HoneyGraph.harvest(it)) }
+        events.first().forEach { addAll(HoneyGraph.event(it)) }
+    }
 
     /** Puts every hive in the search index again, after the garden's index has been rebuilt. */
     suspend fun reindex() = honey.hives().forEach { index(it.toDomain()) }

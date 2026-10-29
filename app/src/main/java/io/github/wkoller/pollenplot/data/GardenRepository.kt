@@ -468,8 +468,11 @@ class GardenRepository(
         return locality().roles(species, CareResolver.resolve(kb, species).care)
     }
 
-    /** Every record as JSON-LD, using Darwin Core, schema.org and Pollenplot's own terms. */
-    suspend fun exportJsonLd(): String {
+    /** Every garden record as JSON-LD, using Darwin Core, schema.org and Pollenplot's own terms. */
+    suspend fun exportJsonLd(): String = JsonLd.document(triples()).toString()
+
+    /** Every garden record as linked data: zones, plants, sightings and the links between records. */
+    suspend fun triples(): List<Triple> {
         val kb = knowledge()
         val triples = mutableListOf<Triple>()
         zones.all().forEach { triples += GardenGraph.zone(it.toDomain()) }
@@ -483,7 +486,7 @@ class GardenRepository(
             triples += GardenGraph.sighting(sighting, (sighting.speciesName ?: sighting.label).let(animals::animal))
         }
         links.all().forEach { triples += GardenGraph.link(it.toDomain()) }
-        return JsonLd.document(triples).toString()
+        return triples
     }
 
     private suspend fun index(zone: Zone) {

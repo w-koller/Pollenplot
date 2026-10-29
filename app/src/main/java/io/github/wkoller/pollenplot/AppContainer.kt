@@ -24,6 +24,7 @@ import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
+import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
@@ -167,6 +168,9 @@ class AppContainer(
                 .collect { MeaningIndexWorker.enqueue(appContext) }
         }
     }
+
+    /** Every record, the garden's and the bees', as one JSON-LD document for backups and "Export data". */
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples()).toString()
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */
     fun recordsNearby(name: String): Int = weeds.data.value.recordsNearby(name)

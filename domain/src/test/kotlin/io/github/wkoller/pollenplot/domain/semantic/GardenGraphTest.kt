@@ -1,8 +1,12 @@
 package io.github.wkoller.pollenplot.domain.semantic
 
+import io.github.wkoller.pollenplot.domain.bees.honey.BroodPattern
+import io.github.wkoller.pollenplot.domain.bees.honey.HiveSign
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveStatus
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveType
 import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
+import io.github.wkoller.pollenplot.domain.bees.honey.Inspection
+import io.github.wkoller.pollenplot.domain.bees.honey.QueenCells
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
@@ -76,6 +80,22 @@ class GardenGraphTest {
         assertTrue(doc.body, doc.body.contains("in Back Citrus Patch"))
         assertTrue(doc.body, doc.body.contains("pollinator magnet"))
         assertEquals("orchard. full sun. mulched", SearchText.zone(zone).body)
+    }
+
+    @Test
+    fun `an inspection is an event about its hive, with each sign as a term`() {
+        val inspection = Inspection(
+            "44444444-4444-4444-4444-444444444444", "33333333-3333-3333-3333-333333333333", LocalDate.of(2026, 10, 20), queenSeen = true,
+            eggsSeen = false, brood = BroodPattern.PATCHY, temperament = null, framesOfBees = 6, framesOfStores = null, queenCells = QueenCells.SWARM,
+            signs = setOf(HiveSign.SMALL_HIVE_BEETLE, HiveSign.CHALKBROOD), actions = "Added a trap",
+        )
+        val doc = JsonLd.document(HoneyGraph.inspection(inspection))
+        val node = node(doc, "urn:uuid:44444444-4444-4444-4444-444444444444")
+        assertEquals(listOf("schema:Event", "pp:HiveInspection"), node["@type"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("urn:uuid:33333333-3333-3333-3333-333333333333", node["schema:about"]!!.jsonObject["@id"]!!.jsonPrimitive.content)
+        assertEquals("2026-10-20", node["schema:startDate"]!!.jsonObject["@value"]!!.jsonPrimitive.content)
+        assertEquals(listOf("pp:Chalkbrood", "pp:SmallHiveBeetle"), node["pp:sign"]!!.jsonArray.map { it.jsonObject["@id"]!!.jsonPrimitive.content })
+        assertTrue("A value not noted is left out", "pp:temperament" !in node && "pp:framesOfStores" !in node)
     }
 
     @Test
