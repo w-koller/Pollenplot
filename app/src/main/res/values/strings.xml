@@ -748,6 +748,18 @@
     <string name="rhythms_fills">Flowers in %1$s</string>
     <string name="rhythms_native_here">Native to your state</string>
     <string name="rhythms_suits">Would suit %1$s</string>
+    <string name="rhythms_month">This month</string>
+    <string name="rhythms_nectar">Rich nectar for honey bees</string>
+    <string name="rhythms_nectar_body">%1$s, a rich source of nectar for honey bees, is flowering.</string>
+    <string name="rhythms_nectar_body_many">%1$s are flowering, and each is a rich source of nectar for honey bees.</string>
+    <string name="rhythms_stingless">Flowering for your stingless bees</string>
+    <string name="rhythms_stingless_body">%1$s, which stingless bees forage on, is flowering.</string>
+    <string name="rhythms_stingless_body_many">%1$s are flowering, and stingless bees forage on each.</string>
+    <string name="rhythms_earlier">%1$s flowered %2$s earlier than last year.</string>
+    <string name="rhythms_later">%1$s flowered %2$s later than last year.</string>
+    <string name="rhythms_timing">Flowering times</string>
+    <string name="rhythms_visits">Pollinators on your flowers</string>
+    <string name="rhythms_visit">%1$s on %2$s</string>
     <string name="rhythms_now">Flowering now</string>
     <string name="rhythms_now_none">Nothing in your garden is expected to flower this month.</string>
     <string name="rhythms_seen">Seen flowering in your photos</string>
@@ -1199,6 +1211,10 @@
     <plurals name="notify_none_title">
         <item quantity="one">No plant was found in the photo you added.</item>
         <item quantity="other">No plants were found in the %d photos you added.</item>
+    </plurals>
+    <plurals name="rhythms_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
     </plurals>
     <plurals name="notify_weeds_title">
         <item quantity="one">A weed has been recorded near your garden.</item>

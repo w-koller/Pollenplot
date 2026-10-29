@@ -107,7 +107,7 @@ class AppContainer(
     val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
     val beeViews = BeeViews(bees, nativeBees, hotels, garden, settingsStore, clock)
     val guides = GuideLibrary(appContext)
-    val rhythms = RhythmsViews(garden, views, knowledge, settingsStore, clock)
+    val rhythms = RhythmsViews(garden, views, bees, nativeBees, knowledge, settingsStore, clock)
     val places = PlaceFinder(this.web) { weeds.sources }
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }

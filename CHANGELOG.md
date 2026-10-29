@@ -136,6 +136,9 @@
   plants from the knowledge base that would fill them, natives of your state first and never a weed. The tab also
   shows what is flowering now and next month, and each plant's flowering through the year, expected and seen in
   photos.
+- This month, at the top of the Rhythms tab: the rich nectar flowering for those who keep honey bees, what stingless
+  bees are foraging on for those who keep them, pollinators seen on the garden's flowers in the last month, and
+  plants that flowered at least a week earlier or later than last year.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood

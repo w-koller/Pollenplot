@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -78,6 +81,7 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
             item(key = "intro") {
                 Text(stringResource(R.string.rhythms_intro), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             }
+            feed(loaded)
             item(key = "calendar") { Calendar(loaded) }
             item(key = "how") {
                 Text(
@@ -142,6 +146,75 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
             item(key = "plants-head") { MonthHeader(loaded.month, Modifier.padding(horizontal = 16.dp)) }
             items(loaded.plants, key = { "row-" + it.id }) { plant -> PlantRow(plant, loaded.month) }
             item(key = "plants-key") { PlantKey() }
+        }
+    }
+}
+
+/** This month's cards: rich nectar and stingless forage for those who keep bees, pollinators seen, and timing shifts. */
+private fun LazyListScope.feed(state: RhythmsState) {
+    val nectar = if (state.keepsHoneyBees) state.richNectar else emptyList()
+    val stingless = if (state.keepsStinglessBees) state.forStingless else emptyList()
+    if (nectar.isEmpty() && stingless.isEmpty() && state.visits.isEmpty() && state.shifts.isEmpty()) return
+    item(key = "feed") { SectionHeading(stringResource(R.string.rhythms_month)) }
+    if (nectar.isNotEmpty()) {
+        item(key = "feed-nectar") {
+            val words = listWords()
+            val names = nectar.map { it.title }
+            FeedCard(
+                R.drawable.ic_hive,
+                stringResource(R.string.rhythms_nectar),
+                if (names.size == 1) stringResource(R.string.rhythms_nectar_body, names[0]) else stringResource(R.string.rhythms_nectar_body_many, UiFormat.joinAnd(names, words)),
+            )
+        }
+    }
+    if (stingless.isNotEmpty()) {
+        item(key = "feed-stingless") {
+            val words = listWords()
+            val names = stingless.map { it.title }
+            FeedCard(
+                R.drawable.ic_emoji_nature,
+                stringResource(R.string.rhythms_stingless),
+                if (names.size == 1) stringResource(R.string.rhythms_stingless_body, names[0]) else stringResource(R.string.rhythms_stingless_body_many, UiFormat.joinAnd(names, words)),
+            )
+        }
+    }
+    if (state.visits.isNotEmpty()) {
+        item(key = "feed-visits") {
+            val lines = mutableListOf<String>()
+            for (visit in state.visits) {
+                val name = visit.animal?.displayName ?: visit.sighting.label
+                lines += stringResource(R.string.rhythms_visit, name, visit.plantTitle.orEmpty()) + " · " + UiFormat.shortDate(visit.sighting.seenAt)
+            }
+            FeedCard(R.drawable.ic_raven, stringResource(R.string.rhythms_visits), lines.joinToString("\n"))
+        }
+    }
+    if (state.shifts.isNotEmpty()) {
+        item(key = "feed-timing") {
+            val lines = mutableListOf<String>()
+            for (shift in state.shifts) {
+                val title = state.title(shift.plantId) ?: continue
+                val days = kotlin.math.abs(shift.days)
+                lines += stringResource(if (shift.days < 0) R.string.rhythms_earlier else R.string.rhythms_later, title, pluralStringResource(R.plurals.rhythms_days, days, days))
+            }
+            if (lines.isNotEmpty()) FeedCard(R.drawable.ic_calendar_month, stringResource(R.string.rhythms_timing), lines.joinToString("\n"))
+        }
+    }
+}
+
+@Composable
+private fun FeedCard(icon: Int, title: String, body: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+    ) {
+        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(painterResource(icon), contentDescription = null)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall)
+                Text(body, style = MaterialTheme.typography.bodyMedium)
+            }
         }
     }
 }

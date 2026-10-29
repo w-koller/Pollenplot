@@ -18,10 +18,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
+import io.github.wkoller.pollenplot.domain.bees.honey.HiveType
+import io.github.wkoller.pollenplot.domain.bees.stingless.NativeBox
+import io.github.wkoller.pollenplot.domain.bees.stingless.NativeOrigin
+import io.github.wkoller.pollenplot.domain.bees.stingless.StinglessSpecies
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.rhythms.BeeGroup
 import io.github.wkoller.pollenplot.domain.rhythms.ForageLevel
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
 import io.github.wkoller.pollenplot.ui.theme.PollenplotTheme
 import kotlinx.coroutines.flow.first
@@ -34,6 +39,7 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.time.LocalDate
 import java.time.Month
 
 /** Pollen Rhythms for the demo yard on the fixed spring morning of 28 October 2026 in Brisbane. Saves pictures. */
@@ -58,7 +64,13 @@ class RhythmsFlowTest {
 
     @Test
     fun theYearForTheDemoYardsBees() {
-        runBlocking { DemoGarden.seed(app.container.garden) }
+        runBlocking {
+            val ids = DemoGarden.seed(app.container.garden)
+            app.container.bees.addHive("Hive 1", HiveType.LANGSTROTH_8, null, null, 2025, LocalDate.of(2026, 9, 1))
+            app.container.nativeBees.addHive("Sugarbag 1", StinglessSpecies.TETRAGONULA_CARBONARIA, NativeBox.OATH, NativeOrigin.BOUGHT, null, null, LocalDate.of(2026, 9, 1))
+            app.container.knowledge.awaitFauna()
+            app.container.garden.recordSighting("Amegilla cingulata", "Blue-banded bee", LifeGroup.INSECT, null, ids.lemon, null, 1, DemoWildlife.clock.instant(), "")
+        }
         val state = runBlocking { app.container.rhythms.state.first { it.plants.isNotEmpty() } }
         val honey = state.lanes.first { it.group == BeeGroup.HONEY }
         assertTrue("Spring in a yard of citrus, tea tree and grevillea is good for honey bees", honey.level(Month.OCTOBER) >= ForageLevel.SOME)
@@ -69,6 +81,9 @@ class RhythmsFlowTest {
         waitFor(hasText("The year for your bees"))
         // Each lane is read as a sentence, since its levels are drawn.
         compose.onNode(hasContentDescription("Honey bees.", substring = true)).assertExists()
+        compose.onNodeWithText("Rich nectar for honey bees").assertExists()
+        compose.onNodeWithText("Flowering for your stingless bees").assertExists()
+        compose.onNodeWithText("Blue-banded bee on Mum's lemon", substring = true).assertExists()
         compose.onNodeWithText("Flowering now").assertExists()
         compose.onNodeWithText("Flowering through the year").assertExists()
         shot("rhythms")

@@ -24,6 +24,18 @@ STRINGS = {
     "rhythms_fills": "Flowers in %1$s",
     "rhythms_native_here": "Native to your state",
     "rhythms_suits": "Would suit %1$s",
+    "rhythms_month": "This month",
+    "rhythms_nectar": "Rich nectar for honey bees",
+    "rhythms_nectar_body": "%1$s, a rich source of nectar for honey bees, is flowering.",
+    "rhythms_nectar_body_many": "%1$s are flowering, and each is a rich source of nectar for honey bees.",
+    "rhythms_stingless": "Flowering for your stingless bees",
+    "rhythms_stingless_body": "%1$s, which stingless bees forage on, is flowering.",
+    "rhythms_stingless_body_many": "%1$s are flowering, and stingless bees forage on each.",
+    "rhythms_earlier": "%1$s flowered %2$s earlier than last year.",
+    "rhythms_later": "%1$s flowered %2$s later than last year.",
+    "rhythms_timing": "Flowering times",
+    "rhythms_visits": "Pollinators on your flowers",
+    "rhythms_visit": "%1$s on %2$s",
     "rhythms_now": "Flowering now",
     "rhythms_now_none": "Nothing in your garden is expected to flower this month.",
     "rhythms_seen": "Seen flowering in your photos",
@@ -37,4 +49,6 @@ STRINGS = {
     "rhythms_not_recorded": "Its flowering is not recorded yet",
 }
 
-PLURALS = {}
+PLURALS = {
+    "rhythms_days": {"one": "%d day", "other": "%d days"},
+}

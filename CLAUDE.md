@@ -67,7 +67,7 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   - `hotels/`: `BeeHotels` (hotels, their sections, looks and upkeep), `SealGuide` (who a nest's seal says is likely
     inside) and `HotelCare` (a hotel worth cleaning out in spring).
   - `rhythms/`: `RhythmsEngine` (each bee group's forage points and level per month, its gaps, and plants that would
-    fill them; the measure is described in its KDoc and on the screen).
+    fill them; the measure is described in its KDoc and on the screen) and `RhythmsFeed` (this month's cards).
   - `guide/`: `Guide` and `GuideParser`, which reads a bee guide page (see Guides below).
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
