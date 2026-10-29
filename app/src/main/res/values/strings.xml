@@ -74,6 +74,16 @@
     <string name="add_photos">Add photos</string>
     <string name="add_check_weed">Check a weed</string>
     <string name="add_plant_by_name">Add a plant by name</string>
+    <string name="settings_records">Your records</string>
+    <string name="export_title">Export data</string>
+    <string name="export_body">Pollenplot keeps your records on the phone. You can save a copy of them as a file, to keep or to share.</string>
+    <string name="export_jsonld">All records as JSON-LD</string>
+    <string name="export_jsonld_body">Zones, plants, sightings, hives, hotels and their records, as linked data that uses Darwin Core and schema.org.</string>
+    <string name="export_dwc">Sightings as Darwin Core</string>
+    <string name="export_dwc_body">Every animal seen in your yard as a table that biodiversity portals take in. The place is your garden\'s, rounded to about 1 km.</string>
+    <string name="export_save">Save as a file</string>
+    <string name="export_saved">Saved.</string>
+    <string name="export_failed">The file could not be saved. Please try again.</string>
     <string name="guide">Guide</string>
     <string name="guide_last_checked">These facts were last checked against their sources on %1$s.</string>
     <string name="guide_sources">Sources</string>

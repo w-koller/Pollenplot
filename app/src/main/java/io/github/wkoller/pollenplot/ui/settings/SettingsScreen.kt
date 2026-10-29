@@ -49,6 +49,7 @@ fun SettingsScreen(
     onOpenLocation: () -> Unit,
     onOpenScanning: () -> Unit,
     onOpenModels: () -> Unit,
+    onOpenExport: () -> Unit,
     onOpenAbout: () -> Unit,
 ) {
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
@@ -88,6 +89,15 @@ fun SettingsScreen(
                     leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
                     supportingContent = { Text(stringResource(R.string.settings_models_body)) },
                 ) { Text(stringResource(R.string.models_title)) }
+            }
+            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+            item { SectionHeading(stringResource(R.string.settings_records)) }
+            item {
+                ListItem(
+                    onClick = onOpenExport,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.export_body)) },
+                ) { Text(stringResource(R.string.export_title)) }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_appearance)) }

@@ -46,8 +46,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     genus, then family), `EcoRoles` (the badges) and `Companions`.
   - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid and tidy placement) and `ZoneBadges`.
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `HoneyGraph`
-    (honey bee records, with mite checks as SOSA observations), `JsonLd` and `SearchText` (what the search index
-    holds for each record).
+    (honey bee records, with mite checks as SOSA observations), `NativeBeeGraph`, `HotelGraph`, `JsonLd`,
+    `DarwinCore` (sightings as a Darwin Core CSV) and `SearchText` (what the search index holds for each record).
   - `wildlife/`: `LifeGroup`, the animal knowledge base (`FaunaBase`, with each state's rules and their official
     pages), `Sighting` and `Biodiversity` (a year of sightings for the Wildlife tab: each kind seen, the months, and
     notices for animals that are venomous or that the law in the garden's state asks about).

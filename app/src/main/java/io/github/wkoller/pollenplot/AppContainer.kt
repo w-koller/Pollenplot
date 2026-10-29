@@ -30,6 +30,7 @@ import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
+import io.github.wkoller.pollenplot.domain.semantic.DarwinCore
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.notify.HeatAlertCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
@@ -193,6 +194,13 @@ class AppContainer(
 
     /** Every record, the garden's and the bees', as one JSON-LD document for backups and "Export data". */
     suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples()).toString()
+
+    /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
+    suspend fun exportDarwinCore(stateName: String?): String {
+        val fauna = knowledge.awaitFauna()
+        val sightings = garden.sightingList.first().map { it to fauna.animal(it.speciesName ?: it.label) }
+        return DarwinCore.csv(sightings, settingsStore.current().gardenPlace, stateName, clock.zone)
+    }
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */
     fun recordsNearby(name: String): Int = weeds.data.value.recordsNearby(name)

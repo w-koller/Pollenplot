@@ -148,6 +148,8 @@
 - A line that waters plants of very different thirst says which plant would get several times what it needs from
   drippers of the same size, and suggests a smaller dripper or capping it.
 - A notification on the new Watering channel on the mornings when a line or a zone is due for watering.
+- Settings › Export data saves a copy of your records as files: all of them as JSON-LD, and the sightings as a Darwin
+  Core table that biodiversity portals take in, with the garden's place rounded to about 1 km.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood

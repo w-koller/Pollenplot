@@ -68,6 +68,7 @@ import io.github.wkoller.pollenplot.ui.guides.GuideScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
+import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneDetailScreen
@@ -84,6 +85,7 @@ import io.github.wkoller.pollenplot.ui.settings.LicenceTextScreen
 import io.github.wkoller.pollenplot.ui.settings.LicencesScreen
 import io.github.wkoller.pollenplot.ui.settings.ModelsScreen
 import io.github.wkoller.pollenplot.ui.settings.ScanSettingsScreen
+import io.github.wkoller.pollenplot.ui.settings.ExportScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
 import io.github.wkoller.pollenplot.ui.water.LineEditorScreen
 import io.github.wkoller.pollenplot.ui.water.WaterScreen
@@ -525,7 +527,18 @@ fun AppRoot(
                         onOpenLocation = { navController.navigate(GardenLocationRoute) },
                         onOpenScanning = { navController.navigate(ScanSettingsRoute) },
                         onOpenModels = { navController.navigate(ModelsRoute) },
+                        onOpenExport = { navController.navigate(ExportRoute) },
                         onOpenAbout = { navController.navigate(AboutRoute) },
+                    )
+                }
+                composable<ExportRoute> {
+                    val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
+                    val stateName = current?.gardenState?.let { stringResource(it.label) }
+                    ExportScreen(
+                        today = container.beeViews.today(),
+                        jsonLd = { container.exportJsonLd() },
+                        darwinCore = { container.exportDarwinCore(stateName) },
+                        onBack = back,
                     )
                 }
                 composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, container.gemma, onBack = back) }

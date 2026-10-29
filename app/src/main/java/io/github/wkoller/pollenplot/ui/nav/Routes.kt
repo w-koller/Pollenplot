@@ -77,6 +77,9 @@ import kotlinx.serialization.Serializable
 /** Upkeep of a bee hotel. */
 @Serializable data class HotelUpkeepRoute(val hotelId: String)
 
+/** Exporting the garden's records as files. */
+@Serializable data object ExportRoute
+
 /** A new watering line, or a line's details to change. */
 @Serializable data class LineEditRoute(val id: String? = null)
 
