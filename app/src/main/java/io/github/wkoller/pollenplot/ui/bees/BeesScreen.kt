@@ -1,6 +1,5 @@
 package io.github.wkoller.pollenplot.ui.bees
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,7 +26,6 @@ import io.github.wkoller.pollenplot.domain.guide.GuideSection
 import io.github.wkoller.pollenplot.domain.wildlife.NativeBeesSeen
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.ui.components.ConnectedChoice
-import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.components.rememberNotificationAccess
 import kotlinx.coroutines.launch
@@ -36,10 +34,10 @@ import kotlinx.coroutines.launch
  * The three bee sections. European honey bees, Australian native bees and bee hotels each keep their own records,
  * screens and guide, so they are chosen here and never shown mixed together.
  */
-enum class BeeSection(@StringRes val label: Int, @DrawableRes val icon: Int, @StringRes val emptyTitle: Int, @StringRes val emptyBody: Int) {
-    HONEY(R.string.bees_section_honey, R.drawable.ic_hive, R.string.bees_honey_empty_title, R.string.bees_honey_empty_body),
-    NATIVE(R.string.bees_section_native, R.drawable.ic_emoji_nature, R.string.bees_native_empty_title, R.string.bees_native_empty_body),
-    HOTELS(R.string.bees_section_hotels, R.drawable.ic_cottage, R.string.bees_hotels_empty_title, R.string.bees_hotels_empty_body),
+enum class BeeSection(@StringRes val label: Int) {
+    HONEY(R.string.bees_section_honey),
+    NATIVE(R.string.bees_section_native),
+    HOTELS(R.string.bees_section_hotels),
 }
 
 @Composable
@@ -55,12 +53,15 @@ fun BeesScreen(
     onAddNativeHive: () -> Unit,
     onOpenNativeHive: (String) -> Unit,
     onOpenAnimal: (String) -> Unit,
+    onAddHotel: () -> Unit,
+    onOpenHotel: (String) -> Unit,
     onOpenGuide: (String) -> Unit,
     initialSection: BeeSection = BeeSection.HONEY,
 ) {
     var section by rememberSaveable { mutableStateOf(initialSection) }
     val hives by beeViews.hives.collectAsStateWithLifecycle(initialValue = null)
     val nativeHives by beeViews.nativeHives.collectAsStateWithLifecycle(initialValue = null)
+    val hotels by beeViews.hotels.collectAsStateWithLifecycle(initialValue = null)
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
@@ -68,6 +69,7 @@ fun BeesScreen(
     val access = rememberNotificationAccess(notifications)
     val honeyGuide by produceState(emptyList<Guide>()) { value = guides.section(GuideSection.HONEY) }
     val nativeGuide by produceState(emptyList<Guide>()) { value = guides.section(GuideSection.NATIVE) }
+    val hotelGuide by produceState(emptyList<Guide>()) { value = guides.section(GuideSection.HOTELS) }
     TabScaffold(
         title = stringResource(R.string.bees_title),
         subtitle = stringResource(R.string.bees_subtitle),
@@ -113,14 +115,15 @@ fun BeesScreen(
                     onOpenAnimal = onOpenAnimal,
                     onOpenGuide = onOpenGuide,
                 )
-            } else if (section == BeeSection.HOTELS) {
-                item {
-                    EmptyState(
-                        icon = section.icon,
-                        title = stringResource(section.emptyTitle),
-                        body = stringResource(section.emptyBody),
-                    )
-                }
+            } else if (section == BeeSection.HOTELS && hotels != null) {
+                hotelSection(
+                    hotels = hotels.orEmpty(),
+                    state = chosen?.gardenState,
+                    guide = hotelGuide,
+                    onAddHotel = onAddHotel,
+                    onOpenHotel = onOpenHotel,
+                    onOpenGuide = onOpenGuide,
+                )
             }
         }
     }

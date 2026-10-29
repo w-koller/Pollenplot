@@ -10,6 +10,7 @@ import io.github.wkoller.pollenplot.data.BeeRepository
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.Locality
@@ -94,6 +95,7 @@ class AppContainer(
     val knowledge = KnowledgeRepository(appContext, scope)
     val bees = BeeRepository(this.database, clock)
     val nativeBees = NativeBeeRepository(this.database, clock)
+    val hotels = HotelRepository(this.database, clock)
     val garden = GardenRepository(
         db = this.database,
         clock = clock,
@@ -102,7 +104,7 @@ class AppContainer(
         fauna = { knowledge.awaitFauna() },
     )
     val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
-    val beeViews = BeeViews(bees, nativeBees, garden, settingsStore, clock)
+    val beeViews = BeeViews(bees, nativeBees, hotels, garden, settingsStore, clock)
     val guides = GuideLibrary(appContext)
     val places = PlaceFinder(this.web) { weeds.sources }
     val location: LocationSource = location ?: PhoneLocation(appContext)
@@ -147,6 +149,7 @@ class AppContainer(
                 // The rebuild clears the whole index, hives included.
                 bees.reindex()
                 nativeBees.reindex()
+                hotels.reindex()
             }
         }
         // The weed lists are brought up to date once a month on Wi-Fi, and straight away when the garden moves.
@@ -180,7 +183,7 @@ class AppContainer(
     }
 
     /** Every record, the garden's and the bees', as one JSON-LD document for backups and "Export data". */
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples()).toString()
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */
     fun recordsNearby(name: String): Int = weeds.data.value.recordsNearby(name)

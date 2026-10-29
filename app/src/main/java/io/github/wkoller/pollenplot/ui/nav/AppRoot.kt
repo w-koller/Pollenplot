@@ -54,6 +54,10 @@ import io.github.wkoller.pollenplot.ui.assistant.AskModel
 import io.github.wkoller.pollenplot.ui.assistant.AskScreen
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
 import io.github.wkoller.pollenplot.ui.bees.HiveEditorScreen
+import io.github.wkoller.pollenplot.ui.bees.HotelEditorScreen
+import io.github.wkoller.pollenplot.ui.bees.HotelLookScreen
+import io.github.wkoller.pollenplot.ui.bees.HotelScreen
+import io.github.wkoller.pollenplot.ui.bees.HotelUpkeepScreen
 import io.github.wkoller.pollenplot.ui.bees.HiveScreen
 import io.github.wkoller.pollenplot.ui.bees.HoneyRecordKind
 import io.github.wkoller.pollenplot.ui.bees.HoneyRecordScreen
@@ -274,6 +278,7 @@ fun AppRoot(
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
                         onOpenHive = { navController.navigate(HiveRoute(it)) },
                         onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
+                        onOpenHotel = { navController.navigate(HotelRoute(it)) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->
@@ -404,8 +409,39 @@ fun AppRoot(
                         onAddNativeHive = { navController.navigate(NativeHiveEditRoute()) },
                         onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
                         onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                        onAddHotel = { navController.navigate(HotelEditRoute()) },
+                        onOpenHotel = { navController.navigate(HotelRoute(it)) },
                         onOpenGuide = { navController.navigate(GuideRoute(it)) },
                     )
+                }
+                composable<HotelRoute> { entry ->
+                    val id = entry.toRoute<HotelRoute>().id
+                    HotelScreen(
+                        views = container.beeViews,
+                        hotels = container.hotels,
+                        hotelId = id,
+                        onBack = back,
+                        onEdit = { navController.navigate(HotelEditRoute(id)) },
+                        onLook = { navController.navigate(HotelLookRoute(id)) },
+                        onUpkeep = { navController.navigate(HotelUpkeepRoute(id)) },
+                    )
+                }
+                composable<HotelEditRoute> { entry ->
+                    HotelEditorScreen(
+                        hotels = container.hotels,
+                        views = container.views,
+                        hotelId = entry.toRoute<HotelEditRoute>().id,
+                        today = container.beeViews.today(),
+                        onBack = back,
+                        onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
+                        onCreated = { id -> navController.navigate(HotelRoute(id)) { popUpTo<HotelEditRoute> { inclusive = true } } },
+                    )
+                }
+                composable<HotelLookRoute> { entry ->
+                    HotelLookScreen(entry.toRoute<HotelLookRoute>().hotelId, container.hotels, container.beeViews.today(), onBack = back)
+                }
+                composable<HotelUpkeepRoute> { entry ->
+                    HotelUpkeepScreen(entry.toRoute<HotelUpkeepRoute>().hotelId, container.hotels, container.beeViews.today(), onBack = back)
                 }
                 composable<NativeHiveRoute> { entry ->
                     val id = entry.toRoute<NativeHiveRoute>().id

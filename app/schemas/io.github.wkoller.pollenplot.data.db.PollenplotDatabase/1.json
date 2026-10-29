@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2bb2038c46bfab5c4c6d9e8fc6ecea7d",
+    "identityHash": "0674f366978911601752812646ad4f53",
     "entities": [
       {
         "tableName": "zones",
@@ -1875,11 +1875,333 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "hotels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `zoneId` TEXT, `facing` TEXT, `heightMm` INTEGER, `installedOnEpochDay` INTEGER, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`zoneId`) REFERENCES `zones`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zoneId",
+            "columnName": "zoneId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "facing",
+            "columnName": "facing",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "heightMm",
+            "columnName": "heightMm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "installedOnEpochDay",
+            "columnName": "installedOnEpochDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_hotels_zoneId",
+            "unique": false,
+            "columnNames": [
+              "zoneId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hotels_zoneId` ON `${TABLE_NAME}` (`zoneId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "zones",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "zoneId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "hotel_sections",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `hotelId` TEXT NOT NULL, `position` INTEGER NOT NULL, `material` TEXT NOT NULL, `holeMm` INTEGER, `depthMm` INTEGER, `holes` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`hotelId`) REFERENCES `hotels`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hotelId",
+            "columnName": "hotelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "material",
+            "columnName": "material",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "holeMm",
+            "columnName": "holeMm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "depthMm",
+            "columnName": "depthMm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "holes",
+            "columnName": "holes",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_hotel_sections_hotelId",
+            "unique": false,
+            "columnNames": [
+              "hotelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hotel_sections_hotelId` ON `${TABLE_NAME}` (`hotelId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hotels",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hotelId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "hotel_observations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `hotelId` TEXT NOT NULL, `dateEpochDay` INTEGER NOT NULL, `sealed` TEXT NOT NULL, `busy` INTEGER, `emerged` INTEGER, `pests` TEXT NOT NULL, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`hotelId`) REFERENCES `hotels`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hotelId",
+            "columnName": "hotelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateEpochDay",
+            "columnName": "dateEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sealed",
+            "columnName": "sealed",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "busy",
+            "columnName": "busy",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "emerged",
+            "columnName": "emerged",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pests",
+            "columnName": "pests",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_hotel_observations_hotelId",
+            "unique": false,
+            "columnNames": [
+              "hotelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hotel_observations_hotelId` ON `${TABLE_NAME}` (`hotelId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hotels",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hotelId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "hotel_upkeep",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `hotelId` TEXT NOT NULL, `dateEpochDay` INTEGER NOT NULL, `kind` TEXT NOT NULL, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`hotelId`) REFERENCES `hotels`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hotelId",
+            "columnName": "hotelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateEpochDay",
+            "columnName": "dateEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_hotel_upkeep_hotelId",
+            "unique": false,
+            "columnNames": [
+              "hotelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hotel_upkeep_hotelId` ON `${TABLE_NAME}` (`hotelId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hotels",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hotelId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2bb2038c46bfab5c4c6d9e8fc6ecea7d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0674f366978911601752812646ad4f53')"
     ]
   }
 }

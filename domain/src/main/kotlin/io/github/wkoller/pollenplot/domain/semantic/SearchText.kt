@@ -3,13 +3,14 @@ package io.github.wkoller.pollenplot.domain.semantic
 import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeHive
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
+import io.github.wkoller.pollenplot.domain.hotels.BeeHotel
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 
-enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE }
+enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL }
 
 /**
  * A record as the search index holds it: the record's key, its kind, the title shown in results and the words it
@@ -75,6 +76,19 @@ object SearchText {
             zoneName?.let { "in $it" },
             words(hive.status.name),
             hive.notes.ifBlank { null },
+        ).joinToString(". "),
+    )
+
+    /** A bee hotel, found by its name, what it is made of and where it is. */
+    fun hotel(hotel: BeeHotel, zoneName: String?): SearchDoc = SearchDoc(
+        id = hotel.id,
+        kind = SearchKind.HOTEL,
+        title = hotel.name,
+        body = listOfNotNull(
+            "bee hotel. insect hotel",
+            hotel.sections.map { words(it.material.name) }.distinct().joinToString(", ").ifBlank { null },
+            zoneName?.let { "in $it" },
+            hotel.notes.ifBlank { null },
         ).joinToString(". "),
     )
 

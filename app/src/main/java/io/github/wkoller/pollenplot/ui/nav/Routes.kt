@@ -65,6 +65,18 @@ import kotlinx.serialization.Serializable
 /** A new record for a stingless bee hive, starting on a kind named by `NativeLogKind`. */
 @Serializable data class NativeLogRoute(val hiveId: String, val kind: String)
 
+/** One bee hotel. */
+@Serializable data class HotelRoute(val id: String)
+
+/** A new bee hotel, or a hotel's details to change. */
+@Serializable data class HotelEditRoute(val id: String? = null)
+
+/** A look at a bee hotel. */
+@Serializable data class HotelLookRoute(val hotelId: String)
+
+/** Upkeep of a bee hotel. */
+@Serializable data class HotelUpkeepRoute(val hotelId: String)
+
 /** A page of a bee guide, by its id, such as `honey/varroa`. */
 @Serializable data class GuideRoute(val id: String)
 

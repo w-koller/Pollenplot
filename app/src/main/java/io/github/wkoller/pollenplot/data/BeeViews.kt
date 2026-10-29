@@ -8,6 +8,9 @@ import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
 import io.github.wkoller.pollenplot.domain.bees.honey.StateMiteChecks
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeHive
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStrength
+import io.github.wkoller.pollenplot.domain.hotels.BeeHotel
+import io.github.wkoller.pollenplot.domain.hotels.HotelCare
+import io.github.wkoller.pollenplot.domain.hotels.HotelState
 import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -22,8 +25,18 @@ data class HiveView(val hive: HoneyHive, val zoneName: String?, val apiary: Apia
 /** A stingless bee hive with the name of its zone and its latest weight and count of bees coming home. */
 data class NativeHiveView(val hive: NativeHive, val zoneName: String?, val strength: NativeStrength)
 
+/** A bee hotel with the name of its zone, its latest look and clean-out, and whether it is worth cleaning this spring. */
+data class HotelView(val hotel: BeeHotel, val zoneName: String?, val state: HotelState, val cleanThisSpring: Boolean)
+
 /** The bee records joined up for the screens, with each honey bee hive's reminders worked out for today. */
-class BeeViews(bees: BeeRepository, natives: NativeBeeRepository, garden: GardenRepository, settings: SettingsStore, private val clock: Clock) {
+class BeeViews(
+    bees: BeeRepository,
+    natives: NativeBeeRepository,
+    hotels: HotelRepository,
+    garden: GardenRepository,
+    settings: SettingsStore,
+    private val clock: Clock,
+) {
     private val records = combine(bees.hives, bees.inspections, bees.checks) { hives, inspections, checks -> Triple(hives, inspections, checks) }
 
     val hives: Flow<List<HiveView>> = combine(records, garden.zoneList, bees.apiaries, settings.settings) { (hives, inspections, checks), zones, apiaries, current ->
@@ -50,6 +63,18 @@ class BeeViews(bees: BeeRepository, natives: NativeBeeRepository, garden: Garden
     }
 
     fun nativeHive(id: String): Flow<NativeHiveView?> = nativeHives.map { list -> list.firstOrNull { it.hive.id == id } }
+
+    val hotels: Flow<List<HotelView>> = combine(hotels.hotels, hotels.observations, hotels.upkeep, garden.zoneList, settings.settings) { list, looks, upkeep, zones, current ->
+        val today = LocalDate.now(clock)
+        val hemisphere = current.gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
+        val zoneNames = zones.associate { it.id to it.name }
+        list.map { hotel ->
+            val state = HotelState.of(hotel.id, looks, upkeep)
+            HotelView(hotel, hotel.zoneId?.let(zoneNames::get), state, HotelCare.cleanInSpring(state, today, hemisphere))
+        }
+    }
+
+    fun hotel(id: String): Flow<HotelView?> = hotels.map { list -> list.firstOrNull { it.hotel.id == id } }
 
     fun today(): LocalDate = LocalDate.now(clock)
 

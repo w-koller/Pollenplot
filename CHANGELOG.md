@@ -123,6 +123,13 @@
 - The native bee guide: stingless bees, looking after a hive, swarms and pests, splitting and budding, and solitary
   native bees and how they nest, from Cumberland City Council's Keepin-A-Hive guide, Aussie Bee, the Australian
   National Botanic Gardens and Business Queensland.
+- Bee hotels, on the Bees tab: each hotel with its zone, the way it faces, its height and its sections, each with its
+  material, hole width and depth, and number of holes. Looks at a hotel record the holes sealed with each kind of seal,
+  the busy holes, what came out and any pests, and upkeep records cleaning out, new paper liners, freezing nests and
+  moving. Who sealed it? says who is most likely inside from what a nest is sealed with, and in spring a hotel not
+  cleaned out in six months says so.
+- The bee hotel guide: building a hotel, who uses one, and pests and keeping a hotel clean, from Aussie Bee's Bee Hotel
+  Guide.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood
