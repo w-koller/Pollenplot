@@ -116,5 +116,6 @@
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood
-  diseases, small hive beetle and wax moth, and exotic mites to report. Each page says when its facts were last checked
-  and links the pages they come from: the Code of Practice, BeeAware, Business Queensland and Plant Health Australia.
+  diseases, small hive beetle and wax moth, exotic mites to report and, for gardens in Queensland, keeping bees there.
+  Each page says when its facts were last checked and links the pages they come from: the Code of Practice, BeeAware,
+  Business Queensland and Plant Health Australia.

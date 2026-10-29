@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.domain.guide
 
+import io.github.wkoller.pollenplot.domain.plants.AuState
 import java.time.LocalDate
 
 /** The three bee sections, each with its own guide. */
@@ -39,7 +40,12 @@ data class Guide(
     val lastChecked: LocalDate,
     val sources: List<GuideSource>,
     val blocks: List<GuideBlock>,
+    /** The states whose rules the page describes; a page for every state names none. */
+    val states: Set<AuState> = emptySet(),
 ) {
+    /** Whether the page is for a garden in [state]; a page about one state's rules is not shown elsewhere. */
+    fun appliesTo(state: AuState?): Boolean = states.isEmpty() || state in states
+
     /** Every web address the page links to, in its text and its sources. */
     val links: List<String>
         get() = sources.map { it.url } + blocks.flatMap { block ->

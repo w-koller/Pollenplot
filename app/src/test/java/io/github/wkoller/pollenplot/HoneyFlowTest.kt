@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -222,6 +223,7 @@ class HoneyFlowTest {
         compose.onNodeWithText("Bees").performClick()
         waitFor(hasText("Checking for Varroa mite"))
         compose.onNodeWithText("Brood diseases").assertExists()
+        compose.onNodeWithText("Keeping bees in Queensland").assertExists()
         compose.onNodeWithText("Checking for Varroa mite").performClick()
         waitFor(hasText("How often"))
         compose.onNodeWithText("Collect half a cup of bees, about 300", substring = true).assertExists()
@@ -241,6 +243,18 @@ class HoneyFlowTest {
         waitFor(hasText("American foulbrood"))
         compose.onNodeWithText("AFB must be reported in every state and territory", substring = true).assertExists()
         shot("guide_brood_dark")
+    }
+
+    @Test
+    @Config(qualifiers = "en-rAU-w411dp-h3400dp-xhdpi")
+    fun queenslandsPageIsOnlyForGardensThere() {
+        runBlocking { app.container.settingsStore.update { it.copy(gardenState = AuState.NSW) } }
+        show()
+        compose.onNodeWithText("Bees").performClick()
+        waitFor(hasText("Brood diseases"))
+        compose.onAllNodesWithText("Keeping bees in Queensland").assertCountEquals(0)
+        // Nor does the section say what Queensland asks of mite checks.
+        compose.onAllNodesWithText("Queensland asks beekeepers to check", substring = true).assertCountEquals(0)
     }
 
     @Test

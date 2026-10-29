@@ -172,7 +172,8 @@ before adding it, because summaries elsewhere are often out of date.
 
 The bee guides are Markdown pages in `app/src/main/assets/guides/<section>/` (honey, native, hotels), one topic per
 file. Each starts with front matter: `title`, `summary` (a sentence), `section`, `order`, `lastChecked` and
-`sources`, one per line as `  - Title | https://…`. `GuideParser` accepts `## ` headings, paragraphs, `- ` bullets,
+`sources`, one per line as `  - Title | https://…`, and `states` (such as `qld`) for a page about one state's rules,
+which only gardens there are shown. `GuideParser` accepts `## ` headings, paragraphs, `- ` bullets,
 `1. ` steps, `> ` notes for what must not be missed, `**bold**`, `*italic*` (species names) and `[links](https://…)`,
 and refuses anything else with its line. Every fact on a page must come from one of its sources; leave out what a
 source does not say, and name the state for a state's rule. Set `lastChecked` to the day the page was checked

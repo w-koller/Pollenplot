@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.domain.guide
 
+import io.github.wkoller.pollenplot.domain.plants.AuState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -63,6 +64,16 @@ class GuideParserTest {
     }
 
     @Test
+    fun `a page about one state's rules is only for gardens there`() {
+        val queensland = GuideParser.parse("honey/qld", page.replace("order: 3", "order: 3\nstates: qld"))
+        assertEquals(setOf(AuState.QLD), queensland.states)
+        assertTrue(queensland.appliesTo(AuState.QLD))
+        assertTrue(!queensland.appliesTo(AuState.NSW))
+        assertTrue(!queensland.appliesTo(null))
+        assertTrue("A page with no states is for everyone", GuideParser.parse("honey/varroa", page).appliesTo(null))
+    }
+
+    @Test
     fun `mistakes are refused with their line`() {
         fun refused(text: String, says: String) {
             val message = assertThrows(GuideFormatException::class.java) { GuideParser.parse("honey/test", text) }.message!!
@@ -76,5 +87,6 @@ class GuideParserTest {
         refused(page.replace("2. Shake", "3. Shake"), "numbered 1, 2, 3")
         refused(page.replace("section: honey", "section: wasps"), "section must be")
         refused(page.replace("order: 3", "order: 3\nauthor: me"), "unknown front matter field")
+        refused(page.replace("order: 3", "order: 3\nstates: queensland"), "is not a state or territory")
     }
 }

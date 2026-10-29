@@ -1,12 +1,13 @@
 package io.github.wkoller.pollenplot.domain.guide
 
+import io.github.wkoller.pollenplot.domain.plants.AuState
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
 /**
  * Reads a guide page: front matter between two `---` lines, then a small part of Markdown. The front matter holds
- * `title`, `summary`, `section` (honey, native or hotels), `order`, `lastChecked` (a date such as 2026-10-29) and
- * `sources`, one per line as `  - Title | https://…`. The text has `## ` headings, paragraphs, `- ` bullets, `1. `
+ * `title`, `summary`, `section` (honey, native or hotels), `order`, `lastChecked` (a date such as 2026-10-29),
+ * `sources`, one per line as `  - Title | https://…`, and, for a page about one state's rules, `states`, such as qld. The text has `## ` headings, paragraphs, `- ` bullets, `1. `
  * steps and `> ` notes, separated by blank lines, with `**bold**`, `*italic*` and `[links](https://…)` inside them.
  * Anything else is refused with the line it is on, so a mistake fails the build instead of showing on a phone.
  */
@@ -55,9 +56,12 @@ object GuideParser {
             fail(id, 1, "lastChecked must be a date such as 2026-10-29")
         }
         if (sources.isEmpty()) fail(id, 1, "a page needs at least one source")
+        val states = fields["states"].orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }.map { name ->
+            AuState.entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: fail(id, 1, "\"$name\" is not a state or territory, such as qld")
+        }.toSet()
         val blocks = blocks(id, lines, end + 1)
         if (blocks.isEmpty()) fail(id, end + 2, "the page has no text")
-        return Guide(id, section, order, field("title"), field("summary"), lastChecked, sources, blocks)
+        return Guide(id, section, order, field("title"), field("summary"), lastChecked, sources, blocks, states)
     }
 
     /** The text after the front matter, from the 0-based line [start]. */
@@ -186,6 +190,6 @@ object GuideParser {
 
     private fun fail(id: String, number: Int, message: String): Nothing = throw GuideFormatException("$id, line $number: $message")
 
-    private val FIELDS = setOf("title", "summary", "section", "order", "lastChecked")
+    private val FIELDS = setOf("title", "summary", "section", "order", "lastChecked", "states")
     private val STEP = Regex("""^(\d+)\. """)
 }

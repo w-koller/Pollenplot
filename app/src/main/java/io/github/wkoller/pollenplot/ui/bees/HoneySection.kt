@@ -80,9 +80,10 @@ internal fun LazyListScope.honeySection(
             OutlinedButton(onClick = onAddHive, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.honey_add_hive)) }
         }
     }
-    if (guide.isNotEmpty()) {
+    val pages = guide.filter { it.appliesTo(state) }
+    if (pages.isNotEmpty()) {
         item(key = "honey-guide") { SectionHeading(stringResource(R.string.guide)) }
-        items(guide, key = { "guide-" + it.id }) { page ->
+        items(pages, key = { "guide-" + it.id }) { page ->
             ListItem(
                 onClick = { onOpenGuide(page.id) },
                 leadingContent = { Icon(painterResource(R.drawable.ic_menu_book), contentDescription = null) },
