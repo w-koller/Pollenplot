@@ -61,6 +61,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     registration page in `BeekeeperRegistration` and the states that ask for more mite checks than the Code in
     `StateMiteChecks`. `HiveReminders` decides which due checks a notification tells
     about: each once while it stays due.
+  - `bees/stingless/`: stingless bee hives and their logs (`StinglessBees`, named so because `native` is a Java
+    keyword) and `HeatAlerts` (which hot days to warn about, from Cumberland City Council's guide). `weather/` holds
+    `OpenMeteoForecast`, and `wildlife/NativeBeesSeen` the native bees seen in a year.
   - `guide/`: `Guide` and `GuideParser`, which reads a bee guide page (see Guides below).
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
@@ -69,8 +72,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
 - `app/data`: `GardenRepository` (records, detections, the search index and their triples, which
   `AppContainer.exportJsonLd` joins with `BeeRepository`'s into one JSON-LD document), `GardenViews` (records
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
-  review), `BeeRepository` (the honey bee records) and `BeeViews` (hives with their zone, apiary and what each is due
-  for today), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
+  review), `BeeRepository` (the honey bee records), `NativeBeeRepository` (stingless bee hives and logs) and
+  `BeeViews` (hives with their zone, apiary and what each honey bee hive is due for today), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on
@@ -95,8 +98,9 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   added photos through the analysis, each gallery photo recorded in `scanned_media` so it is looked at once), and the
   WorkManager jobs: `AddPhotosWorker`, `LibraryScanWorker` (stops after eight minutes and queues the rest),
   `LibraryWatchWorker` (a content-URI trigger that re-arms itself) and `ScanScheduler`, which matches them to the
-  settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which looks at the hives at about
-  seven each morning while there are hives and the reminders are on.
+  settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which runs at about seven each
+  morning while there is a hive to remind or warn about: `HiveReminderCheck` for honey bee checks due and
+  `HeatAlertCheck` for hot days ahead of stingless bee hives.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
@@ -197,7 +201,7 @@ through `ui/components/PollenShapes.kt` and other components, so an API change t
   knowledge database is rebuilt from `app/src/main/assets/kb/` whenever its version changes.
 - Garden locations sent to online services (weather, ALA) are rounded to about 1 km. Photos never leave the phone.
 - Every write goes through `GardenRepository`, which also updates the FTS4 search index and links, or through
-  `BeeRepository` for bee records, which puts hives in the same index. Room supports FTS4 but not FTS5, so the index
+  `BeeRepository` and `NativeBeeRepository` for bee records, which put hives in the same index. Room supports FTS4 but not FTS5, so the index
   uses FTS4; queries are reduced to letters and digits with a prefix star on each word.
 
 ## Copy

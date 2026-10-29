@@ -19,10 +19,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.BeeViews
+import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.guide.Guide
 import io.github.wkoller.pollenplot.domain.guide.GuideSection
+import io.github.wkoller.pollenplot.domain.wildlife.NativeBeesSeen
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.ui.components.ConnectedChoice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
@@ -43,22 +45,29 @@ enum class BeeSection(@StringRes val label: Int, @DrawableRes val icon: Int, @St
 @Composable
 fun BeesScreen(
     beeViews: BeeViews,
+    views: GardenViews,
     settings: SettingsStore,
     notifications: Notifications,
     guides: GuideLibrary,
     onOpenSettings: () -> Unit,
     onAddHive: () -> Unit,
     onOpenHive: (String) -> Unit,
+    onAddNativeHive: () -> Unit,
+    onOpenNativeHive: (String) -> Unit,
+    onOpenAnimal: (String) -> Unit,
     onOpenGuide: (String) -> Unit,
     initialSection: BeeSection = BeeSection.HONEY,
 ) {
     var section by rememberSaveable { mutableStateOf(initialSection) }
     val hives by beeViews.hives.collectAsStateWithLifecycle(initialValue = null)
+    val nativeHives by beeViews.nativeHives.collectAsStateWithLifecycle(initialValue = null)
+    val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
     val uri = LocalUriHandler.current
     val access = rememberNotificationAccess(notifications)
     val honeyGuide by produceState(emptyList<Guide>()) { value = guides.section(GuideSection.HONEY) }
+    val nativeGuide by produceState(emptyList<Guide>()) { value = guides.section(GuideSection.NATIVE) }
     TabScaffold(
         title = stringResource(R.string.bees_title),
         subtitle = stringResource(R.string.bees_subtitle),
@@ -75,6 +84,7 @@ fun BeesScreen(
                 )
             }
             val loaded = hives
+            val natives = nativeHives
             val chosen = current
             if (section == BeeSection.HONEY && loaded != null && chosen != null) {
                 honeySection(
@@ -89,7 +99,21 @@ fun BeesScreen(
                     onOpenGuide = onOpenGuide,
                     onOpenLink = { uri.openUri(it) },
                 )
-            } else if (section != BeeSection.HONEY) {
+            } else if (section == BeeSection.NATIVE && natives != null && chosen != null) {
+                val today = beeViews.today()
+                nativeSection(
+                    hives = natives,
+                    seen = NativeBeesSeen.of(sightings.map { it.sighting to it.animal }, today.year, beeViews.zone()),
+                    settings = chosen,
+                    onSettings = { change -> scope.launch { settings.update(change) } },
+                    notifications = access,
+                    guide = nativeGuide,
+                    onAddHive = onAddNativeHive,
+                    onOpenHive = onOpenNativeHive,
+                    onOpenAnimal = onOpenAnimal,
+                    onOpenGuide = onOpenGuide,
+                )
+            } else if (section == BeeSection.HOTELS) {
                 item {
                     EmptyState(
                         icon = section.icon,

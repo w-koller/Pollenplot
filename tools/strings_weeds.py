@@ -156,7 +156,8 @@ STRINGS = {
     "source_weeds_australia_body": "Weed profiles and the identification key, by the Centre for Invasive Species "
     "Solutions.",
     "source_open_meteo": "Open-Meteo",
-    "source_open_meteo_body": "Place search, using GeoNames data, under CC BY 4.0.",
+    "source_open_meteo_body": "Place search, using GeoNames data, and weather forecasts. Weather data by "
+    "Open-Meteo.com, under CC BY 4.0.",
     "source_inaturalist": "iNaturalist",
     "source_inaturalist_body": "The plants most often recorded in Australia, and their common names, for the accurate "
     "pack's list of plants.",

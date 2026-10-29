@@ -41,7 +41,7 @@ STRINGS = {
 
     "notify_hive_channel": "Hive tasks",
     "notify_hive_channel_description": "Reminders when a honey bee hive is due for an inspection, a brood check or a "
-    "mite check.",
+    "mite check, and warnings before hot days for native bee hives.",
     "notify_hive_inspect_title": "%1$s is due for an inspection",
     "notify_hive_brood_title": "%1$s is due for a brood check",
     "notify_hive_mites_title": "%1$s is due for a mite check",

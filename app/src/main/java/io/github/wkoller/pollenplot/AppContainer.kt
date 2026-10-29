@@ -10,6 +10,7 @@ import io.github.wkoller.pollenplot.data.BeeRepository
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
@@ -24,7 +25,9 @@ import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
+import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
+import io.github.wkoller.pollenplot.notify.HeatAlertCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
@@ -90,6 +93,7 @@ class AppContainer(
     val database: PollenplotDatabase = database ?: PollenplotDatabase.create(appContext)
     val knowledge = KnowledgeRepository(appContext, scope)
     val bees = BeeRepository(this.database, clock)
+    val nativeBees = NativeBeeRepository(this.database, clock)
     val garden = GardenRepository(
         db = this.database,
         clock = clock,
@@ -98,7 +102,7 @@ class AppContainer(
         fauna = { knowledge.awaitFauna() },
     )
     val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
-    val beeViews = BeeViews(bees, garden, settingsStore, clock)
+    val beeViews = BeeViews(bees, nativeBees, garden, settingsStore, clock)
     val guides = GuideLibrary(appContext)
     val places = PlaceFinder(this.web) { weeds.sources }
     val location: LocationSource = location ?: PhoneLocation(appContext)
@@ -121,6 +125,7 @@ class AppContainer(
     val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby), analysis, garden, clock)
     val notifications = Notifications(appContext)
     val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
+    val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
@@ -141,6 +146,7 @@ class AppContainer(
                 garden.reindexAll()
                 // The rebuild clears the whole index, hives included.
                 bees.reindex()
+                nativeBees.reindex()
             }
         }
         // The weed lists are brought up to date once a month on Wi-Fi, and straight away when the garden moves.
@@ -150,9 +156,13 @@ class AppContainer(
                 .distinctUntilChanged().drop(1)
                 .collect { WeedSyncWorker.runNow(appContext) }
         }
-        // The hives are looked at each morning for checks that have fallen due, while there are hives to remind about.
+        // The hives are looked at each morning for honey bee checks that have fallen due and hot days ahead for native
+        // bees, while there is a hive to remind or warn about.
         scope.launch {
-            combine(settingsStore.settings.map { it.hiveReminders }, bees.hives.map { it.isNotEmpty() }) { on, hives -> on && hives }
+            combine(settingsStore.settings, bees.hives, nativeBees.hives) { settings, honey, natives ->
+                (settings.hiveReminders && honey.isNotEmpty()) ||
+                    (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE })
+            }
                 .distinctUntilChanged()
                 .collect { HiveReminderWorker.update(appContext, it, clock) }
         }
@@ -170,7 +180,7 @@ class AppContainer(
     }
 
     /** Every record, the garden's and the bees', as one JSON-LD document for backups and "Export data". */
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples()).toString()
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */
     fun recordsNearby(name: String): Int = weeds.data.value.recordsNearby(name)

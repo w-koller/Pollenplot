@@ -49,6 +49,7 @@ import io.github.wkoller.pollenplot.domain.assistant.RecordKind
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
+import io.github.wkoller.pollenplot.domain.bees.stingless.NativeLogKind
 import io.github.wkoller.pollenplot.ui.assistant.AskModel
 import io.github.wkoller.pollenplot.ui.assistant.AskScreen
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
@@ -56,6 +57,9 @@ import io.github.wkoller.pollenplot.ui.bees.HiveEditorScreen
 import io.github.wkoller.pollenplot.ui.bees.HiveScreen
 import io.github.wkoller.pollenplot.ui.bees.HoneyRecordKind
 import io.github.wkoller.pollenplot.ui.bees.HoneyRecordScreen
+import io.github.wkoller.pollenplot.ui.bees.NativeHiveEditorScreen
+import io.github.wkoller.pollenplot.ui.bees.NativeHiveScreen
+import io.github.wkoller.pollenplot.ui.bees.NativeLogScreen
 import io.github.wkoller.pollenplot.ui.guides.GuideScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
@@ -132,11 +136,12 @@ fun AppRoot(
     val ready = entry != null
     LaunchedEffect(open, ready) {
         if (!ready) return@LaunchedEffect
-        when (open) {
-            MainActivity.OPEN_REVIEW -> navController.navigate(ReviewRoute) { launchSingleTop = true }
-            MainActivity.OPEN_WEEDS -> navController.navigate(WeedsRoute) { launchSingleTop = true }
+        when {
+            open == MainActivity.OPEN_REVIEW -> navController.navigate(ReviewRoute) { launchSingleTop = true }
+            open == MainActivity.OPEN_WEEDS -> navController.navigate(WeedsRoute) { launchSingleTop = true }
             // A tab opens as if it were chosen in the navigation bar.
-            MainActivity.OPEN_BEES -> openTab(TopLevelTab.BEES)
+            open == MainActivity.OPEN_BEES -> openTab(TopLevelTab.BEES)
+            open != null && open.startsWith(MainActivity.OPEN_GUIDE) -> navController.navigate(GuideRoute(open.removePrefix(MainActivity.OPEN_GUIDE)))
             else -> return@LaunchedEffect
         }
         onOpened()
@@ -268,6 +273,7 @@ fun AppRoot(
                         onAskGarden = { navController.navigate(AskRoute()) },
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
                         onOpenHive = { navController.navigate(HiveRoute(it)) },
+                        onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->
@@ -388,14 +394,44 @@ fun AppRoot(
                 composable<BeesRoute> {
                     BeesScreen(
                         beeViews = container.beeViews,
+                        views = container.views,
                         settings = container.settingsStore,
                         notifications = container.notifications,
                         guides = container.guides,
                         onOpenSettings = openSettings,
                         onAddHive = { navController.navigate(HiveEditRoute()) },
                         onOpenHive = { navController.navigate(HiveRoute(it)) },
+                        onAddNativeHive = { navController.navigate(NativeHiveEditRoute()) },
+                        onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
+                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
                         onOpenGuide = { navController.navigate(GuideRoute(it)) },
                     )
+                }
+                composable<NativeHiveRoute> { entry ->
+                    val id = entry.toRoute<NativeHiveRoute>().id
+                    NativeHiveScreen(
+                        views = container.beeViews,
+                        natives = container.nativeBees,
+                        hiveId = id,
+                        onBack = back,
+                        onEdit = { navController.navigate(NativeHiveEditRoute(id)) },
+                        onRecord = { kind -> navController.navigate(NativeLogRoute(id, kind.name)) },
+                    )
+                }
+                composable<NativeHiveEditRoute> { entry ->
+                    NativeHiveEditorScreen(
+                        natives = container.nativeBees,
+                        views = container.views,
+                        hiveId = entry.toRoute<NativeHiveEditRoute>().id,
+                        today = container.beeViews.today(),
+                        onBack = back,
+                        onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
+                        onCreated = { id -> navController.navigate(NativeHiveRoute(id)) { popUpTo<NativeHiveEditRoute> { inclusive = true } } },
+                    )
+                }
+                composable<NativeLogRoute> { entry ->
+                    val route = entry.toRoute<NativeLogRoute>()
+                    NativeLogScreen(NativeLogKind.valueOf(route.kind), route.hiveId, container.nativeBees, container.beeViews.today(), onBack = back)
                 }
                 composable<GuideRoute> { entry -> GuideScreen(container.guides, entry.toRoute<GuideRoute>().id, onBack = back) }
                 composable<HiveRoute> { entry ->

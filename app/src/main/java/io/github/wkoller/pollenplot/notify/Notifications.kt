@@ -15,10 +15,12 @@ import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTaskKind
+import io.github.wkoller.pollenplot.domain.weather.DayForecast
 import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
 import io.github.wkoller.pollenplot.scan.ScanTally
 import io.github.wkoller.pollenplot.ui.ListWords
 import io.github.wkoller.pollenplot.ui.UiFormat
+import io.github.wkoller.pollenplot.ui.bees.degrees
 import io.github.wkoller.pollenplot.ui.bees.label
 import java.time.LocalDate
 
@@ -128,6 +130,25 @@ class Notifications(private val context: Context) {
         return true
     }
 
+    /**
+     * Warns that today or tomorrow is forecast to be hot for stingless bees, and opens the guide's page on caring for a
+     * hive when tapped. Returns whether it could be shown.
+     */
+    fun showHeat(days: List<DayForecast>, today: LocalDate): Boolean {
+        if (days.isEmpty() || !allowed) return false
+        val res = context.resources
+        val advice = res.getString(R.string.notify_heat_body)
+        val (title, body) = if (days.size == 1) {
+            val day = days.single()
+            res.getString(if (day.date == today) R.string.notify_heat_today else R.string.notify_heat_tomorrow, degrees(day.maxTenthsC)) to advice
+        } else {
+            res.getString(R.string.notify_heat_both) to
+                res.getString(R.string.notify_heat_both_detail, degrees(days[0].maxTenthsC), degrees(days[1].maxTenthsC)) + " " + advice
+        }
+        show(HEAT, title, body, channel = HIVES_CHANNEL, open = MainActivity.OPEN_GUIDE + HEAT_GUIDE, icon = R.drawable.ic_emoji_nature)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -163,5 +184,9 @@ class Notifications(private val context: Context) {
         const val ADDED_RESULT = 2
         const val WEEDS_NEARBY = 3
         const val HIVE_TASKS = 4
+        const val HEAT = 5
+
+        /** The guide page on caring for a stingless bee hive, which says how to cool one. */
+        const val HEAT_GUIDE = "native/hive-care"
     }
 }

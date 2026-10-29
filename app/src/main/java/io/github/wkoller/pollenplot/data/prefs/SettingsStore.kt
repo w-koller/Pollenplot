@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
+import io.github.wkoller.pollenplot.domain.bees.stingless.HeatAlerts
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +49,12 @@ data class Settings(
     val inspectEveryDays: Int = DEFAULT_INSPECT_EVERY_DAYS,
     /** The hive checks still due that a notification has told about, as `HiveReminders.key` gives them. */
     val hiveTasksTold: Set<String> = emptySet(),
+    /** Warn before a day forecast to reach [heatAlertTenthsC], for stingless bee hives. */
+    val heatAlerts: Boolean = true,
+    /** The forecast top temperature that brings a warning, in tenths of a degree Celsius. */
+    val heatAlertTenthsC: Int = HeatAlerts.DEFAULT_TENTHS_C,
+    /** The hot days already warned about, as ISO dates. */
+    val heatToldDays: Set<String> = emptySet(),
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
@@ -83,6 +90,9 @@ class SettingsStore(context: Context) {
         val hiveReminders = booleanPreferencesKey("hive_reminders")
         val inspectEveryDays = intPreferencesKey("inspect_every_days")
         val hiveTasksTold = stringSetPreferencesKey("hive_tasks_told")
+        val heatAlerts = booleanPreferencesKey("heat_alerts")
+        val heatAlertTenthsC = intPreferencesKey("heat_alert_tenths_c")
+        val heatToldDays = stringSetPreferencesKey("heat_told_days")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -112,6 +122,9 @@ class SettingsStore(context: Context) {
             hiveReminders = this[Keys.hiveReminders] ?: defaults.hiveReminders,
             inspectEveryDays = this[Keys.inspectEveryDays]?.takeIf { it in Settings.INSPECT_EVERY_CHOICES } ?: defaults.inspectEveryDays,
             hiveTasksTold = this[Keys.hiveTasksTold] ?: defaults.hiveTasksTold,
+            heatAlerts = this[Keys.heatAlerts] ?: defaults.heatAlerts,
+            heatAlertTenthsC = this[Keys.heatAlertTenthsC]?.takeIf { it in HeatAlerts.CHOICES } ?: defaults.heatAlertTenthsC,
+            heatToldDays = this[Keys.heatToldDays] ?: defaults.heatToldDays,
         )
     }
 
@@ -133,6 +146,9 @@ class SettingsStore(context: Context) {
         this[Keys.hiveReminders] = settings.hiveReminders
         this[Keys.inspectEveryDays] = settings.inspectEveryDays
         this[Keys.hiveTasksTold] = settings.hiveTasksTold
+        this[Keys.heatAlerts] = settings.heatAlerts
+        this[Keys.heatAlertTenthsC] = settings.heatAlertTenthsC
+        this[Keys.heatToldDays] = settings.heatToldDays
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

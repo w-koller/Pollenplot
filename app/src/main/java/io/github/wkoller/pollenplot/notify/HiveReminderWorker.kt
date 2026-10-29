@@ -17,7 +17,7 @@ import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
-/** Each morning's look at the hives: a notification for the checks that have fallen due since the last one. */
+/** Each morning's look at the honey bee hives: a notification for the checks that have fallen due since the last one. */
 class HiveReminderCheck(private val views: BeeViews, private val settings: SettingsStore, private val notifications: Notifications) {
     suspend fun run() {
         val current = settings.current()
@@ -36,7 +36,9 @@ class HiveReminderCheck(private val views: BeeViews, private val settings: Setti
 
 class HiveReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        (applicationContext as PollenplotApp).container.hiveReminders.run()
+        val container = (applicationContext as PollenplotApp).container
+        container.hiveReminders.run()
+        container.heatAlerts.run()
         return Result.success()
     }
 
@@ -47,8 +49,9 @@ class HiveReminderWorker(context: Context, params: WorkerParameters) : Coroutine
         private val MORNING: LocalTime = LocalTime.of(7, 0)
 
         /**
-         * Looks at the hives each morning while [on], and stops otherwise. Robolectric tests set up WorkManager in each
-         * test, after the app has started, so there is none to schedule with until then.
+         * Looks at the hives each morning while [on], for honey bee checks due and hot days ahead for native bees, and
+         * stops otherwise. Robolectric tests set up WorkManager in each test, after the app has started, so there is
+         * none to schedule with until then.
          */
         fun update(context: Context, on: Boolean, clock: Clock) {
             val manager = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
