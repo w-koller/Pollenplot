@@ -12,6 +12,7 @@ import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
+import io.github.wkoller.pollenplot.data.RhythmsViews
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
@@ -106,6 +107,7 @@ class AppContainer(
     val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
     val beeViews = BeeViews(bees, nativeBees, hotels, garden, settingsStore, clock)
     val guides = GuideLibrary(appContext)
+    val rhythms = RhythmsViews(garden, views, knowledge, settingsStore, clock)
     val places = PlaceFinder(this.web) { weeds.sources }
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }

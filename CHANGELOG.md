@@ -130,6 +130,12 @@
   cleaned out in six months says so.
 - The bee hotel guide: building a hotel, who uses one, and pests and keeping a hotel clean, from Aussie Bee's Bee Hotel
   Guide.
+- Pollen Rhythms, the Rhythms tab: what the garden's flowers offer honey bees, stingless bees and solitary bees in
+  each month, drawn as three lanes and read aloud as sentences, with how the measure is worked out. Honey bees count
+  mass-flowering trees and shrubs most, and the native bees count the variety of flowers. Each group's gaps come with
+  plants from the knowledge base that would fill them, natives of your state first and never a weed. The tab also
+  shows what is flowering now and next month, and each plant's flowering through the year, expected and seen in
+  photos.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood

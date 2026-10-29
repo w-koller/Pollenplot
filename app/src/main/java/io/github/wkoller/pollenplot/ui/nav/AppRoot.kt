@@ -313,7 +313,14 @@ fun AppRoot(
                         onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
                     )
                 }
-                composable<RhythmsRoute> { RhythmsScreen(onOpenSettings = openSettings) }
+                composable<RhythmsRoute> {
+                    RhythmsScreen(
+                        rhythms = container.rhythms,
+                        onOpenSettings = openSettings,
+                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                        onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
+                    )
+                }
                 composable<WildlifeRoute> {
                     WildlifeScreen(
                         views = container.views,

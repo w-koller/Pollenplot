@@ -66,6 +66,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
     `OpenMeteoForecast`, and `wildlife/NativeBeesSeen` the native bees seen in a year.
   - `hotels/`: `BeeHotels` (hotels, their sections, looks and upkeep), `SealGuide` (who a nest's seal says is likely
     inside) and `HotelCare` (a hotel worth cleaning out in spring).
+  - `rhythms/`: `RhythmsEngine` (each bee group's forage points and level per month, its gaps, and plants that would
+    fill them; the measure is described in its KDoc and on the screen).
   - `guide/`: `Guide` and `GuideParser`, which reads a bee guide page (see Guides below).
 - `ml/`: pure-JVM model code that is checked on the JVM against reference outputs: the BERT `WordPieceTokenizer` and
   `TextEmbedder` (bge-small-en-v1.5 through ONNX Runtime). It compiles against the desktop ONNX Runtime API, which the
@@ -75,8 +77,8 @@ notes from that version's section of `CHANGELOG.md`. Keystores live outside the 
   `AppContainer.exportJsonLd` joins with `BeeRepository`'s into one JSON-LD document), `GardenViews` (records
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), `BeeRepository` (the honey bee records), `NativeBeeRepository` (stingless bee hives and logs),
-  `HotelRepository` (bee hotels and their records) and `BeeViews` (hives and hotels with their zones, and what each
-  honey bee hive is due for today), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
+  `HotelRepository` (bee hotels and their records), `BeeViews` (hives and hotels with their zones, and what each
+  honey bee hive is due for today), `RhythmsViews` (the Rhythms tab's lanes and suggestions), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
 - `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on

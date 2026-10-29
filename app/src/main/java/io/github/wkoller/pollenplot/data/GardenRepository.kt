@@ -406,6 +406,9 @@ class GardenRepository(
 
     suspend fun floweringOf(plantId: String): List<LocalDate> = flowering.forPlant(plantId).map { LocalDate.ofEpochDay(it.observedOnEpochDay) }
 
+    /** Every time a plant was seen flowering in a photo, as the plant and the day, the oldest first. */
+    val floweringList: Flow<List<Pair<String, LocalDate>>> = flowering.observeAll().map { list -> list.map { it.plantId to LocalDate.ofEpochDay(it.observedOnEpochDay) } }
+
     private suspend fun recordFlowering(plantId: String, detection: DetectionRecord) {
         val day = detection.takenAt.atZone(clock.zone).toLocalDate()
         flowering.insert(FloweringEntity(UUID.randomUUID().toString(), plantId, day.toEpochDay(), detection.photoId, "PHOTO"))
