@@ -120,8 +120,9 @@
 - Warnings before hot days: while there is a stingless bee hive, Pollenplot looks at Open-Meteo's forecast for the
   garden each morning and warns on the day before and the day itself when it is forecast to reach 38 °C, or 35 or
   40 °C if you choose. The warning opens the guide's page on cooling a hive.
-- The native bee guide: stingless bees, looking after a hive, swarms and pests, and splitting and budding, from
-  Cumberland City Council's Keepin-A-Hive guide, Aussie Bee and Business Queensland.
+- The native bee guide: stingless bees, looking after a hive, swarms and pests, splitting and budding, and solitary
+  native bees and how they nest, from Cumberland City Council's Keepin-A-Hive guide, Aussie Bee, the Australian
+  National Botanic Gardens and Business Queensland.
 - The JSON-LD export includes the honey bee records: hives and apiaries as places, mite checks as SOSA observations
   of the hive, and inspections, treatments, feeding, harvests and colony events as schema.org events about it.
 - The honey bee guide, in the honey bee section: what every beekeeper must do, checking for Varroa mite, brood
