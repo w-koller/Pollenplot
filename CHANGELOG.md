@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0-rc.2
+
+- A setup when Pollenplot is first opened: set where your garden is, download the identification models (accurate
+  identification first), tick the kinds of zone you have and name them, then allow notifications and photo scanning.
+  Every step can be skipped, and Settings › Set up again opens it later. Gardens that already have zones or a location
+  skip it.
+- The Review queue can be cleared at once: Select, then choose all plants or all wildlife, or tick single finds, and
+  dismiss them or add them to one zone with the suggestion shown on each card. A plant already growing in that zone
+  gets the photo rather than a second plant.
+- Add plant photos on the Plot says that those photos are searched for plants. The Wildlife tab has Add wildlife
+  photos, which asks what kind of animal the photos show, so photos from the gallery are identified as animals even
+  without the accurate pack.
+- About links to Pollenplot's source code on GitHub and can share a link to download the app.
+- The back gesture no longer shrinks the whole window while you swipe.
+- The notification for several added photos with nothing in them shows how many there were.
+
 ## 1.0.0-rc.1
 
 - The app's frame, built with Material 3 Expressive: the Plot, Rhythms, Wildlife, Bees and Water tabs, an add menu
