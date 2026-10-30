@@ -6,12 +6,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -155,6 +157,17 @@ class GardenLocationModel(private val places: PlaceFinder, private val location:
 /** Settings › Garden location. */
 @Composable
 fun GardenLocationScreen(model: GardenLocationModel, settings: SettingsStore, onBack: () -> Unit) {
+    DetailScaffold(title = stringResource(R.string.location_title), onBack = onBack) { padding ->
+        GardenLocationContent(model, settings, padding)
+    }
+}
+
+/**
+ * The garden's place, a search by suburb or postcode, the phone's own location and a state without a place, for
+ * Settings and the first-launch setup. [top] adds items above them.
+ */
+@Composable
+fun GardenLocationContent(model: GardenLocationModel, settings: SettingsStore, padding: PaddingValues, top: LazyListScope.() -> Unit = {}) {
     val context = LocalContext.current
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = Settings())
     val search by model.search.collectAsStateWithLifecycle()
@@ -173,76 +186,75 @@ fun GardenLocationScreen(model: GardenLocationModel, settings: SettingsStore, on
         }
     }
 
-    DetailScaffold(title = stringResource(R.string.location_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
-            item {
-                Text(stringResource(R.string.location_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
-            }
-            item { SectionHeading(stringResource(R.string.location_current)) }
-            item { CurrentPlace(current, onRemove = model::remove) }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.location_search_heading)) }
-            item {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = { Text(stringResource(R.string.location_search)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { model.search(query) }),
-                    trailingIcon = {
-                        IconButton(onClick = { model.search(query) }) {
-                            Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.location_search_action))
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                )
-            }
-            when (val shown = search) {
-                Search.Idle -> Unit
-                Search.Searching -> item { Working(stringResource(R.string.location_searching)) }
-                Search.Failed -> item { Notice(stringResource(R.string.location_search_failed)) }
-                is Search.Found -> if (shown.places.isEmpty()) {
-                    item { Notice(stringResource(R.string.location_no_results, shown.query)) }
-                } else {
-                    items(shown.places) { match -> PlaceRow(match, enabled = busy == null) { model.choose(match) } }
-                }
-            }
-            item {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    when (busy) {
-                        GardenLocationModel.Busy.FINDING -> Working(stringResource(R.string.location_finding))
-                        GardenLocationModel.Busy.SAVING -> Working(stringResource(R.string.location_saving))
-                        null -> OutlinedButton(onClick = usePhone) {
-                            Icon(painterResource(R.drawable.ic_my_location), contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.location_use_phone), modifier = Modifier.padding(start = 8.dp))
-                        }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        top()
+        item {
+            Text(stringResource(R.string.location_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
+        }
+        item { SectionHeading(stringResource(R.string.location_current)) }
+        item { CurrentPlace(current, onRemove = model::remove) }
+        item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+        item { SectionHeading(stringResource(R.string.location_search_heading)) }
+        item {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text(stringResource(R.string.location_search)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { model.search(query) }),
+                trailingIcon = {
+                    IconButton(onClick = { model.search(query) }) {
+                        Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.location_search_action))
                     }
-                    problem?.let { found ->
-                        Text(
-                            stringResource(
-                                when (found) {
-                                    GardenLocationModel.Problem.NO_LOCATION -> R.string.location_phone_failed
-                                    GardenLocationModel.Problem.OUTSIDE_AUSTRALIA -> R.string.location_outside
-                                    GardenLocationModel.Problem.NO_PERMISSION -> R.string.location_permission_denied
-                                },
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                        )
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
+        }
+        when (val shown = search) {
+            Search.Idle -> Unit
+            Search.Searching -> item { Working(stringResource(R.string.location_searching)) }
+            Search.Failed -> item { Notice(stringResource(R.string.location_search_failed)) }
+            is Search.Found -> if (shown.places.isEmpty()) {
+                item { Notice(stringResource(R.string.location_no_results, shown.query)) }
+            } else {
+                items(shown.places) { match -> PlaceRow(match, enabled = busy == null) { model.choose(match) } }
+            }
+        }
+        item {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                when (busy) {
+                    GardenLocationModel.Busy.FINDING -> Working(stringResource(R.string.location_finding))
+                    GardenLocationModel.Busy.SAVING -> Working(stringResource(R.string.location_saving))
+                    null -> OutlinedButton(onClick = usePhone) {
+                        Icon(painterResource(R.drawable.ic_my_location), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(R.string.location_use_phone), modifier = Modifier.padding(start = 8.dp))
                     }
                 }
+                problem?.let { found ->
+                    Text(
+                        stringResource(
+                            when (found) {
+                                GardenLocationModel.Problem.NO_LOCATION -> R.string.location_phone_failed
+                                GardenLocationModel.Problem.OUTSIDE_AUSTRALIA -> R.string.location_outside
+                                GardenLocationModel.Problem.NO_PERMISSION -> R.string.location_permission_denied
+                            },
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
             }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.location_other)) }
-            item {
-                ListItem(
-                    onClick = { choosingState = true },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
-                    supportingContent = { Text(stringResource(current.gardenState.label) + ". " + stringResource(R.string.location_state_only_body)) },
-                ) { Text(stringResource(R.string.location_state_only)) }
-            }
+        }
+        item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+        item { SectionHeading(stringResource(R.string.location_other)) }
+        item {
+            ListItem(
+                onClick = { choosingState = true },
+                leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
+                supportingContent = { Text(stringResource(current.gardenState.label) + ". " + stringResource(R.string.location_state_only_body)) },
+            ) { Text(stringResource(R.string.location_state_only)) }
         }
     }
     if (choosingState) {

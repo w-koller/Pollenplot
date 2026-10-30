@@ -54,6 +54,7 @@ fun SettingsScreen(
     onOpenExport: () -> Unit,
     onOpenBackup: () -> Unit,
     onOpenAbout: () -> Unit,
+    onSetUpAgain: () -> Unit = {},
 ) {
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
     val scope = rememberCoroutineScope()
@@ -143,6 +144,13 @@ fun SettingsScreen(
                 }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+            item {
+                ListItem(
+                    onClick = onSetUpAgain,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_restart_alt), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_setup_again_body)) },
+                ) { Text(stringResource(R.string.settings_setup_again)) }
+            }
             item {
                 ListItem(
                     onClick = onOpenAbout,

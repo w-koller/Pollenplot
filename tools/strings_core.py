@@ -28,7 +28,8 @@ STRINGS = {
     "add_menu_expanded": "Open",
     "add_menu_collapsed": "Closed",
     "add_identify_camera": "Identify with the camera",
-    "add_photos": "Add photos",
+    "add_photos": "Add plant photos",
+    "add_animal_photos": "Add wildlife photos",
     "add_check_weed": "Check a weed",
     "add_plant_by_name": "Add a plant by name",
 }

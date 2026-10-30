@@ -114,6 +114,7 @@ fun ReviewScreen(
         onBack = onBack,
         onOpenPlant = onOpenPlant,
         onCompare = onCompare,
+        selectable = true,
         top = {
             adding?.let { item(key = "adding") { AddingCard(it, Modifier.readable()) } }
         },

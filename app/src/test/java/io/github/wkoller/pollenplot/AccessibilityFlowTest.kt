@@ -157,6 +157,23 @@ class AccessibilityFlowTest {
         compose.onNodeWithText("Export data").performClick()
         reach(hasText("Sightings as Darwin Core"))
         visit("export")
+        compose.onNodeWithContentDescription("Back").performClick()
+        reach(hasText("Set up again"))
+        compose.onNodeWithText("Set up again").performClick()
+        reach(hasText("Welcome to Pollenplot"))
+        visit("setup_welcome")
+        compose.onNodeWithText("Start").performClick()
+        reach(hasText("Where is your garden?"))
+        visit("setup_location")
+        compose.onNodeWithText("Next").performClick()
+        reach(hasText("Identification models"))
+        visit("setup_models")
+        compose.onNodeWithText("Next").performClick()
+        reach(hasText("Your garden's zones"))
+        visit("setup_zones")
+        compose.onNodeWithText("Next").performClick()
+        reach(hasText("Notifications and photos"))
+        visit("setup_permissions")
     }
 
     /**

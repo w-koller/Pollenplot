@@ -1,12 +1,16 @@
 package io.github.wkoller.pollenplot
 
-import android.Manifest
-import android.graphics.Bitmap
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
@@ -20,9 +24,13 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.printToString
+import androidx.core.app.ActivityOptionsCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
+import android.Manifest
+import android.graphics.Bitmap
+import android.net.Uri
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.annotation.DelicateCoilApi
@@ -30,8 +38,11 @@ import coil3.imageDecoderEnabled
 import io.github.wkoller.pollenplot.TestPhotos.bottlebrush
 import io.github.wkoller.pollenplot.TestPhotos.rosemary
 import io.github.wkoller.pollenplot.data.prefs.Settings
+import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
 import io.github.wkoller.pollenplot.ui.theme.PollenplotTheme
@@ -91,9 +102,20 @@ class ReviewFlowTest {
         ids
     }
 
-    private fun show(open: String? = null, settings: Settings = Settings(gardenState = AuState.QLD)) {
+    private fun show(open: String? = null, settings: Settings = Settings(gardenState = AuState.QLD), picked: List<Uri> = emptyList()) {
+        // The system's photo picker answers at once with [picked].
+        val picker = object : ActivityResultRegistryOwner {
+            override val activityResultRegistry = object : ActivityResultRegistry() {
+                override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>, input: I, options: ActivityOptionsCompat?) {
+                    @Suppress("UNCHECKED_CAST")
+                    dispatchResult(requestCode, picked as O)
+                }
+            }
+        }
         compose.setContent {
-            PollenplotTheme(settings) { Surface { AppRoot(app.container, open = open) } }
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides picker) {
+                PollenplotTheme(settings) { Surface { AppRoot(app.container, open = open) } }
+            }
         }
     }
 
@@ -117,6 +139,71 @@ class ReviewFlowTest {
     }
 
     @Test
+    fun dismissEveryPlantAtOnce() {
+        seedWithScannedPhoto()
+        show(open = MainActivity.OPEN_REVIEW)
+        waitFor(hasText("Taken on", substring = true))
+        compose.onNodeWithText("Select").performClick()
+        waitFor(hasText("All plants (2)"))
+        compose.onNodeWithText("All plants (2)").performClick()
+        waitFor(hasText("Dismiss (2)"))
+        shot("review_selecting")
+        compose.onNodeWithText("Dismiss (2)").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.pendingReviewCount.first() } == 0 }
+        waitFor(hasText("Undo"))
+    }
+
+    @Test
+    fun addSelectedFindsToOneZone() {
+        val ids = seedWithScannedPhoto()
+        show(open = MainActivity.OPEN_REVIEW)
+        waitFor(hasText("Taken on", substring = true))
+        compose.onNodeWithText("Select").performClick()
+        waitFor(hasText("Select this plant"))
+        compose.onAllNodesWithText("Select this plant").onFirst().performClick()
+        compose.onNodeWithText("All plants (2)").performClick()
+        waitFor(hasText("Add (2)"))
+        compose.onNodeWithText("Add (2)").performClick()
+        waitFor(hasText("Add to a zone"))
+        compose.onNodeWithText("Hive Corner").performClick()
+        shot("review_add_selected")
+        compose.onNodeWithText("Add 2 finds").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.pendingReviewCount.first() } == 0 }
+
+        val plants = runBlocking { garden.plantList.first() }
+        assertEquals("The rosemary already in Hive Corner gets the photo", 1, plants.count { it.speciesName == "Salvia rosmarinus" })
+        assertEquals(ids.hive, plants.last { it.speciesName == "Melaleuca citrina" }.zoneId)
+    }
+
+    @Test
+    fun wildlifePhotosFromTheGallery() {
+        runBlocking {
+            app.container.knowledge.await()
+            app.container.knowledge.awaitFauna()
+        }
+        val birdPhoto = TestPhotos.gardenPhoto(listOf(rosemary))
+        app.identifier.animalFor = { photo, group ->
+            listOf(FastPlantIdentifier.region(photo, FastPlantIdentifier.CENTRE, mapOf(IdSource.AIY_BIRDS to listOf(LabelScore("Manorina melanocephala", 8_000))), group))
+        }
+        val bird = app.gallery.add(3, Instant.now(), birdPhoto)
+        show(picked = listOf(bird.uri))
+        compose.onNodeWithText("Wildlife").performClick()
+        // The empty Wildlife tab offers it beside the add menu.
+        waitFor(hasText("Add wildlife photos"))
+        compose.onAllNodesWithText("Add wildlife photos").onFirst().performClick()
+        waitFor(hasText("What kind of animal is in them?"))
+        compose.onNodeWithText("Bird").assertIsSelected()
+        shot("wildlife_photos_group")
+        compose.onNodeWithText("Choose photos").performClick()
+
+        // Without the accurate pack the photo would be looked at as a plant, but the user said it shows a bird.
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.pendingReviewCount.first() } == 1 }
+        assertEquals(listOf(LifeGroup.BIRD), app.identifier.asked)
+        waitFor(hasText("Taken on", substring = true))
+        shot("wildlife_photos_review")
+    }
+
+    @Test
     fun aNotificationOpensTheQueue() {
         seedWithScannedPhoto()
         show(open = MainActivity.OPEN_REVIEW)
@@ -129,7 +216,7 @@ class ReviewFlowTest {
         runBlocking { app.container.knowledge.await() }
         show(open = MainActivity.OPEN_REVIEW)
         waitFor(hasText("Nothing to review."))
-        compose.onNodeWithText("Add photos").assertIsDisplayed()
+        compose.onNodeWithText("Add plant photos").assertIsDisplayed()
         shot("review_empty")
     }
 
