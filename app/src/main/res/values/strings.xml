@@ -946,6 +946,11 @@
     <string name="about_body">Pollenplot records the plants, wildlife, bees and watering in your backyard. Plants and animals are identified on your phone, and your records stay on your phone.</string>
     <string name="about_licences">Licences</string>
     <string name="about_licences_body">The software Pollenplot is built with, and the licence each part comes under.</string>
+    <string name="about_source">Source code</string>
+    <string name="about_source_body">Pollenplot is open source. Its code, releases and issues are on GitHub.</string>
+    <string name="about_share">Share Pollenplot</string>
+    <string name="about_share_body">Send a friend the link to download Pollenplot.</string>
+    <string name="about_share_text">Pollenplot helps you look after the plants, wildlife, bees and watering in your backyard. You can download it from %1$s</string>
     <string name="licences_title">Licences</string>
     <string name="licences_body">Pollenplot is built with the software below. Please choose an item to read its licence.</string>
     <string name="licence_item_app">Pollenplot</string>

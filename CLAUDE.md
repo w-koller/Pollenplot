@@ -233,6 +233,10 @@ there. `MaterialShapes` and the loading indicators still need `ExperimentalMater
 through `ui/components/PollenShapes.kt` and other components, so an API change touches one place. Use the new
 `ListItem` overloads (`onClick`, `checked`, trailing `content`), not the deprecated `headlineContent` one.
 
+Predictive back is turned off with `android:enableOnBackInvokedCallback="false"` on `MainActivity`, because the
+shrinking-window animation it plays on a back swipe read as a bug. Android 16 still honours the flag but has deprecated
+it, so check it again when `targetSdk` goes past 36.
+
 ## Data rules
 
 - Measurements are stored as integers with the unit in the name, never as floats: water depth in µm, volume in mL,
