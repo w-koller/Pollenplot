@@ -248,7 +248,7 @@ fun PhotoReviewScreen(
         actions = {
             if (selectable && pending.isNotEmpty()) {
                 if (selecting) {
-                    TextButton(onClick = leaveSelection) { Text(stringResource(R.string.review_select_cancel)) }
+                    TextButton(onClick = leaveSelection) { Text(stringResource(R.string.cancel)) }
                 } else {
                     TextButton(onClick = { selecting = true }) { Text(stringResource(R.string.review_select)) }
                 }

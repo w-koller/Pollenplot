@@ -111,7 +111,8 @@
     <string name="add_menu_expanded">Open</string>
     <string name="add_menu_collapsed">Closed</string>
     <string name="add_identify_camera">Identify with the camera</string>
-    <string name="add_photos">Add photos</string>
+    <string name="add_photos">Add plant photos</string>
+    <string name="add_animal_photos">Add wildlife photos</string>
     <string name="add_check_weed">Check a weed</string>
     <string name="add_plant_by_name">Add a plant by name</string>
     <string name="settings_records">Your records</string>
@@ -843,11 +844,10 @@
     <string name="review_title">Review</string>
     <string name="review_taken">Taken on %1$s</string>
     <string name="review_empty_title">Nothing to review.</string>
-    <string name="review_empty_body">Plants found in photos you add, or in new photos while scanning is on, wait here until you check them.</string>
-    <string name="review_adding_progress">Looking for plants in photo %1$d of %2$d.</string>
-    <string name="review_adding_waiting">Pollenplot will look for plants in the photos you added in a moment.</string>
+    <string name="review_empty_body">Plants and animals found in photos you add, or in new photos while scanning is on, wait here until you check them.</string>
+    <string name="review_adding_progress">Looking at photo %1$d of %2$d.</string>
+    <string name="review_adding_waiting">Pollenplot will look at the photos you added in a moment.</string>
     <string name="review_select">Select</string>
-    <string name="review_select_cancel">Cancel</string>
     <string name="review_select_plants">All plants (%1$d)</string>
     <string name="review_select_wildlife">All wildlife (%1$d)</string>
     <string name="review_select_plant">Select this plant</string>
@@ -882,6 +882,10 @@
     <string name="notify_found_both_title">Pollenplot found %1$s and %2$s in your photos.</string>
     <string name="notify_found_both_body">Please review them to add them to your garden and your sightings.</string>
     <string name="notify_none_body">Please try photos taken closer to the plants, in good light.</string>
+    <string name="notify_none_animals_body">Please try photos taken closer to the animal, in good light.</string>
+    <string name="animal_photos_title">What kind of animal is in them?</string>
+    <string name="animal_photos_body">Pollenplot looks for the kind of animal you choose in each photo. Photos of plants are added from the Plot.</string>
+    <string name="animal_photos_choose">Choose photos</string>
     <string name="rhythms_intro">This is what the flowers in your garden offer each group of bees through the year. Honey bees count mass-flowering trees and shrubs most, and stingless and solitary bees count the variety of flowers.</string>
     <string name="rhythms_calendar">The year for your bees</string>
     <string name="bee_group_honey">Honey bees</string>
@@ -1489,6 +1493,10 @@
     <plurals name="notify_none_title">
         <item quantity="one">No plant was found in the photo you added.</item>
         <item quantity="other">No plants were found in the %d photos you added.</item>
+    </plurals>
+    <plurals name="notify_none_animals_title">
+        <item quantity="one">No animal was found in the photo you added.</item>
+        <item quantity="other">No animals were found in the %d photos you added.</item>
     </plurals>
     <plurals name="rhythms_days">
         <item quantity="one">%d day</item>

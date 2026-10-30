@@ -61,13 +61,17 @@ class Notifications(private val context: Context) {
         show(SCAN_RESULT, foundTitle(tally), foundBody(tally))
     }
 
-    /** Tells the user what was found in the photos they added. */
-    fun showAddedResult(tally: ScanTally) {
+    /** Tells the user what was found in the photos they added, which they said show [wildlife] or plants. */
+    fun showAddedResult(tally: ScanTally, wildlife: Boolean = false) {
         val res = context.resources
         if (tally.found > 0) {
             show(ADDED_RESULT, foundTitle(tally), foundBody(tally))
         } else {
-            show(ADDED_RESULT, res.getQuantityString(R.plurals.notify_none_title, tally.photos), context.getString(R.string.notify_none_body))
+            show(
+                ADDED_RESULT,
+                res.getQuantityString(if (wildlife) R.plurals.notify_none_animals_title else R.plurals.notify_none_title, tally.photos, tally.photos),
+                context.getString(if (wildlife) R.string.notify_none_animals_body else R.string.notify_none_body),
+            )
         }
     }
 

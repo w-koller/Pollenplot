@@ -22,6 +22,9 @@ import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.LocalTextStyle
@@ -97,6 +100,7 @@ import io.github.wkoller.pollenplot.ui.water.WaterScreen
 import io.github.wkoller.pollenplot.ui.weeds.CompareScreen
 import io.github.wkoller.pollenplot.ui.weeds.WeedFinderScreen
 import io.github.wkoller.pollenplot.ui.weeds.WeedsScreen
+import io.github.wkoller.pollenplot.ui.wildlife.AnimalPhotosDialog
 import io.github.wkoller.pollenplot.ui.wildlife.AnimalScreen
 import io.github.wkoller.pollenplot.ui.wildlife.SightingScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
@@ -132,16 +136,28 @@ fun AppRoot(
     }
 
     // Photos chosen in the system's photo picker need no permission. The app keeps read access while it looks at
-    // them in the background, then shows them in the Review queue as they are done.
+    // them in the background, then shows them in the Review queue as they are done. The group the photos show is kept
+    // while the picker is open, because the quick models cannot tell a plant from an animal.
+    var pickingGroup by rememberSaveable { mutableStateOf(LifeGroup.PLANT.name) }
+    var askingAnimal by rememberSaveable { mutableStateOf(false) }
     val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_ADDED_PHOTOS)) { uris ->
         if (uris.isEmpty()) return@rememberLauncherForActivityResult
         uris.forEach { uri ->
             runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
-        AddPhotosWorker.enqueue(context, uris)
+        AddPhotosWorker.enqueue(context, uris, LifeGroup.of(pickingGroup))
         navController.navigate(ReviewRoute) { launchSingleTop = true }
     }
-    val addPhotos = { pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+    val addPhotos = { group: LifeGroup ->
+        pickingGroup = group.name
+        pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+    if (askingAnimal) {
+        AnimalPhotosDialog(onDismiss = { askingAnimal = false }) { group ->
+            askingAnimal = false
+            addPhotos(group)
+        }
+    }
 
     // A notification can ask for a screen, such as the Review queue after a scan. It opens once the navigation host
     // has its first screen, because there is nowhere to navigate from before then.
@@ -208,7 +224,8 @@ fun AppRoot(
                         onAdd = { action ->
                             when (action) {
                                 AddAction.IDENTIFY -> navController.navigate(IdentifyRoute())
-                                AddAction.PHOTOS -> addPhotos()
+                                AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
+                                AddAction.ANIMAL_PHOTOS -> askingAnimal = true
                                 AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                 AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
@@ -324,7 +341,7 @@ fun AppRoot(
                         settings = container.settingsStore,
                         onBack = back,
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onAddPhotos = addPhotos,
+                        onAddPhotos = { addPhotos(LifeGroup.PLANT) },
                         onIdentify = { navController.navigate(IdentifyRoute()) },
                         onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
                     )
@@ -349,7 +366,8 @@ fun AppRoot(
                                 // Birds are what most people photograph first; the camera's chips change it.
                                 AddAction.IDENTIFY -> navController.navigate(IdentifyRoute(group = LifeGroup.BIRD.name))
                                 AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
-                                AddAction.PHOTOS -> addPhotos()
+                                AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
+                                AddAction.ANIMAL_PHOTOS -> askingAnimal = true
                                 AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
                             }

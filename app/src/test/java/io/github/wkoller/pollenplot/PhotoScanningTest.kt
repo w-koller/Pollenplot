@@ -145,6 +145,41 @@ class PhotoScanningTest {
     }
 
     @Test
+    fun `a photo the user says shows a bird is looked at as a bird without the accurate pack`() {
+        val birdPhoto = TestPhotos.gardenPhoto(listOf(rosemary))
+        app.identifier.animalFor = { photo, group ->
+            listOf(FastPlantIdentifier.region(photo, FastPlantIdentifier.CENTRE, mapOf(IdSource.AIY_BIRDS to listOf(LabelScore("Manorina melanocephala", 8_000))), group))
+        }
+        val bird = app.gallery.add(3, now, birdPhoto)
+        runBlocking {
+            app.container.knowledge.awaitFauna()
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(bird.uri), LifeGroup.BIRD)).build().doWork()
+        }
+        assertEquals(listOf(LifeGroup.BIRD), app.identifier.asked)
+        assertEquals(listOf("Pollenplot found 1 animal in your photos."), notificationTitles())
+    }
+
+    @Test
+    fun `a photo added as a plant is looked at as a plant even when the pack sees a bird`() {
+        val photo = TestPhotos.gardenPhoto(listOf(rosemary))
+        app.identifier.groupFor = { LifeGroup.BIRD }
+        val added = app.gallery.add(3, now, photo)
+        runBlocking {
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(added.uri), LifeGroup.PLANT)).build().doWork()
+        }
+        assertEquals(listOf(LifeGroup.PLANT), app.identifier.asked)
+    }
+
+    @Test
+    fun `wildlife photos with no animals say so`() {
+        val lawn = app.gallery.add(2, now, lawnPhoto)
+        runBlocking {
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(lawn.uri), LifeGroup.FROG)).build().doWork()
+        }
+        assertEquals(listOf("No animal was found in the photo you added."), notificationTitles())
+    }
+
+    @Test
     fun `an added photo of a bird is looked at as a bird`() {
         val birdPhoto = TestPhotos.gardenPhoto(listOf(rosemary))
         app.identifier.groupFor = { photo -> if (photo === birdPhoto) LifeGroup.BIRD else LifeGroup.PLANT }

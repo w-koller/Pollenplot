@@ -143,6 +143,7 @@ fun WildlifeScreen(
                             Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.padding(end = 8.dp))
                             Text(stringResource(R.string.add_identify_camera))
                         }
+                        OutlinedButton(onClick = { onAdd(AddAction.ANIMAL_PHOTOS) }) { Text(stringResource(R.string.add_animal_photos)) }
                         OutlinedButton(onClick = { onAdd(AddAction.SIGHTING) }) { Text(stringResource(R.string.add_sighting_by_name)) }
                     }
                 }

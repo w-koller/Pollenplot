@@ -4,12 +4,11 @@ STRINGS = {
     "review_title": "Review",
     "review_taken": "Taken on %1$s",
     "review_empty_title": "Nothing to review.",
-    "review_empty_body": "Plants found in photos you add, or in new photos while scanning is on, wait here until you "
-    "check them.",
-    "review_adding_progress": "Looking for plants in photo %1$d of %2$d.",
-    "review_adding_waiting": "Pollenplot will look for plants in the photos you added in a moment.",
+    "review_empty_body": "Plants and animals found in photos you add, or in new photos while scanning is on, wait here "
+    "until you check them.",
+    "review_adding_progress": "Looking at photo %1$d of %2$d.",
+    "review_adding_waiting": "Pollenplot will look at the photos you added in a moment.",
     "review_select": "Select",
-    "review_select_cancel": "Cancel",
     "review_select_plants": "All plants (%1$d)",
     "review_select_wildlife": "All wildlife (%1$d)",
     "review_select_plant": "Select this plant",
@@ -51,6 +50,13 @@ STRINGS = {
     "notify_found_both_title": "Pollenplot found %1$s and %2$s in your photos.",
     "notify_found_both_body": "Please review them to add them to your garden and your sightings.",
     "notify_none_body": "Please try photos taken closer to the plants, in good light.",
+    "notify_none_animals_body": "Please try photos taken closer to the animal, in good light.",
+
+    # Adding wildlife photos from the gallery
+    "animal_photos_title": "What kind of animal is in them?",
+    "animal_photos_body": "Pollenplot looks for the kind of animal you choose in each photo. Photos of plants are "
+    "added from the Plot.",
+    "animal_photos_choose": "Choose photos",
 }
 
 PLURALS = {
@@ -88,5 +94,9 @@ PLURALS = {
     "notify_none_title": {
         "one": "No plant was found in the photo you added.",
         "other": "No plants were found in the %d photos you added.",
+    },
+    "notify_none_animals_title": {
+        "one": "No animal was found in the photo you added.",
+        "other": "No animals were found in the %d photos you added.",
     },
 }
