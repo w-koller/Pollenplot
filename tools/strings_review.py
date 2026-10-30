@@ -8,6 +8,15 @@ STRINGS = {
     "check them.",
     "review_adding_progress": "Looking for plants in photo %1$d of %2$d.",
     "review_adding_waiting": "Pollenplot will look for plants in the photos you added in a moment.",
+    "review_select": "Select",
+    "review_select_cancel": "Cancel",
+    "review_select_plants": "All plants (%1$d)",
+    "review_select_wildlife": "All wildlife (%1$d)",
+    "review_select_plant": "Select this plant",
+    "review_select_animal": "Select this animal",
+    "review_dismiss_selected": "Dismiss (%1$d)",
+    "review_add_selected": "Add (%1$d)",
+    "review_add_selected_title": "Add to a zone",
 
     # Settings › Photo scanning
     "scan_title": "Photo scanning",
@@ -46,6 +55,17 @@ STRINGS = {
 
 PLURALS = {
     "review_waiting": {"one": "%d plant is waiting for review.", "other": "%d plants are waiting for review."},
+    "review_add_selected_body": {
+        "one": "Pollenplot will add the find you selected with the suggestion shown on its card. Please choose the zone "
+        "it goes to.",
+        "other": "Pollenplot will add the %d finds you selected, each with the suggestion shown on its card. Please "
+        "choose the zone they go to.",
+    },
+    "review_add_selected_skipped": {
+        "one": "%d find has no suggestion, so it stays in the queue for you to name.",
+        "other": "%d finds have no suggestion, so they stay in the queue for you to name.",
+    },
+    "review_add_selected_button": {"one": "Add %d find", "other": "Add %d finds"},
     "scan_album_count": {"one": "%d photo", "other": "%d photos"},
     "notify_found_title": {
         "one": "Pollenplot found %d plant in your photos.",

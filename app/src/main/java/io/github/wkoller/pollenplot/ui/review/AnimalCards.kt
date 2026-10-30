@@ -56,7 +56,7 @@ internal fun UndecidedAnimal(
     var plantId by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
     var behaviour by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
 
-    val choice = savedChoice ?: if (detection.candidates.isEmpty()) null else ReviewChoice.Suggestion(0)
+    val choice = chosen(detection, savedChoice)
     val shown = detection.candidates.withIndex().filter { (i, c) -> i == 0 || c.scoreBp >= MIN_SHOWN_SCORE_BP }.take(MAX_SHOWN)
     val chosenCandidate = (choice as? ReviewChoice.Suggestion)?.let { detection.candidates.getOrNull(it.index) }
     val chosenName = when (choice) {
@@ -125,11 +125,8 @@ internal fun UndecidedAnimal(
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
             onClick = {
-                val label = chosenName ?: return@Button
-                // The scientific name is kept even for an animal the knowledge base does not have; a name the user
-                // typed may be a common name, so it is only the label.
-                val scientific = animal?.name ?: chosenCandidate?.let { it.speciesName ?: it.label }
-                callbacks.onAddSighting?.invoke(detection, scientific, animal?.displayName ?: common ?: label, zoneId, plantId, behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } })
+                val pick = animalPick(detection, choice, fauna) ?: return@Button
+                callbacks.onAddSighting?.invoke(detection, pick.speciesName, pick.label, zoneId, plantId, behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } })
             },
             enabled = chosenName != null && callbacks.onAddSighting != null,
         ) { Text(stringResource(R.string.review_add_sighting)) }

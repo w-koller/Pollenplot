@@ -846,6 +846,15 @@
     <string name="review_empty_body">Plants found in photos you add, or in new photos while scanning is on, wait here until you check them.</string>
     <string name="review_adding_progress">Looking for plants in photo %1$d of %2$d.</string>
     <string name="review_adding_waiting">Pollenplot will look for plants in the photos you added in a moment.</string>
+    <string name="review_select">Select</string>
+    <string name="review_select_cancel">Cancel</string>
+    <string name="review_select_plants">All plants (%1$d)</string>
+    <string name="review_select_wildlife">All wildlife (%1$d)</string>
+    <string name="review_select_plant">Select this plant</string>
+    <string name="review_select_animal">Select this animal</string>
+    <string name="review_dismiss_selected">Dismiss (%1$d)</string>
+    <string name="review_add_selected">Add (%1$d)</string>
+    <string name="review_add_selected_title">Add to a zone</string>
     <string name="scan_title">Photo scanning</string>
     <string name="scan_intro">Pollenplot can look for plants in new photos in your gallery, in the background. Photos that show plants wait in the Review queue for you, and no photo leaves your phone.</string>
     <string name="scan_switch">Look for plants in new photos</string>
@@ -1436,6 +1445,18 @@
     <plurals name="review_waiting">
         <item quantity="one">%d plant is waiting for review.</item>
         <item quantity="other">%d plants are waiting for review.</item>
+    </plurals>
+    <plurals name="review_add_selected_body">
+        <item quantity="one">Pollenplot will add the find you selected with the suggestion shown on its card. Please choose the zone it goes to.</item>
+        <item quantity="other">Pollenplot will add the %d finds you selected, each with the suggestion shown on its card. Please choose the zone they go to.</item>
+    </plurals>
+    <plurals name="review_add_selected_skipped">
+        <item quantity="one">%d find has no suggestion, so it stays in the queue for you to name.</item>
+        <item quantity="other">%d finds have no suggestion, so they stay in the queue for you to name.</item>
+    </plurals>
+    <plurals name="review_add_selected_button">
+        <item quantity="one">Add %d find</item>
+        <item quantity="other">Add %d finds</item>
     </plurals>
     <plurals name="scan_album_count">
         <item quantity="one">%d photo</item>

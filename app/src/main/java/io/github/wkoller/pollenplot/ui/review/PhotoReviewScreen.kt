@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,14 +18,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,24 +47,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.data.BatchAdd
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoReview
+import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.id.ZoneSuggestion
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
+import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -87,7 +108,22 @@ class DetectionActions(private val garden: GardenRepository, private val setting
     fun undoReject(detection: DetectionRecord) {
         scope.launch { garden.reopenDetection(detection.id) }
     }
+
+    fun rejectAll(detections: List<DetectionRecord>) {
+        scope.launch { garden.rejectDetections(detections.map { it.id }) }
+    }
+
+    /** Adds several finds to one zone; [growing] holds the plants already growing there, by species. */
+    fun addAll(adds: List<BatchAdd>, zoneId: String?, growing: Map<String, String>) {
+        scope.launch {
+            garden.confirmDetections(adds, zoneId, growing)
+            if (zoneId != null) settings.update { it.copy(lastZoneId = zoneId) }
+        }
+    }
 }
+
+/** Keeps the selected finds, so a selection survives the phone being turned. */
+private val SelectionSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() })
 
 /** Keeps each card's choice as text, so the choices survive the phone being turned. */
 private val ChoicesSaver = listSaver<Map<String, ReviewChoice>, String>(
@@ -98,7 +134,8 @@ private val ChoicesSaver = listSaver<Map<String, ReviewChoice>, String>(
 /**
  * A screen of photos and the plants found in each, one review card per plant. [reviews] is null while they load.
  * [top] and [bottom] add items around the photos, [photoHeading] goes under each photo, and [empty] is shown when there
- * is nothing to review. Choosing another plant opens a search over the whole screen.
+ * is nothing to review. Choosing another plant opens a search over the whole screen. When [selectable], the finds
+ * waiting for review can be selected, all the plants or all the wildlife at once, and dismissed or added to one zone.
  */
 @Composable
 fun PhotoReviewScreen(
@@ -115,6 +152,7 @@ fun PhotoReviewScreen(
     bottom: LazyListScope.() -> Unit = {},
     empty: @Composable (PaddingValues) -> Unit = {},
     onCompare: ((detectionId: String, speciesName: String) -> Unit)? = null,
+    selectable: Boolean = false,
 ) {
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
@@ -125,6 +163,9 @@ fun PhotoReviewScreen(
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     var choices by rememberSaveable(stateSaver = ChoicesSaver) { mutableStateOf(emptyMap<String, ReviewChoice>()) }
     var choosingFor by rememberSaveable { mutableStateOf<String?>(null) }
+    var selecting by rememberSaveable { mutableStateOf(false) }
+    var selection by rememberSaveable(stateSaver = SelectionSaver) { mutableStateOf(emptySet<String>()) }
+    var choosingZone by rememberSaveable { mutableStateOf(false) }
     val callbacks = remember(actions) {
         ReviewCallbacks(
             onAdd = actions::add,
@@ -160,16 +201,88 @@ fun PhotoReviewScreen(
         return
     }
 
-    DetailScaffold(title = title, onBack = onBack) { padding ->
+    val pending = reviews.orEmpty().flatMap { it.detections }.filter { it.status == DetectionStatus.NEEDS_REVIEW }
+    // A find decided on its own card leaves the selection.
+    val selected = pending.filter { it.id in selection }
+    val leaveSelection = {
+        selecting = false
+        selection = emptySet()
+        choosingZone = false
+    }
+    val nothingLeft = selecting && reviews != null && pending.isEmpty()
+    LaunchedEffect(nothingLeft) { if (nothingLeft) leaveSelection() }
+
+    if (choosingZone && selected.isNotEmpty()) {
+        BackHandler { choosingZone = false }
+        val adds = selected.mapNotNull { detection ->
+            val choice = chosen(detection, choices[detection.id])
+            if (detection.group.isWildlife) {
+                animalPick(detection, choice, fauna)?.let { BatchAdd.Sighting(detection.id, it.speciesName, it.label, detection.group) }
+            } else {
+                plantPick(detection, choice)?.let { BatchAdd.Plant(detection.id, it.speciesName, it.customName, detection.flowering) }
+            }
+        }
+        val zoneIds = zones.map { it.zone.id }.toSet()
+        AddSelectedScreen(
+            adds = adds.size,
+            skipped = selected.size - adds.size,
+            zones = zones,
+            startZoneId = current?.lastZoneId?.takeIf { it in zoneIds },
+            onBack = { choosingZone = false },
+        ) { zoneId ->
+            val growing = plants.filter { it.isGrowing && it.plant.zoneId == zoneId && it.plant.speciesName != null }
+                .associate { it.plant.speciesName!! to it.plant.id }
+            actions.addAll(adds, zoneId, growing)
+            leaveSelection()
+        }
+        return
+    }
+    if (selecting) BackHandler { leaveSelection() }
+    // The chips that select all plants or all wildlife come in above the first photo, so the list shows them.
+    val listState = rememberLazyListState()
+    LaunchedEffect(selecting) { if (selecting) listState.scrollToItem(0) }
+
+    DetailScaffold(
+        title = title,
+        onBack = onBack,
+        actions = {
+            if (selectable && pending.isNotEmpty()) {
+                if (selecting) {
+                    TextButton(onClick = leaveSelection) { Text(stringResource(R.string.review_select_cancel)) }
+                } else {
+                    TextButton(onClick = { selecting = true }) { Text(stringResource(R.string.review_select)) }
+                }
+            }
+        },
+        floatingActionButton = {
+            if (selecting) {
+                SelectionToolbar(
+                    count = selected.size,
+                    onDismiss = {
+                        actions.rejectAll(selected)
+                        leaveSelection()
+                    },
+                    onAdd = { choosingZone = true },
+                )
+            }
+        },
+    ) { padding ->
         when {
             reviews == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { PollenLoadingIndicator() }
             reviews.isEmpty() -> empty(padding)
             else -> LazyColumn(
                 Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 32.dp),
+                state = listState,
+                // Room below the last card for the selection toolbar.
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + if (selecting) 112.dp else 32.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 top()
+                if (selecting) {
+                    item(key = "select-groups") {
+                        SelectGroups(pending, selection, Modifier.readable()) { selection = it }
+                    }
+                }
                 val zoneIds = zones.map { it.zone.id }.toSet()
                 reviews.forEach { review ->
                     item(key = "photo-${review.photo.id}") {
@@ -183,6 +296,11 @@ fun PhotoReviewScreen(
                         .map { d -> plants.firstOrNull { it.plant.id == d.plantId }?.plant?.zoneId }
                     val suggestedZone = ZoneSuggestion.suggest(photoZones, current?.lastZoneId, zoneIds)
                     itemsIndexed(review.detections, key = { _, d -> d.id }) { i, detection ->
+                        if (selecting && detection.status == DetectionStatus.NEEDS_REVIEW) {
+                            SelectRow(detection, checked = detection.id in selection, Modifier.readable()) { on ->
+                                selection = if (on) selection + detection.id else selection - detection.id
+                            }
+                        }
                         DetectionReviewCard(
                             detection = detection,
                             number = i + 1,
@@ -233,6 +351,90 @@ fun MarkedPhoto(review: PhotoReview) {
                 ) {
                     Text(number, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimary)
                 }
+            }
+        }
+    }
+}
+
+/** Chips that select every plant, or every animal and fungus, waiting for review; choosing one again clears them. */
+@Composable
+private fun SelectGroups(pending: List<DetectionRecord>, selection: Set<String>, modifier: Modifier, onSelect: (Set<String>) -> Unit) {
+    val plants = pending.filter { it.group == LifeGroup.PLANT }.map { it.id }.toSet()
+    val wildlife = pending.filter { it.group.isWildlife }.map { it.id }.toSet()
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(
+            plants to stringResource(R.string.review_select_plants, plants.size),
+            wildlife to stringResource(R.string.review_select_wildlife, wildlife.size),
+        ).filter { (ids, _) -> ids.isNotEmpty() }.forEach { (ids, label) ->
+            val all = selection.containsAll(ids)
+            FilterChip(
+                selected = all,
+                onClick = { onSelect(if (all) selection - ids else selection + ids) },
+                label = { Text(label) },
+                leadingIcon = if (all) {
+                    { Icon(painterResource(R.drawable.ic_check), contentDescription = null) }
+                } else {
+                    null
+                },
+            )
+        }
+    }
+}
+
+/** A checkbox above a card that waits for review, with words for a screen reader. */
+@Composable
+private fun SelectRow(detection: DetectionRecord, checked: Boolean, modifier: Modifier, onChange: (Boolean) -> Unit) {
+    Row(
+        modifier.heightIn(min = 48.dp).toggleable(value = checked, role = Role.Checkbox, onValueChange = onChange),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Checkbox(checked = checked, onCheckedChange = null)
+        Text(
+            stringResource(if (detection.group.isWildlife) R.string.review_select_animal else R.string.review_select_plant),
+            style = MaterialTheme.typography.titleSmall,
+        )
+    }
+}
+
+/** What to do with the selected finds: dismiss them, or add them to a zone. */
+@Composable
+private fun SelectionToolbar(count: Int, onDismiss: () -> Unit, onAdd: () -> Unit) {
+    HorizontalFloatingToolbar(expanded = true) {
+        TextButton(onClick = onDismiss, enabled = count > 0) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(R.drawable.ic_close), contentDescription = null)
+                Text(stringResource(R.string.review_dismiss_selected, count))
+            }
+        }
+        TextButton(onClick = onAdd, enabled = count > 0) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(R.drawable.ic_check), contentDescription = null)
+                Text(stringResource(R.string.review_add_selected, count))
+            }
+        }
+    }
+}
+
+/**
+ * The zone the selected finds go to. Each is added with the suggestion or species shown on its card; finds without
+ * one stay in the queue.
+ */
+@Composable
+private fun AddSelectedScreen(adds: Int, skipped: Int, zones: List<ZoneView>, startZoneId: String?, onBack: () -> Unit, onAdd: (String?) -> Unit) {
+    var zoneId by rememberSaveable { mutableStateOf(startZoneId) }
+    DetailScaffold(title = stringResource(R.string.review_add_selected_title), onBack = onBack) { padding ->
+        Column(
+            Modifier.fillMaxSize().padding(padding).padding(16.dp).readable(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(pluralStringResource(R.plurals.review_add_selected_body, adds, adds), style = MaterialTheme.typography.bodyLarge)
+            if (skipped > 0) {
+                Text(pluralStringResource(R.plurals.review_add_selected_skipped, skipped, skipped), style = MaterialTheme.typography.bodyLarge)
+            }
+            ZoneChooser(zones, zoneId) { zoneId = it }
+            Button(onClick = { onAdd(zoneId) }, enabled = adds > 0) {
+                Text(pluralStringResource(R.plurals.review_add_selected_button, adds, adds))
             }
         }
     }

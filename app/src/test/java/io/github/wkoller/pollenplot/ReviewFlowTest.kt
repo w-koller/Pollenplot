@@ -117,6 +117,43 @@ class ReviewFlowTest {
     }
 
     @Test
+    fun dismissEveryPlantAtOnce() {
+        seedWithScannedPhoto()
+        show(open = MainActivity.OPEN_REVIEW)
+        waitFor(hasText("Taken on", substring = true))
+        compose.onNodeWithText("Select").performClick()
+        waitFor(hasText("All plants (2)"))
+        compose.onNodeWithText("All plants (2)").performClick()
+        waitFor(hasText("Dismiss (2)"))
+        shot("review_selecting")
+        compose.onNodeWithText("Dismiss (2)").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.pendingReviewCount.first() } == 0 }
+        waitFor(hasText("Undo"))
+    }
+
+    @Test
+    fun addSelectedFindsToOneZone() {
+        val ids = seedWithScannedPhoto()
+        show(open = MainActivity.OPEN_REVIEW)
+        waitFor(hasText("Taken on", substring = true))
+        compose.onNodeWithText("Select").performClick()
+        waitFor(hasText("Select this plant"))
+        compose.onAllNodesWithText("Select this plant").onFirst().performClick()
+        compose.onNodeWithText("All plants (2)").performClick()
+        waitFor(hasText("Add (2)"))
+        compose.onNodeWithText("Add (2)").performClick()
+        waitFor(hasText("Add to a zone"))
+        compose.onNodeWithText("Hive Corner").performClick()
+        shot("review_add_selected")
+        compose.onNodeWithText("Add 2 finds").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.pendingReviewCount.first() } == 0 }
+
+        val plants = runBlocking { garden.plantList.first() }
+        assertEquals("The rosemary already in Hive Corner gets the photo", 1, plants.count { it.speciesName == "Salvia rosmarinus" })
+        assertEquals(ids.hive, plants.last { it.speciesName == "Melaleuca citrina" }.zoneId)
+    }
+
+    @Test
     fun aNotificationOpensTheQueue() {
         seedWithScannedPhoto()
         show(open = MainActivity.OPEN_REVIEW)
