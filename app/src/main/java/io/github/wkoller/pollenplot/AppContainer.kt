@@ -226,6 +226,18 @@ class AppContainer(
     }
 
     /** Every record, the garden's and the bees', as one JSON-LD document for backups and "Export data". */
+    /**
+     * Whether the first-launch setup opens: only for a garden with no place and no zones that has not been through it.
+     * A garden that already has either never sees it, even if it is later emptied.
+     */
+    suspend fun setupNeeded(): Boolean {
+        val settings = settingsStore.current()
+        if (settings.setupDone) return false
+        if (settings.gardenPlace == null && garden.zoneList.first().isEmpty()) return true
+        settingsStore.update { it.copy(setupDone = true) }
+        return false
+    }
+
     suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */

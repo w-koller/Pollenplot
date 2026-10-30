@@ -104,6 +104,9 @@ import kotlinx.serialization.Serializable
 /** Settings › Garden location. */
 @Serializable data object GardenLocationRoute
 
+/** The first-launch setup; [again] when it was opened from Settings, so finishing goes back there. */
+@Serializable data class SetupRoute(val again: Boolean = false)
+
 /** The weeds in the garden and near it. */
 @Serializable data object WeedsRoute
 

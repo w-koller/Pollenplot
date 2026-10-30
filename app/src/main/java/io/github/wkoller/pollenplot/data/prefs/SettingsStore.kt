@@ -64,6 +64,8 @@ data class Settings(
     val lastBackupAt: Long? = null,
     /** The hours watering is planned for, to suit the local water rules. */
     val wateringWindow: WateringWindow = WateringWindow.DEFAULT,
+    /** The first-launch setup was finished or skipped, or the garden already had records when it would have opened. */
+    val setupDone: Boolean = false,
 ) {
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
@@ -107,6 +109,7 @@ class SettingsStore(context: Context) {
         val lastBackupAt = longPreferencesKey("last_backup_at")
         val wateringFromMinute = intPreferencesKey("watering_from_minute")
         val wateringToMinute = intPreferencesKey("watering_to_minute")
+        val setupDone = booleanPreferencesKey("setup_done")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -145,6 +148,7 @@ class SettingsStore(context: Context) {
             wateringWindow = this[Keys.wateringFromMinute]?.let { from ->
                 this[Keys.wateringToMinute]?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
             } ?: defaults.wateringWindow,
+            setupDone = this[Keys.setupDone] ?: defaults.setupDone,
         )
     }
 
@@ -174,6 +178,7 @@ class SettingsStore(context: Context) {
         setOrRemove(Keys.lastBackupAt, settings.lastBackupAt)
         this[Keys.wateringFromMinute] = settings.wateringWindow.fromMinute
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute
+        this[Keys.setupDone] = settings.setupDone
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

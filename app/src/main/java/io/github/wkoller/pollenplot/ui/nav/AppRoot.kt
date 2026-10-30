@@ -95,6 +95,7 @@ import io.github.wkoller.pollenplot.ui.settings.BackupModel
 import io.github.wkoller.pollenplot.ui.settings.BackupScreen
 import io.github.wkoller.pollenplot.ui.settings.ExportScreen
 import io.github.wkoller.pollenplot.ui.settings.SettingsScreen
+import io.github.wkoller.pollenplot.ui.setup.SetupScreen
 import io.github.wkoller.pollenplot.ui.water.LineEditorScreen
 import io.github.wkoller.pollenplot.ui.water.WaterScreen
 import io.github.wkoller.pollenplot.ui.weeds.CompareScreen
@@ -121,6 +122,7 @@ fun AppRoot(
     navController: NavHostController = rememberNavController(),
     open: String? = null,
     onOpened: () -> Unit = {},
+    setup: Boolean = false,
 ) {
     val context = LocalContext.current
     val entry by navController.currentBackStackEntryAsState()
@@ -211,7 +213,7 @@ fun AppRoot(
             val railInsets = if (wide && showTabs) Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)) else Modifier
             NavHost(
                 navController = navController,
-                startDestination = PlotRoute,
+                startDestination = if (setup) SetupRoute() else PlotRoute,
                 modifier = Modifier.padding(padding).consumeWindowInsets(padding).then(railInsets),
             ) {
                 val openSettings = { navController.navigate(SettingsRoute) }
@@ -560,7 +562,29 @@ fun AppRoot(
                         onOpenExport = { navController.navigate(ExportRoute) },
                         onOpenBackup = { navController.navigate(BackupRoute) },
                         onOpenAbout = { navController.navigate(AboutRoute) },
+                        onSetUpAgain = { navController.navigate(SetupRoute(again = true)) },
                     )
+                }
+                composable<SetupRoute> { entry ->
+                    val again = entry.toRoute<SetupRoute>().again
+                    val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
+                    SetupScreen(
+                        location = model,
+                        settings = container.settingsStore,
+                        meaning = container.meaning,
+                        accurate = container.accurate,
+                        gemma = container.gemma,
+                        garden = container.garden,
+                        gallery = container.gallery,
+                        notifications = container.notifications,
+                        clock = container.clock,
+                    ) {
+                        if (again) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(PlotRoute) { popUpTo<SetupRoute> { inclusive = true } }
+                        }
+                    }
                 }
                 composable<ExportRoute> {
                     val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)

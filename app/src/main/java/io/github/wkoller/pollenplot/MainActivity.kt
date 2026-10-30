@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
@@ -28,10 +29,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
             val open by opening.collectAsStateWithLifecycle()
+            // Decided once, before the first screen, because it chooses where the app starts.
+            val setup by produceState<Boolean?>(null) { value = container.setupNeeded() }
             val loaded = settings ?: return@setContent
+            val startWithSetup = setup ?: return@setContent
             PollenplotTheme(loaded) {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AppRoot(container, open = open, onOpened = { opening.value = null })
+                    AppRoot(container, open = open, onOpened = { opening.value = null }, setup = startWithSetup)
                 }
             }
         }
