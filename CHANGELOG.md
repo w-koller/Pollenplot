@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (in progress)
+## 1.0.0-rc.1
 
 - The app's frame, built with Material 3 Expressive: the Plot, Rhythms, Wildlife, Bees and Water tabs, an add menu
   on the Plot, Settings with the theme and wallpaper colours, and About › Licences.

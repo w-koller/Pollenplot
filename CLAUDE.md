@@ -39,7 +39,11 @@ CI (`.github/workflows/android.yml`) runs the same tasks, checks that `strings.x
 uploads the debug APK, reports and screenshots. It builds a signed release APK when the `KEYSTORE_BASE64`,
 `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD` secrets are set (the build reads them as `PP_*` environment
 variables). A `v*` tag that matches `versionName` publishes the APK and its checksum as a GitHub Release, with the
-notes from that version's section of `CHANGELOG.md`. Keystores live outside the repo and must never be committed.
+notes from the section of `CHANGELOG.md` headed exactly `## <version>`. A version with a suffix, such as `1.0.0-rc.1`,
+is published as a pre-release. Keystores live outside the repo and must never be committed.
+
+Each enhancement is made on a new branch and merged into `main` only after it has been tested successfully, so `main`
+is always ready to tag.
 
 ## Layout
 
@@ -235,7 +239,8 @@ through `ui/components/PollenShapes.kt` and other components, so an API change t
   flow in mL/h, area in cm², temperature in tenths of °C, weight in g, lengths in mm, confidence in basis points and
   coordinates in degrees × 10⁷.
 - Every user record has a UUID string key, which is also its IRI (`urn:uuid:…`) in the semantic layer.
-- The user database stays at schema version 1 until the first tagged release. After that, every change needs a
+- The user database is at schema version 1 in the first tagged release, 1.0.0-rc.1. A pre-release counts, because
+  it is installed on phones and keeps real records. From then on, every change needs a
   migration in `PollenplotDatabase.MIGRATIONS`, which restored backups go through too, and a schema committed in
   `app/schemas/`, and there is no destructive migration fallback. The read-only
   knowledge database is rebuilt from `app/src/main/assets/kb/` whenever its version changes.

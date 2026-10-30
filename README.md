@@ -6,7 +6,7 @@ Pollenplot is an Android app for recording everything about a backyard garden. I
 the phone, so photos never leave it, and it shows how the garden's plants, wildlife, bees and watering fit together.
 It is written for Australian gardens first.
 
-Version 1 will include:
+Version 1 includes:
 
 - **Plant and wildlife identification** with on-device AI (AIY, BioCAP and Gemma 4), from the camera or from your
   photos, which are scanned in the background.
@@ -28,7 +28,20 @@ export JAVA_HOME=/path/to/jdk-17 ANDROID_HOME=/path/to/android-sdk
 ./gradlew :domain:test :ml:test :app:testDebugUnitTest :app:assembleDebug
 ```
 
-The debug APK is written to `app/build/outputs/apk/debug/`. Signed release APKs are published as GitHub Releases.
+The debug APK is written to `app/build/outputs/apk/debug/`. It is a separate app from the release, with its own
+records, so it is for testing only.
+
+## Releases
+
+Signed APKs are built by GitHub Actions and published as GitHub Releases, each with its SHA-256 checksum. To publish
+one, set `versionCode` and `versionName` in `app/build.gradle.kts`, give the version a section headed `## <version>`
+in `CHANGELOG.md`, merge it into `main` and push a tag such as `v1.0.0`. A version with a suffix, such as
+`1.0.0-rc.1` and the tag `v1.0.0-rc.1`, is published as a pre-release for testing, which does not become the latest
+release.
+
+The release signing key is kept outside the repository and reaches CI as four repository secrets: `KEYSTORE_BASE64`,
+`KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`. Please keep a backup of the key, because without it a new version
+cannot be installed over the old one.
 
 ## Licence
 
