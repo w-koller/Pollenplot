@@ -111,7 +111,8 @@
     <string name="add_menu_expanded">Open</string>
     <string name="add_menu_collapsed">Closed</string>
     <string name="add_identify_camera">Identify with the camera</string>
-    <string name="add_photos">Add photos</string>
+    <string name="add_photos">Add plant photos</string>
+    <string name="add_animal_photos">Add wildlife photos</string>
     <string name="add_check_weed">Check a weed</string>
     <string name="add_plant_by_name">Add a plant by name</string>
     <string name="settings_records">Your records</string>
@@ -843,9 +844,17 @@
     <string name="review_title">Review</string>
     <string name="review_taken">Taken on %1$s</string>
     <string name="review_empty_title">Nothing to review.</string>
-    <string name="review_empty_body">Plants found in photos you add, or in new photos while scanning is on, wait here until you check them.</string>
-    <string name="review_adding_progress">Looking for plants in photo %1$d of %2$d.</string>
-    <string name="review_adding_waiting">Pollenplot will look for plants in the photos you added in a moment.</string>
+    <string name="review_empty_body">Plants and animals found in photos you add, or in new photos while scanning is on, wait here until you check them.</string>
+    <string name="review_adding_progress">Looking at photo %1$d of %2$d.</string>
+    <string name="review_adding_waiting">Pollenplot will look at the photos you added in a moment.</string>
+    <string name="review_select">Select</string>
+    <string name="review_select_plants">All plants (%1$d)</string>
+    <string name="review_select_wildlife">All wildlife (%1$d)</string>
+    <string name="review_select_plant">Select this plant</string>
+    <string name="review_select_animal">Select this animal</string>
+    <string name="review_dismiss_selected">Dismiss (%1$d)</string>
+    <string name="review_add_selected">Add (%1$d)</string>
+    <string name="review_add_selected_title">Add to a zone</string>
     <string name="scan_title">Photo scanning</string>
     <string name="scan_intro">Pollenplot can look for plants in new photos in your gallery, in the background. Photos that show plants wait in the Review queue for you, and no photo leaves your phone.</string>
     <string name="scan_switch">Look for plants in new photos</string>
@@ -873,6 +882,10 @@
     <string name="notify_found_both_title">Pollenplot found %1$s and %2$s in your photos.</string>
     <string name="notify_found_both_body">Please review them to add them to your garden and your sightings.</string>
     <string name="notify_none_body">Please try photos taken closer to the plants, in good light.</string>
+    <string name="notify_none_animals_body">Please try photos taken closer to the animal, in good light.</string>
+    <string name="animal_photos_title">What kind of animal is in them?</string>
+    <string name="animal_photos_body">Pollenplot looks for the kind of animal you choose in each photo. Photos of plants are added from the Plot.</string>
+    <string name="animal_photos_choose">Choose photos</string>
     <string name="rhythms_intro">This is what the flowers in your garden offer each group of bees through the year. Honey bees count mass-flowering trees and shrubs most, and stingless and solitary bees count the variety of flowers.</string>
     <string name="rhythms_calendar">The year for your bees</string>
     <string name="bee_group_honey">Honey bees</string>
@@ -933,6 +946,11 @@
     <string name="about_body">Pollenplot records the plants, wildlife, bees and watering in your backyard. Plants and animals are identified on your phone, and your records stay on your phone.</string>
     <string name="about_licences">Licences</string>
     <string name="about_licences_body">The software Pollenplot is built with, and the licence each part comes under.</string>
+    <string name="about_source">Source code</string>
+    <string name="about_source_body">Pollenplot is open source. Its code, releases and issues are on GitHub.</string>
+    <string name="about_share">Share Pollenplot</string>
+    <string name="about_share_body">Send a friend the link to download Pollenplot.</string>
+    <string name="about_share_text">Pollenplot helps you look after the plants, wildlife, bees and watering in your backyard. You can download it from %1$s</string>
     <string name="licences_title">Licences</string>
     <string name="licences_body">Pollenplot is built with the software below. Please choose an item to read its licence.</string>
     <string name="licence_item_app">Pollenplot</string>
@@ -957,6 +975,37 @@
     <string name="licence_notices">Their licences and notices</string>
     <string name="licence_loading">Loading the licence.</string>
     <string name="licence_missing">This licence could not be opened. Please try again.</string>
+    <string name="setup_step">Step %1$d of %2$d</string>
+    <string name="setup_next">Next</string>
+    <string name="setup_skip">Skip</string>
+    <string name="setup_finish">Finish</string>
+    <string name="setup_back">Previous step</string>
+    <string name="setup_welcome_title">Welcome to Pollenplot</string>
+    <string name="setup_welcome_body">Pollenplot keeps the plants, wildlife, bees and watering in your backyard, and explains how they fit together. Plants and animals are identified on your phone, and your records stay on your phone.</string>
+    <string name="setup_welcome_steps">Setup takes a few minutes. It sets where your garden is, offers the models that identify plants and animals, sketches your first zones and asks for notifications. Every step can be skipped and changed later in Settings.</string>
+    <string name="setup_welcome_start">Start</string>
+    <string name="setup_welcome_skip">Skip setup</string>
+    <string name="setup_location_title">Where is your garden?</string>
+    <string name="setup_models_title">Identification models</string>
+    <string name="setup_models_intro">Pollenplot can identify common plants and animals with the models built into the app. These downloads add more. Accurate identification is recommended for a new garden, and Wi-Fi is best for it. Downloads carry on while you finish setup.</string>
+    <string name="setup_recommended_model">%1$s (recommended)</string>
+    <string name="setup_zones_title">Your garden\'s zones</string>
+    <string name="setup_zones_body">Zones are the parts of your garden, such as a bed along the fence or the lawn. Please tick the ones you have and give each a name. Pollenplot sets them out on the Plot, where you can move them and change their size.</string>
+    <string name="setup_zones_name">Name of the %1$s</string>
+    <string name="setup_zones_have">Your Plot has %1$s.</string>
+    <string name="setup_permissions_title">Notifications and photos</string>
+    <string name="setup_permissions_body">Both are optional, and you can change them later in Settings.</string>
+    <string name="setup_notifications">Notifications</string>
+    <string name="setup_notifications_body">Pollenplot tells you when watering is due, when a hive check is due, when a hot day is coming for stingless bees and what it found in your photos.</string>
+    <string name="setup_notifications_allow">Allow notifications</string>
+    <string name="setup_notifications_on">Notifications are allowed.</string>
+    <string name="setup_scanning">Photo scanning</string>
+    <string name="setup_scanning_body">Pollenplot can look for plants in new photos in your gallery, in the background. No photo leaves your phone.</string>
+    <string name="setup_scanning_allow">Turn on photo scanning</string>
+    <string name="setup_scanning_on">Photo scanning is on.</string>
+    <string name="setup_scanning_denied">Pollenplot cannot see your photos. You can allow them later in Settings › Photo scanning.</string>
+    <string name="settings_setup_again">Set up again</string>
+    <string name="settings_setup_again_body">Go through the first-launch setup again: location, models, zones and permissions.</string>
     <string name="plot_title">Plot</string>
     <string name="plot_subtitle">Your backyard</string>
     <string name="plot_empty_title">Your plot has no zones yet.</string>
@@ -1437,6 +1486,18 @@
         <item quantity="one">%d plant is waiting for review.</item>
         <item quantity="other">%d plants are waiting for review.</item>
     </plurals>
+    <plurals name="review_add_selected_body">
+        <item quantity="one">Pollenplot will add the find you selected with the suggestion shown on its card. Please choose the zone it goes to.</item>
+        <item quantity="other">Pollenplot will add the %d finds you selected, each with the suggestion shown on its card. Please choose the zone they go to.</item>
+    </plurals>
+    <plurals name="review_add_selected_skipped">
+        <item quantity="one">%d find has no suggestion, so it stays in the queue for you to name.</item>
+        <item quantity="other">%d finds have no suggestion, so they stay in the queue for you to name.</item>
+    </plurals>
+    <plurals name="review_add_selected_button">
+        <item quantity="one">Add %d find</item>
+        <item quantity="other">Add %d finds</item>
+    </plurals>
     <plurals name="scan_album_count">
         <item quantity="one">%d photo</item>
         <item quantity="other">%d photos</item>
@@ -1469,9 +1530,17 @@
         <item quantity="one">No plant was found in the photo you added.</item>
         <item quantity="other">No plants were found in the %d photos you added.</item>
     </plurals>
+    <plurals name="notify_none_animals_title">
+        <item quantity="one">No animal was found in the photo you added.</item>
+        <item quantity="other">No animals were found in the %d photos you added.</item>
+    </plurals>
     <plurals name="rhythms_days">
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="setup_zones_add">
+        <item quantity="one">Add %d zone</item>
+        <item quantity="other">Add %d zones</item>
     </plurals>
     <plurals name="today_water_minutes">
         <item quantity="one">Please water %1$s, for %2$d minute.</item>

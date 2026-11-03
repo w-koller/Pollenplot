@@ -2,6 +2,7 @@ package io.github.wkoller.pollenplot
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.wkoller.pollenplot.data.BatchAdd
 import io.github.wkoller.pollenplot.data.DetectionDraft
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
@@ -242,6 +243,53 @@ class GardenRepositoryTest {
         assertNull("The sighting stays when the plant goes", garden.sighting(sighting.id)!!.plantId)
         garden.deleteSighting(sighting.id)
         assertTrue(garden.search("blue-banded").none { it.recordId == sighting.id })
+    }
+
+    @Test
+    fun `several parts of photos can be marked as not a plant at once`() = runBlocking {
+        val found = recordBedPhoto()
+        garden.rejectDetections(found.map { it.id })
+        assertTrue(found.all { garden.detection(it.id)!!.status == DetectionStatus.REJECTED })
+        assertEquals(0, garden.pendingReviewCount.first())
+    }
+
+    @Test
+    fun `several finds can be added to one zone at once`() = runBlocking {
+        val zone = garden.addZone("Front Native Strip", ZoneKind.GARDEN_BED)
+        val growing = garden.addPlant("Salvia rosmarinus", null, zone.id)
+        val found = recordBedPhoto()
+        val photo = StoredPhoto("photo-2", "photos/photo-2.jpg", 2_048, 1_536)
+        val takenAt = LocalDate.of(2026, 11, 2).atTime(10, 0).toInstant(ZoneOffset.UTC)
+        val bee = Candidate("Amegilla cingulata", null, 7_000, setOf(IdSource.BIOCAP))
+        val drafts = listOf(
+            DetectionDraft(BoxBp(1_000, 1_000, 3_000, 3_000), "thumbs/brush2.webp", true, emptyList()),
+            DetectionDraft(BoxBp(5_000, 5_000, 8_000, 8_000), "thumbs/bee.webp", false, listOf(bee), LifeGroup.INSECT),
+        )
+        garden.recordPhoto(photo, PhotoOrigin.CAMERA, takenAt, drafts)
+        val second = garden.detectionsInPhoto(photo.id).first()
+
+        garden.confirmDetections(
+            listOf(
+                BatchAdd.Plant(found[0].id, "Melaleuca citrina", null, flowering = false),
+                BatchAdd.Plant(found[1].id, "Salvia rosmarinus", null, flowering = false),
+                BatchAdd.Plant(second[0].id, "Melaleuca citrina", null, flowering = true),
+                BatchAdd.Sighting(second[1].id, "Amegilla cingulata", "Blue-banded bee", LifeGroup.INSECT),
+            ),
+            zone.id,
+            growing = mapOf("Salvia rosmarinus" to growing.id),
+        )
+
+        val plants = garden.plantList.first()
+        assertEquals("One new bottlebrush beside the rosemary already there", 2, plants.size)
+        val bottlebrush = plants.single { it.speciesName == "Melaleuca citrina" }
+        assertEquals(zone.id, bottlebrush.zoneId)
+        assertEquals(growing.id, garden.detection(found[1].id)!!.plantId)
+        assertEquals("The second photo of the same species in the batch goes to the plant just added", bottlebrush.id, garden.detection(second[0].id)!!.plantId)
+        assertEquals(listOf(LocalDate.of(2026, 11, 2)), garden.floweringOf(bottlebrush.id))
+        val sighting = garden.sightingList.first().single()
+        assertEquals(zone.id, sighting.zoneId)
+        assertEquals(sighting.id, garden.detection(second[1].id)!!.sightingId)
+        assertEquals(0, garden.pendingReviewCount.first())
     }
 
     @Test

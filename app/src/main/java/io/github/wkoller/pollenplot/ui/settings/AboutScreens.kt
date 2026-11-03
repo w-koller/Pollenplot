@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,11 +35,14 @@ import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenShapes
 import io.github.wkoller.pollenplot.domain.weeds.WeedSources
 import io.github.wkoller.pollenplot.ui.plants.label
+import io.github.wkoller.pollenplot.web.ProjectLinks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
 fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit, onOpenSources: () -> Unit) {
+    val uri = LocalUriHandler.current
+    val context = LocalContext.current
     DetailScaffold(title = stringResource(R.string.about_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
             item {
@@ -80,6 +84,30 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit, onOpenSources: (
                     leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
                 ) {
                     Text(stringResource(R.string.about_sources))
+                }
+            }
+            item {
+                ListItem(
+                    onClick = { uri.openUri(ProjectLinks.SOURCE) },
+                    supportingContent = { Text(stringResource(R.string.about_source_body)) },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_code), contentDescription = null) },
+                    trailingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
+                ) {
+                    Text(stringResource(R.string.about_source))
+                }
+            }
+            item {
+                val text = stringResource(R.string.about_share_text, ProjectLinks.RELEASES)
+                val title = stringResource(R.string.about_share)
+                ListItem(
+                    onClick = {
+                        val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+                        context.startActivity(Intent.createChooser(send, title))
+                    },
+                    supportingContent = { Text(stringResource(R.string.about_share_body)) },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
+                ) {
+                    Text(title)
                 }
             }
         }

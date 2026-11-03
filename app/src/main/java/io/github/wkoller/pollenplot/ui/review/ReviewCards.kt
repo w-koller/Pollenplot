@@ -58,6 +58,7 @@ import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.Confidence
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
+import io.github.wkoller.pollenplot.domain.id.ReviewPick
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.Species
@@ -185,6 +186,24 @@ sealed interface ReviewChoice {
     }
 }
 
+/** The choice a card shows: the user's, or else the best suggestion, or nothing when the models made no suggestion. */
+internal fun chosen(detection: DetectionRecord, saved: ReviewChoice?): ReviewChoice? =
+    saved ?: if (detection.candidates.isEmpty()) null else ReviewChoice.Suggestion(0)
+
+/** The plant a card adds for [choice]. A suggestion the knowledge base does not know keeps the model's name. */
+internal fun plantPick(detection: DetectionRecord, choice: ReviewChoice?): ReviewPick.Plant? = when (choice) {
+    is ReviewChoice.Picked -> ReviewPick.plant(detection.candidates, picked = choice.speciesName)
+    is ReviewChoice.Suggestion -> ReviewPick.plant(detection.candidates, index = choice.index)
+    null -> null
+}
+
+/** The sighting a card adds for [choice]. */
+internal fun animalPick(detection: DetectionRecord, choice: ReviewChoice?, fauna: FaunaBase?): ReviewPick.Animal? = when (choice) {
+    is ReviewChoice.Picked -> ReviewPick.animal(detection.candidates, fauna, picked = choice.speciesName)
+    is ReviewChoice.Suggestion -> ReviewPick.animal(detection.candidates, fauna, index = choice.index)
+    null -> null
+}
+
 @Composable
 private fun Undecided(
     detection: DetectionRecord,
@@ -201,8 +220,7 @@ private fun Undecided(
     var zoneChosen by rememberSaveable(detection.id) { mutableStateOf(false) }
     var flowering by rememberSaveable(detection.id) { mutableStateOf(detection.flowering) }
 
-    // The best suggestion is chosen until the user chooses something else.
-    val choice = savedChoice ?: if (detection.candidates.isEmpty()) null else ReviewChoice.Suggestion(0)
+    val choice = chosen(detection, savedChoice)
     val shown = detection.candidates.withIndex()
         .filter { (i, c) -> i == 0 || c.scoreBp >= MIN_SHOWN_SCORE_BP }
         .take(MAX_SHOWN)
@@ -283,9 +301,8 @@ private fun Undecided(
 
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val onAdd = {
-            // A suggestion the knowledge base does not know is kept under the model's name, to match up later.
-            val custom = if (chosenSpeciesName == null) chosenCandidate?.label else null
-            callbacks.onAdd(detection, chosenSpeciesName, custom, zoneId, flowering)
+            plantPick(detection, choice)?.let { callbacks.onAdd(detection, it.speciesName, it.customName, zoneId, flowering) }
+            Unit
         }
         // With the same species already growing, adding the photo to it is the main choice and a second plant the other.
         if (existing != null) {

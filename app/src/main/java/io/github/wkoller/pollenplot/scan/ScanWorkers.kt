@@ -24,6 +24,7 @@ import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -33,17 +34,21 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-/** Looks for plants in the photos the user added, one at a time, and says what it found. */
+/**
+ * Looks for plants or animals in the photos the user added, one at a time, and says what it found. The user says
+ * which group the photos show; without one, the models decide for each photo.
+ */
 class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val container = (applicationContext as PollenplotApp).container
         val uris = inputData.getStringArray(KEY_URIS).orEmpty().map(Uri::parse)
+        val group = LifeGroup.of(inputData.getString(KEY_GROUP))
         var tally = ScanTally()
         uris.forEachIndexed { done, uri ->
             setProgress(workDataOf(KEY_DONE to done, KEY_TOTAL to uris.size))
-            tally = tally.withPhoto(container.scanner.scanAddedPhoto(uri))
+            tally = tally.withPhoto(container.scanner.scanAddedPhoto(uri, group))
         }
-        container.notifications.showAddedResult(tally)
+        container.notifications.showAddedResult(tally, wildlife = group?.isWildlife == true)
         if (tally.found > 0) SecondOpinionWorker.enqueue(applicationContext)
         return Result.success()
     }
@@ -53,13 +58,15 @@ class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWor
         const val KEY_DONE = "done"
         const val KEY_TOTAL = "total"
         private const val KEY_URIS = "uris"
+        private const val KEY_GROUP = "group"
 
-        fun input(uris: List<Uri>): Data = workDataOf(KEY_URIS to uris.map { it.toString() }.toTypedArray())
+        fun input(uris: List<Uri>, group: LifeGroup? = null): Data =
+            workDataOf(KEY_URIS to uris.map { it.toString() }.toTypedArray(), KEY_GROUP to group?.name)
 
-        /** Queues [uris] behind any photos still being looked at. */
-        fun enqueue(context: Context, uris: List<Uri>) {
+        /** Queues [uris], photos of [group], behind any photos still being looked at. */
+        fun enqueue(context: Context, uris: List<Uri>, group: LifeGroup?) {
             val request = OneTimeWorkRequestBuilder<AddPhotosWorker>()
-                .setInputData(input(uris))
+                .setInputData(input(uris, group))
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request)

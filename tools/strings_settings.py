@@ -21,6 +21,12 @@ STRINGS = {
     "identified on your phone, and your records stay on your phone.",
     "about_licences": "Licences",
     "about_licences_body": "The software Pollenplot is built with, and the licence each part comes under.",
+    "about_source": "Source code",
+    "about_source_body": "Pollenplot is open source. Its code, releases and issues are on GitHub.",
+    "about_share": "Share Pollenplot",
+    "about_share_body": "Send a friend the link to download Pollenplot.",
+    "about_share_text": "Pollenplot helps you look after the plants, wildlife, bees and watering in your backyard. "
+    "You can download it from %1$s",
 
     "licences_title": "Licences",
     "licences_body": "Pollenplot is built with the software below. Please choose an item to read its licence.",

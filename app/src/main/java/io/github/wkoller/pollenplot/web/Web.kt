@@ -67,6 +67,6 @@ class HttpWeb : Web {
         const val TIMEOUT_MS = 30_000
         const val MAX_BYTES = 16 * 1024 * 1024
         const val BUFFER_BYTES = 64 * 1024
-        val USER_AGENT = "Pollenplot/${BuildConfig.VERSION_NAME} (+https://github.com/w-koller/Pollenplot)"
+        val USER_AGENT = "Pollenplot/${BuildConfig.VERSION_NAME} (+${ProjectLinks.SOURCE})"
     }
 }

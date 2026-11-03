@@ -104,6 +104,9 @@ import kotlinx.serialization.Serializable
 /** Settings › Garden location. */
 @Serializable data object GardenLocationRoute
 
+/** The first-launch setup; [again] when it was opened from Settings, so finishing goes back there. */
+@Serializable data class SetupRoute(val again: Boolean = false)
+
 /** The weeds in the garden and near it. */
 @Serializable data object WeedsRoute
 
@@ -137,6 +140,7 @@ enum class TopLevelTab(
 enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
     IDENTIFY(R.string.add_identify_camera, R.drawable.ic_photo_camera),
     PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate),
+    ANIMAL_PHOTOS(R.string.add_animal_photos, R.drawable.ic_add_photo_alternate),
     WEED(R.string.add_check_weed, R.drawable.ic_grass),
     PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant),
     SIGHTING(R.string.add_sighting_by_name, R.drawable.ic_edit),
@@ -146,7 +150,7 @@ enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
         /** The Plot's add menu. */
         val PLOT = listOf(IDENTIFY, PHOTOS, WEED, PLANT)
 
-        /** The Wildlife tab's add menu. Photos added from the gallery are only searched for plants so far. */
-        val WILDLIFE = listOf(IDENTIFY, SIGHTING)
+        /** The Wildlife tab's add menu. Photos from the gallery are looked at for the kind of animal the user chooses. */
+        val WILDLIFE = listOf(IDENTIFY, ANIMAL_PHOTOS, SIGHTING)
     }
 }

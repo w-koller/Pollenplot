@@ -312,6 +312,34 @@ class GardenRepository(
     /** Marks a detection as not a plant. */
     suspend fun rejectDetection(detectionId: String) = detections.setStatus(detectionId, DetectionStatus.REJECTED.name, null, null)
 
+    /** Marks several detections as not a plant or not wildlife, in one transaction. */
+    suspend fun rejectDetections(detectionIds: Collection<String>) = db.withTransaction {
+        detectionIds.forEach { rejectDetection(it) }
+    }
+
+    /**
+     * Adds several detections at once, all to [zoneId], in one transaction. A plant whose species already grows in that
+     * zone, in [growing] (species name to plant id) or added earlier in the batch, gets the photo rather than a second
+     * plant.
+     */
+    suspend fun confirmDetections(adds: List<BatchAdd>, zoneId: String?, growing: Map<String, String>) = db.withTransaction {
+        val inZone = growing.toMutableMap()
+        adds.forEach { add ->
+            when (add) {
+                is BatchAdd.Plant -> {
+                    val existing = add.speciesName?.let(inZone::get)
+                    if (existing != null) {
+                        attachDetection(add.detectionId, existing, add.flowering)
+                    } else {
+                        val plant = confirmDetection(add.detectionId, add.speciesName, add.customName, zoneId, flowering = add.flowering)
+                        add.speciesName?.let { inZone[it] = plant.id }
+                    }
+                }
+                is BatchAdd.Sighting -> confirmSighting(add.detectionId, add.speciesName, add.label, add.group, zoneId, plantId = null, behaviour = null)
+            }
+        }
+    }
+
     /** Puts a detection marked as not a plant back in review. */
     suspend fun reopenDetection(detectionId: String) = db.withTransaction {
         val entity = detections.get(detectionId) ?: return@withTransaction
@@ -547,6 +575,15 @@ data class DetectionDraft(
     val candidates: List<Candidate>,
     val group: LifeGroup = LifeGroup.PLANT,
 )
+
+/** A part of a photo to add when several are added at once: a plant, or an animal or fungus as a sighting. */
+sealed interface BatchAdd {
+    val detectionId: String
+
+    data class Plant(override val detectionId: String, val speciesName: String?, val customName: String?, val flowering: Boolean) : BatchAdd
+
+    data class Sighting(override val detectionId: String, val speciesName: String?, val label: String, val group: LifeGroup) : BatchAdd
+}
 
 /** A stored detection with its suggestions, for review. */
 data class DetectionRecord(

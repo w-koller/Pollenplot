@@ -100,8 +100,8 @@ android {
         applicationId = "io.github.wkoller.pollenplot"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0-rc.1"
+        versionCode = 2
+        versionName = "1.0.0-rc.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // The optional text model for search by meaning, pinned in gradle.properties with its SHA-256.
         buildConfigField("String", "BGE_URL", "\"${providers.gradleProperty("pollenplot.bge.url").get()}\"")

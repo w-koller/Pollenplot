@@ -55,7 +55,7 @@ import java.time.Clock
 private val BACK_DAYS = listOf(0, 7, 30, 90, 365)
 
 /** The permissions that let the app read the gallery on this version of Android. */
-private fun galleryPermissions(): Array<String> = when {
+internal fun galleryPermissions(): Array<String> = when {
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
     else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)

@@ -9,6 +9,7 @@ import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.ScanOutcome
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import java.time.Clock
 import java.time.Instant
 
@@ -76,11 +77,14 @@ class PhotoScanner(
         return Found.of(result.detections)
     }
 
-    /** Scans a photo the user added and returns what it showed, or null if it could not be read. */
-    suspend fun scanAddedPhoto(uri: Uri): Found? {
+    /**
+     * Scans a photo the user added and returns what it showed, or null if it could not be read. [group] is what the user
+     * said the photo shows; without it, the models decide.
+     */
+    suspend fun scanAddedPhoto(uri: Uri, group: LifeGroup? = null): Found? {
         val bitmap = gallery.load(uri, PhotoStore.MAX_SIDE) ?: return null
         val takenAt = gallery.takenAt(uri) ?: clock.instant()
-        val result = analysis.analyse(bitmap, PhotoOrigin.IMPORT, takenAt)
+        val result = analysis.analyse(bitmap, PhotoOrigin.IMPORT, takenAt, group)
         // A photo from the gallery is remembered, so a later scan of the gallery does not add its plants twice.
         mediaIdOf(uri)?.let { id ->
             garden.recordScan(id, takenAt, if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS, result.photo?.id)

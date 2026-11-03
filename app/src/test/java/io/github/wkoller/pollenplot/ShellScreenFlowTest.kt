@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot
 
+import android.content.Intent
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -25,9 +26,12 @@ import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
 import io.github.wkoller.pollenplot.ui.theme.PollenplotTheme
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
@@ -105,6 +109,14 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("About Pollenplot").performClick()
         compose.onNodeWithText("Ecosystem Management for Your Backyard").assertIsDisplayed()
         shot("about")
+        compose.onNodeWithText("Source code").assertExists()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Share Pollenplot"))
+        compose.onNodeWithText("Share Pollenplot").performClick()
+        val chooser = shadowOf(ApplicationProvider.getApplicationContext<android.app.Application>()).nextStartedActivity
+        assertEquals(Intent.ACTION_CHOOSER, chooser.action)
+        val send = chooser.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)!!
+        assertTrue(send.getStringExtra(Intent.EXTRA_TEXT)!!.endsWith("https://github.com/w-koller/Pollenplot/releases"))
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Licences"))
         compose.onNodeWithText("Licences").performClick()
         shot("licences")
         compose.onNodeWithText("Android Jetpack and Jetpack Compose").performClick()

@@ -3,11 +3,13 @@ package io.github.wkoller.pollenplot.ui.settings
 import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -43,93 +45,121 @@ import kotlinx.coroutines.launch
 /** Settings › Models: the models the app can download, how big they are, and whether they are on the phone. */
 @Composable
 fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, gemma: GemmaModel, onBack: () -> Unit) {
+    DetailScaffold(title = stringResource(R.string.models_title), onBack = onBack) { padding ->
+        ModelsContent(meaning, accurate, gemma, padding)
+    }
+}
+
+/**
+ * A card for each model with its download controls, for Settings and the first-launch setup. [setup] puts accurate
+ * identification first and marks it as recommended, and [top] adds items above the cards.
+ */
+@Composable
+fun ModelsContent(
+    meaning: MeaningSearch,
+    accurate: AccuratePack,
+    gemma: GemmaModel,
+    padding: PaddingValues,
+    setup: Boolean = false,
+    top: LazyListScope.() -> Unit = {},
+) {
     val context = LocalContext.current
     val state by meaning.state.collectAsStateWithLifecycle()
     val pack by accurate.state.collectAsStateWithLifecycle()
     val assistant by gemma.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    DetailScaffold(title = stringResource(R.string.models_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item {
-                Text(
-                    stringResource(R.string.models_intro),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    val meaningItem: LazyListScope.() -> Unit = {
+        item {
+            ModelCard(
+                icon = R.drawable.ic_search,
+                title = stringResource(R.string.models_meaning),
+                body = stringResource(R.string.models_meaning_body, Formatter.formatShortFileSize(context, meaning.download.sizeBytes)),
+            ) {
+                DownloadControls(
+                    state = state,
+                    totalBytes = meaning.download.sizeBytes,
+                    ready = R.string.models_meaning_ready,
+                    onDownload = { meaning.download.start() },
+                    onUseMobileData = { meaning.download.restartWithMobileData() },
+                    onCancel = { meaning.download.cancel() },
+                    onDelete = { scope.launch { meaning.delete() } },
                 )
             }
-            item {
-                ModelCard(
-                    icon = R.drawable.ic_search,
-                    title = stringResource(R.string.models_meaning),
-                    body = stringResource(R.string.models_meaning_body, Formatter.formatShortFileSize(context, meaning.download.sizeBytes)),
-                ) {
-                    DownloadControls(
-                        state = state,
-                        totalBytes = meaning.download.sizeBytes,
-                        ready = R.string.models_meaning_ready,
-                        onDownload = { meaning.download.start() },
-                        onUseMobileData = { meaning.download.restartWithMobileData() },
-                        onCancel = { meaning.download.cancel() },
-                        onDelete = { scope.launch { meaning.delete() } },
-                    )
-                }
+        }
+    }
+    val gemmaItem: LazyListScope.() -> Unit = {
+        item {
+            ModelCard(
+                icon = R.drawable.ic_forum,
+                title = stringResource(R.string.models_gemma),
+                body = stringResource(R.string.models_gemma_body, Formatter.formatShortFileSize(context, gemma.download.sizeBytes)),
+            ) {
+                DownloadControls(
+                    state = assistant,
+                    totalBytes = gemma.download.sizeBytes,
+                    ready = R.string.models_gemma_ready,
+                    onDownload = { gemma.download.start() },
+                    onUseMobileData = { gemma.download.restartWithMobileData() },
+                    onCancel = { gemma.download.cancel() },
+                    onDelete = { scope.launch { gemma.delete() } },
+                )
             }
-            item {
-                ModelCard(
-                    icon = R.drawable.ic_forum,
-                    title = stringResource(R.string.models_gemma),
-                    body = stringResource(R.string.models_gemma_body, Formatter.formatShortFileSize(context, gemma.download.sizeBytes)),
-                ) {
-                    DownloadControls(
-                        state = assistant,
-                        totalBytes = gemma.download.sizeBytes,
-                        ready = R.string.models_gemma_ready,
-                        onDownload = { gemma.download.start() },
-                        onUseMobileData = { gemma.download.restartWithMobileData() },
-                        onCancel = { gemma.download.cancel() },
-                        onDelete = { scope.launch { gemma.delete() } },
-                    )
-                }
-            }
-            item {
-                val current = pack
-                ModelCard(
-                    icon = R.drawable.ic_local_florist,
-                    title = stringResource(R.string.models_accurate),
-                    body = if (accurate.available) {
-                        stringResource(R.string.models_accurate_body, Formatter.formatShortFileSize(context, accurate.download.sizeBytes))
-                    } else {
-                        stringResource(R.string.models_accurate_body_short)
-                    },
-                ) {
-                    val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
-                    when (current) {
-                        PackState.NotAvailable -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        PackState.Unpacking -> {
-                            Text(stringResource(R.string.models_unpacking), style = MaterialTheme.typography.bodyMedium, modifier = status)
-                            PollenProgressBar(null, Modifier.fillMaxWidth())
-                        }
-                        PackState.Ready -> {
-                            Text(stringResource(R.string.models_accurate_ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
-                            OutlinedButton(onClick = { scope.launch { accurate.delete() } }) { Text(stringResource(R.string.models_delete)) }
-                        }
-                        PackState.Damaged -> {
-                            Text(stringResource(R.string.models_damaged), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = status)
-                            Button(onClick = { accurate.download.start() }) { Text(stringResource(R.string.models_try_again)) }
-                        }
-                        is PackState.Fetching -> DownloadControls(
-                            state = current.download,
-                            totalBytes = accurate.download.sizeBytes,
-                            ready = R.string.models_unpacking,
-                            onDownload = { accurate.download.start() },
-                            onUseMobileData = { accurate.download.restartWithMobileData() },
-                            onCancel = { accurate.download.cancel() },
-                            onDelete = { scope.launch { accurate.delete() } },
-                        )
+        }
+    }
+    val accurateItem: LazyListScope.() -> Unit = {
+        item {
+            val current = pack
+            ModelCard(
+                icon = R.drawable.ic_local_florist,
+                title = if (setup) stringResource(R.string.setup_recommended_model, stringResource(R.string.models_accurate)) else stringResource(R.string.models_accurate),
+                body = if (accurate.available) {
+                    stringResource(R.string.models_accurate_body, Formatter.formatShortFileSize(context, accurate.download.sizeBytes))
+                } else {
+                    stringResource(R.string.models_accurate_body_short)
+                },
+            ) {
+                val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                when (current) {
+                    PackState.NotAvailable -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    PackState.Unpacking -> {
+                        Text(stringResource(R.string.models_unpacking), style = MaterialTheme.typography.bodyMedium, modifier = status)
+                        PollenProgressBar(null, Modifier.fillMaxWidth())
                     }
+                    PackState.Ready -> {
+                        Text(stringResource(R.string.models_accurate_ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
+                        OutlinedButton(onClick = { scope.launch { accurate.delete() } }) { Text(stringResource(R.string.models_delete)) }
+                    }
+                    PackState.Damaged -> {
+                        Text(stringResource(R.string.models_damaged), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = status)
+                        Button(onClick = { accurate.download.start() }) { Text(stringResource(R.string.models_try_again)) }
+                    }
+                    is PackState.Fetching -> DownloadControls(
+                        state = current.download,
+                        totalBytes = accurate.download.sizeBytes,
+                        ready = R.string.models_unpacking,
+                        onDownload = { accurate.download.start() },
+                        onUseMobileData = { accurate.download.restartWithMobileData() },
+                        onCancel = { accurate.download.cancel() },
+                        onDelete = { scope.launch { accurate.delete() } },
+                    )
                 }
             }
         }
+    }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = padding, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        top()
+        item {
+            Text(
+                stringResource(if (setup) R.string.setup_models_intro else R.string.models_intro),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+        // Accurate identification matters most to a new garden, so setup offers it first.
+        if (setup) accurateItem()
+        meaningItem()
+        gemmaItem()
+        if (!setup) accurateItem()
     }
 }
 
