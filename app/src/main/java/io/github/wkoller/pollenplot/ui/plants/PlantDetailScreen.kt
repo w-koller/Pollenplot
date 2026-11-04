@@ -67,6 +67,7 @@ import io.github.wkoller.pollenplot.domain.plants.FactLevel
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.ResolvedCare
 import io.github.wkoller.pollenplot.domain.plants.Toxicity
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.assistant.CareDraftCard
@@ -159,7 +160,7 @@ fun PlantDetailScreen(
             } else if (resolved == null) {
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {
-                facts(resolved, loaded, all, kb)
+                facts(resolved, loaded, all, kb, locality.hemisphere)
             }
             val seen = sightings.filter { it.sighting.plantId == plantId }
             val users = (loaded.species?.name ?: loaded.plant.speciesName)?.let { fauna?.usersOf(it) }.orEmpty()
@@ -239,7 +240,7 @@ private class Levels(private val resolved: ResolvedCare, fields: List<CareField>
     fun line(field: CareField): FactLevel? = if (card != null) null else resolved.levelOf(field)?.takeIf { it != FactLevel.SPECIES }
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.facts(resolved: ResolvedCare, view: PlantView, all: List<PlantView>, kb: KnowledgeBase?) {
+private fun androidx.compose.foundation.lazy.LazyListScope.facts(resolved: ResolvedCare, view: PlantView, all: List<PlantView>, kb: KnowledgeBase?, hemisphere: Hemisphere) {
     val care = resolved.care
     fun levels(vararg fields: CareField) = Levels(resolved, fields.toList())
 
@@ -286,15 +287,17 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(resolved: Resol
     item {
         val l = levels(CareField.FLOWERING)
         FactCard(R.drawable.ic_calendar_month, stringResource(R.string.plant_flowering), l.card) {
-            val flowering = care.flowering
+            // The knowledge base keeps months for the Southern Hemisphere; a northern garden sees them six months on.
+            val flowering = care.flowering?.fromSouthern(hemisphere)
+            val peak = care.peakFlowering?.fromSouthern(hemisphere)
             when {
                 flowering == null || flowering.isEmpty -> Line(stringResource(R.string.flowering_unknown))
                 else -> {
                     val words = listWords()
                     val locale = LocalConfiguration.current.locales[0]
-                    MonthStrip(flowering, care.peakFlowering ?: MonthSet.NONE)
+                    MonthStrip(flowering, peak ?: MonthSet.NONE)
                     Line(if (flowering == MonthSet.ALL) stringResource(R.string.flowering_all_year) else stringResource(R.string.flowering_months, UiFormat.months(flowering, words, locale)))
-                    care.peakFlowering?.takeIf { !it.isEmpty && it != flowering }?.let { Line(stringResource(R.string.flowering_peak, UiFormat.months(it, words, locale))) }
+                    peak?.takeIf { !it.isEmpty && it != flowering }?.let { Line(stringResource(R.string.flowering_peak, UiFormat.months(it, words, locale))) }
                 }
             }
         }

@@ -18,4 +18,13 @@ object Pairing {
             .map { PairingNote(it, thirstiest, (thirstiest.plantFactorBp!! + it.plantFactorBp!! / 2) / it.plantFactorBp!!) }
             .sortedByDescending { it.timesNeeded }
     }
+
+    /**
+     * The plants that get several times what they need on any of [lines], by id, for the Overwatering risk badge. A
+     * line watered by hand is left out, because each plant on it can be given its own amount.
+     */
+    fun overwatered(lines: List<WateringLine>, plants: List<WaterPlant>): Set<String> =
+        lines.filterNot { it.method.byHand }
+            .flatMap { line -> check(plants.filter { it.zoneId in line.zoneIds }) }
+            .mapTo(mutableSetOf()) { it.plant.id }
 }

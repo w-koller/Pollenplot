@@ -62,6 +62,7 @@ import io.github.wkoller.pollenplot.domain.id.ReviewPick
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.Species
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
 import io.github.wkoller.pollenplot.ui.weeds.WeedNotice
@@ -212,9 +213,9 @@ internal fun animalPick(detection: DetectionRecord, choice: ReviewChoice?, fauna
  * month the photo was taken, or no flowers were seen.
  */
 @Composable
-private fun FlowerNote(detection: DetectionRecord, species: Species?, kb: KnowledgeBase?) {
+private fun FlowerNote(detection: DetectionRecord, species: Species?, kb: KnowledgeBase?, hemisphere: Hemisphere) {
     val month = detection.takenAt.atZone(ZoneId.systemDefault()).month
-    val months = if (kb != null && species != null) CareResolver.resolve(kb, species).care.flowering else null
+    val months = if (kb != null && species != null) CareResolver.resolve(kb, species).care.flowering?.fromSouthern(hemisphere) else null
     val (icon, text) = when {
         detection.flowering -> R.drawable.ic_local_florist to stringResource(R.string.review_flowering_seen)
         months != null && !months.isEmpty && month !in months -> R.drawable.ic_calendar_month to stringResource(
@@ -325,7 +326,7 @@ private fun Undecided(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.review_flowering_body))
                 // Why the switch started where it did, until the user changes it.
-                if (flowering == detection.flowering) FlowerNote(detection, chosenSpecies, kb)
+                if (flowering == detection.flowering) FlowerNote(detection, chosenSpecies, kb, locality.hemisphere)
             }
         },
         trailingContent = { Switch(checked = flowering, onCheckedChange = null) },

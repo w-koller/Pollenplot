@@ -6,6 +6,12 @@ STRINGS = {
     "settings_scanning": "Photo scanning",
     "settings_scanning_on": "On. Pollenplot looks for plants in new photos.",
     "settings_scanning_off": "Off. Pollenplot looks only at photos you add or take in the app.",
+    "settings_background": "Background work",
+    "settings_battery": "Battery saver",
+    "settings_battery_unrestricted": "Not restricted. Reminders and photo scans can run on time.",
+    "settings_battery_optimised": "Some phones pause apps in the background to save battery, which can delay the "
+    "morning reminders and photo scans. Please choose Unrestricted for Pollenplot in the phone's battery settings if "
+    "reminders arrive late.",
     "settings_theme": "Theme",
     "theme_system": "Phone setting",
     "theme_light": "Light",

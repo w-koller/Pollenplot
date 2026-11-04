@@ -102,6 +102,7 @@ class ReportBuilder(
     private suspend fun garden(pictures: Boolean): ReportSection {
         val zones = views.zones.first()
         val plants = views.plants.first()
+        val hemisphere = settings.current().hemisphere
         val plot = ReportFigure.Plot(
             s(R.string.report_plot),
             zones.map { view -> view.zone.rect.let { PlotZone(view.zone.name, it.xCm, it.yCm, it.widthCm, it.heightCm) } },
@@ -136,7 +137,7 @@ class ReportBuilder(
                 val care = view.care?.care
                 listOf(
                     text(view.title), text(view.species?.name ?: view.plant.speciesName), text(view.zoneName), number(view.plant.quantity),
-                    text(care?.water?.let { s(it.label) }), text(care?.flowering?.let { UiFormat.months(it) }),
+                    text(care?.water?.let { s(it.label) }), text(care?.flowering?.let { UiFormat.months(it.fromSouthern(hemisphere)) }),
                     // Without the official lists on the phone, the national Weeds of National Significance flag still counts.
                     text(view.roles.joinToString(", ") { s(it.label) }), yesNo(view.weed.isWeed || view.species?.wons == true),
                 )

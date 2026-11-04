@@ -97,7 +97,7 @@ class ShellScreenFlowTest {
     fun settingsAboutAndLicences() {
         show()
         compose.onNodeWithContentDescription("Settings").performClick()
-        compose.onNodeWithText("Use colours from your wallpaper").assertIsDisplayed()
+        compose.onNodeWithText("Battery saver").assertIsDisplayed()
         shot("settings")
         compose.onNodeWithText("Models").performClick()
         // Search by meaning, accurate identification and the garden assistant can each be downloaded.
@@ -105,6 +105,8 @@ class ShellScreenFlowTest {
         compose.onNodeWithText("Garden assistant").assertIsDisplayed()
         shot("models")
         compose.onNodeWithContentDescription("Back").performClick()
+        compose.scrollTo(hasText("Use colours from your wallpaper"))
+        compose.onNodeWithText("Use colours from your wallpaper").assertIsDisplayed()
         compose.scrollTo(hasText("About Pollenplot"))
         compose.onNodeWithText("About Pollenplot").performClick()
         compose.onNodeWithText("Ecosystem Management for Your Backyard").assertIsDisplayed()

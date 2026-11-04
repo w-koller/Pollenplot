@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2074d87a72b6fbaa858a937e0aca22c7",
+    "identityHash": "503610bc9fb1ea926d3c169760a1323e",
     "entities": [
       {
         "tableName": "zones",
@@ -611,67 +611,6 @@
             "mediaId"
           ]
         }
-      },
-      {
-        "tableName": "links",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`subjectId` TEXT NOT NULL, `predicate` TEXT NOT NULL, `objectId` TEXT NOT NULL, `provenance` TEXT NOT NULL, `confidenceBp` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`subjectId`, `predicate`, `objectId`))",
-        "fields": [
-          {
-            "fieldPath": "subjectId",
-            "columnName": "subjectId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "predicate",
-            "columnName": "predicate",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "objectId",
-            "columnName": "objectId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "provenance",
-            "columnName": "provenance",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "confidenceBp",
-            "columnName": "confidenceBp",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "createdAt",
-            "columnName": "createdAt",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "subjectId",
-            "predicate",
-            "objectId"
-          ]
-        },
-        "indices": [
-          {
-            "name": "index_links_objectId",
-            "unique": false,
-            "columnNames": [
-              "objectId"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_links_objectId` ON `${TABLE_NAME}` (`objectId`)"
-          }
-        ]
       },
       {
         "tableName": "search",
@@ -2357,7 +2296,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2074d87a72b6fbaa858a937e0aca22c7')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '503610bc9fb1ea926d3c169760a1323e')"
     ]
   }
 }

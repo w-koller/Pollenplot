@@ -8,21 +8,6 @@ import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import java.math.BigDecimal
 
-/** Where a link between two records came from: the user, an AI model, or an official source. */
-enum class Provenance { USER, AI, SOURCE }
-
-/**
- * A relation between two records that is not already part of either record, such as "this sighting was on that
- * plant". [confidenceBp] is in basis points; links the user made are certain.
- */
-data class Link(
-    val subjectId: String,
-    val predicate: String,
-    val objectId: String,
-    val provenance: Provenance,
-    val confidenceBp: Int = 10_000,
-)
-
 /**
  * Describes garden records in standard vocabularies. A zone is a schema.org Place; a plant in the garden is a Darwin
  * Core Occurrence of its taxon, placed in its zone; eco-roles use Pollenplot's own terms.
@@ -84,11 +69,6 @@ object GardenGraph {
             .iri(iri, Vocab.PP + "seenOn", sighting.plantId?.let(Vocab::recordIri))
             .text(iri, Vocab.DWC + "occurrenceRemarks", sighting.notes)
             .build()
-    }
-
-    fun link(link: Link): List<Triple> {
-        val statement = Triple(Vocab.recordIri(link.subjectId), link.predicate, Term.Iri(Vocab.recordIri(link.objectId)))
-        return listOf(statement)
     }
 
     /** An eco-role's term, such as PollinatorMagnet. */

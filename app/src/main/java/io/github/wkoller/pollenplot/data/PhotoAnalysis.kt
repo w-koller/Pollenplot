@@ -13,6 +13,7 @@ import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.FoundRegion
@@ -37,6 +38,8 @@ class PhotoAnalysis(
     private val clock: Clock,
     /** How many times a plant or animal has been recorded near the garden, for the boost they get. */
     private val nearby: (String) -> Int = { 0 },
+    /** The garden's hemisphere, which the month a photo was taken is read in. */
+    private val hemisphere: suspend () -> Hemisphere = { Hemisphere.SOUTHERN },
 ) {
     /**
      * Looks for what [group] the camera was pointed at in [bitmap], or, for a photo nobody chose a group for, for what
@@ -74,9 +77,10 @@ class PhotoAnalysis(
             fold = { kept, other -> kept.copy(colour = kept.colour || other.colour, model = foldModel(kept.model, other.model)) },
         )
         val month = takenAt.atZone(clock.zone).month
+        val hemisphere = hemisphere()
         val stored = photos.savePhoto(bitmap)
         val drafts = merged.map { (region, candidates, colour, model) ->
-            val flowering = region.group == LifeGroup.PLANT && FlowerCall.decide(model, floweringMonths(kb, candidates), month, colour).flowering
+            val flowering = region.group == LifeGroup.PLANT && FlowerCall.decide(model, floweringMonths(kb, candidates), month, colour, hemisphere).flowering
             DetectionDraft(region.box, photos.saveThumbnail(region.thumbnail), flowering, candidates, region.group)
         }
         return AnalysedPhoto(stored, found.found, garden.recordPhoto(stored, origin, takenAt, drafts))

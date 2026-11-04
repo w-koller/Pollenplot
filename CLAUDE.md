@@ -250,8 +250,10 @@ it, so check it again when `targetSdk` goes past 36.
   flow in mL/h, area in cm², temperature in tenths of °C, weight in g, lengths in mm, confidence in basis points and
   coordinates in degrees × 10⁷.
 - Every user record has a UUID string key, which is also its IRI (`urn:uuid:…`) in the semantic layer.
-- The user database is at schema version 1 in the first tagged release, 1.0.0-rc.1. A pre-release counts, because
-  it is installed on phones and keeps real records. From then on, every change needs a
+- The user database stays at schema version 1 until 1.0.0, the first tag without a pre-release suffix. Until then
+  its tables may change in place, with `app/schemas/.../1.json` regenerated, because the release candidates go to a
+  few testers who install each one afresh (an older candidate's database and backups do not open in a newer one, and
+  the changelog says so). From 1.0.0, every change needs a
   migration in `PollenplotDatabase.MIGRATIONS`, which restored backups go through too, and a schema committed in
   `app/schemas/`, and there is no destructive migration fallback. The read-only
   knowledge database is rebuilt from `app/src/main/assets/kb/` whenever its version changes.

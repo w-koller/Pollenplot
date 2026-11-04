@@ -161,18 +161,6 @@ interface FloweringDao {
 }
 
 @Dao
-interface LinkDao {
-    @Query("SELECT * FROM links")
-    suspend fun all(): List<LinkEntity>
-
-    @Upsert
-    suspend fun upsert(link: LinkEntity)
-
-    @Query("DELETE FROM links WHERE subjectId = :id OR objectId = :id")
-    suspend fun deleteFor(id: String)
-}
-
-@Dao
 interface SearchDao {
     @Query("DELETE FROM search WHERE recordId = :recordId")
     suspend fun delete(recordId: String)

@@ -6,7 +6,6 @@ import io.github.wkoller.pollenplot.data.db.CareDraftEntity
 import io.github.wkoller.pollenplot.data.db.DetectionEntity
 import io.github.wkoller.pollenplot.data.db.EmbeddingEntity
 import io.github.wkoller.pollenplot.data.db.FloweringEntity
-import io.github.wkoller.pollenplot.data.db.LinkEntity
 import io.github.wkoller.pollenplot.data.db.PhotoEntity
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.db.ScannedMediaEntity
@@ -31,7 +30,6 @@ import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.semantic.GardenGraph
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
-import io.github.wkoller.pollenplot.domain.semantic.Link
 import io.github.wkoller.pollenplot.domain.semantic.MeaningMatch
 import io.github.wkoller.pollenplot.domain.semantic.SearchText
 import io.github.wkoller.pollenplot.domain.semantic.Triple
@@ -55,7 +53,7 @@ import java.util.UUID
 private const val MAX_QUERY_ARGS = 500
 
 /**
- * Zones, plants and the links between records. Every write also updates the search index, so "Search your garden"
+ * Zones, plants, sightings and photos found for review. Every write also updates the search index, so "Search your garden"
  * always matches what is stored, and every record can be exported as linked data.
  */
 class GardenRepository(
@@ -69,7 +67,6 @@ class GardenRepository(
 ) {
     private val zones = db.zoneDao()
     private val plants = db.plantDao()
-    private val links = db.linkDao()
     private val search = db.searchDao()
     private val photos = db.photoDao()
     private val detections = db.detectionDao()
@@ -126,7 +123,6 @@ class GardenRepository(
     suspend fun deleteZone(id: String) = db.withTransaction {
         val affected = plants.inZone(id).map { it.toDomain() }
         zones.delete(id)
-        links.deleteFor(id)
         search.delete(id)
         affected.forEach { index(it.copy(zoneId = null)) }
     }
@@ -157,7 +153,6 @@ class GardenRepository(
 
     suspend fun deletePlant(id: String) = db.withTransaction {
         plants.delete(id)
-        links.deleteFor(id)
         search.delete(id)
     }
 
@@ -366,7 +361,6 @@ class GardenRepository(
 
     suspend fun deleteSighting(id: String) = db.withTransaction {
         sightings.delete(id)
-        links.deleteFor(id)
         search.delete(id)
     }
 
@@ -442,10 +436,6 @@ class GardenRepository(
         flowering.insert(FloweringEntity(UUID.randomUUID().toString(), plantId, day.toEpochDay(), detection.photoId, "PHOTO"))
     }
 
-    suspend fun link(link: Link) = links.upsert(
-        LinkEntity(link.subjectId, link.predicate, link.objectId, link.provenance.name, link.confidenceBp, now()),
-    )
-
     /**
      * Finds records whose words start with each word of [query]. The words are reduced to letters and digits, so
      * nothing the user types can break the search syntax.
@@ -502,7 +492,7 @@ class GardenRepository(
     /** Every garden record as JSON-LD, using Darwin Core, schema.org and Pollenplot's own terms. */
     suspend fun exportJsonLd(): String = JsonLd.document(triples()).toString()
 
-    /** Every garden record as linked data: zones, plants, sightings and the links between records. */
+    /** Every garden record as linked data: zones, plants and sightings. */
     suspend fun triples(): List<Triple> {
         val kb = knowledge()
         val triples = mutableListOf<Triple>()
@@ -516,7 +506,6 @@ class GardenRepository(
             val sighting = entity.toDomain()
             triples += GardenGraph.sighting(sighting, (sighting.speciesName ?: sighting.label).let(animals::animal))
         }
-        links.all().forEach { triples += GardenGraph.link(it.toDomain()) }
         return triples
     }
 
