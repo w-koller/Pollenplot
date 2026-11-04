@@ -4,6 +4,7 @@ import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveStatus
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
+import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.Toxicity
@@ -66,9 +67,7 @@ class RhythmsViews(
         val kb = knowledge.await()
         val today = LocalDate.now(clock)
         val hemisphere = current.hemisphere
-        // Flowers seen in the last year, so that last year's timing does not stay on the calendar for ever.
-        val since = today.minusYears(1)
-        val seenMonths = seen.filter { (_, day) -> day.isAfter(since) }.groupBy({ it.first }, { it.second.month })
+        val seenDays = seen.groupBy({ it.first }, { it.second })
         val growing = plants.filter { it.plant.status == PlantStatus.GROWING }
         val rows = growing.map { view ->
             val care = view.care?.care
@@ -80,7 +79,7 @@ class RhythmsViews(
                 quantity = view.plant.quantity,
                 flowering = care?.flowering?.fromSouthern(hemisphere) ?: MonthSet.NONE,
                 peak = care?.peakFlowering?.fromSouthern(hemisphere) ?: MonthSet.NONE,
-                seenFlowering = MonthSet.of(seenMonths[view.plant.id].orEmpty()),
+                seenFlowering = FloweringSeen.lastYear(seenDays[view.plant.id].orEmpty(), today),
                 forage = care?.forage,
             )
         }

@@ -80,6 +80,10 @@ value class MonthSet(val bits: Int) {
     fun fromSouthern(hemisphere: Hemisphere): MonthSet =
         if (hemisphere == Hemisphere.SOUTHERN) this else of(months.map { Seasons.fromSouthern(it, hemisphere) })
 
+    /** The reverse of [fromSouthern]: months in [hemisphere] written for the Southern Hemisphere, as the knowledge base keeps them. */
+    fun toSouthern(hemisphere: Hemisphere): MonthSet =
+        if (hemisphere == Hemisphere.SOUTHERN) this else of(months.map { Seasons.toSouthern(it, hemisphere) })
+
     companion object {
         private const val ALL_BITS = (1 shl 12) - 1
 

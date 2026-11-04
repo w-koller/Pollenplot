@@ -74,6 +74,8 @@ import io.github.wkoller.pollenplot.ui.guides.GuideScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
+import io.github.wkoller.pollenplot.ui.plants.EditFactsScreen
+import io.github.wkoller.pollenplot.ui.plants.PlantPhotoScreen
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
@@ -107,6 +109,7 @@ import io.github.wkoller.pollenplot.ui.wildlife.SightingScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
 import io.github.wkoller.pollenplot.ui.wishlist.WishScreen
 import io.github.wkoller.pollenplot.ui.wishlist.WishlistScreen
+import java.time.LocalDate
 
 /** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
 private val WIDE_WINDOW = 600.dp
@@ -288,7 +291,23 @@ fun AppRoot(
                         onAsk = { navController.navigate(AskRoute(plantId = id)) },
                         assistant = container.assistant,
                         onOpenModels = { navController.navigate(ModelsRoute) },
+                        onEditFacts = { navController.navigate(EditFactsRoute(id)) },
+                        onOpenPhoto = { photoId, detectionId -> navController.navigate(PlantPhotoRoute(photoId, detectionId)) },
+                        today = LocalDate.now(container.clock),
                     )
+                }
+                composable<EditFactsRoute> { entry ->
+                    EditFactsScreen(
+                        plantId = entry.toRoute<EditFactsRoute>().plantId,
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        corrections = container.corrections,
+                        onBack = back,
+                    )
+                }
+                composable<PlantPhotoRoute> { entry ->
+                    val route = entry.toRoute<PlantPhotoRoute>()
+                    PlantPhotoScreen(container.garden, container.knowledge, route.photoId, route.detectionId, onBack = back)
                 }
                 composable<AddPlantRoute> { entry ->
                     val route = entry.toRoute<AddPlantRoute>()

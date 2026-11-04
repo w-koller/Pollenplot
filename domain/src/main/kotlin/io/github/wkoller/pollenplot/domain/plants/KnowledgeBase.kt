@@ -10,7 +10,10 @@ class KnowledgeBase(
     genera: List<GroupProfile>,
     families: List<GroupProfile>,
     val companions: List<CompanionPair>,
+    /** The user's corrections to species' care, by normalised scientific name. See [CareCorrections]. */
+    private val corrections: Map<String, CareProfile> = emptyMap(),
 ) {
+    private val speciesList = species
     val allSpecies: List<Species> = species.sortedBy { it.displayName.lowercase() }
     val allGenera: List<GroupProfile> = genera
     val allFamilies: List<GroupProfile> = families
@@ -30,6 +33,13 @@ class KnowledgeBase(
     fun genus(name: String): GroupProfile? = generaByName[normalise(name)]
 
     fun family(name: String): GroupProfile? = familiesByName[normalise(name)]
+
+    /** The facts the user corrected for [species], which [CareResolver] puts before the knowledge base's. */
+    fun correction(species: Species): CareProfile? = corrections[normalise(species.name)]
+
+    /** This knowledge base with the user's [corrections], keyed by scientific name, in place of any it had. */
+    fun withCorrections(corrections: Map<String, CareProfile>): KnowledgeBase =
+        KnowledgeBase(version, speciesList, allGenera, allFamilies, companions, corrections.mapKeys { normalise(it.key) })
 
     /** Whether [name] is a genus that appears in the knowledge base, as a genus record or through its species. */
     fun isKnownGenus(name: String): Boolean = genus(name) != null || allSpecies.any { normalise(it.genus) == normalise(name) }

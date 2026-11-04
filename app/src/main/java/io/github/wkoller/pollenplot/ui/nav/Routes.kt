@@ -30,6 +30,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable data class PlantRoute(val id: String)
 
+/** The user's corrections to a plant's facts, which apply to every plant of its species. */
+@Serializable data class EditFactsRoute(val plantId: String)
+
+/** One photo a plant was found in, with the find outlined. */
+@Serializable data class PlantPhotoRoute(val photoId: String, val detectionId: String? = null)
+
 /** Adds a plant, optionally into a zone or starting from a species chosen elsewhere, such as in search. */
 @Serializable data class AddPlantRoute(val zoneId: String? = null, val species: String? = null, val wishId: String? = null)
 

@@ -83,6 +83,10 @@ interface DetectionDao {
     @Query("SELECT * FROM detections WHERE photoId = :photoId ORDER BY leftBp, topBp")
     fun observeForPhoto(photoId: String): Flow<List<DetectionEntity>>
 
+    /** The finds added to a plant, the most recently taken first. */
+    @Query("SELECT d.* FROM detections d JOIN photos p ON p.id = d.photoId WHERE d.plantId = :plantId AND d.status = 'CONFIRMED' ORDER BY p.takenAt DESC")
+    fun observeForPlant(plantId: String): Flow<List<DetectionEntity>>
+
     @Query("SELECT * FROM detections WHERE photoId IN (:photoIds) ORDER BY leftBp, topBp")
     fun observeForPhotos(photoIds: List<String>): Flow<List<DetectionEntity>>
 

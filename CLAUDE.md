@@ -51,9 +51,11 @@ is always ready to tag.
 
 - `domain/`: every rule and calculation, with no Android code. Every rule change needs a test here.
   - `season/`: hemispheres, seasons and `MonthSet`.
-  - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (species, then
-    genus, then family), `EcoRoles` (the badges) and `Companions`.
-  - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid with no edges, and tidy placement) and `ZoneBadges`.
+  - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (the user's
+    corrections, then species, then genus, then family), `CareCorrections` (the facts a user may correct, stored as
+    the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges) and `Companions`.
+  - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
+    `Wishlist` and `FloweringSeen` (the months a plant was seen in flower in the last year).
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `HoneyGraph`
     (honey bee records, with mite checks as SOSA observations), `NativeBeeGraph`, `HotelGraph`, `JsonLd`,
     `DarwinCore` (sightings as a Darwin Core CSV) and `SearchText` (what the search index holds for each record).
@@ -108,7 +110,9 @@ is always ready to tag.
   joined with the knowledge base for the screens), `PhotoAnalysis` (a photo through the identifier into storage and
   review), `BeeRepository` (the honey bee records), `NativeBeeRepository` (stingless bee hives and logs),
   `HotelRepository` (bee hotels and their records), `BeeViews` (hives and hotels with their zones, and what each
-  honey bee hive is due for today), `RhythmsViews` (the Rhythms tab's lanes and suggestions), `WaterRepository`
+  honey bee hive is due for today), `RhythmsViews` (the Rhythms tab's lanes and suggestions), `CorrectionRepository` (the user's
+  corrections to species' facts, which `KnowledgeRepository` puts into the knowledge base it sends, so every view that
+  resolves care uses them), `WishRepository` (the wishlist), `WaterRepository`
   (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
   `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.

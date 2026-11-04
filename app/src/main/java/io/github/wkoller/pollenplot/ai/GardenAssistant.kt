@@ -193,7 +193,7 @@ class GardenAssistant(
     private suspend fun prepare(subject: AskSubject, question: String, weedStatus: String?): Prepared = when (subject) {
         is AskSubject.Plant -> {
             val view = views.plant(subject.id).first()
-            val facts = if (view == null) emptyList() else AssistantFacts.plant(view.title, view.species, view.care?.care, view.zoneName, view.plant.quantity, weedStatus, views.locality.first().hemisphere)
+            val facts = if (view == null) emptyList() else AssistantFacts.plant(view.title, view.species, view.care?.care, view.zoneName, view.plant.quantity, weedStatus, views.locality.first().hemisphere, view.care?.corrected.orEmpty())
             Prepared(GardenPrompts.about(facts, question), view?.plant?.thumbnail?.let { photo(it) })
         }
         is AskSubject.Animal -> {

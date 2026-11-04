@@ -43,6 +43,15 @@
 - Identify has Choose from photos, for a photo on the phone or in a cloud album the photo picker shows, such as Google
   Photos. It also works when the camera is not allowed.
 - Photos added with Add plant photos give back the app's access to them once they have been looked at.
+- A plant's page shows the photos it was found in, the newest first, each with its date, how sure the models were and
+  what else they suggested. Choosing one opens the photo with the plant outlined.
+- The Flowering card shows the months a plant was seen in flower in the last year under the months the knowledge base
+  expects.
+- Review's Add to another plant adds a find to any plant in the garden, plants of the same kind first.
+- Edit facts on a plant's page corrects its light, water need, frost tolerance, soils, feeding, flowering months, height
+  and width for every plant of that species. Corrected facts are marked Your correction, and the badges, calendar,
+  watering, search and the assistant use them. Each can go back to the knowledge base. Corrections are in backups and
+  the JSON-LD export as your own statements.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 
