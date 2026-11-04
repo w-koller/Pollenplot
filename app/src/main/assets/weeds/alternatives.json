@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "sources": [
+    {"key": "gmi-nsw", "title": "Grow Me Instead: New South Wales", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-New-South-Wales.pdf", "states": ["NSW", "ACT"]},
+    {"key": "gmi-vic", "title": "Grow Me Instead: Victoria", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-Victoria.pdf", "states": ["VIC"]},
+    {"key": "gmi-tas", "title": "Grow Me Instead: Tasmania", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-Tasmania.pdf", "states": ["TAS"]},
+    {"key": "gmi-sa", "title": "Grow Me Instead: South Australia", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-South-Australia.pdf", "states": ["SA"]},
+    {"key": "gmi-wa", "title": "Grow Me Instead: Western Australia", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-Western-Australia.pdf", "states": ["WA"]},
+    {"key": "gmi-nt", "title": "Grow Me Instead: Northern Territory", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-Northern-Territory.pdf", "states": ["NT"]},
+    {"key": "gmi-qld-wet-tropics", "title": "Grow Me Instead: Queensland Wet Tropics", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-Qld-Wet-Tropics.pdf", "states": ["QLD"]},
+    {"key": "gmi-qld-dry-tropics", "title": "Grow Me Instead: Queensland Dry Tropics", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-Qld-Dry-Tropics.pdf", "states": ["QLD"]},
+    {"key": "gmi-qld-south-west", "title": "Grow Me Instead: Queensland South West", "url": "https://www.growmeinstead.com.au/public/GMI-brochure-Qld-South-West.pdf", "states": ["QLD"]}
+  ],
+  "weeds": [
+    {"weed": "Acacia baileyana", "common": "Cootamundra wattle", "alternatives": [
+      {"species": "Acacia binervia", "source": "gmi-nsw"},
+      {"species": "Acacia floribunda", "source": "gmi-nsw"},
+      {"species": "Acacia covenyi", "source": "gmi-nsw"},
+      {"species": "Acacia iteaphylla", "source": "gmi-vic"},
+      {"species": "Acacia floribunda", "source": "gmi-vic"},
+      {"species": "Melaleuca bracteata", "source": "gmi-vic"},
+      {"species": "Acacia covenyi", "source": "gmi-sa"},
+      {"species": "Acacia pendula", "source": "gmi-sa"}
+    ]},
+    {"weed": "Acacia podalyriifolia", "common": "Queensland silver wattle", "alternatives": [
+      {"species": "Acacia binervia", "source": "gmi-nsw"},
+      {"species": "Acacia floribunda", "source": "gmi-nsw"},
+      {"species": "Acacia covenyi", "source": "gmi-nsw"}
+    ]},
+    {"weed": "Agapanthus praecox", "common": "Agapanthus", "alternatives": [
+      {"species": "Crinum pedunculatum", "source": "gmi-nsw"}
+    ]},
+    {"weed": "Olea europaea subsp. cuspidata", "common": "African olive", "alternatives": [
+      {"species": "Tristaniopsis laurina", "source": "gmi-nsw"},
+      {"species": "Cupaniopsis anacardioides", "source": "gmi-nsw"}
+    ]},
+    {"weed": "Asparagus aethiopicus", "common": "Asparagus fern", "alternatives": [
+      {"species": "Myoporum parvifolium", "source": "gmi-nsw"},
+      {"species": "Doodia aspera", "source": "gmi-nsw"}
+    ]},
+    {"weed": "Syagrus romanzoffiana", "common": "Cocos palm", "alternatives": [
+      {"species": "Livistona australis", "source": "gmi-nsw"},
+      {"species": "Wodyetia bifurcata", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Lilium formosanum", "common": "Taiwan lily", "alternatives": [
+      {"species": "Crinum pedunculatum", "source": "gmi-nsw"}
+    ]},
+    {"weed": "Zantedeschia aethiopica", "common": "Arum lily", "alternatives": [
+      {"species": "Crinum pedunculatum", "source": "gmi-nsw"},
+      {"species": "Alocasia brisbanensis", "source": "gmi-nsw"},
+      {"species": "Patersonia sericea", "source": "gmi-vic"},
+      {"species": "Lomandra longifolia", "source": "gmi-tas"}
+    ]},
+    {"weed": "Pennisetum setaceum", "common": "Fountain grass", "alternatives": [
+      {"species": "Poa labillardierei", "source": "gmi-nsw"},
+      {"species": "Poa poiformis", "source": "gmi-nsw"},
+      {"species": "Cymbopogon ambiguus", "source": "gmi-nt"},
+      {"species": "Themeda triandra", "source": "gmi-nt"}
+    ]},
+    {"weed": "Salix cinerea", "common": "Grey sallow", "alternatives": [
+      {"species": "Eucalyptus pauciflora", "source": "gmi-vic"},
+      {"species": "Grevillea robusta", "source": "gmi-vic"}
+    ]},
+    {"weed": "Salix rubens", "common": "Basket willow", "alternatives": [
+      {"species": "Eucalyptus pauciflora", "source": "gmi-vic"},
+      {"species": "Grevillea robusta", "source": "gmi-vic"}
+    ]},
+    {"weed": "Salix nigra", "common": "Black willow", "alternatives": [
+      {"species": "Eucalyptus pauciflora", "source": "gmi-vic"},
+      {"species": "Grevillea robusta", "source": "gmi-vic"}
+    ]},
+    {"weed": "Erica lusitanica", "common": "Spanish heath", "alternatives": [
+      {"species": "Epacris impressa", "source": "gmi-vic"}
+    ]},
+    {"weed": "Pittosporum undulatum", "common": "Sweet pittosporum", "alternatives": [
+      {"species": "Melaleuca bracteata", "source": "gmi-vic"},
+      {"species": "Hymenosporum flavum", "source": "gmi-vic"}
+    ]},
+    {"weed": "Cestrum elegans", "common": "Red cestrum", "alternatives": [
+      {"species": "Hakea multilineata", "source": "gmi-vic"}
+    ]},
+    {"weed": "Populus alba", "common": "White poplar", "alternatives": [
+      {"species": "Eucalyptus ovata", "source": "gmi-tas"}
+    ]},
+    {"weed": "Chamaecytisus palmensis", "common": "Tree lucerne", "alternatives": [
+      {"species": "Acacia terminalis", "source": "gmi-tas"}
+    ]},
+    {"weed": "Cytisus scoparius", "common": "English broom", "alternatives": [
+      {"species": "Grevillea victoriae", "source": "gmi-tas"}
+    ]},
+    {"weed": "Genista monspessulana", "common": "Cape broom", "alternatives": [
+      {"species": "Grevillea victoriae", "source": "gmi-tas"}
+    ]},
+    {"weed": "Spartium junceum", "common": "Spanish broom", "alternatives": [
+      {"species": "Grevillea victoriae", "source": "gmi-tas"}
+    ]},
+    {"weed": "Echium candicans", "common": "Pride of Madeira", "alternatives": [
+      {"species": "Acacia myrtifolia", "source": "gmi-tas"}
+    ]},
+    {"weed": "Hedera helix", "common": "English ivy", "alternatives": [
+      {"species": "Pandorea pandorana", "source": "gmi-tas"}
+    ]},
+    {"weed": "Crataegus monogyna", "common": "Hawthorn", "alternatives": [
+      {"species": "Bursaria spinosa", "source": "gmi-tas"}
+    ]},
+    {"weed": "Acacia longifolia", "common": "Sydney wattle", "alternatives": [
+      {"species": "Acacia pycnantha", "source": "gmi-sa"}
+    ]},
+    {"weed": "Melaleuca armillaris", "common": "Bracelet honey-myrtle", "alternatives": [
+      {"species": "Agonis flexuosa", "source": "gmi-sa"}
+    ]},
+    {"weed": "Retama raetam", "common": "White weeping broom", "alternatives": [
+      {"species": "Chamelaucium uncinatum", "source": "gmi-sa"},
+      {"species": "Westringia fruticosa", "source": "gmi-sa"},
+      {"species": "Senna artemisioides", "source": "gmi-sa"}
+    ]},
+    {"weed": "Billardiera heterophylla", "common": "Bluebell creeper", "alternatives": [
+      {"species": "Hardenbergia violacea", "source": "gmi-sa"},
+      {"species": "Hardenbergia comptoniana", "source": "gmi-sa"}
+    ]},
+    {"weed": "Gazania rigens", "common": "Gazania", "alternatives": [
+      {"species": "Enchylaena tomentosa", "source": "gmi-sa"},
+      {"species": "Rhagodia spinescens", "source": "gmi-sa"}
+    ]},
+    {"weed": "Gazania linearis", "common": "Gazania", "alternatives": [
+      {"species": "Enchylaena tomentosa", "source": "gmi-sa"},
+      {"species": "Rhagodia spinescens", "source": "gmi-sa"}
+    ]},
+    {"weed": "Cinnamomum camphora", "common": "Camphor laurel", "alternatives": [
+      {"species": "Tristaniopsis laurina", "source": "gmi-wa"},
+      {"species": "Cupaniopsis anacardioides", "source": "gmi-wa"},
+      {"species": "Eucalyptus caesia", "source": "gmi-wa"}
+    ]},
+    {"weed": "Polygala myrtifolia", "common": "Polygala", "alternatives": [
+      {"species": "Chamelaucium uncinatum", "source": "gmi-wa"},
+      {"species": "Eremophila maculata", "source": "gmi-wa"},
+      {"species": "Melaleuca nesophila", "source": "gmi-wa"}
+    ]},
+    {"weed": "Nephrolepis cordifolia", "common": "Fishbone fern", "alternatives": [
+      {"species": "Doodia aspera", "source": "gmi-wa"},
+      {"species": "Blechnum cartilagineum", "source": "gmi-wa"}
+    ]},
+    {"weed": "Spathodea campanulata", "common": "African tulip tree", "alternatives": [
+      {"species": "Stenocarpus sinuatus", "source": "gmi-nt"}
+    ]},
+    {"weed": "Sphagneticola trilobata", "common": "Singapore daisy", "alternatives": [
+      {"species": "Vitex rotundifolia", "source": "gmi-nt"}
+    ]},
+    {"weed": "Ipomoea batatas", "common": "Yellow sweet potato", "alternatives": [
+      {"species": "Vitex rotundifolia", "source": "gmi-nt"}
+    ]},
+    {"weed": "Aerva javanica", "common": "Kapok bush", "alternatives": [
+      {"species": "Eremophila nivea", "source": "gmi-nt"},
+      {"species": "Eremophila glabra", "source": "gmi-nt"}
+    ]},
+    {"weed": "Bryophyllum delagoense", "common": "Mother-of-millions", "alternatives": [
+      {"species": "Carpobrotus glaucescens", "source": "gmi-nt"}
+    ]},
+    {"weed": "Lantana camara", "common": "Lantana", "alternatives": [
+      {"species": "Eremophila polyclada", "source": "gmi-nt"}
+    ]},
+    {"weed": "Eugenia uniflora", "common": "Brazilian cherry", "alternatives": [
+      {"species": "Syzygium australe", "source": "gmi-qld-wet-tropics"},
+      {"species": "Syzygium smithii", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Murraya paniculata", "common": "Murraya", "alternatives": [
+      {"species": "Syzygium australe", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Syzygium cumini", "common": "Java plum", "alternatives": [
+      {"species": "Waterhousea floribunda", "source": "gmi-qld-wet-tropics"},
+      {"species": "Syzygium australe", "source": "gmi-qld-wet-tropics"},
+      {"species": "Xanthostemon chrysanthus", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Tithonia diversifolia", "common": "Japanese sunflower", "alternatives": [
+      {"species": "Xanthostemon chrysanthus", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Tradescantia fluminensis", "common": "Wandering trad", "alternatives": [
+      {"species": "Viola hederacea", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Tradescantia zebrina", "common": "Silver inch plant", "alternatives": [
+      {"species": "Viola hederacea", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Ardisia elliptica", "common": "Shoe-button ardisia", "alternatives": [
+      {"species": "Syzygium australe", "source": "gmi-qld-wet-tropics"},
+      {"species": "Syzygium australe", "source": "gmi-qld-dry-tropics"},
+      {"species": "Cordyline stricta", "source": "gmi-qld-dry-tropics"}
+    ]},
+    {"weed": "Ardisia crenata", "common": "Coral berry", "alternatives": [
+      {"species": "Syzygium australe", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Canna indica", "common": "Canna lily", "alternatives": [
+      {"species": "Alocasia brisbanensis", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Hedychium gardnerianum", "common": "Kahili ginger", "alternatives": [
+      {"species": "Alpinia caerulea", "source": "gmi-qld-wet-tropics"},
+      {"species": "Curcuma australasica", "source": "gmi-qld-wet-tropics"}
+    ]},
+    {"weed": "Leonotis leonurus", "common": "Lion's tail", "alternatives": [
+      {"species": "Hibiscus heterophyllus", "source": "gmi-qld-dry-tropics"},
+      {"species": "Eremophila glabra", "source": "gmi-qld-dry-tropics"}
+    ]},
+    {"weed": "Schefflera actinophylla", "common": "Queensland umbrella tree", "alternatives": [
+      {"species": "Stenocarpus sinuatus", "source": "gmi-qld-dry-tropics"},
+      {"species": "Xanthostemon chrysanthus", "source": "gmi-qld-dry-tropics"}
+    ]},
+    {"weed": "Asystasia gangetica", "common": "Chinese violet", "alternatives": [
+      {"species": "Pandorea pandorana", "source": "gmi-qld-dry-tropics"}
+    ]},
+    {"weed": "Gloriosa superba", "common": "Glory lily", "alternatives": [
+      {"species": "Pandorea jasminoides", "source": "gmi-qld-dry-tropics"}
+    ]},
+    {"weed": "Corymbia torelliana", "common": "Cadaghi", "alternatives": [
+      {"species": "Corymbia citriodora", "source": "gmi-qld-south-west"},
+      {"species": "Brachychiton populneus", "source": "gmi-qld-south-west"}
+    ]},
+    {"weed": "Fraxinus griffithii", "common": "Mountain ash", "alternatives": [
+      {"species": "Melaleuca linariifolia", "source": "gmi-qld-south-west"},
+      {"species": "Geijera parviflora", "source": "gmi-qld-south-west"}
+    ]},
+    {"weed": "Koelreuteria paniculata", "common": "Golden rain tree", "alternatives": [
+      {"species": "Brachychiton populneus", "source": "gmi-qld-south-west"}
+    ]}
+  ]
+}
