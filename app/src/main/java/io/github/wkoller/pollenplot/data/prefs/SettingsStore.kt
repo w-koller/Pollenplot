@@ -67,6 +67,8 @@ data class Settings(
     val wateringWindow: WateringWindow = WateringWindow.DEFAULT,
     /** The first-launch setup was finished or skipped, or the garden already had records when it would have opened. */
     val setupDone: Boolean = false,
+    /** Cats or dogs live at home, so plants toxic to pets are flagged first and left out of suggestions. */
+    val petsAtHome: Boolean = false,
 ) {
     /** The garden's hemisphere, from where it is, or the Southern Hemisphere until a place is chosen. */
     val hemisphere: Hemisphere get() = gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
@@ -114,6 +116,7 @@ class SettingsStore(context: Context) {
         val wateringFromMinute = intPreferencesKey("watering_from_minute")
         val wateringToMinute = intPreferencesKey("watering_to_minute")
         val setupDone = booleanPreferencesKey("setup_done")
+        val petsAtHome = booleanPreferencesKey("pets_at_home")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -153,6 +156,7 @@ class SettingsStore(context: Context) {
                 this[Keys.wateringToMinute]?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
             } ?: defaults.wateringWindow,
             setupDone = this[Keys.setupDone] ?: defaults.setupDone,
+            petsAtHome = this[Keys.petsAtHome] ?: defaults.petsAtHome,
         )
     }
 
@@ -183,6 +187,7 @@ class SettingsStore(context: Context) {
         this[Keys.wateringFromMinute] = settings.wateringWindow.fromMinute
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute
         this[Keys.setupDone] = settings.setupDone
+        this[Keys.petsAtHome] = settings.petsAtHome
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

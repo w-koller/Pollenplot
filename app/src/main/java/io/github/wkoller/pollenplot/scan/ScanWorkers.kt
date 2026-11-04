@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.scan
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -47,6 +48,8 @@ class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWor
         uris.forEachIndexed { done, uri ->
             setProgress(workDataOf(KEY_DONE to done, KEY_TOTAL to uris.size))
             tally = tally.withPhoto(container.scanner.scanAddedPhoto(uri, group))
+            // The app keeps its own copy of a photo with plants in it, so the picker's grant is given back once read.
+            runCatching { applicationContext.contentResolver.releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
         container.notifications.showAddedResult(tally, wildlife = group?.isWildlife == true)
         if (tally.found > 0) SecondOpinionWorker.enqueue(applicationContext)

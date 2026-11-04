@@ -34,6 +34,7 @@ data class BackupSettings(
     val waterReminders: Boolean? = null,
     val wateringFromMinute: Int? = null,
     val wateringToMinute: Int? = null,
+    val petsAtHome: Boolean? = null,
 ) {
     fun json(): String = format.encodeToString(serializer(), this)
 
@@ -64,6 +65,7 @@ data class BackupSettings(
             wateringWindow = wateringFromMinute?.let { from ->
                 wateringToMinute?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
             } ?: current.wateringWindow,
+            petsAtHome = petsAtHome ?: current.petsAtHome,
         )
     }
 
@@ -93,6 +95,7 @@ data class BackupSettings(
             waterReminders = settings.waterReminders,
             wateringFromMinute = settings.wateringWindow.fromMinute,
             wateringToMinute = settings.wateringWindow.toMinute,
+            petsAtHome = settings.petsAtHome,
         )
 
         /** The settings in [text], or null when they cannot be read, in which case the phone's settings stay. */

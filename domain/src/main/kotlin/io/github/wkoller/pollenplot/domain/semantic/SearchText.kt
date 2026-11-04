@@ -4,13 +4,14 @@ import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeHive
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.hotels.BeeHotel
+import io.github.wkoller.pollenplot.domain.garden.Wish
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 
-enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL }
+enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL, WISH }
 
 /**
  * A record as the search index holds it: the record's key, its kind, the title shown in results and the words it
@@ -89,6 +90,22 @@ object SearchText {
             hotel.sections.map { words(it.material.name) }.distinct().joinToString(", ").ifBlank { null },
             zoneName?.let { "in $it" },
             hotel.notes.ifBlank { null },
+        ).joinToString(". "),
+    )
+
+    /** A plant on the wishlist, found by its names, where it was seen, the zone it might go in and the notes. */
+    fun wish(wish: Wish, species: Species?, zoneName: String?): SearchDoc = SearchDoc(
+        id = wish.id,
+        kind = SearchKind.WISH,
+        title = wish.customName ?: species?.displayName ?: wish.speciesName.orEmpty(),
+        body = listOfNotNull(
+            "wishlist",
+            species?.common?.joinToString(", ")?.ifBlank { null },
+            (species?.name ?: wish.speciesName)?.let { name -> species?.let { "$name, family ${it.family}" } ?: name },
+            words(wish.status.name),
+            wish.placeName.ifBlank { null }?.let { "seen at $it" },
+            zoneName?.let { "for $it" },
+            wish.notes.ifBlank { null },
         ).joinToString(". "),
     )
 

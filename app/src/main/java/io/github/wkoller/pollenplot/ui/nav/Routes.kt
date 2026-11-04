@@ -31,12 +31,12 @@ import kotlinx.serialization.Serializable
 @Serializable data class PlantRoute(val id: String)
 
 /** Adds a plant, optionally into a zone or starting from a species chosen elsewhere, such as in search. */
-@Serializable data class AddPlantRoute(val zoneId: String? = null, val species: String? = null)
+@Serializable data class AddPlantRoute(val zoneId: String? = null, val species: String? = null, val wishId: String? = null)
 
 @Serializable data object SearchRoute
 
 /** Identify with the camera, or check whether a plant is a weed. [group] is what the camera starts out looking for. */
-@Serializable data class IdentifyRoute(val checkingWeed: Boolean = false, val group: String? = null)
+@Serializable data class IdentifyRoute(val checkingWeed: Boolean = false, val group: String? = null, val field: Boolean = false)
 
 /** One kind of animal seen in the yard, by its knowledge base name or the name it was recorded under. */
 @Serializable data class AnimalRoute(val key: String)
@@ -122,6 +122,12 @@ import kotlinx.serialization.Serializable
 /** Finds a weed on the council's list by what it looks like. From a photo, its suggestions come first. */
 @Serializable data class WeedFinderRoute(val detectionId: String? = null)
 
+/** The wishlist of plants to grow. */
+@Serializable data object WishlistRoute
+
+/** One plant on the wishlist. */
+@Serializable data class WishRoute(val id: String)
+
 /** The main tabs, in the order they appear in the navigation bar. */
 enum class TopLevelTab(
     val route: Any,
@@ -142,13 +148,14 @@ enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
     PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate),
     ANIMAL_PHOTOS(R.string.add_animal_photos, R.drawable.ic_add_photo_alternate),
     WEED(R.string.add_check_weed, R.drawable.ic_grass),
+    FIELD(R.string.add_field, R.drawable.ic_travel_explore),
     PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant),
     SIGHTING(R.string.add_sighting_by_name, R.drawable.ic_edit),
     ;
 
     companion object {
         /** The Plot's add menu. */
-        val PLOT = listOf(IDENTIFY, PHOTOS, WEED, PLANT)
+        val PLOT = listOf(IDENTIFY, PHOTOS, WEED, FIELD, PLANT)
 
         /** The Wildlife tab's add menu. Photos from the gallery are looked at for the kind of animal the user chooses. */
         val WILDLIFE = listOf(IDENTIFY, ANIMAL_PHOTOS, SIGHTING)

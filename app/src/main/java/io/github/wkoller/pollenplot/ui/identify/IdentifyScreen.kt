@@ -9,6 +9,7 @@ import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -105,6 +106,7 @@ import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.review.PhotoReviewScreen
 import io.github.wkoller.pollenplot.ui.review.confidenceLabel
 import io.github.wkoller.pollenplot.ui.review.readable
+import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import kotlinx.coroutines.flow.map
 import java.io.File
 
@@ -126,24 +128,36 @@ fun IdentifyScreen(
     onOpenFinder: ((detectionId: String?) -> Unit)? = null,
     /** Whether the accurate pack is on the phone, which names the groups the quick models do not cover. */
     accurateReady: Boolean = false,
+    /** Native alternatives for a find that is a weed, and the wishlist to add them to. */
+    help: WeedHelp? = null,
+    onOpenWishlist: () -> Unit = {},
 ) {
     val stage by model.stage.collectAsStateWithLifecycle()
     val group by model.group.collectAsStateWithLifecycle()
     val scope by model.scope.collectAsStateWithLifecycle()
-    // Checking a weed is the same identification of plants; each suggestion's weed status shows on its card.
-    LaunchedEffect(checkingWeed) { if (checkingWeed) model.choose(LifeGroup.PLANT) }
-    val screenTitle = stringResource(if (checkingWeed) R.string.identify_weed_title else R.string.identify_title)
+    val field = model.field
+    // Checking a weed, and a plant away from home, are the same identification of one plant; each suggestion's weed
+    // status shows on its card.
+    LaunchedEffect(checkingWeed, field) { if (checkingWeed || field) model.choose(LifeGroup.PLANT) }
+    val screenTitle = stringResource(
+        when {
+            checkingWeed -> R.string.identify_weed_title
+            field -> R.string.field_title
+            else -> R.string.identify_title
+        },
+    )
     val hint = when {
         checkingWeed -> stringResource(R.string.identify_weed_hint)
+        field -> stringResource(R.string.field_hint)
         group == LifeGroup.PLANT && scope == PhotoScope.SEVERAL -> stringResource(R.string.identify_point_bed)
         group == LifeGroup.PLANT -> stringResource(R.string.identify_point)
         AiyModel.of(group) == null && !accurateReady -> stringResource(R.string.identify_needs_pack)
         else -> stringResource(R.string.identify_point_animal, stringResource(group.noun))
     }
     when (val current = stage) {
-        IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack, chooseGroup = !checkingWeed)
+        IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack, chooseGroup = !checkingWeed && !field)
         IdentifyStage.Analysing -> Analysing(model)
-        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed })
+        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed }, help, onOpenWishlist)
         IdentifyStage.NoneFound -> Problem(
             screenTitle = screenTitle,
             title = if (group == LifeGroup.PLANT) stringResource(R.string.identify_none_title) else stringResource(R.string.identify_none_animal, stringResource(group.noun)),
@@ -194,11 +208,14 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, tit
         }
     }
 
+    val choosePhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(model::choosePhoto) }
+    val fromPhotos = { choosePhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+
     if (granted) {
-        Viewfinder(model, knowledge, hint, onBack, chooseGroup)
+        Viewfinder(model, knowledge, hint, onBack, chooseGroup, fromPhotos)
     } else {
         DetailScaffold(title = title, onBack = onBack) { padding ->
-            Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 EmptyState(R.drawable.ic_photo_camera, stringResource(R.string.identify_permission_title), stringResource(R.string.identify_permission_body))
                 if (canAskAgain) {
                     Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) { Text(stringResource(R.string.identify_permission_allow)) }
@@ -210,6 +227,7 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, tit
                         )
                     }) { Text(stringResource(R.string.identify_permission_settings)) }
                 }
+                OutlinedButton(onClick = fromPhotos) { Text(stringResource(R.string.identify_from_photos)) }
             }
         }
     }
@@ -218,7 +236,7 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, tit
 /** The camera, full screen, with the live suggestions and the button that takes the photo. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hint: String, onBack: () -> Unit, chooseGroup: Boolean) {
+private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hint: String, onBack: () -> Unit, chooseGroup: Boolean, fromPhotos: () -> Unit) {
     val live by model.live.collectAsStateWithLifecycle()
     val capturing by model.capturing.collectAsStateWithLifecycle()
     val group by model.group.collectAsStateWithLifecycle()
@@ -262,17 +280,23 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             LiveSuggestions(live, nameOf, hint)
-            MediumExtendedFloatingActionButton(
-                text = { Text(stringResource(if (capturing) R.string.identify_capturing else R.string.identify_capture)) },
-                icon = {
-                    if (capturing) {
-                        PollenLoadingIndicator(Modifier.size(28.dp))
-                    } else {
-                        Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null)
-                    }
-                },
-                onClick = { model.capture { imageCapture.takeUprightBitmap() } },
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                // A photo already on the phone, or in a cloud album the photo picker shows, can be identified too.
+                FilledTonalIconButton(onClick = fromPhotos, enabled = !capturing, modifier = Modifier.size(56.dp)) {
+                    Icon(painterResource(R.drawable.ic_photo_library), contentDescription = stringResource(R.string.identify_from_photos))
+                }
+                MediumExtendedFloatingActionButton(
+                    text = { Text(stringResource(if (capturing) R.string.identify_capturing else R.string.identify_capture)) },
+                    icon = {
+                        if (capturing) {
+                            PollenLoadingIndicator(Modifier.size(28.dp))
+                        } else {
+                            Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null)
+                        }
+                    },
+                    onClick = { model.capture { imageCapture.takeUprightBitmap() } },
+                )
+            }
         }
     }
 }
@@ -396,9 +420,14 @@ private fun Results(
     onOpenPlant: (String) -> Unit,
     onCompare: (detectionId: String, speciesName: String) -> Unit,
     onOpenFinder: ((detectionId: String?) -> Unit)?,
+    help: WeedHelp?,
+    onOpenWishlist: () -> Unit,
 ) {
     val result by model.results.collectAsStateWithLifecycle()
     PhotoReviewScreen(
+        help = help,
+        field = model.field,
+        onOpenWishlist = onOpenWishlist,
         onCompare = onCompare,
         title = title,
         reviews = result?.let(::listOf),
@@ -421,7 +450,13 @@ private fun Results(
                 modifier = Modifier.semantics { heading() },
             )
             Text(
-                stringResource(if (animal != null) R.string.identify_animal_note else R.string.identify_model_note),
+                stringResource(
+                    when {
+                        animal != null -> R.string.identify_animal_note
+                        model.field -> R.string.field_note
+                        else -> R.string.identify_model_note
+                    },
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

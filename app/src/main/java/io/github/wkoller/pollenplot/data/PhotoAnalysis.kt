@@ -59,13 +59,15 @@ class PhotoAnalysis(
         val kb = knowledge.await()
         val fauna = knowledge.awaitFauna()
         // Species already growing in the garden are boosted, because most photos show the same plants again, and
-        // species recorded near the garden a little.
-        val gardenSpecies = garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+        // species recorded near the garden a little. A photo taken away from home gets neither boost.
+        val away = origin == PhotoOrigin.FIELD
+        val gardenSpecies = if (away) emptySet() else garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+        val recorded: (String) -> Int = if (away) { _ -> 0 } else nearby
         val fused = found.regions.map { region ->
             val candidates = if (region.group == LifeGroup.PLANT) {
-                CandidateFusion.fuse(region.labels, kb, gardenSpecies, nearby = nearby)
+                CandidateFusion.fuse(region.labels, kb, gardenSpecies, nearby = recorded)
             } else {
-                CandidateFusion.fuse(region.labels, { label -> fauna.animal(label)?.name }, emptySet(), nearby = nearby)
+                CandidateFusion.fuse(region.labels, { label -> fauna.animal(label)?.name }, emptySet(), nearby = recorded)
             }
             Fused(region, candidates, region.flowering, region.modelFlowering)
         }

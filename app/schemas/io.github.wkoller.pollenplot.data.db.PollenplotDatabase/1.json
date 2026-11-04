@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "503610bc9fb1ea926d3c169760a1323e",
+    "identityHash": "9368e2191f6e408ae9bde27dcd2a5609",
     "entities": [
       {
         "tableName": "zones",
@@ -2292,11 +2292,143 @@
             "dateEpochDay"
           ]
         }
+      },
+      {
+        "tableName": "wishes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `speciesName` TEXT, `customName` TEXT, `detectionId` TEXT, `thumbnail` TEXT, `placeName` TEXT NOT NULL, `latE7` INTEGER, `lonE7` INTEGER, `priceCents` INTEGER, `notes` TEXT NOT NULL, `targetZoneId` TEXT, `status` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`detectionId`) REFERENCES `detections`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`targetZoneId`) REFERENCES `zones`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speciesName",
+            "columnName": "speciesName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "customName",
+            "columnName": "customName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "detectionId",
+            "columnName": "detectionId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "thumbnail",
+            "columnName": "thumbnail",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "placeName",
+            "columnName": "placeName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latE7",
+            "columnName": "latE7",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lonE7",
+            "columnName": "lonE7",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "priceCents",
+            "columnName": "priceCents",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetZoneId",
+            "columnName": "targetZoneId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_wishes_detectionId",
+            "unique": false,
+            "columnNames": [
+              "detectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_wishes_detectionId` ON `${TABLE_NAME}` (`detectionId`)"
+          },
+          {
+            "name": "index_wishes_targetZoneId",
+            "unique": false,
+            "columnNames": [
+              "targetZoneId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_wishes_targetZoneId` ON `${TABLE_NAME}` (`targetZoneId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "detections",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "detectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "zones",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "targetZoneId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '503610bc9fb1ea926d3c169760a1323e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9368e2191f6e408ae9bde27dcd2a5609')"
     ]
   }
 }

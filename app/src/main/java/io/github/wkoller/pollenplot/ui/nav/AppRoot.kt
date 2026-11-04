@@ -105,6 +105,8 @@ import io.github.wkoller.pollenplot.ui.wildlife.AnimalPhotosDialog
 import io.github.wkoller.pollenplot.ui.wildlife.AnimalScreen
 import io.github.wkoller.pollenplot.ui.wildlife.SightingScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
+import io.github.wkoller.pollenplot.ui.wishlist.WishScreen
+import io.github.wkoller.pollenplot.ui.wishlist.WishlistScreen
 
 /** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
 private val WIDE_WINDOW = 600.dp
@@ -229,6 +231,7 @@ fun AppRoot(
                                 AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
                                 AddAction.ANIMAL_PHOTOS -> askingAnimal = true
                                 AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
+                                AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                 AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
                             }
@@ -239,6 +242,7 @@ fun AppRoot(
                         onSearch = { navController.navigate(SearchRoute) },
                         onReview = { navController.navigate(ReviewRoute) },
                         onWeeds = { navController.navigate(WeedsRoute) },
+                        onWishlist = { navController.navigate(WishlistRoute) },
                         today = container.today,
                         onOpenWater = { openTab(TopLevelTab.WATER) },
                         onOpenBees = { openTab(TopLevelTab.BEES) },
@@ -278,6 +282,7 @@ fun AppRoot(
                         plantId = id,
                         onBack = back,
                         onCompare = { navController.navigate(CompareRoute(it, plantId = id)) },
+                        help = container.weedHelp,
                         onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
                         onOpenSighting = { navController.navigate(SightingRoute(it)) },
                         onAsk = { navController.navigate(AskRoute(plantId = id)) },
@@ -295,6 +300,8 @@ fun AppRoot(
                         initialSpecies = route.species,
                         onBack = back,
                         onAdded = { plantId ->
+                            // A plant added from the wishlist marks its wish planted.
+                            route.wishId?.let(container::wishPlanted)
                             navController.navigate(PlantRoute(plantId)) { popUpTo<AddPlantRoute> { inclusive = true } }
                         },
                     )
@@ -314,11 +321,20 @@ fun AppRoot(
                         onOpenHive = { navController.navigate(HiveRoute(it)) },
                         onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
                         onOpenHotel = { navController.navigate(HotelRoute(it)) },
+                        onOpenWish = { navController.navigate(WishRoute(it)) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->
+                    val route = entry.toRoute<IdentifyRoute>()
                     val model = viewModel {
-                        IdentifyModel(container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore, createSavedStateHandle(), container::recordsNearby)
+                        IdentifyModel(
+                            container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore,
+                            createSavedStateHandle(), container::recordsNearby,
+                            field = route.field,
+                            wishes = container.wishes,
+                            readPhoto = container::readChosenPhoto,
+                            discardFieldPhoto = container::discardFieldPhoto,
+                        )
                     }
                     IdentifyScreen(
                         model = model,
@@ -328,7 +344,9 @@ fun AppRoot(
                         onBack = back,
                         onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
-                        checkingWeed = entry.toRoute<IdentifyRoute>().checkingWeed,
+                        checkingWeed = route.checkingWeed,
+                        help = container.weedHelp,
+                        onOpenWishlist = { navController.navigate(WishlistRoute) { popUpTo<IdentifyRoute> { inclusive = true } } },
                         accurateReady = container.accurate.state.collectAsStateWithLifecycle().value == PackState.Ready,
                         onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
                         onOpenFinder = { navController.navigate(WeedFinderRoute(it)) },
@@ -371,6 +389,7 @@ fun AppRoot(
                                 AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
                                 AddAction.ANIMAL_PHOTOS -> askingAnimal = true
                                 AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
+                                AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
                             }
                         },
@@ -618,6 +637,27 @@ fun AppRoot(
                         onSetLocation = { navController.navigate(GardenLocationRoute) },
                         onCompare = { navController.navigate(CompareRoute(it)) },
                         onOpenFinder = { navController.navigate(WeedFinderRoute()) },
+                        help = container.weedHelp,
+                    )
+                }
+                composable<WishlistRoute> {
+                    WishlistScreen(
+                        views = container.wishViews,
+                        onBack = back,
+                        onOpenWish = { navController.navigate(WishRoute(it)) },
+                        onFindPlant = { navController.navigate(IdentifyRoute(field = true)) },
+                    )
+                }
+                composable<WishRoute> { entry ->
+                    val id = entry.toRoute<WishRoute>().id
+                    WishScreen(
+                        id = id,
+                        wishViews = container.wishViews,
+                        views = container.views,
+                        knowledge = container.knowledge,
+                        help = container.weedHelp,
+                        onBack = back,
+                        onPlant = { species, zoneId -> navController.navigate(AddPlantRoute(zoneId = zoneId, species = species, wishId = id)) },
                     )
                 }
                 composable<CompareRoute> { entry ->

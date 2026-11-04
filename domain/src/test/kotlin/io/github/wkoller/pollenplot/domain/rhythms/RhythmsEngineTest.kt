@@ -13,6 +13,9 @@ import org.junit.Test
 import java.time.Month
 
 class RhythmsEngineTest {
+    private fun species(name: String, common: String, native: Set<AuState>) =
+        Species(name, name.substringBefore(' '), "Family", listOf(common), GrowthForm.SHRUB, native, false, emptyList(), CareProfile())
+
     private fun months(vararg months: Month) = months.fold(MonthSet.NONE) { set, month -> set + MonthSet.of(month) }
 
     private fun forage(honey: Int = 0, stingless: Int = 0, resin: Int = 0, solitary: Int = 0, buzz: Boolean = false) =
@@ -55,8 +58,6 @@ class RhythmsEngineTest {
 
     @Test
     fun `suggestions fill a gap with local natives first and never a weed`() {
-        fun species(name: String, common: String, native: Set<AuState>) =
-            Species(name, name.substringBefore(' '), "Family", listOf(common), GrowthForm.SHRUB, native, false, emptyList(), CareProfile())
         val winter = months(Month.JUNE, Month.JULY)
         val candidates = listOf(
             CandidatePlant(species("Grevillea robusta", "Silky oak", setOf(AuState.QLD)), winter, forage(honey = 3), setOf(Sun.FULL_SUN), weed = false),
@@ -69,5 +70,18 @@ class RhythmsEngineTest {
         assertEquals(listOf("Grevillea robusta", "Banksia ericifolia"), picked.map { it.species.name })
         assertEquals("Front Native Strip", picked.first().zoneName)
         assertEquals(listOf(Month.JUNE, Month.JULY), picked.first().fills)
+    }
+
+    @Test
+    fun `plants toxic to pets are not suggested while pets live at home`() {
+        val winter = months(Month.JUNE, Month.JULY)
+        val candidates = listOf(
+            CandidatePlant(species("Grevillea robusta", "Silky oak", setOf(AuState.QLD)), winter, forage(honey = 3), null, weed = false, toxicToPets = true),
+            CandidatePlant(species("Banksia ericifolia", "Heath banksia", setOf(AuState.NSW)), winter, forage(honey = 3), null, weed = false),
+        )
+        val gaps = listOf(Month.JUNE)
+        assertEquals(2, RhythmsEngine.suggestions(BeeGroup.HONEY, gaps, candidates, emptySet(), AuState.QLD, emptyList()).size)
+        val withPets = RhythmsEngine.suggestions(BeeGroup.HONEY, gaps, candidates, emptySet(), AuState.QLD, emptyList(), pets = true)
+        assertEquals(listOf("Banksia ericifolia"), withPets.map { it.species.name })
     }
 }

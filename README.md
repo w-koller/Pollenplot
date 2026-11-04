@@ -14,13 +14,15 @@ Version 1 includes:
   pollinator magnet, high thirst or frog safe.
 - **Plant requirements**: sun, water, fertiliser, compost, wildlife value, ground cover and companion plants.
 - **A weed identifier** that checks plants against official weed sources for your area (Brisbane City Council,
-  Weeds Australia and the Atlas of Living Australia).
+  Weeds Australia and the Atlas of Living Australia), with native alternatives from the Grow Me Instead booklets.
+- **A wishlist** of plants to grow, including plants identified away from home, with whether each is native or a
+  weed where you live.
 - **Pollen Rhythms**, a nectar and pollen calendar with forage gaps for honey bees and native bees.
 - **Bees**: separate guides and trackers for European honey bees and Australian native bees, and a logger for bee
   and insect hotels.
 - **Water**: irrigation options, and watering times and amounts from your plants and the weather.
-- **Search** across your zones, plants, sightings, hives and hotels by their words, and by meaning once the optional
-  text model is on the phone, and garden reports as PDF or Excel.
+- **Search** across your zones, plants, sightings, hives, hotels and wishlist by their words, and by meaning once
+  the optional text model is on the phone, and garden reports as PDF or Excel.
 
 Pollenplot needs Android 12 or newer.
 

@@ -85,6 +85,15 @@ fun SettingsScreen(
                     },
                 ) { Text(stringResource(R.string.settings_location)) }
             }
+            item {
+                ListItem(
+                    checked = settings.petsAtHome,
+                    onCheckedChange = { on -> update { it.copy(petsAtHome = on) } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_pets), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_pets_body)) },
+                    trailingContent = { Switch(checked = settings.petsAtHome, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_pets)) }
+            }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_photos)) }
             item {

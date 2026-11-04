@@ -105,7 +105,7 @@ object RhythmsEngine {
 
     /**
      * Plants that would fill [gaps] for [group]: species not in the garden that flower in a gap and score at least 2
-     * for the group, leaving out weeds. Natives of the garden's state come first, then those filling the most gap
+     * for the group, leaving out weeds, and plants toxic to pets when [pets] live at home. Natives of the garden's state come first, then those filling the most gap
      * months, then those a zone's sun suits.
      */
     fun suggestions(
@@ -116,10 +116,11 @@ object RhythmsEngine {
         state: AuState?,
         zones: List<Pair<String, Sun?>>,
         limit: Int = 3,
+        pets: Boolean = false,
     ): List<Suggestion> {
         if (gaps.isEmpty()) return emptyList()
         return candidates.asSequence()
-            .filter { it.species.name !in inGarden && !it.weed && score(it.forage, group) >= 2 }
+            .filter { it.species.name !in inGarden && !it.weed && !(pets && it.toxicToPets) && score(it.forage, group) >= 2 }
             .mapNotNull { candidate ->
                 val fills = gaps.filter { it in candidate.flowering }
                 if (fills.isEmpty()) return@mapNotNull null
@@ -132,5 +133,15 @@ object RhythmsEngine {
     }
 }
 
-/** A species the calendar could suggest, with its flowering for the garden's hemisphere and whether it is a weed there. */
-data class CandidatePlant(val species: Species, val flowering: MonthSet, val forage: Forage?, val sun: Set<Sun>?, val weed: Boolean)
+/**
+ * A species the calendar could suggest, with its flowering for the garden's hemisphere, whether it is a weed there, and
+ * whether it is toxic to pets.
+ */
+data class CandidatePlant(
+    val species: Species,
+    val flowering: MonthSet,
+    val forage: Forage?,
+    val sun: Set<Sun>?,
+    val weed: Boolean,
+    val toxicToPets: Boolean = false,
+)

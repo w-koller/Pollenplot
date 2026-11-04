@@ -6,6 +6,7 @@ import io.github.wkoller.pollenplot.domain.bees.honey.HiveStatus
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
+import io.github.wkoller.pollenplot.domain.plants.Toxicity
 import io.github.wkoller.pollenplot.domain.rhythms.BeeGroup
 import io.github.wkoller.pollenplot.domain.rhythms.CandidatePlant
 import io.github.wkoller.pollenplot.domain.rhythms.Lane
@@ -87,10 +88,14 @@ class RhythmsViews(
         val inGarden = growing.mapNotNull { it.species?.name }.toSet()
         val candidates = kb.allSpecies.map { species ->
             val care = CareResolver.resolve(kb, species).care
-            CandidatePlant(species, care.flowering?.fromSouthern(hemisphere) ?: MonthSet.NONE, care.forage, care.sun, weed = species.wons || locality.weed(species).isWeed)
+            CandidatePlant(
+                species, care.flowering?.fromSouthern(hemisphere) ?: MonthSet.NONE, care.forage, care.sun,
+                weed = species.wons || locality.weed(species).isWeed,
+                toxicToPets = care.toxicPets == Toxicity.MILD || care.toxicPets == Toxicity.SEVERE,
+            )
         }
         val zoneSun = zones.map { it.name to it.sun }
-        val suggestions = lanes.associate { lane -> lane.group to RhythmsEngine.suggestions(lane.group, lane.gaps, candidates, inGarden, current.gardenState, zoneSun) }
+        val suggestions = lanes.associate { lane -> lane.group to RhythmsEngine.suggestions(lane.group, lane.gaps, candidates, inGarden, current.gardenState, zoneSun, pets = current.petsAtHome) }
         RhythmsState(today, rows.sortedBy { it.title.lowercase() }, lanes, suggestions, shifts = RhythmsFeed.shifts(seen, today))
     }
 

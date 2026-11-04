@@ -63,6 +63,7 @@ import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoReview
+import io.github.wkoller.pollenplot.data.WishRepository
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
@@ -74,6 +75,7 @@ import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
+import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -82,7 +84,18 @@ import java.io.File
  * What the review cards do, for both the Identify results and the Review queue. Work runs in the screen model's scope,
  * so it finishes even if the phone is turned meanwhile. A zone chosen for a plant is remembered and offered next time.
  */
-class DetectionActions(private val garden: GardenRepository, private val settings: SettingsStore, private val scope: CoroutineScope) {
+class DetectionActions(
+    private val garden: GardenRepository,
+    private val settings: SettingsStore,
+    private val scope: CoroutineScope,
+    private val wishes: WishRepository? = null,
+) {
+    /** Saves a plant found away from home to the wishlist, with the zone it might go in. */
+    fun save(detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?) {
+        val wishes = wishes ?: return
+        scope.launch { wishes.saveFind(detection.id, speciesName, customName, zoneId) }
+    }
+
     fun add(detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?, flowering: Boolean) {
         scope.launch {
             garden.confirmDetection(detection.id, speciesName, customName, zoneId, flowering = flowering)
@@ -153,6 +166,11 @@ fun PhotoReviewScreen(
     empty: @Composable (PaddingValues) -> Unit = {},
     onCompare: ((detectionId: String, speciesName: String) -> Unit)? = null,
     selectable: Boolean = false,
+    /** Native alternatives for a find that is a weed, and the wishlist to add them to. */
+    help: WeedHelp? = null,
+    /** The photos were taken away from home: plants are saved to the wishlist or let go. */
+    field: Boolean = false,
+    onOpenWishlist: (() -> Unit)? = null,
 ) {
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
@@ -176,6 +194,8 @@ fun PhotoReviewScreen(
             onOpenPlant = onOpenPlant,
             onCompare = onCompare?.let { compare -> { detection, species -> compare(detection.id, species) } },
             onAddSighting = actions::addSighting,
+            onSave = actions::save,
+            onOpenWishlist = onOpenWishlist,
         )
     }
 
@@ -316,6 +336,8 @@ fun PhotoReviewScreen(
                             modifier = Modifier.readable(),
                             fauna = fauna,
                             sightings = sightings,
+                            field = field,
+                            help = help,
                         )
                     }
                 }

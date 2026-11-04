@@ -78,6 +78,7 @@ fun PlotScreen(
     onSearch: () -> Unit,
     onReview: () -> Unit,
     onWeeds: () -> Unit,
+    onWishlist: () -> Unit = {},
     today: TodayViews? = null,
     onOpenWater: () -> Unit = {},
     onOpenBees: () -> Unit = {},
@@ -135,6 +136,9 @@ fun PlotScreen(
                             Icon(painterResource(R.drawable.ic_grass), contentDescription = null)
                         }
                     }
+                }
+                IconButton(onClick = onWishlist) {
+                    Icon(painterResource(R.drawable.ic_bookmark), contentDescription = stringResource(R.string.wishlist_title))
                 }
                 IconButton(onClick = onSearch) {
                     Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.search_title))

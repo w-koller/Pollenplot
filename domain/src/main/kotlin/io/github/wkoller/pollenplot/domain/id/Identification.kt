@@ -11,8 +11,11 @@ import kotlin.math.min
 /** The models that suggest what a photo shows. */
 enum class IdSource { AIY_PLANTS, AIY_BIRDS, AIY_INSECTS, BIOCAP, GEMMA }
 
-/** Where a photo came from. */
-enum class PhotoOrigin { CAMERA, IMPORT, LIBRARY }
+/**
+ * Where a photo came from. A [FIELD] photo was taken away from home to find out what a plant is; its finds never wait in
+ * the Review queue, and are saved to the wishlist or let go.
+ */
+enum class PhotoOrigin { CAMERA, IMPORT, LIBRARY, FIELD }
 
 /**
  * How much of a photo is looked at for plants. A photo taken of one plant gives one card for the plant in the middle; a
@@ -20,8 +23,11 @@ enum class PhotoOrigin { CAMERA, IMPORT, LIBRARY }
  */
 enum class PhotoScope { ONE, SEVERAL }
 
-/** Where a detection is in review: waiting, confirmed as a plant in the garden, or not a plant. */
-enum class DetectionStatus { NEEDS_REVIEW, CONFIRMED, REJECTED }
+/**
+ * Where a detection is in review: waiting, confirmed as a plant in the garden, not a plant, or a plant found away from
+ * home and saved to the wishlist.
+ */
+enum class DetectionStatus { NEEDS_REVIEW, CONFIRMED, REJECTED, SAVED }
 
 /**
  * One label from one model, as the model named it, with its score in basis points, and a [common] name when the model
