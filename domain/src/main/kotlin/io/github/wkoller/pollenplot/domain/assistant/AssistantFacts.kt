@@ -4,6 +4,7 @@ import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.CareProfile
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.plants.Toxicity
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import java.time.format.TextStyle
@@ -15,7 +16,15 @@ import java.util.Locale
  * something can be eaten: the assistant never decides that.
  */
 object AssistantFacts {
-    fun plant(title: String, species: Species?, care: CareProfile?, zoneName: String?, quantity: Int, weedStatus: String?): List<String> = buildList {
+    fun plant(
+        title: String,
+        species: Species?,
+        care: CareProfile?,
+        zoneName: String?,
+        quantity: Int,
+        weedStatus: String?,
+        hemisphere: Hemisphere = Hemisphere.SOUTHERN,
+    ): List<String> = buildList {
         add(listOfNotNull(title, species?.let { "${it.name}, family ${it.family}" }).joinToString(", "))
         species?.form?.let { add("Growth form: ${words(it.name)}") }
         species?.let {
@@ -44,7 +53,7 @@ object AssistantFacts {
         care.forage?.let { f ->
             add("Bee forage, 0 to 3: honey bees ${f.honeyBest}, native bees ${f.nativeBest}${if (f.buzz) "; its flowers need buzz pollination" else ""}")
         }
-        care.flowering?.let { add("Flowers in: ${months(it)}") }
+        care.flowering?.let { add("Flowers in: ${months(it.fromSouthern(hemisphere))}") }
         care.height?.let { add("Height: ${it.minMm / 1000.0} to ${it.maxMm / 1000.0} m") }
         care.width?.let { add("Width: ${it.minMm / 1000.0} to ${it.maxMm / 1000.0} m") }
         care.pruning?.let { add("Pruning: $it") }

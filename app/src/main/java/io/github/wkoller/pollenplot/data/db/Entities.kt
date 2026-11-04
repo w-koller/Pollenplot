@@ -191,17 +191,6 @@ data class ScannedMediaEntity(
     val accurate: Boolean = false,
 )
 
-/** A relation between two records that neither record holds itself, with where it came from. */
-@Entity(tableName = "links", primaryKeys = ["subjectId", "predicate", "objectId"], indices = [Index("objectId")])
-data class LinkEntity(
-    val subjectId: String,
-    val predicate: String,
-    val objectId: String,
-    val provenance: String,
-    val confidenceBp: Int,
-    val createdAt: Long,
-)
-
 /**
  * The full-text search index: one row per record, rebuilt whenever the record or anything it mentions changes. The
  * Porter stemmer lets "weeds" find "weed" and "flowering" find "flowers".

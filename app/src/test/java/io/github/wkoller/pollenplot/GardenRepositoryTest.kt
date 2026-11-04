@@ -23,6 +23,8 @@ import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
+import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
@@ -125,6 +127,20 @@ class GardenRepositoryTest {
         assertEquals("Lantana is a weed, and tea tree, rosemary and lavender all feed bees", listOf(ZoneBadge.WEED_FOUND, ZoneBadge.POLLINATOR_HOTSPOT), hive.badges)
         val front = zones.single { it.zone.id == ids.front }
         assertEquals("All five natives need little water", emptyList<ZoneBadge>(), front.badges)
+    }
+
+    @Test
+    fun `plants sharing a dripper line with a much thirstier one risk overwatering`() = runBlocking {
+        val ids = DemoGarden.seed(garden)
+        val drip = WateringLine("drip", "Citrus drippers", WaterMethod.DRIPPERS, setOf(ids.citrus), flowMlPerHour = 8_000)
+        val settings = ApplicationProvider.getApplicationContext<PollenplotApp>().container.settingsStore
+        val views = GardenViews(garden, knowledge, settings, flowOf(WeedData.EMPTY), flowOf(listOf(drip)))
+        val citrus = views.zones.first { list -> list.isNotEmpty() && list.all { z -> z.plants.all { it.care != null } } }.single { it.zone.id == ids.citrus }
+        val flagged = citrus.plants.filter { EcoRole.OVERWATERING_RISK in it.roles }.map { it.plant.speciesName }
+        assertTrue("The everlastings get several times what they need beside the citrus: $flagged", flagged.isNotEmpty())
+        assertTrue(citrus.plants.filter { it.plant.speciesName in flagged }.all { it.care!!.care.water!!.plantFactorBp * 3 <= citrus.plants.maxOf { p -> p.care!!.care.water!!.plantFactorBp } })
+        val byHand = GardenViews(garden, knowledge, settings, flowOf(WeedData.EMPTY), flowOf(listOf(drip.copy(method = WaterMethod.HOSE))))
+        assertTrue("A hose gives each plant its own amount", byHand.plants.first { it.isNotEmpty() }.none { EcoRole.OVERWATERING_RISK in it.roles })
     }
 
     @Test

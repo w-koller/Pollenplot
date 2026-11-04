@@ -11,7 +11,6 @@ import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStrength
 import io.github.wkoller.pollenplot.domain.hotels.BeeHotel
 import io.github.wkoller.pollenplot.domain.hotels.HotelCare
 import io.github.wkoller.pollenplot.domain.hotels.HotelState
-import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -41,7 +40,7 @@ class BeeViews(
 
     val hives: Flow<List<HiveView>> = combine(records, garden.zoneList, bees.apiaries, settings.settings) { (hives, inspections, checks), zones, apiaries, current ->
         val today = LocalDate.now(clock)
-        val hemisphere = current.gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
+        val hemisphere = current.hemisphere
         val zoneNames = zones.associate { it.id to it.name }
         val monthly = StateMiteChecks.monthly(current.monthlyMiteChecks, current.gardenState)
         hives.map { hive ->
@@ -66,7 +65,7 @@ class BeeViews(
 
     val hotels: Flow<List<HotelView>> = combine(hotels.hotels, hotels.observations, hotels.upkeep, garden.zoneList, settings.settings) { list, looks, upkeep, zones, current ->
         val today = LocalDate.now(clock)
-        val hemisphere = current.gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
+        val hemisphere = current.hemisphere
         val zoneNames = zones.associate { it.id to it.name }
         list.map { hotel ->
             val state = HotelState.of(hotel.id, looks, upkeep)

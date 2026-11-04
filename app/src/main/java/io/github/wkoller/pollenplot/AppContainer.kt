@@ -33,6 +33,7 @@ import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
 import io.github.wkoller.pollenplot.domain.report.XlsxWriter
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.semantic.DarwinCore
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.notify.HeatAlertCheck
@@ -113,15 +114,15 @@ class AppContainer(
         db = this.database,
         clock = clock,
         knowledge = { knowledge.await() },
-        locality = { Locality(settingsStore.settings.first().gardenState, weeds.data.value) },
+        locality = { settingsStore.settings.first().let { Locality(it.gardenState, weeds.data.value, it.hemisphere) } },
         fauna = { knowledge.awaitFauna() },
     )
-    val views = GardenViews(garden, knowledge, settingsStore, weeds.data)
+    val water = WaterRepository(this.database, this.web, clock)
+    val views = GardenViews(garden, knowledge, settingsStore, weeds.data, water.lines)
     val beeViews = BeeViews(bees, nativeBees, hotels, garden, settingsStore, clock)
     val guides = GuideLibrary(appContext)
     val rhythms = RhythmsViews(garden, views, bees, nativeBees, knowledge, settingsStore, clock)
     val places = PlaceFinder(this.web) { weeds.sources }
-    val water = WaterRepository(this.database, this.web, clock)
     val waterViews = WaterViews(water, views, garden, settingsStore, clock)
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
@@ -138,9 +139,9 @@ class AppContainer(
     private val fast by lazy { FastPlantIdentifier(appContext) }
     private val quickIdentifier: Identifier by lazy { testIdentifier ?: fast }
     val identifier: Identifier by lazy { testIdentifier ?: AccuratePlantIdentifier(fast) { accurate.open() } }
-    val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock, ::recordsNearby)
+    val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock, ::recordsNearby, ::gardenHemisphere)
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
-    val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby), analysis, garden, clock)
+    val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby, ::gardenHemisphere), analysis, garden, clock)
     val notifications = Notifications(appContext)
     val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
@@ -260,6 +261,9 @@ class AppContainer(
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */
     fun recordsNearby(name: String): Int = weeds.data.value.recordsNearby(name)
+
+    /** The garden's hemisphere, as the settings hold it now. */
+    private suspend fun gardenHemisphere(): Hemisphere = settingsStore.settings.first().hemisphere
 
     /**
      * The names whose accepted spelling the weed update looks up: the garden's plants, the knowledge base with its

@@ -21,6 +21,16 @@
 - Accurate identification pack 2 adds BioCAP's flower vectors. Older packs are removed from the phone once a newer one
   is due.
 - `docs/sharing.md` proposes how a household could share one garden.
+- Gardens in the Northern Hemisphere see flowering months six months on from the knowledge base's Southern months,
+  on the plant page, in the review cards' flower note, in reports and in the assistant's facts. A photo taken there is
+  no longer called out of season by the Southern months.
+- The Overwatering risk badge shows on a plant that shares a dripper, drip line, spray or sprinkler line with a plant
+  that needs three times as much water or more.
+- Settings has a Battery saver row. It says whether the phone holds Pollenplot back to save battery, which can delay the
+  morning reminders and photo scans, and opens the phone's battery settings.
+- The README describes what the app sends online, each permission, the optional downloads and known limits.
+- The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
+  installing this one, because its records and backups do not open in this version.
 
 ## 1.0.0-rc.2
 

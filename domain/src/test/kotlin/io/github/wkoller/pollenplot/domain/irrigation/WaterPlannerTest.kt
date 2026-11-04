@@ -125,6 +125,16 @@ class WaterPlannerTest {
     }
 
     @Test
+    fun `only plants sharing a line that is not watered by hand risk overwatering`() {
+        val grevillea = WaterPlant("grevillea", "Grevillea", "citrus", plantFactorBp = 1_000, widthMm = 1_500, form = GrowthForm.SHRUB, quantity = 1, soil = Soil.LOAM)
+        val apart = grevillea.copy(id = "apart", zoneId = "natives")
+        val drip = WateringLine("drip", "Drip", WaterMethod.DRIPPERS, setOf("citrus"), flowMlPerHour = 8_000)
+        assertEquals(setOf("grevillea"), Pairing.overwatered(listOf(drip), listOf(lemon, grevillea, apart)))
+        assertEquals("A hose gives each plant its own amount", emptySet<String>(), Pairing.overwatered(listOf(drip.copy(method = WaterMethod.HOSE)), listOf(lemon, grevillea)))
+        assertEquals("A zone on no line is left alone", emptySet<String>(), Pairing.overwatered(emptyList(), listOf(lemon, grevillea)))
+    }
+
+    @Test
     fun `plants without a water need or size are left out and named`() {
         val unknown = WaterPlant("x", "Mystery shrub", "citrus", plantFactorBp = null, widthMm = 1_000, form = GrowthForm.SHRUB, quantity = 1, soil = null)
         val plan = WaterPlanner.plan(WaterMethod.HOSE, null, listOf(unknown), days(today, 7), today, null)

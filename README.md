@@ -19,7 +19,52 @@ Version 1 includes:
 - **Bees**: separate guides and trackers for European honey bees and Australian native bees, and a logger for bee
   and insect hotels.
 - **Water**: irrigation options, and watering times and amounts from your plants and the weather.
-- **Search by meaning** across all your records, and garden reports as PDF or Excel.
+- **Search** across your zones, plants, sightings, hives and hotels by their words, and by meaning once the optional
+  text model is on the phone, and garden reports as PDF or Excel.
+
+Pollenplot needs Android 12 or newer.
+
+## Privacy
+
+Photos are identified on the phone and never leave it, except in a backup file you save yourself. The app has no
+account, no analytics and no advertising. It goes online only for:
+
+- the weather forecast, from Open-Meteo;
+- weed lists and plants and animals recorded near the garden, from Brisbane City Council and the Atlas of Living
+  Australia;
+- suburb search and the council area, from Open-Meteo and the Atlas of Living Australia;
+- the optional models, when you choose to download them.
+
+The garden's location is rounded to about 1 km before it is sent to any of these.
+
+## Permissions
+
+- **Camera**: to identify a plant or animal in front of you. Photos you add from the gallery come through the system
+  photo picker and need no permission.
+- **Photos and videos**: only when you turn on scanning the gallery in Settings, so new garden photos are looked at
+  in the background. You can allow all photos or only the ones you choose.
+- **Approximate location**: only when you ask the app to find the garden from where you are.
+- **Notifications**: for hive checks, hot days ahead of stingless bee hives, watering due and finished scans.
+- **Internet**: for the services listed under Privacy.
+
+## Optional downloads
+
+The quick identification models come with the app. These are downloaded only when you ask for them, and each file is
+checked against its published SHA-256 checksum:
+
+- **Accurate identification pack** (BioCAP), about 127 MB, for better plant identification.
+- **Text model** (bge-small-en-v1.5), about 34 MB, for search by meaning.
+- **Gemma 4 E2B**, about 2.6 GB, for second opinions on unsure finds and for answering questions about your garden.
+
+## Known limits
+
+- The knowledge base is written for Australia. Months follow the garden's hemisphere, but the plants, weed sources and
+  state rules are Australian.
+- Weed lists for a council come from Brisbane City Council's open data; elsewhere the app uses the national lists and
+  links to the state's pages.
+- Phone makers' battery savers can delay background scans and the morning reminders. Settings explains how to check
+  this on your phone.
+- Identification can be wrong. Please never eat a plant or handle an animal because the app named it.
 
 ## Building
 

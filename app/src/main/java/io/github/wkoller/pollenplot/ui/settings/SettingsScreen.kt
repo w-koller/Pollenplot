@@ -1,5 +1,12 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings as AndroidSettings
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
@@ -95,6 +102,9 @@ fun SettingsScreen(
                 ) { Text(stringResource(R.string.models_title)) }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+            item { SectionHeading(stringResource(R.string.settings_background)) }
+            item { BatteryRow() }
+            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_records)) }
             item {
                 ListItem(
@@ -161,6 +171,33 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+/**
+ * Whether the phone holds Pollenplot back to save battery, which can delay its morning reminders and scans, and a way
+ * to the phone's own battery settings. The app does not ask to be exempted itself.
+ */
+@Composable
+private fun BatteryRow() {
+    val context = LocalContext.current
+    val power = remember(context) { context.getSystemService(PowerManager::class.java) }
+    fun unrestricted() = power?.isIgnoringBatteryOptimizations(context.packageName) == true
+    var unrestricted by remember { mutableStateOf(unrestricted()) }
+    // The user may change it in the phone's settings and come back.
+    LifecycleResumeEffect(Unit) {
+        unrestricted = unrestricted()
+        onPauseOrDispose { }
+    }
+    ListItem(
+        onClick = {
+            val battery = Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            val app = Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            runCatching { context.startActivity(battery) }.onFailure { runCatching { context.startActivity(app) } }
+        },
+        leadingContent = { Icon(painterResource(R.drawable.ic_battery_saver), contentDescription = null) },
+        supportingContent = { Text(stringResource(if (unrestricted) R.string.settings_battery_unrestricted else R.string.settings_battery_optimised)) },
+    ) { Text(stringResource(R.string.settings_battery)) }
 }
 
 @Composable

@@ -15,7 +15,6 @@ import io.github.wkoller.pollenplot.domain.rhythms.RhythmsFeed
 import io.github.wkoller.pollenplot.domain.rhythms.Suggestion
 import io.github.wkoller.pollenplot.domain.rhythms.TimingShift
 import io.github.wkoller.pollenplot.domain.wildlife.FaunaRole
-import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -65,7 +64,7 @@ class RhythmsViews(
     private val calendar: Flow<RhythmsState> = combine(views.plants, garden.floweringList, views.locality, settings.settings, garden.zoneList) { plants, seen, locality, current, zones ->
         val kb = knowledge.await()
         val today = LocalDate.now(clock)
-        val hemisphere = current.gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
+        val hemisphere = current.hemisphere
         // Flowers seen in the last year, so that last year's timing does not stay on the calendar for ever.
         val since = today.minusYears(1)
         val seenMonths = seen.filter { (_, day) -> day.isAfter(since) }.groupBy({ it.first }, { it.second.month })

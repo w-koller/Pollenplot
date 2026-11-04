@@ -8,6 +8,9 @@ import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneBadge
 import io.github.wkoller.pollenplot.domain.garden.ZoneBadges
+import io.github.wkoller.pollenplot.domain.irrigation.Pairing
+import io.github.wkoller.pollenplot.domain.irrigation.WaterPlant
+import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.CareProfile
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
@@ -16,6 +19,7 @@ import io.github.wkoller.pollenplot.domain.plants.EcoRoles
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.plants.ResolvedCare
 import io.github.wkoller.pollenplot.domain.plants.Species
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.weeds.WeedStatus
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
@@ -23,13 +27,14 @@ import io.github.wkoller.pollenplot.weeds.WeedData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /**
  * Where the garden is, as far as badges are concerned: its state, which decides what is a local native, and the weed
  * lists for its area, which decide what is a weed there.
  */
-data class Locality(val state: AuState?, val weeds: WeedData) {
+data class Locality(val state: AuState?, val weeds: WeedData, val hemisphere: Hemisphere = Hemisphere.SOUTHERN) {
     /** A species' weed status in the garden's area, found by its name or any of its synonyms. */
     fun weed(species: Species): WeedStatus = weeds.status(listOf(species.name) + species.synonyms)
 
@@ -78,17 +83,30 @@ data class SightingView(val sighting: Sighting, val animal: Animal?, val zoneNam
 data class ZoneView(val zone: Zone, val plants: List<PlantView>, val badges: List<ZoneBadge>, val sightings: List<SightingView> = emptyList())
 
 /** The garden for the screens: records joined with the knowledge base, the garden's state and its weed lists. */
-class GardenViews(repository: GardenRepository, knowledge: KnowledgeRepository, settings: SettingsStore, weeds: Flow<WeedData>) {
-    val locality: Flow<Locality> = combine(settings.settings.map { it.gardenState }.distinctUntilChanged(), weeds) { state, data -> Locality(state, data) }
+class GardenViews(
+    repository: GardenRepository,
+    knowledge: KnowledgeRepository,
+    settings: SettingsStore,
+    weeds: Flow<WeedData>,
+    /** The watering lines, which decide which plants risk overwatering. */
+    lines: Flow<List<WateringLine>> = flowOf(emptyList()),
+) {
+    val locality: Flow<Locality> = combine(settings.settings.map { it.gardenState to it.hemisphere }.distinctUntilChanged(), weeds) { (state, hemisphere), data ->
+        Locality(state, data, hemisphere)
+    }
 
     val plants: Flow<List<PlantView>> = combine(
         repository.plantList,
         repository.zoneList,
         knowledge.knowledge,
         locality,
-    ) { plants, zones, kb, locality ->
+        lines,
+    ) { plants, zones, kb, locality, lines ->
         val zoneNames = zones.associate { it.id to it.name }
-        plants.map { view(it, kb, locality, zoneNames) }
+        val views = plants.map { view(it, kb, locality, zoneNames) }
+        // A plant sharing a line's run time with a much thirstier one gets several times what it needs.
+        val overwatered = Pairing.overwatered(lines, views.filter { it.plant.status == PlantStatus.GROWING }.map { it.waterPlant() })
+        if (overwatered.isEmpty()) views else views.map { if (it.plant.id in overwatered) view(it.plant, kb, locality, zoneNames, overwatering = true) else it }
     }
 
     /** Every sighting, the most recent first. */
@@ -121,12 +139,12 @@ class GardenViews(repository: GardenRepository, knowledge: KnowledgeRepository, 
     fun zone(id: String): Flow<ZoneView?> = zones.map { list -> list.firstOrNull { it.zone.id == id } }
 
     companion object {
-        fun view(plant: GardenPlant, kb: KnowledgeBase?, locality: Locality, zoneNames: Map<String, String>): PlantView {
+        fun view(plant: GardenPlant, kb: KnowledgeBase?, locality: Locality, zoneNames: Map<String, String>, overwatering: Boolean = false): PlantView {
             val species = plant.speciesName?.let { kb?.species(it) }
             val care = if (kb != null && species != null) CareResolver.resolve(kb, species) else null
             val weed = species?.let(locality::weed) ?: plant.speciesName?.let(locality::weed) ?: WeedStatus.NONE
             val roles = when {
-                care != null -> EcoRoles.of(species, care.care, locality.state, weedRisk = weed.isWeed)
+                care != null -> EcoRoles.of(species, care.care, locality.state, weedRisk = weed.isWeed, overwatering = overwatering)
                 weed.isWeed -> listOf(EcoRole.WEED_RISK)
                 else -> emptyList()
             }
@@ -134,3 +152,15 @@ class GardenViews(repository: GardenRepository, knowledge: KnowledgeRepository, 
         }
     }
 }
+
+/** The plant as watering sees it: its zone and water need, for pairing on a line. */
+private fun PlantView.waterPlant() = WaterPlant(
+    id = plant.id,
+    title = title,
+    zoneId = plant.zoneId,
+    plantFactorBp = care?.care?.water?.plantFactorBp,
+    widthMm = null,
+    form = species?.form,
+    quantity = plant.quantity,
+    soil = null,
+)

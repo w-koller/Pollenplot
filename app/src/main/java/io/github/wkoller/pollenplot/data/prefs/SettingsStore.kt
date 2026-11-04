@@ -16,6 +16,7 @@ import io.github.wkoller.pollenplot.domain.bees.stingless.HeatAlerts
 import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -67,6 +68,9 @@ data class Settings(
     /** The first-launch setup was finished or skipped, or the garden already had records when it would have opened. */
     val setupDone: Boolean = false,
 ) {
+    /** The garden's hemisphere, from where it is, or the Southern Hemisphere until a place is chosen. */
+    val hemisphere: Hemisphere get() = gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
+
     companion object {
         const val DEFAULT_SCAN_BACK_DAYS = 30
         const val DEFAULT_INSPECT_EVERY_DAYS = 14

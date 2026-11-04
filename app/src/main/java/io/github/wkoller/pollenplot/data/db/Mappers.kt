@@ -7,8 +7,6 @@ import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.plants.Soil
 import io.github.wkoller.pollenplot.domain.plants.Sun
-import io.github.wkoller.pollenplot.domain.semantic.Link
-import io.github.wkoller.pollenplot.domain.semantic.Provenance
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
@@ -105,4 +103,3 @@ fun Sighting.toEntity(createdAt: Long, updatedAt: Long) = SightingEntity(
     updatedAt = updatedAt,
 )
 
-fun LinkEntity.toDomain() = Link(subjectId, predicate, objectId, enumOrNull<Provenance>(provenance) ?: Provenance.USER, confidenceBp)

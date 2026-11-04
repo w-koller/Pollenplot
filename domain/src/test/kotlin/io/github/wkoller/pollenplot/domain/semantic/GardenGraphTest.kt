@@ -63,13 +63,10 @@ class GardenGraphTest {
     }
 
     @Test
-    fun `blank values are left out and links join two records`() {
+    fun `blank values are left out`() {
         val bare = GardenPlant("33333333-3333-3333-3333-333333333333", null, "Unknown shrub", null)
         val p = node(JsonLd.document(GardenGraph.plant(bare, null, emptyList())), "urn:uuid:${bare.id}")
         assertTrue(p.keys.none { it == "dwc:scientificName" || it == "schema:containedInPlace" || it == "dwc:occurrenceRemarks" })
-
-        val link = GardenGraph.link(Link(plant.id, Vocab.PP + "companionOf", "44444444-4444-4444-4444-444444444444", Provenance.USER))
-        assertEquals("urn:uuid:44444444-4444-4444-4444-444444444444", (link.single().obj as Term.Iri).value)
     }
 
     @Test

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.domain.id
 
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -17,6 +18,13 @@ class FlowerCallTest {
     fun `a plant out of season is not in flower whatever its colours`() {
         assertEquals(FlowerCall(false, FlowerReason.OUT_OF_SEASON), FlowerCall.decide(model = null, months = spring, month = Month.MARCH, colour = true))
         assertEquals(FlowerCall(false, FlowerReason.OUT_OF_SEASON), FlowerCall.decide(model = false, months = spring, month = Month.MARCH, colour = true))
+    }
+
+    @Test
+    fun `a northern garden's month is compared with the southern months six months on`() {
+        // Spring flowering in the south is March to May in the north.
+        assertEquals(FlowerCall(true, FlowerReason.COLOUR), FlowerCall.decide(model = null, months = spring, month = Month.APRIL, colour = true, hemisphere = Hemisphere.NORTHERN))
+        assertEquals(FlowerCall(false, FlowerReason.OUT_OF_SEASON), FlowerCall.decide(model = null, months = spring, month = Month.OCTOBER, colour = true, hemisphere = Hemisphere.NORTHERN))
     }
 
     @Test

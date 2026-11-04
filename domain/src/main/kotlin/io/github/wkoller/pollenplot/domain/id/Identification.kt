@@ -1,7 +1,9 @@
 package io.github.wkoller.pollenplot.domain.id
 
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.season.MonthSet
+import io.github.wkoller.pollenplot.domain.season.Seasons
 import java.time.Month
 import kotlin.math.max
 import kotlin.math.min
@@ -235,12 +237,12 @@ data class FlowerCall(val flowering: Boolean, val reason: FlowerReason) {
     companion object {
         /**
          * [model] is BioCAP's answer, or null when it gave none. [months] are the plant's flowering months in the
-         * Southern Hemisphere, or null when they are not recorded. [month] is when the photo was taken. [colour] is
-         * the colour hint.
+         * Southern Hemisphere, or null when they are not recorded. [month] is when the photo was taken, in the garden's
+         * [hemisphere]. [colour] is the colour hint.
          */
-        fun decide(model: Boolean?, months: MonthSet?, month: Month, colour: Boolean): FlowerCall = when {
+        fun decide(model: Boolean?, months: MonthSet?, month: Month, colour: Boolean, hemisphere: Hemisphere = Hemisphere.SOUTHERN): FlowerCall = when {
             model == true -> FlowerCall(true, FlowerReason.MODEL)
-            months != null && !months.isEmpty && month !in months -> FlowerCall(false, FlowerReason.OUT_OF_SEASON)
+            months != null && !months.isEmpty && Seasons.toSouthern(month, hemisphere) !in months -> FlowerCall(false, FlowerReason.OUT_OF_SEASON)
             model == false -> FlowerCall(false, FlowerReason.MODEL)
             colour -> FlowerCall(true, FlowerReason.COLOUR)
             else -> FlowerCall(false, FlowerReason.NO_SIGN)
