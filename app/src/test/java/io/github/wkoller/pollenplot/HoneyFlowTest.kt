@@ -161,7 +161,8 @@ class HoneyFlowTest {
         compose.onNodeWithText("Save").performScrollTo().performClick()
         // The editor shows the status too, so this waits for it to close.
         compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Save").fetchSemanticsNodes().isEmpty() }
-        compose.onNodeWithText("Queenless").assertExists()
+        // The page shows the change once the database sends it.
+        waitFor(hasText("Queenless"))
         compose.onNodeWithText("Queen from 2026, marked white").assertExists()
         assertEquals(HiveStatus.QUEENLESS, runBlocking { bees.hives.first().single().status })
     }

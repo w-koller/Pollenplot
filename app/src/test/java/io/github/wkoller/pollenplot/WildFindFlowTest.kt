@@ -116,8 +116,8 @@ class WildFindFlowTest {
         waitFor(hasText("This find will not be saved, and the photo is deleted when you leave."))
 
         model.takeAnother()
-        // The photo is let go outside the screen's scope, which may already be gone.
-        compose.waitUntil(WAIT_MS) { runBlocking { garden.photo(photoId) } == null }
+        // The photo is let go outside the screen's scope, which may already be gone, and its files after its record.
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.photo(photoId) } == null && !photoFile.exists() }
         assertNull("The photo's record is gone", runBlocking { garden.photo(photoId) })
         assertFalse("The photo's file is gone", photoFile.exists())
     }
