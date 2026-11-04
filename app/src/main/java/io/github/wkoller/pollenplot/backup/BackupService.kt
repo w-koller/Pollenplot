@@ -53,6 +53,7 @@ data class BackupContents(
     val hives: Int,
     val hotels: Int,
     val wateringLines: Int,
+    val wishes: Int = 0,
 )
 
 /** A backup that has been read and checked, kept aside in the app's own storage until it is restored or put away. */
@@ -380,6 +381,7 @@ class BackupService(
             hives = count("honey_hives") + count("native_hives"),
             hotels = count("hotels"),
             wateringLines = count("watering_lines"),
+            wishes = count("wishes"),
         )
     }
 
@@ -522,6 +524,6 @@ class BackupService(
 
         /** Every photo and cut-out that a record shows. */
         const val STORED_PATHS = "SELECT path FROM photos UNION SELECT thumbnail FROM plants " +
-            "UNION SELECT thumbnail FROM detections UNION SELECT thumbnail FROM sightings"
+            "UNION SELECT thumbnail FROM detections UNION SELECT thumbnail FROM sightings UNION SELECT thumbnail FROM wishes"
     }
 }

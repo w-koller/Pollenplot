@@ -25,7 +25,7 @@ fun SightingFields(
     onBehaviour: (Behaviour?) -> Unit,
 ) {
     val nearbyPlants = plants.filter { (it.isGrowing && (zoneId == null || it.plant.zoneId == zoneId)) || it.plant.id == plantId }
-    ZoneChooser(zones, zoneId, onZone)
+    ZoneChooser(zones, zoneId, onChoose = onZone)
     if (nearbyPlants.isNotEmpty()) {
         val titles = nearbyPlants.associate { it.plant.id to it.title }
         ChipGroup(

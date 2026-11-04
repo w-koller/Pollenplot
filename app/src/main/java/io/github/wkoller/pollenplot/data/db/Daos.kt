@@ -56,6 +56,10 @@ interface PhotoDao {
 
     @Query("SELECT * FROM photos WHERE id IN (:ids)")
     suspend fun getAll(ids: List<String>): List<PhotoEntity>
+
+    /** Removes a photo with the finds in it and their suggestions. */
+    @Query("DELETE FROM photos WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao
@@ -85,21 +89,24 @@ interface DetectionDao {
     /** Photos with plants waiting for review, the most recently taken first. */
     @Query(
         "SELECT d.photoId FROM detections d JOIN photos p ON p.id = d.photoId WHERE d.status = 'NEEDS_REVIEW' " +
-            "GROUP BY d.photoId ORDER BY MAX(p.takenAt) DESC",
+            "AND p.origin != 'FIELD' GROUP BY d.photoId ORDER BY MAX(p.takenAt) DESC",
     )
     fun observePendingPhotoIds(): Flow<List<String>>
 
-    @Query("SELECT COUNT(*) FROM detections WHERE status = 'NEEDS_REVIEW'")
+    @Query("SELECT COUNT(*) FROM detections d JOIN photos p ON p.id = d.photoId WHERE d.status = 'NEEDS_REVIEW' AND p.origin != 'FIELD'")
     fun observePendingCount(): Flow<Int>
 
-    /** Plants waiting for review that [source] has not suggested names for. */
+    /** Plants waiting for review that [source] has not suggested names for. Finds away from home are left out. */
     @Query(
-        "SELECT * FROM detections d WHERE d.status = 'NEEDS_REVIEW' AND NOT EXISTS " +
+        "SELECT d.* FROM detections d JOIN photos p ON p.id = d.photoId WHERE d.status = 'NEEDS_REVIEW' AND p.origin != 'FIELD' AND NOT EXISTS " +
             "(SELECT 1 FROM candidates c WHERE c.detectionId = d.id AND c.sources LIKE '%' || :source || '%') ORDER BY d.createdAt DESC",
     )
     suspend fun pendingWithout(source: String): List<DetectionEntity>
 
-    @Query("SELECT * FROM detections WHERE status = 'NEEDS_REVIEW' AND secondOpinion = 0 ORDER BY createdAt DESC LIMIT :limit")
+    @Query(
+        "SELECT d.* FROM detections d JOIN photos p ON p.id = d.photoId WHERE d.status = 'NEEDS_REVIEW' AND p.origin != 'FIELD' " +
+            "AND d.secondOpinion = 0 ORDER BY d.createdAt DESC LIMIT :limit",
+    )
     suspend fun waitingForSecondOpinion(limit: Int): List<DetectionEntity>
 
     @Query("UPDATE detections SET secondOpinion = 1 WHERE id = :id")
@@ -114,6 +121,12 @@ interface DetectionDao {
 
     @Query("UPDATE detections SET status = :status, plantId = :plantId, sightingId = :sightingId WHERE id = :id")
     suspend fun setStatus(id: String, status: String, plantId: String?, sightingId: String?)
+
+    @Query("SELECT COUNT(*) FROM detections WHERE photoId = :photoId AND status = 'SAVED'")
+    suspend fun savedInPhoto(photoId: String): Int
+
+    @Query("SELECT thumbnail FROM detections WHERE photoId = :photoId")
+    suspend fun thumbnailsInPhoto(photoId: String): List<String>
 }
 
 @Dao

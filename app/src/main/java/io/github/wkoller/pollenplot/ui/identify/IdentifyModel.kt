@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.ui.identify
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.PhotoReview
+import io.github.wkoller.pollenplot.data.WishRepository
+import io.github.wkoller.pollenplot.data.photos.PhotoStore
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
@@ -27,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 /** What the Identify screen is showing. */
 sealed interface IdentifyStage {
@@ -56,6 +60,16 @@ class IdentifyModel(
     private val saved: SavedStateHandle,
     /** How many times a plant has been recorded near the garden, for the boost such plants get. */
     private val nearby: (String) -> Int = { 0 },
+    /** Photos are taken away from home, to find out what a plant is and perhaps save it to the wishlist. */
+    val field: Boolean = false,
+    wishes: WishRepository? = null,
+    /** Reads a photo the user chose, at most [PhotoStore.MAX_SIDE] across, and when it was taken. */
+    private val readPhoto: suspend (Uri) -> Pair<Bitmap, Instant?>? = { null },
+    /**
+     * Lets go of a photo taken away from home with nothing saved from it. It runs outside this model's scope, because
+     * the model may be going.
+     */
+    private val discardFieldPhoto: (String) -> Unit = {},
 ) : ViewModel() {
     private val _stage = MutableStateFlow(saved.get<String>(PHOTO_ID)?.let { IdentifyStage.Results(it) } ?: IdentifyStage.Camera)
     val stage: StateFlow<IdentifyStage> = _stage.asStateFlow()
@@ -91,7 +105,7 @@ class IdentifyModel(
     val results: StateFlow<PhotoReview?> = _results.asStateFlow()
 
     /** What the review cards do. */
-    val actions = DetectionActions(garden, settings, viewModelScope)
+    val actions = DetectionActions(garden, settings, viewModelScope, wishes)
 
     private var watching: Job? = null
 
@@ -144,6 +158,32 @@ class IdentifyModel(
         }
     }
 
+    /** Where photos taken here come from. */
+    private fun origin(): PhotoOrigin = if (field) PhotoOrigin.FIELD else PhotoOrigin.CAMERA
+
+    /** Finds the plants in a photo the user chose from the phone or a cloud album, read once and not kept linked. */
+    fun choosePhoto(uri: Uri) {
+        if (_stage.value != IdentifyStage.Camera || _capturing.value) return
+        _capturing.value = true
+        viewModelScope.launch {
+            val read = try {
+                readPhoto(uri)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "The chosen photo could not be read", e)
+                null
+            } finally {
+                _capturing.value = false
+            }
+            if (read == null) {
+                _stage.value = IdentifyStage.Failed
+                return@launch
+            }
+            analyse(read.first, if (field) PhotoOrigin.FIELD else PhotoOrigin.IMPORT, read.second)
+        }
+    }
+
     /** Takes a photo with [take] and finds the plants in it. */
     fun capture(take: suspend () -> Bitmap) {
         if (_stage.value != IdentifyStage.Camera || _capturing.value) return
@@ -165,11 +205,15 @@ class IdentifyModel(
     }
 
     /** Finds the plants in [photo], keeps it if it shows any, and shows them for review. */
-    suspend fun analyse(photo: Bitmap) {
+    suspend fun analyse(photo: Bitmap, from: PhotoOrigin = origin(), takenAt: Instant? = null) {
         _captured.value = photo
         _stage.value = IdentifyStage.Analysing
         _stage.value = try {
-            val result = analysis.analyse(photo, PhotoOrigin.CAMERA, group = _group.value, scope = _scope.value)
+            val result = if (takenAt != null) {
+                analysis.analyse(photo, from, takenAt, group = _group.value, scope = _scope.value)
+            } else {
+                analysis.analyse(photo, from, group = _group.value, scope = _scope.value)
+            }
             val stored = result.photo
             if (stored == null || result.detections.isEmpty()) {
                 IdentifyStage.NoneFound
@@ -191,8 +235,12 @@ class IdentifyModel(
         }
     }
 
-    /** Goes back to the camera for another photo. Plants not yet reviewed wait in the Review queue. */
+    /**
+     * Goes back to the camera for another photo. Plants not yet reviewed wait in the Review queue; a photo taken away
+     * from home with nothing saved from it is let go.
+     */
     fun takeAnother() {
+        letGo()
         saved.remove<String>(PHOTO_ID)
         watching?.cancel()
         watching = null
@@ -200,6 +248,14 @@ class IdentifyModel(
         _live.value = emptyList()
         gardenSpecies = null
         _stage.value = IdentifyStage.Camera
+    }
+
+    override fun onCleared() {
+        letGo()
+    }
+
+    private fun letGo() {
+        if (field) saved.get<String>(PHOTO_ID)?.let(discardFieldPhoto)
     }
 
     /** Follows a photo's plants in the database, so each card shows what was decided for it. */

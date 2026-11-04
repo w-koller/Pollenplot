@@ -29,6 +29,20 @@
 - Settings has a Battery saver row. It says whether the phone holds Pollenplot back to save battery, which can delay the
   morning reminders and photo scans, and opens the phone's battery settings.
 - The README describes what the app sends online, each permission, the optional downloads and known limits.
+- Identify a plant away from home, from the Plot's add menu or the Wishlist. Each find says whether it is native to
+  your state, a weed in your area, or not on your area's weed lists, with the sun and water it needs. Save it to the
+  wishlist or let it go. These finds never wait in the Review queue, and a photo with nothing saved from it is deleted.
+  Plants in your garden and plants recorded near it get no boost in these photos.
+- The Wishlist, opened from the Plot, keeps plants you would like to grow: where you saw each one, its price, the zone
+  it might go in and the badges that zone would gain, and notes. Plant it adds the plant to that zone and marks the
+  wish planted. Wishes are in search, reports, backups and the JSON-LD export.
+- A weed's plant page, its card in review and the Weeds screen show native alternatives for your state, from the
+  Grow Me Instead booklets, each with Add to wishlist and a link to its booklet.
+- Settings and the setup ask whether cats or dogs live at home. Then plants toxic to pets show that badge first, and
+  Pollen Rhythms leaves them out of its suggestions.
+- Identify has Choose from photos, for a photo on the phone or in a cloud album the photo picker shows, such as Google
+  Photos. It also works when the camera is not allowed.
+- Photos added with Add plant photos give back the app's access to them once they have been looked at.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 

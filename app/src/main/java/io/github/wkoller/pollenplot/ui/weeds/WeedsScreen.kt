@@ -64,6 +64,8 @@ fun WeedsScreen(
     onSetLocation: () -> Unit,
     onCompare: (speciesName: String) -> Unit = {},
     onOpenFinder: () -> Unit = {},
+    /** Native alternatives for each weed growing in the garden, and the wishlist to add them to. */
+    help: WeedHelp? = null,
 ) {
     val context = LocalContext.current
     val uri = LocalUriHandler.current
@@ -132,6 +134,10 @@ fun WeedsScreen(
                     Column {
                         PlantRow(view, onClick = { onOpenPlant(view.plant.id) })
                         WeedNotice(view.weed, locality, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
+                        help?.let { helper ->
+                            val names = view.species?.let { listOf(it.name) + it.synonyms } ?: listOfNotNull(view.plant.speciesName)
+                            NativeAlternatives(helper, names, kb, locality, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
+                        }
                     }
                 }
             }

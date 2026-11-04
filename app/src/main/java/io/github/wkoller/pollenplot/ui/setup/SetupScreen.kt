@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -80,6 +81,7 @@ import io.github.wkoller.pollenplot.ui.settings.GardenLocationModel
 import io.github.wkoller.pollenplot.ui.settings.ModelsContent
 import io.github.wkoller.pollenplot.ui.settings.galleryPermissions
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Clock
@@ -144,7 +146,7 @@ fun SetupScreen(
         SetupStep.MODELS -> SetupScaffold(index, stringResource(R.string.setup_models_title), previous, onSkip = next, onNext = next) { padding ->
             ModelsContent(meaning, accurate, gemma, padding, setup = true)
         }
-        SetupStep.ZONES -> ZonesStep(index, garden, previous, next)
+        SetupStep.ZONES -> ZonesStep(index, garden, settings, previous, next)
         SetupStep.PERMISSIONS -> SetupScaffold(
             index,
             stringResource(R.string.setup_permissions_title),
@@ -236,8 +238,9 @@ private fun Welcome(padding: PaddingValues) {
  * Pollenplot sets out on the Plot's grid.
  */
 @Composable
-private fun ZonesStep(index: Int, garden: GardenRepository, onPrevious: () -> Unit, onNext: () -> Unit) {
+private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsStore, onPrevious: () -> Unit, onNext: () -> Unit) {
     val existing by garden.zoneList.collectAsStateWithLifecycle(initialValue = emptyList())
+    val pets by remember(settings) { settings.settings.map { it.petsAtHome } }.collectAsStateWithLifecycle(initialValue = false)
     var ticked by rememberSaveable(stateSaver = TickedSaver) { mutableStateOf(emptyMap<ZoneKind, String>()) }
     val scope = rememberCoroutineScope()
     val labels = SETUP_KINDS.associateWith { stringResource(it.label) }
@@ -293,6 +296,16 @@ private fun ZonesStep(index: Int, garden: GardenRepository, onPrevious: () -> Un
                         )
                     }
                 }
+            }
+            // Pets change which plants Pollenplot suggests, so the question is asked with the garden's zones.
+            item(key = "pets") {
+                ListItem(
+                    checked = pets,
+                    onCheckedChange = { on -> scope.launch { settings.update { it.copy(petsAtHome = on) } } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_pets), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_pets_body)) },
+                    trailingContent = { Switch(checked = pets, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_pets)) }
             }
         }
     }

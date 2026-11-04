@@ -77,7 +77,9 @@ import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.RoleBadges
 import io.github.wkoller.pollenplot.ui.listWords
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
+import io.github.wkoller.pollenplot.ui.weeds.NativeAlternatives
 import io.github.wkoller.pollenplot.ui.weeds.WeedCard
+import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.ui.wildlife.PlantAnimalsCard
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -94,6 +96,8 @@ fun PlantDetailScreen(
     plantId: String,
     onBack: () -> Unit,
     onCompare: (speciesName: String) -> Unit = {},
+    /** Native alternatives for a plant that is a weed, and the wishlist to add them to. */
+    help: WeedHelp? = null,
     onOpenAnimal: (String) -> Unit = {},
     onOpenSighting: (String) -> Unit = {},
     onAsk: (() -> Unit)? = null,
@@ -135,6 +139,9 @@ fun PlantDetailScreen(
             if (loaded.weed.isWeed) {
                 val name = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()
                 item { WeedCard(loaded.weed, locality, scientificName = name, onCompare = { onCompare(name) }) }
+                help?.let { helper ->
+                    item { NativeAlternatives(helper, loaded.species?.let { listOf(it.name) + it.synonyms } ?: listOf(name), kb, locality) }
+                }
             }
             val unknownName = loaded.plant.speciesName
             if (resolved == null && unknownName != null && assistant != null) {

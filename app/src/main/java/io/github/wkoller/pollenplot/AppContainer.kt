@@ -1,6 +1,8 @@
 package io.github.wkoller.pollenplot
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
@@ -16,6 +18,8 @@ import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.RhythmsViews
 import io.github.wkoller.pollenplot.data.TodayViews
 import io.github.wkoller.pollenplot.data.WaterRepository
+import io.github.wkoller.pollenplot.data.WishRepository
+import io.github.wkoller.pollenplot.data.WishViews
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.Locality
@@ -32,10 +36,13 @@ import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
+import io.github.wkoller.pollenplot.domain.garden.WishStatus
 import io.github.wkoller.pollenplot.domain.report.XlsxWriter
 import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.semantic.DarwinCore
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
+import io.github.wkoller.pollenplot.domain.weeds.WeedAlternatives
+import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.notify.HeatAlertCheck
 import io.github.wkoller.pollenplot.report.ReportPart
 import io.github.wkoller.pollenplot.report.ReportBuilder
@@ -76,6 +83,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.OutputStream
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 
 /**
@@ -128,6 +136,16 @@ class AppContainer(
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
     val weedPhotos = WeedPhotos(this.web) { weeds.sources }
     val photos = PhotoStore(appContext)
+    val wishes = WishRepository(this.database, clock, { knowledge.await() }, photos::delete)
+
+    val wishViews = WishViews(wishes, views, knowledge, settingsStore)
+
+    /** Native plants to grow instead of garden weeds, read from the assets once they are first needed. */
+    val weedHelp = WeedHelp(
+        { appContext.assets.open("weeds/alternatives.json").bufferedReader().use { WeedAlternatives.parse(it.readText()) } },
+        wishes,
+        settingsStore,
+    )
 
     val accurate = AccuratePack(appContext, scope)
 
@@ -146,7 +164,7 @@ class AppContainer(
     val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
     val waterPlan = WaterPlanCheck(water, waterViews, settingsStore, notifications)
-    val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock)
+    val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews)
     val today = TodayViews(water, waterViews, beeViews, garden, views, settingsStore, clock)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
@@ -173,6 +191,7 @@ class AppContainer(
                 bees.reindex()
                 nativeBees.reindex()
                 hotels.reindex()
+                wishes.reindex()
             }
         }
         // The weed lists are brought up to date once a month on Wi-Fi, and straight away when the garden moves.
@@ -218,6 +237,7 @@ class AppContainer(
             bees.reindex()
             nativeBees.reindex()
             hotels.reindex()
+            wishes.reindex()
         } catch (e: RuntimeException) {
             // The index is rebuilt again when the app next starts, so search catches up then.
             Log.w("Backup", "The search index could not be rebuilt after a restore", e)
@@ -239,7 +259,7 @@ class AppContainer(
         return false
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {
@@ -261,6 +281,21 @@ class AppContainer(
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */
     fun recordsNearby(name: String): Int = weeds.data.value.recordsNearby(name)
+
+    /** A photo the user chose to identify, upright and small enough for the models, and when it was taken. */
+    suspend fun readChosenPhoto(uri: Uri): Pair<Bitmap, Instant?>? = withContext(Dispatchers.IO) {
+        gallery.load(uri, PhotoStore.MAX_SIDE)?.let { it to gallery.takenAt(uri) }
+    }
+
+    /** Lets go of a photo taken away from home with nothing saved from it, whatever the screen does meanwhile. */
+    fun discardFieldPhoto(photoId: String) {
+        scope.launch { wishes.discardFieldPhoto(photoId) }
+    }
+
+    /** Marks a wish planted once its plant is in the garden. */
+    fun wishPlanted(id: String) {
+        scope.launch { wishes.setStatus(id, WishStatus.PLANTED) }
+    }
 
     /** The garden's hemisphere, as the settings hold it now. */
     private suspend fun gardenHemisphere(): Hemisphere = settingsStore.settings.first().hemisphere

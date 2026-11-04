@@ -103,7 +103,7 @@ class HotelFlowTest {
 
         compose.onNodeWithContentDescription("Back").performClick()
         waitFor(hasText("Bee hotels"))
-        compose.onNodeWithText("Fence hotel").assertExists()
+        waitFor(hasText("Fence hotel"))
         shot("bees_hotels")
     }
 

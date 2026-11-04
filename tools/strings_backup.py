@@ -58,4 +58,5 @@ PLURALS = {
     "backup_hives": {"one": "%d hive", "other": "%d hives"},
     "backup_hotels": {"one": "%d bee hotel", "other": "%d bee hotels"},
     "backup_lines": {"one": "%d watering line", "other": "%d watering lines"},
+    "backup_wishes": {"one": "%d plant on the wishlist", "other": "%d plants on the wishlist"},
 }

@@ -26,6 +26,7 @@ STRINGS = {
     "report_part_native": "Native bees",
     "report_part_hotels": "Bee hotels",
     "report_part_water": "Watering",
+    "report_part_wishlist": "Wishlist",
 
     "report_zones": "Zones",
     "report_plants": "Plants",
@@ -95,6 +96,8 @@ STRINGS = {
     "col_flow": "Flow in L an hour",
     "col_next": "Next watering",
     "col_where": "Line or zone",
+    "col_seen_at": "Seen at",
+    "col_price": "Price in dollars",
     "report_yes": "Yes",
     "report_no": "No",
 }

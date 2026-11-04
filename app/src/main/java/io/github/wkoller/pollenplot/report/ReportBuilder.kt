@@ -10,7 +10,9 @@ import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.RhythmsViews
 import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.data.WaterViews
+import io.github.wkoller.pollenplot.data.WishViews
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
+import io.github.wkoller.pollenplot.domain.garden.WishStatus
 import io.github.wkoller.pollenplot.domain.report.PlotZone
 import io.github.wkoller.pollenplot.domain.report.Report
 import io.github.wkoller.pollenplot.domain.report.ReportCell
@@ -25,6 +27,7 @@ import io.github.wkoller.pollenplot.ui.bees.label
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.water.label
 import io.github.wkoller.pollenplot.ui.wildlife.label
+import io.github.wkoller.pollenplot.ui.wishlist.label
 import java.io.File
 import java.math.BigDecimal
 import java.time.Clock
@@ -43,6 +46,7 @@ enum class ReportPart(@StringRes val label: Int) {
     NATIVE(R.string.report_part_native),
     HOTELS(R.string.report_part_hotels),
     WATER(R.string.report_part_water),
+    WISHLIST(R.string.report_part_wishlist),
 }
 
 /**
@@ -60,6 +64,7 @@ class ReportBuilder(
     private val rhythms: RhythmsViews,
     private val settings: SettingsStore,
     private val clock: Clock,
+    private val wishes: WishViews? = null,
 ) {
     private fun s(@StringRes id: Int, vararg args: Any): String = context.getString(id, *args)
 
@@ -92,6 +97,7 @@ class ReportBuilder(
                 ReportPart.NATIVE -> native(::inPeriod)
                 ReportPart.HOTELS -> hotels(::inPeriod)
                 ReportPart.WATER -> water(::inPeriod)
+                ReportPart.WISHLIST -> wishlist()
             }
         }
         // A part with nothing recorded says so, rather than showing a heading with nothing under it.
@@ -263,6 +269,23 @@ class ReportBuilder(
             },
         )
         return ReportSection(s(R.string.report_part_hotels), emptyList(), listOf(hotelTable, looks))
+    }
+
+    /** The plants on the wishlist as they are now, wanted ones first. */
+    private suspend fun wishlist(): ReportSection {
+        val list = wishes?.list?.first().orEmpty()
+        val table = table(
+            R.string.report_part_wishlist,
+            listOf(R.string.col_plant, R.string.col_scientific, R.string.col_status, R.string.col_seen_at, R.string.col_price, R.string.col_zone, R.string.col_notes),
+            list.map { view ->
+                val wish = view.wish
+                listOf(
+                    text(view.title), text(view.scientificName), text(s(wish.status.label)), text(wish.placeName),
+                    wish.priceCents?.let { ReportCell.Number(BigDecimal.valueOf(it, 2)) } ?: text(null), text(view.zoneName), text(wish.notes),
+                )
+            },
+        )
+        return ReportSection(s(R.string.report_part_wishlist), emptyList(), listOf(table))
     }
 
     private suspend fun water(inPeriod: (LocalDate) -> Boolean): ReportSection {

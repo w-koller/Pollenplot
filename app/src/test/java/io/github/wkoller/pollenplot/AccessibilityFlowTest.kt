@@ -80,6 +80,7 @@ class AccessibilityFlowTest {
             container.hotels.saveHotel(BeeHotel(container.hotels.newRecordId(), "Fence hotel", ids.hive, null, null, null, listOf(HotelSection(HotelMaterial.BAMBOO, null, null, 12))))
             container.water.saveLine(WateringLine(container.water.newId(), "Citrus drip", WaterMethod.entries.first(), setOf(ids.citrus), 8_000))
             container.water.refreshWeather(place)
+            container.wishes.add("Hibbertia scandens", ids.front)
         }
     }
 
@@ -95,6 +96,15 @@ class AccessibilityFlowTest {
         compose.setContent { PollenplotTheme(Settings()) { Surface { AppRoot(app.container) } } }
         waitFor(hasText("Today"))
         visit("plot")
+        compose.onNodeWithContentDescription("Wishlist").performClick()
+        reach(hasText("Snake vine"))
+        visit("wishlist")
+        compose.onNodeWithText("Snake vine").performClick()
+        reach(hasText("Plant it"))
+        visit("wish")
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.onNodeWithContentDescription("Back").performClick()
+        waitFor(hasText("Today"))
         compose.onNodeWithContentDescription("Show as a list").performClick()
         reach(hasText("Back Citrus Patch"))
         visit("plot_list")

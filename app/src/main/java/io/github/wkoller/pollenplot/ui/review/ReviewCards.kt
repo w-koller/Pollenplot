@@ -65,6 +65,8 @@ import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
+import io.github.wkoller.pollenplot.ui.weeds.NativeAlternatives
+import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.ui.weeds.WeedNotice
 import io.github.wkoller.pollenplot.ui.components.Badge
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
@@ -93,6 +95,9 @@ class ReviewCallbacks(
     val onCompare: ((detection: DetectionRecord, speciesName: String) -> Unit)? = null,
     /** Adds an animal or fungus as a sighting: its scientific name if known, the name to show for it, and where. */
     val onAddSighting: ((detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantId: String?, behaviour: Behaviour?) -> Unit)? = null,
+    /** Saves a plant found away from home to the wishlist, with the zone it might go in. */
+    val onSave: ((detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?) -> Unit)? = null,
+    val onOpenWishlist: (() -> Unit)? = null,
 )
 
 /**
@@ -117,6 +122,9 @@ fun DetectionReviewCard(
     modifier: Modifier = Modifier,
     fauna: FaunaBase? = null,
     sightings: List<SightingView> = emptyList(),
+    /** The photo was taken away from home: a plant is saved to the wishlist or let go, not added to the garden. */
+    field: Boolean = false,
+    help: WeedHelp? = null,
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
@@ -131,8 +139,9 @@ fun DetectionReviewCard(
                 DetectionStatus.NEEDS_REVIEW -> if (detection.group.isWildlife) {
                     UndecidedAnimal(detection, fauna, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
                 } else {
-                    Undecided(detection, kb, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
+                    Undecided(detection, kb, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks, field, help)
                 }
+                DetectionStatus.SAVED -> SavedFind(detection, kb, choice, callbacks)
                 DetectionStatus.CONFIRMED -> if (detection.sightingId != null) {
                     val sighting = sightings.firstOrNull { it.sighting.id == detection.sightingId }
                     if (sighting == null) {
@@ -157,8 +166,18 @@ fun DetectionReviewCard(
                 }
                 DetectionStatus.REJECTED -> {
                     val wildlife = detection.group.isWildlife
-                    Header(detection.thumbnail, stringResource(if (wildlife) R.string.review_rejected_wildlife_title else R.string.review_rejected_title), null)
-                    Text(stringResource(if (wildlife) R.string.review_rejected_wildlife else R.string.review_rejected), style = MaterialTheme.typography.bodyLarge)
+                    val title = when {
+                        field -> R.string.field_let_go_title
+                        wildlife -> R.string.review_rejected_wildlife_title
+                        else -> R.string.review_rejected_title
+                    }
+                    val body = when {
+                        field -> R.string.field_let_go
+                        wildlife -> R.string.review_rejected_wildlife
+                        else -> R.string.review_rejected
+                    }
+                    Header(detection.thumbnail, stringResource(title), null)
+                    Text(stringResource(body), style = MaterialTheme.typography.bodyLarge)
                     TextButton(onClick = { callbacks.onUndoReject(detection) }) { Text(stringResource(R.string.review_undo)) }
                 }
             }
@@ -242,6 +261,8 @@ private fun Undecided(
     onChoose: (ReviewChoice) -> Unit,
     suggestedZoneId: String?,
     callbacks: ReviewCallbacks,
+    field: Boolean,
+    help: WeedHelp?,
 ) {
     var ownZone by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
     var zoneChosen by rememberSaveable(detection.id) { mutableStateOf(false) }
@@ -259,7 +280,8 @@ private fun Undecided(
     }
     val chosenSpecies = chosenSpeciesName?.let { kb?.species(it) }
     val zoneId = if (zoneChosen) ownZone else suggestedZoneId
-    val existing = chosenSpeciesName?.let { name -> plants.firstOrNull { it.isGrowing && it.plant.speciesName == name } }
+    // Away from home, the plant is not being added to the garden, so a plant of the same species there is not offered.
+    val existing = if (field) null else chosenSpeciesName?.let { name -> plants.firstOrNull { it.isGrowing && it.plant.speciesName == name } }
 
     Header(
         thumbnail = detection.thumbnail,
@@ -276,12 +298,19 @@ private fun Undecided(
     }
     // The suggestion's weed status where the garden is, before it is added.
     val weed = chosenSpecies?.let(locality::weed) ?: chosenSpeciesName?.let(locality::weed)
-    if (weed != null && weed.isWeed && chosenSpeciesName != null) {
+    val isWeed = weed != null && weed.isWeed && chosenSpeciesName != null
+    if (field && chosenSpecies != null && kb != null && !isWeed) {
+        WildStatusLine(chosenSpecies, CareResolver.resolve(kb, chosenSpecies).care, locality)
+    }
+    if (isWeed) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            WeedNotice(weed, locality, Modifier.weight(1f))
+            WeedNotice(weed!!, locality, Modifier.weight(1f))
             callbacks.onCompare?.let { compare ->
-                TextButton(onClick = { compare(detection, chosenSpecies?.name ?: chosenSpeciesName) }) { Text(stringResource(R.string.review_compare)) }
+                TextButton(onClick = { compare(detection, chosenSpecies?.name ?: chosenSpeciesName!!) }) { Text(stringResource(R.string.review_compare)) }
             }
+        }
+        if (help != null) {
+            NativeAlternatives(help, chosenSpecies?.let { listOf(it.name) + it.synonyms } ?: listOfNotNull(chosenSpeciesName), kb, locality)
         }
     }
 
@@ -315,9 +344,15 @@ private fun Undecided(
         }
     }
 
-    ZoneChooser(zones, zoneId) {
+    ZoneChooser(zones, zoneId, title = if (field) stringResource(R.string.field_zone) else null) {
         ownZone = it
         zoneChosen = true
+    }
+    if (field) {
+        FieldActions(choice != null, isWeed, chosenSpecies?.displayName ?: chosenCandidate?.common ?: chosenCandidate?.label, onSave = {
+            plantPick(detection, choice)?.let { callbacks.onSave?.invoke(detection, it.speciesName, it.customName, zoneId) }
+        }, onLetGo = { callbacks.onReject(detection) })
+        return
     }
     ListItem(
         checked = flowering,

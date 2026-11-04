@@ -178,10 +178,10 @@ fun AddToGardenSheet(
 }
 
 @Composable
-fun ZoneChooser(zones: List<ZoneView>, zoneId: String?, onChoose: (String?) -> Unit) {
+fun ZoneChooser(zones: List<ZoneView>, zoneId: String?, title: String? = null, onChoose: (String?) -> Unit) {
     val names = zones.associate { it.zone.id to it.zone.name }
     ChipGroup(
-        title = stringResource(R.string.add_sheet_zone),
+        title = title ?: stringResource(R.string.add_sheet_zone),
         options = listOf<String?>(null) + zones.map { it.zone.id },
         selected = zoneId,
         label = { id -> id?.let(names::get) ?: stringResource(R.string.add_sheet_no_zone) },
