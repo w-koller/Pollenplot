@@ -17,6 +17,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -94,6 +95,8 @@ class BackupFlowTest {
                 PollenplotTheme(settings) { Surface { AppRoot(app.container) } }
             }
         }
+        // The Plot opens once the app knows the garden needs no setup.
+        waitFor(hasContentDescription("Settings"))
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.scrollTo(hasText("Backup and restore"))
         compose.onNodeWithText("Backup and restore").performClick()

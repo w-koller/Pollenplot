@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -191,6 +192,8 @@ class IdentifyFlowTest {
         compose.setContent {
             PollenplotTheme(Settings(gardenState = AuState.QLD)) { Surface { AppRoot(app.container) } }
         }
+        // The Plot opens once the app knows the garden needs no setup.
+        waitFor(hasContentDescription("Open the add menu"))
         compose.onNodeWithContentDescription("Open the add menu").performClick()
         compose.onNodeWithText("Identify with the camera").performClick()
         compose.onNodeWithText("Pollenplot needs the camera to identify plants.").assertIsDisplayed()
