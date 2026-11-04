@@ -184,6 +184,10 @@ fun PhotoReviewScreen(
     var selecting by rememberSaveable { mutableStateOf(false) }
     var selection by rememberSaveable(stateSaver = SelectionSaver) { mutableStateOf(emptySet<String>()) }
     var choosingZone by rememberSaveable { mutableStateOf(false) }
+    // The find being added to a plant chosen from the whole garden, with its species and whether it was in flower.
+    var attaching by rememberSaveable { mutableStateOf<String?>(null) }
+    var attachingSpecies by rememberSaveable { mutableStateOf<String?>(null) }
+    var attachingFlowering by rememberSaveable { mutableStateOf(false) }
     val callbacks = remember(actions) {
         ReviewCallbacks(
             onAdd = actions::add,
@@ -196,7 +200,26 @@ fun PhotoReviewScreen(
             onAddSighting = actions::addSighting,
             onSave = actions::save,
             onOpenWishlist = onOpenWishlist,
+            onChoosePlant = if (field) {
+                null
+            } else {
+                { detection, species, flowering ->
+                    attaching = detection.id
+                    attachingSpecies = species
+                    attachingFlowering = flowering
+                }
+            },
         )
+    }
+
+    val attachingDetection = attaching?.let { id -> reviews?.flatMap { it.detections }?.firstOrNull { it.id == id } }
+    if (attachingDetection != null) {
+        BackHandler { attaching = null }
+        PlantChooser(plants, attachingSpecies, onBack = { attaching = null }) { plantId ->
+            actions.attach(attachingDetection, plantId, attachingFlowering)
+            attaching = null
+        }
+        return
     }
 
     val searchingFor = choosingFor

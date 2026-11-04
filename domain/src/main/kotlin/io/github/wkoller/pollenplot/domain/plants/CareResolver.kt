@@ -1,7 +1,10 @@
 package io.github.wkoller.pollenplot.domain.plants
 
-/** Where a fact came from: the species itself, or its genus or family when the species has no record of its own. */
-enum class FactLevel { SPECIES, GENUS, FAMILY }
+/**
+ * Where a fact came from: the user's own correction for the species, the species itself, or its genus or family when
+ * the species has no record of its own.
+ */
+enum class FactLevel { USER, SPECIES, GENUS, FAMILY }
 
 enum class CareField {
     SUN, WATER, DROUGHT, FROST, SALT, SOILS, PH, FERTILISER, COMPOST, WILDLIFE, FORAGE, GROUND_COVER, HEIGHT, WIDTH,
@@ -13,30 +16,37 @@ data class ResolvedCare(val care: CareProfile, val levels: Map<CareField, FactLe
     fun levelOf(field: CareField): FactLevel? = levels[field]
 
     /** True when at least one fact had to come from the genus or family. */
-    val usesFallback: Boolean get() = levels.values.any { it != FactLevel.SPECIES }
+    val usesFallback: Boolean get() = levels.values.any { it == FactLevel.GENUS || it == FactLevel.FAMILY }
+
+    /** The facts the user corrected. */
+    val corrected: Set<CareField> get() = levels.filterValues { it == FactLevel.USER }.keys
 }
 
 /**
  * Fills gaps in a species' care profile from its genus, then its family. A plant known only by its genus, such as an
- * identification that stopped at "Grevillea", gets the genus and family facts.
+ * identification that stopped at "Grevillea", gets the genus and family facts. The user's corrections for the species,
+ * which the knowledge base carries, come before all of them.
  */
 object CareResolver {
-    fun resolve(kb: KnowledgeBase, species: Species): ResolvedCare =
-        merge(species.care, kb.genus(species.genus)?.care, kb.family(species.family)?.care, FactLevel.SPECIES)
+    /** The species' care, with the user's corrections unless [corrected] is false. */
+    fun resolve(kb: KnowledgeBase, species: Species, corrected: Boolean = true): ResolvedCare =
+        merge(
+            listOfNotNull(
+                kb.correction(species)?.takeIf { corrected }?.let { it to FactLevel.USER },
+                species.care to FactLevel.SPECIES,
+                kb.genus(species.genus)?.care?.let { it to FactLevel.GENUS },
+                kb.family(species.family)?.care?.let { it to FactLevel.FAMILY },
+            ),
+        )
 
     fun resolveGenus(kb: KnowledgeBase, genus: String): ResolvedCare? {
         val group = kb.genus(genus) ?: return null
         val family = group.family?.let { kb.family(it) }
-        return merge(group.care, null, family?.care, FactLevel.GENUS)
+        return merge(listOfNotNull(group.care to FactLevel.GENUS, family?.care?.let { it to FactLevel.FAMILY }))
     }
 
-    private fun merge(first: CareProfile, genus: CareProfile?, family: CareProfile?, firstLevel: FactLevel): ResolvedCare {
+    private fun merge(layers: List<Pair<CareProfile, FactLevel>>): ResolvedCare {
         val levels = mutableMapOf<CareField, FactLevel>()
-        val layers = listOfNotNull(
-            first to firstLevel,
-            genus?.let { it to FactLevel.GENUS },
-            family?.let { it to FactLevel.FAMILY },
-        )
 
         fun <T> pick(field: CareField, get: (CareProfile) -> T?): T? {
             for ((profile, level) in layers) {

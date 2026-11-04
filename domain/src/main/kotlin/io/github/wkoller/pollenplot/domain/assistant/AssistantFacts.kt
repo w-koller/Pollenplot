@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.domain.assistant
 
 import io.github.wkoller.pollenplot.domain.plants.AuState
+import io.github.wkoller.pollenplot.domain.plants.CareField
 import io.github.wkoller.pollenplot.domain.plants.CareProfile
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.plants.Toxicity
@@ -24,7 +25,10 @@ object AssistantFacts {
         quantity: Int,
         weedStatus: String?,
         hemisphere: Hemisphere = Hemisphere.SOUTHERN,
+        /** The facts the gardener corrected, which are marked as theirs rather than the knowledge base's. */
+        corrected: Set<CareField> = emptySet(),
     ): List<String> = buildList {
+        fun add(field: CareField, line: String) = add(if (field in corrected) "$line (the gardener's own correction)" else line)
         add(listOfNotNull(title, species?.let { "${it.name}, family ${it.family}" }).joinToString(", "))
         species?.form?.let { add("Growth form: ${words(it.name)}") }
         species?.let {
@@ -34,16 +38,16 @@ object AssistantFacts {
         weedStatus?.let { add("Weed status where the garden is, from the official lists: $it") }
         care ?: return@buildList
         care.description?.let { add(it) }
-        care.sun?.let { sun -> add("Light: ${sun.sortedBy { it.ordinal }.joinToString(", ") { words(it.name) }}") }
-        care.water?.let { add("Water need once established: ${words(it.name)}") }
+        care.sun?.let { sun -> add(CareField.SUN, "Light: ${sun.sortedBy { it.ordinal }.joinToString(", ") { words(it.name) }}") }
+        care.water?.let { add(CareField.WATER, "Water need once established: ${words(it.name)}") }
         care.drought?.let { add("Drought tolerance: $it of 3") }
-        care.frost?.let { add("Frost tolerance: $it of 3") }
+        care.frost?.let { add(CareField.FROST, "Frost tolerance: $it of 3") }
         care.salt?.let { add("Salt tolerance: $it of 3") }
-        care.soils?.let { soils -> add("Soils: ${soils.sortedBy { it.ordinal }.joinToString(", ") { words(it.name) }}") }
+        care.soils?.let { soils -> add(CareField.SOILS, "Soils: ${soils.sortedBy { it.ordinal }.joinToString(", ") { words(it.name) }}") }
         val phMin = care.phMinTenths
         val phMax = care.phMaxTenths
         if (phMin != null && phMax != null) add("Soil pH: ${phMin / 10.0} to ${phMax / 10.0}")
-        care.fertiliser?.let { add("Feeding: ${words(it.name)}") }
+        care.fertiliser?.let { add(CareField.FERTILISER, "Feeding: ${words(it.name)}") }
         care.fertiliserNote?.let { add(it) }
         care.compostNote?.let { add(it) }
         care.wildlife?.let { w ->
@@ -53,9 +57,9 @@ object AssistantFacts {
         care.forage?.let { f ->
             add("Bee forage, 0 to 3: honey bees ${f.honeyBest}, native bees ${f.nativeBest}${if (f.buzz) "; its flowers need buzz pollination" else ""}")
         }
-        care.flowering?.let { add("Flowers in: ${months(it.fromSouthern(hemisphere))}") }
-        care.height?.let { add("Height: ${it.minMm / 1000.0} to ${it.maxMm / 1000.0} m") }
-        care.width?.let { add("Width: ${it.minMm / 1000.0} to ${it.maxMm / 1000.0} m") }
+        care.flowering?.let { add(CareField.FLOWERING, "Flowers in: ${months(it.fromSouthern(hemisphere))}") }
+        care.height?.let { add(CareField.HEIGHT, "Height: ${it.minMm / 1000.0} to ${it.maxMm / 1000.0} m") }
+        care.width?.let { add(CareField.WIDTH, "Width: ${it.minMm / 1000.0} to ${it.maxMm / 1000.0} m") }
         care.pruning?.let { add("Pruning: $it") }
         care.toxicPets?.let { add("Toxic to pets: ${toxicity(it)}") }
         care.toxicPeople?.let { add("Toxic to people: ${toxicity(it)}") }

@@ -11,6 +11,7 @@ import io.github.wkoller.pollenplot.ai.SecondOpinionWorker
 import io.github.wkoller.pollenplot.backup.BackupService
 import io.github.wkoller.pollenplot.data.BeeRepository
 import io.github.wkoller.pollenplot.data.BeeViews
+import io.github.wkoller.pollenplot.data.CorrectionRepository
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HotelRepository
@@ -76,6 +77,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -114,7 +116,8 @@ class AppContainer(
         scope,
     )
     val database: PollenplotDatabase = database ?: PollenplotDatabase.create(appContext)
-    val knowledge = KnowledgeRepository(appContext, scope)
+    val corrections = CorrectionRepository(this.database, clock)
+    val knowledge = KnowledgeRepository(appContext, scope, corrections.profiles)
     val bees = BeeRepository(this.database, clock)
     val nativeBees = NativeBeeRepository(this.database, clock)
     val hotels = HotelRepository(this.database, clock)
@@ -182,10 +185,11 @@ class AppContainer(
             SecondOpinionWorker.enqueue(appContext)
         }
         // The search text includes knowledge base facts and badges, so it is rebuilt when the app starts and whenever
-        // the garden's state or weed lists change. A garden holds hundreds of records at most, so this takes a moment.
+        // the garden's state, its weed lists or the user's corrections change. A garden holds hundreds of records at
+        // most, so this takes a moment.
         scope.launch {
             knowledge.await()
-            views.locality.distinctUntilChanged().collectLatest {
+            combine(views.locality.distinctUntilChanged(), knowledge.knowledge.filterNotNull()) { place, kb -> place to kb }.collectLatest {
                 garden.reindexAll()
                 // The rebuild clears the whole index, hives included.
                 bees.reindex()
@@ -259,7 +263,7 @@ class AppContainer(
         return false
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {

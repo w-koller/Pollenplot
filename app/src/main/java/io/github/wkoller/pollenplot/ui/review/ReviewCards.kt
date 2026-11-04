@@ -98,6 +98,8 @@ class ReviewCallbacks(
     /** Saves a plant found away from home to the wishlist, with the zone it might go in. */
     val onSave: ((detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?) -> Unit)? = null,
     val onOpenWishlist: (() -> Unit)? = null,
+    /** Opens a chooser of every plant in the garden, to add the find to whichever one the photo shows. */
+    val onChoosePlant: ((detection: DetectionRecord, speciesName: String?, flowering: Boolean) -> Unit)? = null,
 )
 
 /**
@@ -379,6 +381,13 @@ private fun Undecided(
             Button(onClick = onAdd, enabled = choice != null) { Text(stringResource(R.string.review_add)) }
         }
         OutlinedButton(onClick = { callbacks.onReject(detection) }) { Text(stringResource(R.string.review_not_plant)) }
+    }
+    // The photo may show a plant already in the garden under another name, or a second plant of the same kind.
+    callbacks.onChoosePlant?.takeIf { plants.any { it.isGrowing } }?.let { choose ->
+        TextButton(onClick = { choose(detection, chosenSpeciesName, flowering) }) {
+            Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Text(stringResource(R.string.review_add_to_other))
+        }
     }
 
 }

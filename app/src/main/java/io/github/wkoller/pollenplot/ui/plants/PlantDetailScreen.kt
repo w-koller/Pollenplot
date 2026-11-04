@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,6 +58,7 @@ import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
+import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.plants.CareField
 import io.github.wkoller.pollenplot.domain.plants.CareProfile
@@ -84,6 +86,7 @@ import io.github.wkoller.pollenplot.ui.wildlife.PlantAnimalsCard
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import java.time.LocalDate
 import java.time.Month
 import java.time.format.TextStyle
 
@@ -103,8 +106,14 @@ fun PlantDetailScreen(
     onAsk: (() -> Unit)? = null,
     assistant: Assistant? = null,
     onOpenModels: () -> Unit = {},
+    /** Opens the user's corrections to the plant's facts, for a plant in the knowledge base. */
+    onEditFacts: (() -> Unit)? = null,
+    onOpenPhoto: (photoId: String, detectionId: String) -> Unit = { _, _ -> },
+    today: LocalDate = LocalDate.now(),
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
+    val finds by remember(plantId) { garden.findsOf(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val flowered by garden.floweringList.collectAsStateWithLifecycle(initialValue = emptyList())
     val draft by remember(plantId) { garden.careDraft(plantId) }.collectAsStateWithLifecycle(initialValue = null)
     var draftState by remember { mutableStateOf(DraftState.IDLE) }
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -167,7 +176,13 @@ fun PlantDetailScreen(
             } else if (resolved == null) {
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {
-                facts(resolved, loaded, all, kb, locality.hemisphere)
+                val seen = FloweringSeen.lastYear(flowered.filter { it.first == plantId }.map { it.second }, today)
+                facts(resolved, loaded, all, kb, locality.hemisphere, seen, onEditFacts) {
+                    if (finds.isNotEmpty()) item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
+                }
+            }
+            if (resolved == null && finds.isNotEmpty()) {
+                item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
             }
             val seen = sightings.filter { it.sighting.plantId == plantId }
             val users = (loaded.species?.name ?: loaded.plant.speciesName)?.let { fauna?.usersOf(it) }.orEmpty()
@@ -247,7 +262,18 @@ private class Levels(private val resolved: ResolvedCare, fields: List<CareField>
     fun line(field: CareField): FactLevel? = if (card != null) null else resolved.levelOf(field)?.takeIf { it != FactLevel.SPECIES }
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.facts(resolved: ResolvedCare, view: PlantView, all: List<PlantView>, kb: KnowledgeBase?, hemisphere: Hemisphere) {
+private fun androidx.compose.foundation.lazy.LazyListScope.facts(
+    resolved: ResolvedCare,
+    view: PlantView,
+    all: List<PlantView>,
+    kb: KnowledgeBase?,
+    hemisphere: Hemisphere,
+    /** The months the plant was seen in flower in the last year, in the garden's own months. */
+    seen: MonthSet,
+    onEditFacts: (() -> Unit)?,
+    /** The plant's photo history, which goes after its facts and before where they came from. */
+    history: androidx.compose.foundation.lazy.LazyListScope.() -> Unit,
+) {
     val care = resolved.care
     fun levels(vararg fields: CareField) = Levels(resolved, fields.toList())
 
@@ -297,15 +323,27 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(resolved: Resol
             // The knowledge base keeps months for the Southern Hemisphere; a northern garden sees them six months on.
             val flowering = care.flowering?.fromSouthern(hemisphere)
             val peak = care.peakFlowering?.fromSouthern(hemisphere)
+            val words = listWords()
+            val locale = LocalConfiguration.current.locales[0]
             when {
                 flowering == null || flowering.isEmpty -> Line(stringResource(R.string.flowering_unknown))
                 else -> {
-                    val words = listWords()
-                    val locale = LocalConfiguration.current.locales[0]
+                    if (!seen.isEmpty) StripLabel(stringResource(R.string.flowering_expected))
                     MonthStrip(flowering, peak ?: MonthSet.NONE)
-                    Line(if (flowering == MonthSet.ALL) stringResource(R.string.flowering_all_year) else stringResource(R.string.flowering_months, UiFormat.months(flowering, words, locale)))
+                    Line(
+                        if (flowering == MonthSet.ALL) stringResource(R.string.flowering_all_year) else stringResource(R.string.flowering_months, UiFormat.months(flowering, words, locale)),
+                        level = l.line(CareField.FLOWERING),
+                    )
                     peak?.takeIf { !it.isEmpty && it != flowering }?.let { Line(stringResource(R.string.flowering_peak, UiFormat.months(it, words, locale))) }
                 }
+            }
+            // What the photos showed, under what the knowledge base expects.
+            if (seen.isEmpty) {
+                if (flowering != null && !flowering.isEmpty) Line(stringResource(R.string.flowering_not_seen))
+            } else {
+                StripLabel(stringResource(R.string.flowering_seen))
+                MonthStrip(seen, MonthSet.NONE)
+                Line(stringResource(R.string.flowering_seen_months, UiFormat.months(seen, words, locale)))
             }
         }
     }
@@ -364,6 +402,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(resolved: Resol
             }
         }
     }
+    history()
+    onEditFacts?.let { edit ->
+        item {
+            OutlinedButton(onClick = edit) {
+                Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(R.string.facts_edit), modifier = Modifier.padding(start = 8.dp))
+            }
+        }
+    }
     item {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.source_species), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -412,7 +459,7 @@ private fun ForageCard(care: CareProfile, level: FactLevel?) {
     }
 }
 
-/** A card of facts with an icon, a heading, and a note when the facts are for the genus or family. */
+/** A card of facts with an icon, a heading, and a tag when the facts are for the genus or family or the user's. */
 @Composable
 fun FactCard(@DrawableRes icon: Int, title: String, level: FactLevel? = null, content: @Composable ColumnScope.() -> Unit) {
     Card(
@@ -431,7 +478,7 @@ fun FactCard(@DrawableRes icon: Int, title: String, level: FactLevel? = null, co
                     itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-                    if (level == FactLevel.GENUS || level == FactLevel.FAMILY) LevelTag(level)
+                    if (level != null && level != FactLevel.SPECIES) LevelTag(level)
                 }
             }
             content()
@@ -439,7 +486,10 @@ fun FactCard(@DrawableRes icon: Int, title: String, level: FactLevel? = null, co
     }
 }
 
-/** One fact, with a tag when it is for the genus or family. A missing fact says so rather than leaving a gap. */
+/**
+ * One fact, with a tag when it is for the genus or family or the user corrected it. A missing fact says so rather than
+ * leaving a gap.
+ */
 @Composable
 private fun Line(text: String?, strong: Boolean = false, level: FactLevel? = null) {
     val content: @Composable (Modifier) -> Unit = { modifier ->
@@ -451,7 +501,7 @@ private fun Line(text: String?, strong: Boolean = false, level: FactLevel? = nul
             modifier = modifier,
         )
     }
-    if (level == FactLevel.GENUS || level == FactLevel.FAMILY) {
+    if (level != null && level != FactLevel.SPECIES) {
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -469,11 +519,23 @@ private fun Line(text: String?, strong: Boolean = false, level: FactLevel? = nul
 private fun LevelTag(level: FactLevel) {
     Surface(shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
         Text(
-            stringResource(if (level == FactLevel.GENUS) R.string.level_genus else R.string.level_family),
+            stringResource(
+                when (level) {
+                    FactLevel.USER -> R.string.level_user
+                    FactLevel.GENUS -> R.string.level_genus
+                    else -> R.string.level_family
+                },
+            ),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
         )
     }
+}
+
+/** A small label above a strip of months, which TalkBack leaves out because the sentence below says the same. */
+@Composable
+private fun StripLabel(text: String) {
+    Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.clearAndSetSemantics { })
 }
 
 /** The twelve months with flowering months filled in. TalkBack reads the sentence below it instead. */

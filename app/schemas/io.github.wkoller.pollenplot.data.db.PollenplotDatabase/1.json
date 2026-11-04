@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9368e2191f6e408ae9bde27dcd2a5609",
+    "identityHash": "db4961b19c079aeb567e88fc96eaf646",
     "entities": [
       {
         "tableName": "zones",
@@ -2424,11 +2424,65 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "care_corrections",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `speciesName` TEXT NOT NULL, `field` TEXT NOT NULL, `valueJson` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speciesName",
+            "columnName": "speciesName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "field",
+            "columnName": "field",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valueJson",
+            "columnName": "valueJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_care_corrections_speciesName_field",
+            "unique": true,
+            "columnNames": [
+              "speciesName",
+              "field"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_care_corrections_speciesName_field` ON `${TABLE_NAME}` (`speciesName`, `field`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9368e2191f6e408ae9bde27dcd2a5609')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'db4961b19c079aeb567e88fc96eaf646')"
     ]
   }
 }

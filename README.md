@@ -12,7 +12,8 @@ Version 1 includes:
   photos, which are scanned in the background.
 - **The Plot**, a canvas of your yard's zones with each plant's cut-out photo and badges for its role, such as
   pollinator magnet, high thirst or frog safe.
-- **Plant requirements**: sun, water, fertiliser, compost, wildlife value, ground cover and companion plants.
+- **Plant requirements**: sun, water, fertiliser, compost, wildlife value, ground cover and companion plants, which
+  you can correct for your own garden. Each plant keeps the photos it was found in and the months it was seen in flower.
 - **A weed identifier** that checks plants against official weed sources for your area (Brisbane City Council,
   Weeds Australia and the Atlas of Living Australia), with native alternatives from the Grow Me Instead booklets.
 - **A wishlist** of plants to grow, including plants identified away from home, with whether each is native or a

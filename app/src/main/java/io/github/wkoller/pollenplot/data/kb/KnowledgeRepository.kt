@@ -2,31 +2,44 @@ package io.github.wkoller.pollenplot.data.kb
 
 import android.content.Context
 import io.github.wkoller.pollenplot.CrashReporter
+import io.github.wkoller.pollenplot.domain.plants.CareProfile
 import io.github.wkoller.pollenplot.domain.plants.KbFiles
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
  * The plant and animal knowledge bases from app/src/main/assets/kb, read once in the background when the app starts.
- * They are a few hundred kilobytes of reference data, so they are held in memory rather than in a database.
+ * They are a few hundred kilobytes of reference data, so they are held in memory rather than in a database. The plant
+ * knowledge base carries the user's [corrections], and is sent again whenever they change.
  */
-class KnowledgeRepository(private val context: Context, scope: CoroutineScope) {
-    private val _knowledge = MutableStateFlow<KnowledgeBase?>(null)
-    val knowledge: StateFlow<KnowledgeBase?> = _knowledge.asStateFlow()
+class KnowledgeRepository(
+    private val context: Context,
+    scope: CoroutineScope,
+    corrections: Flow<Map<String, CareProfile>> = flowOf(emptyMap()),
+) {
+    private val loaded = MutableStateFlow<KnowledgeBase?>(null)
+    val knowledge: StateFlow<KnowledgeBase?> = combine(loaded, corrections) { kb, corrected ->
+        if (kb == null || corrected.isEmpty()) kb else kb.withCorrections(corrected)
+    }.stateIn(scope, SharingStarted.Eagerly, null)
     private val _fauna = MutableStateFlow<FaunaBase?>(null)
     val fauna: StateFlow<FaunaBase?> = _fauna.asStateFlow()
 
     init {
         scope.launch(Dispatchers.IO) {
-            _knowledge.value = load()
+            loaded.value = load()
             _fauna.value = loadFauna()
         }
     }

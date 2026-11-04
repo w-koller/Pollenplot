@@ -264,6 +264,10 @@ class GardenRepository(
     fun detectionsInPhoto(photoId: String): Flow<List<DetectionRecord>> =
         detections.observeForPhoto(photoId).map { list -> list.map { record(it) } }
 
+    /** The finds added to a plant, with the photos they came from, the most recently taken first. */
+    fun findsOf(plantId: String): Flow<List<DetectionRecord>> =
+        detections.observeForPlant(plantId).map { list -> list.map { record(it) } }
+
     private suspend fun record(entity: DetectionEntity): DetectionRecord {
         val takenAt = photos.get(entity.photoId)?.takenAt?.let(Instant::ofEpochMilli) ?: Instant.ofEpochMilli(entity.createdAt)
         val candidates = detections.candidates(entity.id).map { c ->
