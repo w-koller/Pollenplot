@@ -36,7 +36,9 @@ Free disk space is short on this machine, so model exports and evaluations run i
 are never downloaded here.
 
 CI (`.github/workflows/android.yml`) runs the same tasks, checks that `strings.xml` matches `tools/strings_*.py`, and
-uploads the debug APK, reports and screenshots. It builds a signed release APK when the `KEYSTORE_BASE64`,
+uploads the debug APK, reports and screenshots. It caches Robolectric's Android jar and fetches it with retries,
+because Robolectric's own download has no retry; its version in the workflow changes with Robolectric or the tests'
+SDK. It builds a signed release APK when the `KEYSTORE_BASE64`,
 `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD` secrets are set (the build reads them as `PP_*` environment
 variables). A `v*` tag that matches `versionName` publishes the APK and its checksum as a GitHub Release, with the
 notes from the section of `CHANGELOG.md` headed exactly `## <version>`. A version with a suffix, such as `1.0.0-rc.1`,
