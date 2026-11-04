@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+- The Plot has no edges. Zones can be moved anywhere, including above and to the left of where the first ones were
+  placed, and new zones go beside the others. A grid shows every metre, with a stronger line every 5 m, and while the
+  layout is edited a dashed line marks the part of the yard laid out so far.
+- While the layout is edited, any zone can be dragged without choosing it first. The place it will snap to is drawn as
+  it moves, with how far it moved or its new size, and the view pans when a zone is dragged to the edge.
+- The Plot has zoom in, zoom out and Show the whole plot buttons.
+- Holding a zone on the Plot shows a preview of it: its plants, its next watering, its badges and the animals seen
+  there. Lifting the finger closes it, and screen readers open it with the zone's Preview zone action.
+- A photo from the camera is read as one plant, the one in the middle of the frame, and gives one card. The Garden bed
+  choice looks for each plant in the photo, as photos from the gallery are.
+- A plant found several times in one photo gives one card. Finds of the same species are made one wherever they are in
+  the photo, and an unsure find inside a stronger one is taken as part of it. A photo gives at most four cards.
+- In flower starts switched off unless there is a sign of flowers. The accurate pack's BioCAP looks for flowers when
+  the pack has its flower vectors. A plant that does not usually flower in the month the photo was taken starts as not
+  in flower. Otherwise flower colours in the middle of the cut-out count, and sky, mulch, soil and pots no longer do.
+  The card says why the switch started where it did.
+- Accurate identification pack 2 adds BioCAP's flower vectors. Older packs are removed from the phone once a newer one
+  is due.
+- `docs/sharing.md` proposes how a household could share one garden.
+
 ## 1.0.0-rc.2
 
 - A setup when Pollenplot is first opened: set where your garden is, download the identification models (accurate

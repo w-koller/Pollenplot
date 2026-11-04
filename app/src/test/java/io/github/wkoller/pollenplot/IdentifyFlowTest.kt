@@ -30,10 +30,12 @@ import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
+import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
@@ -141,6 +143,31 @@ class IdentifyFlowTest {
         show(analysed(TestPhotos.threePlants()), Settings(theme = ThemeChoice.DARK, gardenState = AuState.QLD))
         waitFor(hasText("Pollenplot found 3 plants in this photo."))
         shot("identify_results_dark")
+    }
+
+    @Test
+    fun aPhotoOfOnePlantGivesOneCard() {
+        seed()
+        show(analysed(TestPhotos.threePlants(), PhotoScope.ONE))
+        waitFor(hasText("Add to garden"))
+        compose.onNodeWithText("Pollenplot found 1 plant in this photo.").assertIsDisplayed()
+        assertEquals("No card is numbered as one of several", 0, compose.onAllNodesWithText("Plant 1 of", substring = true).fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun oneBushSeenInSeveralTilesIsOnePlant() {
+        seed()
+        val bush = TestPhotos.bottlebrush
+        val tiles = listOf(BoxBp(0, 3_000, 2_000, 6_000), BoxBp(2_000, 6_000, 4_000, 9_000), bush.box).mapIndexed { i, box ->
+            TestPhotos.region(TestPhotos.Painted(box, bush.leaf, bush.flower), flowering = i == 1, LabelScore("Callistemon citrinus", 7_000 - i * 1_000))
+        }
+        val model = analysed(tiles)
+        show(model)
+        waitFor(hasText("Pollenplot found 1 plant in this photo."))
+        val photoId = (model.stage.value as IdentifyStage.Results).photoId
+        val found = runBlocking { garden.detectionsInPhoto(photoId).first() }
+        assertEquals(1, found.size)
+        assertTrue("Flowers seen on any tile are kept", found.single().flowering)
     }
 
     @Test
@@ -254,12 +281,15 @@ class IdentifyFlowTest {
     }
 
     /** Runs a painted garden photo through the app's analysis, with [regions] as what the models found. */
-    private fun analysed(regions: List<FoundRegion>): IdentifyModel {
+    /** The model after a photo showing [regions], taken with the Garden bed chip unless [scope] says one plant. */
+    private fun analysed(regions: List<FoundRegion>, scope: PhotoScope = PhotoScope.SEVERAL): IdentifyModel {
         val identifier = ScriptedIdentifier { regions }
         val container = app.container
         val analysis = PhotoAnalysis({ identifier }, container.photos, garden, container.knowledge, container.clock)
         val model = IdentifyModel(analysis, { identifier }, garden, container.knowledge, container.settingsStore, SavedStateHandle())
+        model.choose(LifeGroup.PLANT, scope)
         runBlocking { model.analyse(TestPhotos.gardenPhoto()) }
+        assertEquals(listOf(scope), identifier.scopes)
         if (regions.isNotEmpty()) assertTrue("The photo was analysed, not ${model.stage.value}", model.stage.value is IdentifyStage.Results)
         return model
     }

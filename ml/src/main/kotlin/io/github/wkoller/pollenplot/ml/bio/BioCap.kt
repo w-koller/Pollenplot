@@ -4,6 +4,8 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import java.nio.FloatBuffer
+import kotlin.math.exp
+import kotlin.math.roundToInt
 
 /**
  * BioCAP's image encoder, which turns a photo of an organism into a unit vector that lies close to the text vectors
@@ -124,6 +126,39 @@ class SpeciesIndex(val species: List<IndexedSpecies>, private val vectors: Short
             val buffer = java.nio.ByteBuffer.wrap(f16).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
             val vectors = ShortArray(buffer.remaining()).also { buffer.get(it) }
             return SpeciesIndex(rows, vectors, dimensions)
+        }
+    }
+}
+
+/**
+ * BioCAP's text vectors for a plant in flower and a plant with only leaves, which packs carry from pack 2, and the band
+ * of beliefs between [noBp] and [yesBp] where the pack's evaluation found BioCAP too often wrong to answer.
+ */
+class FlowerVectors(private val yes: FloatArray, private val no: FloatArray, val yesBp: Int, val noBp: Int) {
+    init {
+        require(yes.size == no.size) { "Both vectors have the same length" }
+    }
+
+    /**
+     * BioCAP's belief that a photo's [vector] shows flowers, in basis points: its similarity to each text vector, as
+     * the two shares of a softmax at the model's [logitScale], the way it weighs species.
+     */
+    fun flowerBp(vector: FloatArray, logitScale: Float): Int {
+        require(vector.size == yes.size)
+        var difference = 0f
+        for (d in vector.indices) difference += vector[d] * (yes[d] - no[d])
+        return (BASIS / (1 + exp(-(logitScale * difference).toDouble()))).roundToInt()
+    }
+
+    companion object {
+        private const val BASIS = 10_000.0
+
+        /** The vectors from the pack's flowers.f16 bytes: the flowering row, then the leafy one. */
+        fun read(f16: ByteArray, dimensions: Int, yesBp: Int, noBp: Int): FlowerVectors {
+            val buffer = java.nio.ByteBuffer.wrap(f16).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+            require(buffer.remaining() == 2 * dimensions) { "Expected two vectors of $dimensions numbers" }
+            val values = FloatArray(2 * dimensions) { SpeciesIndex.halfToFloat(buffer.get(it).toInt() and 0xFFFF) }
+            return FlowerVectors(values.copyOfRange(0, dimensions), values.copyOfRange(dimensions, 2 * dimensions), yesBp, noBp)
         }
     }
 }

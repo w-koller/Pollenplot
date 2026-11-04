@@ -75,6 +75,7 @@ class WeedFlowTest {
         seed()
         show()
         compose.onNodeWithContentDescription("Settings").performClick()
+        waitFor(hasText("Garden location"))
         compose.onNodeWithText("Garden location").performClick()
         waitFor(hasText("No location set yet."))
         shot("location_empty")
@@ -197,6 +198,7 @@ class WeedFlowTest {
         shadowOf(app).grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION)
         show()
         compose.onNodeWithContentDescription("Settings").performClick()
+        waitFor(hasText("Garden location"))
         compose.onNodeWithText("Garden location").performClick()
         compose.onNodeWithText("Use this phone's location").performClick()
         waitFor(hasText("Near Brisbane City"))
@@ -212,6 +214,7 @@ class WeedFlowTest {
         app.location.point = 51.5 to -0.12
         show()
         compose.onNodeWithContentDescription("Settings").performClick()
+        waitFor(hasText("Garden location"))
         compose.onNodeWithText("Garden location").performClick()
         compose.onNodeWithText("Use this phone's location").performClick()
         waitFor(hasText("This location is outside Australia", substring = true))

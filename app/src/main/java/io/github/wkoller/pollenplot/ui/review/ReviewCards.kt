@@ -70,6 +70,9 @@ import io.github.wkoller.pollenplot.ui.components.RoleIcons
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
 import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
 import java.io.File
+import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.Locale
 
 /** Suggestions below this score are left off the card; the user can still search for the plant. */
 internal const val MIN_SHOWN_SCORE_BP = 500
@@ -204,6 +207,29 @@ internal fun animalPick(detection: DetectionRecord, choice: ReviewChoice?, fauna
     null -> null
 }
 
+/**
+ * Why a plant starts as in flower or not: flowers were seen in the photo, the plant does not usually flower in the
+ * month the photo was taken, or no flowers were seen.
+ */
+@Composable
+private fun FlowerNote(detection: DetectionRecord, species: Species?, kb: KnowledgeBase?) {
+    val month = detection.takenAt.atZone(ZoneId.systemDefault()).month
+    val months = if (kb != null && species != null) CareResolver.resolve(kb, species).care.flowering else null
+    val (icon, text) = when {
+        detection.flowering -> R.drawable.ic_local_florist to stringResource(R.string.review_flowering_seen)
+        months != null && !months.isEmpty && month !in months -> R.drawable.ic_calendar_month to stringResource(
+            R.string.review_flowering_out_of_season,
+            species!!.displayName,
+            month.getDisplayName(TextStyle.FULL, Locale.getDefault()),
+        )
+        else -> R.drawable.ic_visibility_off to stringResource(R.string.review_flowering_not_seen)
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(16.dp))
+        Text(text, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
 @Composable
 private fun Undecided(
     detection: DetectionRecord,
@@ -295,7 +321,13 @@ private fun Undecided(
     ListItem(
         checked = flowering,
         onCheckedChange = { flowering = it },
-        supportingContent = { Text(stringResource(R.string.review_flowering_body)) },
+        supportingContent = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.review_flowering_body))
+                // Why the switch started where it did, until the user changes it.
+                if (flowering == detection.flowering) FlowerNote(detection, chosenSpecies, kb)
+            }
+        },
         trailingContent = { Switch(checked = flowering, onCheckedChange = null) },
     ) { Text(stringResource(R.string.review_flowering)) }
 

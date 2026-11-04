@@ -8,6 +8,7 @@ import io.github.wkoller.pollenplot.download.DownloadSpec
 import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.download.VerifiedDownload
 import io.github.wkoller.pollenplot.ml.bio.BioCapEncoder
+import io.github.wkoller.pollenplot.ml.bio.FlowerVectors
 import io.github.wkoller.pollenplot.ml.bio.SpeciesIndex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -68,6 +69,7 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
     init {
         if (available) {
             scope.launch {
+                withContext(Dispatchers.IO) { deleteOlderPacks() }
                 if (withContext(Dispatchers.IO) { File(directory, MANIFEST).isFile }) {
                     _state.value = PackState.Ready
                 } else {
@@ -95,7 +97,11 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
             withContext(Dispatchers.IO) {
                 val manifest = JSONObject(File(directory, MANIFEST).readText())
                 val index = SpeciesIndex.read(File(directory, "species.tsv").readLines(), File(directory, "species.f16").readBytes(), manifest.getInt("embedding_dim"))
-                AccurateModels(BioCapEncoder(File(directory, "biocap-visual.onnx").path), index, manifest.getDouble("logit_scale").toFloat())
+                // Packs from pack 2 also hold BioCAP's vectors for a plant in flower and one with only leaves.
+                val flowers = manifest.optJSONObject("flowers")?.let { about ->
+                    FlowerVectors.read(File(directory, "flowers.f16").readBytes(), manifest.getInt("embedding_dim"), about.getInt("yes_bp"), about.getInt("no_bp"))
+                }
+                AccurateModels(BioCapEncoder(File(directory, "biocap-visual.onnx").path), index, manifest.getDouble("logit_scale").toFloat(), flowers)
             }.also { models = it }
         } catch (e: CancellationException) {
             throw e
@@ -112,6 +118,13 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
         withContext(Dispatchers.IO) { directory.deleteRecursively() }
         download.cancel()
         _state.value = PackState.Fetching(DownloadState.NotDownloaded)
+    }
+
+    /** Removes packs this version of the app no longer uses, which would otherwise keep their space on the phone. */
+    private fun deleteOlderPacks() {
+        val folder = directory.parentFile ?: return
+        folder.listFiles { file -> file.name.startsWith("biocap-pack-") && file.name != directory.name && file.name != download.file.name }
+            ?.forEach { it.deleteRecursively() }
     }
 
     private suspend fun unpack() {

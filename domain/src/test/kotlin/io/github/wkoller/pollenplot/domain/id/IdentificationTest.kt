@@ -44,6 +44,44 @@ class IdentificationTest {
     }
 
     @Test
+    fun `labels that differ only in case are one species`() {
+        val results = listOf(
+            tile(BoxBp(0, 0, 6_000, 6_000), "Lantana camara", 7_000),
+            tile(BoxBp(2_000, 2_000, 8_000, 8_000), "lantana Camara ", 6_000),
+        )
+        assertEquals(1, RegionPlanner.select(results).size)
+    }
+
+    @Test
+    fun `a photo gives at most four regions`() {
+        val boxes = RegionPlanner.tiles().drop(5)
+        val results = boxes.mapIndexed { i, box -> tile(box, "Species $i", 9_000 - i * 100) }
+        assertEquals(RegionPlanner.MAX_REGIONS, RegionPlanner.select(results).size)
+    }
+
+    @Test
+    fun `one plant takes the better score of the middle and the whole photo`() {
+        val centre = BoxBp(1_500, 1_500, 8_500, 8_500)
+        val one = RegionPlanner.one(
+            TileResult(centre, listOf(LabelScore("Rosa chinensis", 5_000), LabelScore("Rosa gallica", 1_000)), 2_000),
+            TileResult(BoxBp.WHOLE, listOf(LabelScore("Rosa gallica", 3_000), LabelScore("rosa chinensis", 4_000)), 3_000),
+        )!!
+        assertEquals(centre, one.box)
+        assertEquals(listOf(5_000, 3_000), one.labels.map { it.scoreBp })
+        assertEquals(2_000, one.backgroundBp)
+        val nothing = TileResult(BoxBp.WHOLE, listOf(LabelScore("Zea mays", 600)), 9_000)
+        assertEquals(null, RegionPlanner.one(nothing.copy(box = centre), nothing))
+    }
+
+    @Test
+    fun `covered by measures how much of a box lies inside another`() {
+        val small = BoxBp(0, 0, 4_000, 4_000)
+        assertEquals(1.0, small.coveredBy(BoxBp.WHOLE), 1e-9)
+        assertEquals(0.25, small.coveredBy(BoxBp(2_000, 2_000, 10_000, 10_000)), 1e-9)
+        assertEquals(0.0, small.coveredBy(BoxBp(6_000, 6_000, 10_000, 10_000)), 1e-9)
+    }
+
+    @Test
     fun `with no confident tile the whole photo still gets suggestions`() {
         val results = listOf(tile(BoxBp.WHOLE, "Zea mays", 1_200, background = 900), tile(BoxBp(0, 0, 4_000, 4_000), "Zea mays", 1_000))
         assertEquals(listOf(BoxBp.WHOLE), RegionPlanner.select(results).map { it.box })
@@ -62,13 +100,19 @@ class IdentificationTest {
     }
 
     @Test
-    fun `flower hint looks for vivid colours that are not green`() {
-        assertTrue(FlowerHint.isVividNonGreen(hue = 0f, saturation = 0.8f, value = 0.8f))
-        assertTrue("Purple", FlowerHint.isVividNonGreen(hue = 280f, saturation = 0.6f, value = 0.6f))
-        assertFalse("Leaf green", FlowerHint.isVividNonGreen(hue = 110f, saturation = 0.7f, value = 0.6f))
-        assertFalse("Grey path", FlowerHint.isVividNonGreen(hue = 30f, saturation = 0.1f, value = 0.6f))
-        assertTrue(FlowerHint.likely(FlowerHint.ColourStats(sampled = 1_000, vividNonGreen = 60)))
-        assertFalse(FlowerHint.likely(FlowerHint.ColourStats(sampled = 1_000, vividNonGreen = 20)))
+    fun `flower hint looks for flower colours that are not leaves, sky or mulch`() {
+        assertTrue(FlowerHint.isFlowerColour(hue = 0f, saturation = 0.8f, value = 0.8f))
+        assertTrue("Purple", FlowerHint.isFlowerColour(hue = 280f, saturation = 0.6f, value = 0.6f))
+        assertTrue("A bright orange flower", FlowerHint.isFlowerColour(hue = 30f, saturation = 0.8f, value = 0.9f))
+        assertFalse("Leaf green", FlowerHint.isFlowerColour(hue = 110f, saturation = 0.7f, value = 0.6f))
+        assertFalse("Grey path", FlowerHint.isFlowerColour(hue = 30f, saturation = 0.1f, value = 0.6f))
+        assertFalse("Mulch", FlowerHint.isFlowerColour(hue = 27f, saturation = 0.5f, value = 0.45f))
+        assertFalse("Sky at the top", FlowerHint.isFlowerColour(hue = 210f, saturation = 0.6f, value = 0.9f, y = 1_000))
+        assertTrue("Blue flowers lower down", FlowerHint.isFlowerColour(hue = 210f, saturation = 0.6f, value = 0.9f, y = 6_000))
+        assertTrue(FlowerHint.sampled(5_000, 5_000))
+        assertFalse("The edge of the cut-out", FlowerHint.sampled(500, 5_000))
+        assertTrue(FlowerHint.likely(FlowerHint.ColourStats(sampled = 1_000, vividNonGreen = 90)))
+        assertFalse(FlowerHint.likely(FlowerHint.ColourStats(sampled = 1_000, vividNonGreen = 60)))
         assertFalse(FlowerHint.likely(FlowerHint.ColourStats(sampled = 0, vividNonGreen = 0)))
     }
 

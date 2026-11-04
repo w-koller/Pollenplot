@@ -7,7 +7,19 @@ STRINGS = {
     "plot_done": "Done",
     "plot_adjust": "Move and resize",
     "plot_details": "Zone details",
-    "plot_edit_hint": "Please tap a zone to choose it, then drag it or use Move and resize. Zones snap to a 50 cm grid.",
+    "plot_edit_hint": "Please drag a zone to move it, or tap it and use Move and resize. Zones snap to a 50 cm grid.",
+    "plot_show_all": "Show the whole plot",
+    "plot_zoom_in": "Zoom in",
+    "plot_zoom_out": "Zoom out",
+    "plot_drag_right": "%1$s m right",
+    "plot_drag_left": "%1$s m left",
+    "plot_drag_down": "%1$s m down",
+    "plot_drag_up": "%1$s m up",
+    "plot_drag_none": "In its old place",
+    "plot_drag_size": "%1$s m by %2$s m",
+    "zone_preview": "Preview zone",
+    "zone_preview_close": "Close the preview",
+    "zone_preview_no_plants": "This zone has no plants yet.",
     "plot_unzoned": "Plants without a zone",
     "plot_zoned_empty_body": "Your plants are listed below. Zones are the areas of your yard, and you can add one to place your plants on the plot.",
 
@@ -93,4 +105,8 @@ STRINGS = {
     "state_wa": "Western Australia",
     "state_nt": "Northern Territory",
     "state_act": "Australian Capital Territory",
+}
+
+PLURALS = {
+    "zone_preview_more": {"one": "and %1$d more plant", "other": "and %1$d more plants"},
 }

@@ -15,6 +15,7 @@ import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.AiyModel
 import io.github.wkoller.pollenplot.ml.Identifier
@@ -64,6 +65,11 @@ class IdentifyModel(
     /** What the user is photographing. The quick models cannot tell a plant from an animal, so the user says. */
     val group: StateFlow<LifeGroup> = _group.asStateFlow()
 
+    private val _scope = MutableStateFlow(saved.get<String>(SCOPE)?.let(PhotoScope::valueOf) ?: PhotoScope.ONE)
+
+    /** Whether a plant photo shows one plant or a garden bed of several. Animal photos show one animal. */
+    val scope: StateFlow<PhotoScope> = _scope.asStateFlow()
+
     private val _live = MutableStateFlow<List<Candidate>>(emptyList())
 
     /** The best suggestions for what the camera is pointed at, or none while it is not pointed at a plant. */
@@ -96,12 +102,14 @@ class IdentifyModel(
         saved.get<String>(PHOTO_ID)?.let(::watch)
     }
 
-    /** Photographs a different kind of thing from now on. */
-    fun choose(group: LifeGroup) {
-        if (_group.value == group) return
+    /** Photographs a different kind of thing from now on, and for plants, one plant or a bed of several. */
+    fun choose(group: LifeGroup, scope: PhotoScope = PhotoScope.ONE) {
+        if (_group.value == group && _scope.value == scope) return
+        if (_group.value != group) _live.value = emptyList()
         _group.value = group
+        _scope.value = scope
         saved[GROUP] = group.name
-        _live.value = emptyList()
+        saved[SCOPE] = scope.name
     }
 
     /** Looks at one camera frame and updates the live suggestions. */
@@ -161,7 +169,7 @@ class IdentifyModel(
         _captured.value = photo
         _stage.value = IdentifyStage.Analysing
         _stage.value = try {
-            val result = analysis.analyse(photo, PhotoOrigin.CAMERA, group = _group.value)
+            val result = analysis.analyse(photo, PhotoOrigin.CAMERA, group = _group.value, scope = _scope.value)
             val stored = result.photo
             if (stored == null || result.detections.isEmpty()) {
                 IdentifyStage.NoneFound
@@ -206,6 +214,7 @@ class IdentifyModel(
         const val TAG = "Identify"
         const val PHOTO_ID = "photoId"
         const val GROUP = "group"
+        const val SCOPE = "scope"
 
         /** Live suggestions are shown only when the model is at least this sure, so the chips do not flicker with noise. */
         const val LIVE_MIN_SCORE_BP = 1_500

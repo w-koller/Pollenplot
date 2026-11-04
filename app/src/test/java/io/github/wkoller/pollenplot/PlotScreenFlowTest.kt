@@ -2,6 +2,10 @@ package io.github.wkoller.pollenplot
 
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
@@ -15,12 +19,15 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
+import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.ui.theme.PollenplotTheme
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -140,6 +147,49 @@ class PlotScreenFlowTest {
         val rect = runBlocking { app.container.garden.zone(ids.hive)!!.rect }
         assertEquals(450, rect.widthCm)
         assertEquals(500, rect.yCm)
+
+        // The canvas has no edge: a zone at the origin moves past it, with the screen reader's action as with a drag.
+        // Done closed the sheet and the editing both, so the layout is edited again.
+        waitFor(hasContentDescription("Edit layout"))
+        compose.onNodeWithContentDescription("Edit layout").performClick()
+        compose.onNodeWithContentDescription("Front Native Strip", substring = true).performClick()
+        val front = compose.onNodeWithContentDescription("Front Native Strip", substring = true).fetchSemanticsNode()
+        compose.runOnIdle { front.config[SemanticsActions.CustomActions].single { it.label == "Move left" }.action() }
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.zone(ids.front)!!.rect.xCm } == -50 }
+        compose.onNodeWithContentDescription("Show the whole plot").performClick()
+        shot("plot_edit_past_origin")
+    }
+
+    @Test
+    fun holdAZoneToPreviewIt() {
+        seed()
+        show()
+        waitFor(hasContentDescription("Hive Corner", substring = true))
+        val hive = compose.onNodeWithContentDescription("Hive Corner", substring = true)
+        hive.performTouchInput { down(center) }
+        compose.mainClock.advanceTimeBy(1_000)
+        waitFor(hasContentDescription("Close the preview"))
+        compose.onNodeWithText("Lemon-scented tea tree", substring = true).assertIsDisplayed()
+        shot("plot_zone_preview")
+        hive.performTouchInput { up() }
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasContentDescription("Close the preview")).fetchSemanticsNodes().isEmpty() }
+        assertEquals("Holding a zone does not open it", 0, compose.onAllNodesWithText("Pollinator hotspot").fetchSemanticsNodes().size)
+
+        // A screen reader opens the preview with the zone's action, and it stays until it is closed.
+        hive.performSemanticsAction(SemanticsActions.OnLongClick)
+        waitFor(hasContentDescription("Close the preview"))
+        compose.onNodeWithContentDescription("Close the preview").performClick()
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasContentDescription("Close the preview")).fetchSemanticsNodes().isEmpty() }
+    }
+
+    @Test
+    fun zonePreviewInTheDarkWithLargeText() {
+        seed()
+        show(Settings(theme = ThemeChoice.DARK, gardenState = AuState.QLD), fontScale = 2f)
+        waitFor(hasContentDescription("Hive Corner", substring = true))
+        compose.onNodeWithContentDescription("Hive Corner", substring = true).performSemanticsAction(SemanticsActions.OnLongClick)
+        waitFor(hasContentDescription("Close the preview"))
+        shot("plot_zone_preview_dark_large")
     }
 
     private fun seed(): DemoGarden.Ids = runBlocking {
@@ -148,10 +198,13 @@ class PlotScreenFlowTest {
         DemoGarden.seed(app.container.garden)
     }
 
-    private fun show(settings: Settings = Settings(gardenState = AuState.QLD)) {
+    private fun show(settings: Settings = Settings(gardenState = AuState.QLD), fontScale: Float = 1f) {
         compose.setContent {
-            PollenplotTheme(settings) {
-                Surface { AppRoot(app.container) }
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                PollenplotTheme(settings) {
+                    Surface { AppRoot(app.container) }
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.domain.id
 
+import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import kotlin.math.exp
 import kotlin.math.roundToInt
 
@@ -60,16 +61,22 @@ object AccurateRegions {
     /**
      * The new regions from BioCAP's look at [checked] tiles: those confident enough, the most confident first, without
      * two for the same plant and without repeating one of the [existing] regions, given with BioCAP's best species.
+     * Species are compared by [key].
      */
-    fun select(checked: Map<BoxBp, List<LabelScore>>, existing: List<Pair<BoxBp, String>>, max: Int): List<Pair<BoxBp, List<LabelScore>>> {
+    fun select(
+        checked: Map<BoxBp, List<LabelScore>>,
+        existing: List<Pair<BoxBp, String>>,
+        max: Int,
+        key: (String) -> String = KnowledgeBase::normalise,
+    ): List<Pair<BoxBp, List<LabelScore>>> {
         val confident = checked.entries
             .filter { (_, labels) -> (labels.firstOrNull()?.scoreBp ?: 0) >= MIN_SHARE_BP }
             .sortedByDescending { it.value.first().scoreBp }
-        val kept = existing.toMutableList()
+        val kept = existing.map { (box, species) -> box to key(species) }.toMutableList()
         val chosen = mutableListOf<Pair<BoxBp, List<LabelScore>>>()
         for ((box, labels) in confident) {
             if (chosen.size == max) break
-            val species = labels.first().label
+            val species = key(labels.first().label)
             val clashes = kept.any { (other, otherSpecies) ->
                 val overlap = other.iou(box)
                 overlap > ANY_IOU || (otherSpecies == species && overlap > SAME_SPECIES_IOU)

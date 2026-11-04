@@ -36,7 +36,9 @@ Free disk space is short on this machine, so model exports and evaluations run i
 are never downloaded here.
 
 CI (`.github/workflows/android.yml`) runs the same tasks, checks that `strings.xml` matches `tools/strings_*.py`, and
-uploads the debug APK, reports and screenshots. It builds a signed release APK when the `KEYSTORE_BASE64`,
+uploads the debug APK, reports and screenshots. It caches Robolectric's Android jar and fetches it with retries,
+because Robolectric's own download has no retry; its version in the workflow changes with Robolectric or the tests'
+SDK. It builds a signed release APK when the `KEYSTORE_BASE64`,
 `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD` secrets are set (the build reads them as `PP_*` environment
 variables). A `v*` tag that matches `versionName` publishes the APK and its checksum as a GitHub Release, with the
 notes from the section of `CHANGELOG.md` headed exactly `## <version>`. A version with a suffix, such as `1.0.0-rc.1`,
@@ -51,14 +53,17 @@ is always ready to tag.
   - `season/`: hemispheres, seasons and `MonthSet`.
   - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (species, then
     genus, then family), `EcoRoles` (the badges) and `Companions`.
-  - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid and tidy placement) and `ZoneBadges`.
+  - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid with no edges, and tidy placement) and `ZoneBadges`.
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `HoneyGraph`
     (honey bee records, with mite checks as SOSA observations), `NativeBeeGraph`, `HotelGraph`, `JsonLd`,
     `DarwinCore` (sightings as a Darwin Core CSV) and `SearchText` (what the search index holds for each record).
   - `wildlife/`: `LifeGroup`, the animal knowledge base (`FaunaBase`, with each state's rules and their official
     pages), `Sighting` and `Biodiversity` (a year of sightings for the Wildlife tab: each kind seen, the months, and
     notices for animals that are venomous or that the law in the garden's state asks about).
-  - `id/`: identification. `RegionPlanner` (the tiles each photo is classified in and how regions are chosen),
+  - `id/`: identification. `PhotoScope` (a camera photo of one plant, or a garden bed or gallery photo of several),
+    `RegionPlanner` (the tiles each photo is classified in, how regions are chosen, and `one` for a single plant),
+    `FoundMerge` (the same plant found twice in one photo made one, after fusion), `FlowerCall` (whether a found plant
+    starts as in flower: BioCAP, then its flowering months, then `FlowerHint`'s colours, else not),
     `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
     plants recorded near it), `ThumbnailMath`, `FlowerHint`, `Confidence` and `ZoneSuggestion` (the zone offered for
     a plant found in a photo).
@@ -181,7 +186,9 @@ is always ready to tag.
 
 ## Models
 
-BioCAP's input is prepared by `Bitmaps.squarePixels`: the square around the plant, halved while it is at least twice
+From pack 2 the BioCAP pack also holds `flowers.f16` (a flowering and a leafy text vector) and `flowers.yes_bp` and
+`no_bp` in its manifest, chosen by the export's evaluation on iNaturalist photos annotated for flowers; `FlowerVectors`
+reads them, and a pack without them leaves flowering to season and colour. BioCAP's input is prepared by `Bitmaps.squarePixels`: the square around the plant, halved while it is at least twice
 224 across, then scaled to 224 (`smoothScale`). `tools/models/export_biocap.py` prepares its evaluation photos the
 same way (`phone_square`), so a change to one needs the same change to the other. The pack's evaluation measures each
 step from BioCAP as published to the model the phone runs, and ships the smallest form within half a point of the

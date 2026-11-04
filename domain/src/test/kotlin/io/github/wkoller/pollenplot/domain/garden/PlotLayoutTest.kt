@@ -9,16 +9,17 @@ import org.junit.Test
 class PlotLayoutTest {
     @Test
     fun `positions and sizes snap to the 50 cm grid`() {
-        assertEquals(ZoneRect(100, 0, 350, 50), PlotLayout.snapped(ZoneRect(124, -30, 337, 10)))
+        assertEquals(ZoneRect(100, -50, 350, 50), PlotLayout.snapped(ZoneRect(124, -30, 337, 10)))
         assertEquals(150, PlotLayout.snap(126))
         assertEquals(100, PlotLayout.snap(124))
+        assertEquals("Negative positions snap too", -100, PlotLayout.snap(-124))
     }
 
     @Test
-    fun `nudging moves one grid step and stops at the canvas edge`() {
+    fun `nudging moves one grid step, past the origin too`() {
         val rect = ZoneRect(0, 100, 400, 300)
         assertEquals(ZoneRect(50, 50, 400, 300), PlotLayout.nudged(rect, stepsRight = 1, stepsDown = -1))
-        assertEquals(ZoneRect(0, 100, 400, 300), PlotLayout.nudged(rect, stepsRight = -1, stepsDown = 0))
+        assertEquals("The canvas has no edge", ZoneRect(-50, 100, 400, 300), PlotLayout.nudged(rect, stepsRight = -1, stepsDown = 0))
     }
 
     @Test
@@ -45,6 +46,12 @@ class PlotLayoutTest {
         val next = PlotLayout.placeNew(listOf(moved))
         assertFalse(next.overlaps(moved))
         assertEquals(ZoneRect(1000, 0, 400, 300), next)
+    }
+
+    @Test
+    fun `new zones go beside zones moved past the origin`() {
+        val moved = listOf(ZoneRect(-1_200, -800, 400, 300), ZoneRect(-700, -800, 400, 300))
+        assertEquals(ZoneRect(-200, -800, 400, 300), PlotLayout.placeNew(moved))
     }
 
     @Test

@@ -106,6 +106,7 @@ fun PlotScreen(
     fun finishEditing() {
         editing = false
         selectedId = null
+        adjusting = false
     }
     BackHandler(editing) { finishEditing() }
 

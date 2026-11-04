@@ -36,6 +36,32 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
+      # Robolectric downloads its Android jar from Maven Central when the tests start, with no retry, and that has
+      # failed on push runs that start alongside a pull-request run. The jar is cached and fetched with retries here,
+      # and Robolectric finds it in the local Maven repository. Change the version with Robolectric or the tests' SDK.
+      - name: Cache Robolectric's Android jar
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository/org/robolectric/android-all-instrumented
+          key: robolectric-android-all-15-robolectric-13954326-i7
+
+      - name: Fetch Robolectric's Android jar
+        env:
+          VERSION: 15-robolectric-13954326-i7
+        run: |
+          dir=~/.m2/repository/org/robolectric/android-all-instrumented/$VERSION
+          base=https://repo1.maven.org/maven2/org/robolectric/android-all-instrumented/$VERSION/android-all-instrumented-$VERSION
+          mkdir -p "$dir"
+          cd "$dir"
+          for ext in pom jar; do
+            name=android-all-instrumented-$VERSION.$ext
+            [ -s "$name" ] && continue
+            curl --fail --silent --show-error --location --retry 5 --retry-all-errors -o "$name.sha512" "$base.$ext.sha512"
+            curl --fail --silent --show-error --location --retry 5 --retry-all-errors -o "$name.part" "$base.$ext"
+            echo "$(cut -c1-128 "$name.sha512")  $name.part" | sha512sum --check --quiet
+            mv "$name.part" "$name"
+          done
+
       - name: Test, lint and build the debug APK
         run: ./gradlew :domain:test :ml:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --console=plain
 
