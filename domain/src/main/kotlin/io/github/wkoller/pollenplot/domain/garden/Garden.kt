@@ -6,7 +6,10 @@ import java.time.LocalDate
 
 enum class ZoneKind { GARDEN_BED, VEG_PATCH, ORCHARD, LAWN, POTS, POND, HIVE_CORNER, OTHER }
 
-/** A zone's place on the Plot canvas, in centimetres of real yard, measured from the top left of the canvas. */
+/**
+ * A zone's place on the Plot canvas, in centimetres of real yard. The origin is only where the first zones were placed,
+ * so a position may be negative.
+ */
 data class ZoneRect(val xCm: Int, val yCm: Int, val widthCm: Int, val heightCm: Int) {
     init {
         require(widthCm > 0 && heightCm > 0) { "A zone needs a size" }

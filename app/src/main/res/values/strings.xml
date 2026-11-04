@@ -374,6 +374,8 @@
     <string name="identify_capture">Take a photo</string>
     <string name="identify_capturing">Taking the photo</string>
     <string name="identify_point">Please point the camera at a plant.</string>
+    <string name="identify_point_bed">Please fit the garden bed in the frame.</string>
+    <string name="identify_choice_bed">Garden bed</string>
     <string name="identify_live_label">%1$s: %2$s</string>
     <string name="identify_analysing">Looking for plants in the photo.</string>
     <string name="identify_none_title">No plant was found in this photo.</string>
@@ -393,6 +395,9 @@
     <string name="review_not_in_kb">Not in the knowledge base yet</string>
     <string name="review_flowering">In flower</string>
     <string name="review_flowering_body">Pollen Rhythms uses this to learn when your plants flower.</string>
+    <string name="review_flowering_seen">Flowers were seen in the photo. Please check that this is right.</string>
+    <string name="review_flowering_not_seen">No flowers were seen in the photo.</string>
+    <string name="review_flowering_out_of_season">%1$s does not usually flower in %2$s.</string>
     <string name="review_add">Add to garden</string>
     <string name="review_add_again">Add as another plant</string>
     <string name="review_not_plant">Not a plant</string>
@@ -678,7 +683,19 @@
     <string name="plot_done">Done</string>
     <string name="plot_adjust">Move and resize</string>
     <string name="plot_details">Zone details</string>
-    <string name="plot_edit_hint">Please tap a zone to choose it, then drag it or use Move and resize. Zones snap to a 50 cm grid.</string>
+    <string name="plot_edit_hint">Please drag a zone to move it, or tap it and use Move and resize. Zones snap to a 50 cm grid.</string>
+    <string name="plot_show_all">Show the whole plot</string>
+    <string name="plot_zoom_in">Zoom in</string>
+    <string name="plot_zoom_out">Zoom out</string>
+    <string name="plot_drag_right">%1$s m right</string>
+    <string name="plot_drag_left">%1$s m left</string>
+    <string name="plot_drag_down">%1$s m down</string>
+    <string name="plot_drag_up">%1$s m up</string>
+    <string name="plot_drag_none">In its old place</string>
+    <string name="plot_drag_size">%1$s m by %2$s m</string>
+    <string name="zone_preview">Preview zone</string>
+    <string name="zone_preview_close">Close the preview</string>
+    <string name="zone_preview_no_plants">This zone has no plants yet.</string>
     <string name="plot_unzoned">Plants without a zone</string>
     <string name="plot_zoned_empty_body">Your plants are listed below. Zones are the areas of your yard, and you can add one to place your plants on the plot.</string>
     <string name="kind_garden_bed">Garden bed</string>
@@ -1481,6 +1498,10 @@
     <plurals name="role_more">
         <item quantity="one">%d more</item>
         <item quantity="other">%d more</item>
+    </plurals>
+    <plurals name="zone_preview_more">
+        <item quantity="one">and %1$d more plant</item>
+        <item quantity="other">and %1$d more plants</item>
     </plurals>
     <plurals name="review_waiting">
         <item quantity="one">%d plant is waiting for review.</item>

@@ -54,17 +54,19 @@ object Bitmaps {
         return if (current.width == width && current.height == height) current else current.scale(width, height)
     }
 
-    /** Samples a grid of pixels and counts the vivid, non-green ones, for the flowering hint. */
+    /** Samples a grid of pixels in the middle of [bitmap] and counts those of flower colours, for the flowering hint. */
     fun colourStats(bitmap: Bitmap, grid: Int = 48): FlowerHint.ColourStats {
         val hsv = FloatArray(3)
         var sampled = 0
         var vivid = 0
+        val last = (grid - 1).coerceAtLeast(1)
         for (gy in 0 until grid) for (gx in 0 until grid) {
-            val x = (gx * (bitmap.width - 1)) / (grid - 1).coerceAtLeast(1)
-            val y = (gy * (bitmap.height - 1)) / (grid - 1).coerceAtLeast(1)
-            Color.colorToHSV(bitmap[x, y], hsv)
+            val across = gx * BoxBp.FULL / last
+            val down = gy * BoxBp.FULL / last
+            if (!FlowerHint.sampled(across, down)) continue
+            Color.colorToHSV(bitmap[(gx * (bitmap.width - 1)) / last, (gy * (bitmap.height - 1)) / last], hsv)
             sampled++
-            if (FlowerHint.isVividNonGreen(hsv[0], hsv[1], hsv[2])) vivid++
+            if (FlowerHint.isFlowerColour(hsv[0], hsv[1], hsv[2], down)) vivid++
         }
         return FlowerHint.ColourStats(sampled, vivid)
     }

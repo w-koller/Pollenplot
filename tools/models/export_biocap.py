@@ -7,7 +7,10 @@ The pack holds:
 - species.f16: one unit vector for each species in tools/models/species_index.tsv, from BioCAP's text encoder, as
   little-endian 16-bit floats, one row of 512 per species, in the order of species.tsv.
 - species.tsv: that index, so the app can name what a vector matches.
-- manifest.json: how to prepare a photo, the prompt used, each file's SHA-256 and the evaluation results.
+- flowers.f16: two unit vectors from BioCAP's text encoder, a plant in flower and then a plant with only leaves, each
+  the mean of a few prompts, as little-endian 16-bit floats. The app compares a plant's photo with both, as a softmax
+  at BioCAP's logit scale, and answers only outside the band of beliefs the evaluation found too often wrong.
+- manifest.json: how to prepare a photo, the prompts used, each file's SHA-256 and the evaluation results.
 
 It also writes reference.json: the vectors for the 224 x 224 test images in tools/models/fixtures/, which the app's
 tests compare with its own preprocessing and model run.
@@ -43,7 +46,7 @@ FIXTURES = os.path.join(ROOT, "tools", "models", "fixtures")
 
 REPO = "imageomics/biocap"
 REVISION = "4e544d1d08781b6afee77bd7c1a85d04bd567d1b"
-PACK_VERSION = 1
+PACK_VERSION = 2
 SIZE = 224
 MEAN = [0.48145466, 0.4578275, 0.40821073]
 STD = [0.26862954, 0.26130258, 0.27577711]
@@ -53,6 +56,19 @@ USER_AGENT = "Pollenplot model pack builder (https://github.com/w-koller/Pollenp
 def prompt(taxonomy, common):
     """BioCLIP's taxonomic and common name text, which BioCAP was trained with."""
     return f"a photo of {taxonomy} with common name {common}." if common else f"a photo of {taxonomy}."
+
+
+# Ways of saying a plant is in flower, and that it has only leaves, averaged so no one wording decides.
+FLOWER_PROMPTS_YES = ["a photo of a plant in flower.", "a photo of a plant with flowers.", "a photo of a flowering plant."]
+FLOWER_PROMPTS_NO = ["a photo of a plant with only leaves.", "a photo of a plant without flowers.", "a photo of a plant's leaves and stems."]
+
+# iNaturalist's "Flowers and Fruits" annotation, and its values for a plant in flower and one with neither.
+PHENOLOGY_TERM = 12
+PHENOLOGY_FLOWERS = 13
+PHENOLOGY_NEITHER = 21
+
+# BioCAP answers whether a plant is in flower only where at least this share of its answers were right.
+FLOWER_MIN_ACCURACY = 0.9
 
 
 def load_model():
@@ -173,10 +189,77 @@ def evaluation_photos(rows, plan, per_species, seed):
     return photos
 
 
+def flower_photos(value, count, seed):
+    """Research-grade Australian plant photos with open licences that iNaturalist's observers annotated with [value]
+    for flowers and fruits, from pages chosen at random so no one season or place fills the set."""
+    random.seed(seed * 100 + value)
+    photos = []
+    pages = random.sample(range(1, 40), 39)
+    for page in pages:
+        if len(photos) >= count:
+            break
+        query = urllib.parse.urlencode({
+            "iconic_taxa": "Plantae", "quality_grade": "research", "photos": "true", "place_id": 6744,
+            "photo_license": "cc0,cc-by,cc-by-nc", "term_id": PHENOLOGY_TERM, "term_value_id": value,
+            "per_page": 30, "page": page, "order_by": "id",
+        })
+        try:
+            data = json.loads(fetch(f"https://api.inaturalist.org/v1/observations?{query}"))
+        except Exception as error:
+            print(f"  skipped page {page}: {error}")
+            continue
+        for observation in data.get("results", []):
+            if len(photos) >= count or not observation.get("photos"):
+                continue
+            url = observation["photos"][0]["url"].replace("square", "medium")
+            try:
+                photos.append(Image.open(io.BytesIO(fetch(url))).convert("RGB"))
+            except Exception:
+                continue
+        time.sleep(1.0)
+    return photos
+
+
+def flower_bp(vector, flowers, logit_scale):
+    """BioCAP's belief that a photo shows flowers, in basis points, as the app works it out (FlowerVectors)."""
+    difference = float(vector @ (flowers[0] - flowers[1]))
+    return round(10_000 / (1 + np.exp(-logit_scale * difference)))
+
+
+def flower_band(beliefs, truths):
+    """The thresholds outside which BioCAP answers: the band with the most photos answered while at least
+    FLOWER_MIN_ACCURACY of the answers are right, as (yes_bp, no_bp, accuracy, answered share)."""
+    beliefs = np.array(beliefs)
+    truths = np.array(truths)
+    best = None
+    steps = range(0, 10_001, 250)
+    for no_bp in steps:
+        for yes_bp in steps:
+            if yes_bp <= no_bp:
+                continue
+            yes = beliefs >= yes_bp
+            no = beliefs <= no_bp
+            answered = int(yes.sum() + no.sum())
+            if answered == 0:
+                continue
+            right = int((yes & truths).sum() + (no & ~truths).sum())
+            accuracy = right / answered
+            if accuracy < FLOWER_MIN_ACCURACY:
+                continue
+            key = (answered, accuracy)
+            if best is None or key > best[0]:
+                best = (key, yes_bp, no_bp, accuracy, answered / len(beliefs))
+    if best is None:
+        # BioCAP is never right often enough: it never answers, and the app falls back on season and colour.
+        return 10_001, -1, None, 0.0
+    return best[1], best[2], round(best[3], 4), round(best[4], 4)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True)
     parser.add_argument("--eval-photos", type=int, default=3, help="Photos of each species in the evaluation")
+    parser.add_argument("--flower-photos", type=int, default=300, help="Photos in flower, and as many not, in the flower evaluation")
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
     torch.set_grad_enabled(False)
@@ -284,6 +367,32 @@ def main():
     results = {"photos": len(photos), "steps": measured, "groups": groups_measured, "shipped": chosen}
     print(json.dumps(results, indent=1))
 
+    # The flower vectors: each the mean of its prompts' unit vectors, made unit length again, then judged on plants
+    # that observers marked as in flower or as having neither flowers nor fruit, through the model the phone runs.
+    logit_scale = float(model.logit_scale.exp())
+    flowers = []
+    for prompts in (FLOWER_PROMPTS_YES, FLOWER_PROMPTS_NO):
+        encoded = torch.nn.functional.normalize(model.encode_text(tokenizer(prompts)), dim=-1).mean(dim=0)
+        flowers.append(torch.nn.functional.normalize(encoded, dim=-1).numpy())
+    flowers = np.stack(flowers).astype(np.float32)
+    flowers.astype("<f2").tofile(os.path.join(args.out, "flowers.f16"))
+    flowers16 = flowers.astype(np.float16).astype(np.float32)
+    beliefs, truths = [], []
+    for value, truth in ((PHENOLOGY_FLOWERS, True), (PHENOLOGY_NEITHER, False)):
+        for image in flower_photos(value, args.flower_photos, seed=PACK_VERSION):
+            beliefs.append(flower_bp(embed(phone, phone_square(image)), flowers16, logit_scale))
+            truths.append(truth)
+    yes_bp, no_bp, flower_accuracy, answered = flower_band(beliefs, truths)
+    even = [(b >= 5_000) == t for b, t in zip(beliefs, truths)]
+    flower_results = {
+        "photos_in_flower": truths.count(True),
+        "photos_not_in_flower": truths.count(False),
+        "accuracy_at_even": round(sum(even) / max(1, len(even)), 4),
+        "accuracy_answered": flower_accuracy,
+        "answered": answered,
+    }
+    print(json.dumps({"flowers": flower_results, "yes_bp": yes_bp, "no_bp": no_bp}, indent=1))
+
     # Reference vectors for the app's tests: 224 x 224 images, so only the model run and normalisation are compared.
     references = []
     for name in sorted(os.listdir(FIXTURES)):
@@ -302,7 +411,7 @@ def main():
         for row in rows:
             writer.writerow([row["name"], row["common"], row["aliases"], group_of(row)])
 
-    files = ["biocap-visual.onnx", "species.f16", "species.tsv"]
+    files = ["biocap-visual.onnx", "species.f16", "species.tsv", "flowers.f16"]
     manifest = {
         "format": 1,
         "pack": PACK_VERSION,
@@ -317,7 +426,14 @@ def main():
         "embedding_dim": int(species.shape[1]),
         "species": len(rows),
         "prompt": "a photo of {taxonomy} with common name {common}.",
-        "logit_scale": float(model.logit_scale.exp()),
+        "logit_scale": logit_scale,
+        "flowers": {
+            "prompts_yes": FLOWER_PROMPTS_YES,
+            "prompts_no": FLOWER_PROMPTS_NO,
+            "yes_bp": yes_bp,
+            "no_bp": no_bp,
+            "evaluation": flower_results,
+        },
         "files": {name: sha256(os.path.join(args.out, name)) for name in files},
         "evaluation": results,
         "versions": {"torch": torch.__version__, "open_clip": open_clip.__version__, "onnx": onnx.__version__, "onnxruntime": ort.__version__},
@@ -345,6 +461,14 @@ def main():
         f.write(f"\nThe pack holds {chosen}.\n\nBy group, with the ONNX model:\n\n| Group | Photos | Top 1 | Top 5 | Group |\n|---|---|---|---|---|\n")
         for group, value in groups_measured.items():
             f.write(f"| {group} | {value['photos']} | {value['top1']:.1%} | {value['top5']:.1%} | {value['group']:.1%} |\n")
+        f.write(f"\nIn flower: {flower_results['photos_in_flower']} plants observers marked as in flower and ")
+        f.write(f"{flower_results['photos_not_in_flower']} marked as having neither flowers nor fruit, with the model the phone runs. ")
+        f.write(f"Split at an even belief, {flower_results['accuracy_at_even']:.1%} were right. ")
+        if flower_results["accuracy_answered"] is None:
+            f.write(f"No band reached {FLOWER_MIN_ACCURACY:.0%}, so BioCAP does not answer and the app goes by season and colour.\n")
+        else:
+            f.write(f"BioCAP answers yes from {yes_bp} and no up to {no_bp} basis points: {flower_results['answered']:.1%} of the photos, ")
+            f.write(f"{flower_results['accuracy_answered']:.1%} of them right.\n")
     print(f"Wrote {pack}")
 
 

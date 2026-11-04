@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.ui.semantics.contentDescription
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.AiyModel
 import io.github.wkoller.pollenplot.ui.wildlife.CAMERA_GROUPS
@@ -128,11 +129,13 @@ fun IdentifyScreen(
 ) {
     val stage by model.stage.collectAsStateWithLifecycle()
     val group by model.group.collectAsStateWithLifecycle()
+    val scope by model.scope.collectAsStateWithLifecycle()
     // Checking a weed is the same identification of plants; each suggestion's weed status shows on its card.
     LaunchedEffect(checkingWeed) { if (checkingWeed) model.choose(LifeGroup.PLANT) }
     val screenTitle = stringResource(if (checkingWeed) R.string.identify_weed_title else R.string.identify_title)
     val hint = when {
         checkingWeed -> stringResource(R.string.identify_weed_hint)
+        group == LifeGroup.PLANT && scope == PhotoScope.SEVERAL -> stringResource(R.string.identify_point_bed)
         group == LifeGroup.PLANT -> stringResource(R.string.identify_point)
         AiyModel.of(group) == null && !accurateReady -> stringResource(R.string.identify_needs_pack)
         else -> stringResource(R.string.identify_point_animal, stringResource(group.noun))
@@ -219,6 +222,7 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
     val live by model.live.collectAsStateWithLifecycle()
     val capturing by model.capturing.collectAsStateWithLifecycle()
     val group by model.group.collectAsStateWithLifecycle()
+    val scope by model.scope.collectAsStateWithLifecycle()
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val nameOf: (Candidate) -> String = { candidate ->
@@ -246,7 +250,7 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
                     Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
                 }
                 // The quick models cannot tell a plant from an animal, so the user says what the photo is of.
-                if (chooseGroup) GroupChoice(group, model::choose)
+                if (chooseGroup) GroupChoice(group, scope, model::choose)
             }
         }
         Column(
@@ -273,19 +277,27 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
     }
 }
 
+/** One of the camera's choices of what a photo is of: a group, and for plants, one plant or a garden bed. */
+private data class CameraChoice(val group: LifeGroup, val scope: PhotoScope = PhotoScope.ONE)
+
+/** A plant, a garden bed of several plants, then each group of animals. */
+private val CAMERA_CHOICES = CAMERA_GROUPS.flatMap { group ->
+    if (group == LifeGroup.PLANT) listOf(CameraChoice(group), CameraChoice(group, PhotoScope.SEVERAL)) else listOf(CameraChoice(group))
+}
+
 /** What the photo is of, as a row of chips over the camera that scrolls sideways. */
 @Composable
-private fun GroupChoice(selected: LifeGroup, onChoose: (LifeGroup) -> Unit) {
+private fun GroupChoice(selected: LifeGroup, scope: PhotoScope, onChoose: (LifeGroup, PhotoScope) -> Unit) {
     val description = stringResource(R.string.identify_what)
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).semantics { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        CAMERA_GROUPS.forEach { group ->
+        CAMERA_CHOICES.forEach { choice ->
             FilterChip(
-                selected = group == selected,
-                onClick = { onChoose(group) },
-                label = { Text(stringResource(group.label)) },
+                selected = choice.group == selected && (selected != LifeGroup.PLANT || choice.scope == scope),
+                onClick = { onChoose(choice.group, choice.scope) },
+                label = { Text(if (choice.scope == PhotoScope.SEVERAL) stringResource(R.string.identify_choice_bed) else stringResource(choice.group.label)) },
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = Color.Black.copy(alpha = 0.55f),
                     labelColor = Color.White,

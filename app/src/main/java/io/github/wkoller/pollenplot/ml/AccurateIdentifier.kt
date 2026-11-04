@@ -3,28 +3,45 @@ package io.github.wkoller.pollenplot.ml
 import android.graphics.Bitmap
 import io.github.wkoller.pollenplot.domain.id.AccurateRegions
 import io.github.wkoller.pollenplot.domain.id.BoxBp
+import io.github.wkoller.pollenplot.domain.id.FlowerCall
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
+import io.github.wkoller.pollenplot.domain.id.RegionPlanner
 import io.github.wkoller.pollenplot.domain.id.TileResult
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.bio.BioCapEncoder
+import io.github.wkoller.pollenplot.ml.bio.FlowerVectors
 import io.github.wkoller.pollenplot.ml.bio.SpeciesIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** BioCAP and the species it can name, open and ready. */
-class AccurateModels(private val encoder: BioCapEncoder, val index: SpeciesIndex, private val logitScale: Float) : AutoCloseable {
+/** What BioCAP saw in one part of a photo: its labels, and for a plant whether it is in flower, when it is sure. */
+class AccurateLook(val labels: List<LabelScore>, val flowering: Boolean?)
+
+/** BioCAP and the species it can name, open and ready, with its flower vectors when the pack has them. */
+class AccurateModels(
+    private val encoder: BioCapEncoder,
+    val index: SpeciesIndex,
+    private val logitScale: Float,
+    private val flowers: FlowerVectors? = null,
+) : AutoCloseable {
     /**
      * BioCAP's labels for the square around [box] in [photo]: the closest species of [group] as shares, best first,
      * with the index's common names. A pack whose index has no groups names plants only.
      */
-    fun labels(photo: Bitmap, box: BoxBp, group: LifeGroup = LifeGroup.PLANT): List<LabelScore> {
-        if (!index.hasGroups && group != LifeGroup.PLANT) return emptyList()
+    fun labels(photo: Bitmap, box: BoxBp, group: LifeGroup = LifeGroup.PLANT): List<LabelScore> = look(photo, box, group).labels
+
+    /** As [labels], with BioCAP's answer to whether a plant is in flower from the same look at the photo. */
+    fun look(photo: Bitmap, box: BoxBp, group: LifeGroup = LifeGroup.PLANT): AccurateLook {
+        if (!index.hasGroups && group != LifeGroup.PLANT) return AccurateLook(emptyList(), null)
         val vector = encoder.encode(Bitmaps.squarePixels(photo, box, BioCapEncoder.SIZE))
         val wanted = group.name.lowercase()
         val near = index.nearest(vector, count = CONSIDERED) { species -> species.group == null || species.group == wanted }
         val common = near.associate { it.species.name to it.species.common }
-        return AccurateRegions.shares(near.map { it.species.name to it.similarity }, logitScale).take(KEPT).map { it.copy(common = common[it.label]) }
+        val labels = AccurateRegions.shares(near.map { it.species.name to it.similarity }, logitScale).take(KEPT).map { it.copy(common = common[it.label]) }
+        val flowering = flowers?.takeIf { group == LifeGroup.PLANT }?.let { FlowerCall.model(it.flowerBp(vector, logitScale), it.yesBp, it.noBp) }
+        return AccurateLook(labels, flowering)
     }
 
     /**
@@ -54,22 +71,36 @@ class AccurateModels(private val encoder: BioCapEncoder, val index: SpeciesIndex
  * it names the animal in the middle of the frame. Without the accurate pack on the phone, this is the quick model alone.
  */
 class AccuratePlantIdentifier(private val fast: FastPlantIdentifier, private val models: suspend () -> AccurateModels?) : Identifier {
-    override suspend fun identify(photo: Bitmap, group: LifeGroup): Identification {
-        val accurate = models() ?: return fast.identify(photo, group)
+    override suspend fun identify(photo: Bitmap, group: LifeGroup, scope: PhotoScope): Identification {
+        val accurate = models() ?: return fast.identify(photo, group, scope)
         if (group != LifeGroup.PLANT) return identifyAnimal(photo, group, accurate)
+        if (scope == PhotoScope.ONE) return identifyOne(photo, accurate)
         val quick = fast.scan(photo)
         return withContext(Dispatchers.Default) {
             val named = quick.regions.map { region ->
-                FoundRegion(region.box, region.labels + (IdSource.BIOCAP to accurate.labels(photo, region.box)), region.thumbnail, region.flowering)
+                val look = accurate.look(photo, region.box)
+                FoundRegion(region.box, region.labels + (IdSource.BIOCAP to look.labels), region.thumbnail, region.flowering, modelFlowering = look.flowering)
             }
-            val checked = AccurateRegions.tilesToCheck(quick.tiles, named.map { it.box })
-                .associateWith { box -> accurate.labels(photo, box) }
+            val looks = AccurateRegions.tilesToCheck(quick.tiles, named.map { it.box }).associateWith { box -> accurate.look(photo, box) }
             val existing = named.mapNotNull { region -> region.labels[IdSource.BIOCAP]?.firstOrNull()?.let { region.box to it.label } }
-            val added = AccurateRegions.select(checked, existing, max = MAX_REGIONS - named.size).map { (box, labels) ->
-                FastPlantIdentifier.region(photo, box, mapOf(IdSource.BIOCAP to labels))
+            val added = AccurateRegions.select(looks.mapValues { it.value.labels }, existing, max = MAX_REGIONS - named.size).map { (box, labels) ->
+                FastPlantIdentifier.region(photo, box, mapOf(IdSource.BIOCAP to labels), modelFlowering = looks.getValue(box).flowering)
             }
             Identification(found = quick.showsPlant || added.isNotEmpty(), regions = named + added)
         }
+    }
+
+    /** The one plant in the middle of the frame, named by the quick model, if it is sure of a plant, and by BioCAP. */
+    private suspend fun identifyOne(photo: Bitmap, accurate: AccurateModels): Identification {
+        val quick = fast.one(photo)
+        val look = withContext(Dispatchers.Default) { accurate.look(photo, FastPlantIdentifier.CENTRE) }
+        val biocap = look.labels
+        val labels = quick?.labels.orEmpty() + if (biocap.isEmpty()) emptyMap() else mapOf(IdSource.BIOCAP to biocap)
+        // BioCAP names a species for any photo, so on its own it counts only when it is as sure as for a new region.
+        if (quick == null && (biocap.firstOrNull()?.scoreBp ?: 0) < AccurateRegions.MIN_SHARE_BP) return Identification(false, emptyList())
+        val region = quick?.let { FoundRegion(it.box, labels, it.thumbnail, it.flowering, modelFlowering = look.flowering) }
+            ?: FastPlantIdentifier.region(photo, FastPlantIdentifier.CENTRE, labels, modelFlowering = look.flowering)
+        return Identification(true, listOf(region))
     }
 
     /** The animal in the middle of the frame, named by its quick model, if it has one, and by BioCAP. */
@@ -93,6 +124,6 @@ class AccuratePlantIdentifier(private val fast: FastPlantIdentifier, private val
     override fun close() = fast.close()
 
     private companion object {
-        const val MAX_REGIONS = 6
+        const val MAX_REGIONS = RegionPlanner.MAX_REGIONS
     }
 }

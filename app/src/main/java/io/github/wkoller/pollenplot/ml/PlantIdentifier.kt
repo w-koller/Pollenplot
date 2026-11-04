@@ -10,6 +10,7 @@ import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.FlowerHint
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.id.RegionPlanner
 import io.github.wkoller.pollenplot.domain.id.TileResult
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
@@ -24,28 +25,37 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-/** One region of a photo that seems to show a plant or an animal, with each model's suggestions and a cut-out. */
+/**
+ * One region of a photo that seems to show a plant or an animal, with each model's suggestions and a cut-out. For a
+ * plant, [flowering] is the colour hint and [modelFlowering] BioCAP's answer, when it gave one.
+ */
 class FoundRegion(
     val box: BoxBp,
     val labels: Map<IdSource, List<LabelScore>>,
     val thumbnail: Bitmap,
     val flowering: Boolean,
     val group: LifeGroup = LifeGroup.PLANT,
+    val modelFlowering: Boolean? = null,
 )
 
 /** What the identifier found in a photo: whether it shows what was looked for, and each region. */
-class Identification(val found: Boolean, val regions: List<FoundRegion>)
+class Identification(val found: Boolean, val regions: List<FoundRegion>) {
+    companion object {
+        /** What was found when [regions] is all there is to go on: found when there is any. */
+        fun of(regions: List<FoundRegion>?) = Identification(!regions.isNullOrEmpty(), regions.orEmpty())
+    }
+}
 
 /** What the quick model saw in a photo: every tile's scores, and the regions it was sure of. */
 class QuickScan(val tiles: List<TileResult>, val regions: List<FoundRegion>, val showsPlant: Boolean)
 
 /**
  * Identifies the plants and animals in photos and camera frames. The app uses the on-device models; tests use a fake.
- * [LifeGroup.PLANT] looks for every plant in a photo; an animal group, which the user chooses on the camera, looks at
- * the animal in the middle of the frame.
+ * [LifeGroup.PLANT] looks for the plant in the middle of the frame, or with [PhotoScope.SEVERAL] for every plant in a
+ * photo; an animal group, which the user chooses on the camera, looks at the animal in the middle of the frame.
  */
 interface Identifier {
-    suspend fun identify(photo: Bitmap, group: LifeGroup = LifeGroup.PLANT): Identification
+    suspend fun identify(photo: Bitmap, group: LifeGroup = LifeGroup.PLANT, scope: PhotoScope = PhotoScope.SEVERAL): Identification
 
     /** A quick look at the middle of a camera frame, for the live suggestions. */
     suspend fun glance(frame: Bitmap, group: LifeGroup = LifeGroup.PLANT): TileResult
@@ -89,7 +99,8 @@ class FastPlantIdentifier(private val context: Context) : Identifier {
 
     private fun classifier(model: AiyModel) = classifiers.getOrPut(model) { AiyClassifier(context, model) }
 
-    override suspend fun identify(photo: Bitmap, group: LifeGroup): Identification {
+    override suspend fun identify(photo: Bitmap, group: LifeGroup, scope: PhotoScope): Identification {
+        if (group == LifeGroup.PLANT && scope == PhotoScope.ONE) return Identification.of(one(photo)?.let { listOf(it) })
         if (group == LifeGroup.PLANT) return scan(photo).let { Identification(it.showsPlant, it.regions) }
         val model = AiyModel.of(group) ?: return Identification(false, emptyList())
         val result = withContext(Dispatchers.Default) { lock.withLock { classifier(model).classify(Bitmaps.scaleDown(photo, WORKING_SIDE), CENTRE) } }
@@ -112,6 +123,16 @@ class FastPlantIdentifier(private val context: Context) : Identifier {
         }
     }
 
+    /** The one plant in the middle of [photo], from the quick model's look at the middle and at the whole photo. */
+    suspend fun one(photo: Bitmap): FoundRegion? = withContext(Dispatchers.Default) {
+        val found = lock.withLock {
+            val image = Bitmaps.scaleDown(photo, WORKING_SIDE)
+            val plants = classifier(AiyModel.PLANTS)
+            RegionPlanner.one(plants.classify(image, CENTRE), plants.classify(image, BoxBp.WHOLE))
+        }
+        found?.let { region(photo, it.box, mapOf(IdSource.AIY_PLANTS to it.labels)) }
+    }
+
     override suspend fun glance(frame: Bitmap, group: LifeGroup): TileResult = withContext(Dispatchers.Default) {
         val model = AiyModel.of(group) ?: return@withContext TileResult(CENTRE, emptyList(), backgroundBp = 0)
         lock.withLock { classifier(model).classify(frame, CENTRE) }
@@ -126,11 +147,17 @@ class FastPlantIdentifier(private val context: Context) : Identifier {
         /** The middle of the frame, inside the camera's square guide, where the user points the camera. */
         val CENTRE = BoxBp(1_500, 1_500, 8_500, 8_500)
 
-        /** A region of [photo] with its cut-out and, for a plant, its flowering hint. */
-        fun region(photo: Bitmap, box: BoxBp, labels: Map<IdSource, List<LabelScore>>, group: LifeGroup = LifeGroup.PLANT): FoundRegion {
+        /** A region of [photo] with its cut-out and, for a plant, its flowering hint and BioCAP's answer. */
+        fun region(
+            photo: Bitmap,
+            box: BoxBp,
+            labels: Map<IdSource, List<LabelScore>>,
+            group: LifeGroup = LifeGroup.PLANT,
+            modelFlowering: Boolean? = null,
+        ): FoundRegion {
             val crop = Bitmaps.squareCrop(photo, box, THUMB_SIDE)
             val flowering = group == LifeGroup.PLANT && FlowerHint.likely(Bitmaps.colourStats(crop))
-            return FoundRegion(box, labels, crop, flowering, group)
+            return FoundRegion(box, labels, crop, flowering, group, modelFlowering.takeIf { group == LifeGroup.PLANT })
         }
     }
 }

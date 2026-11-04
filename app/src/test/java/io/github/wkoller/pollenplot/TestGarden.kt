@@ -18,6 +18,7 @@ import io.github.wkoller.pollenplot.domain.assistant.DraftedCare
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.id.TileResult
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.FoundRegion
@@ -143,9 +144,15 @@ class ScriptedIdentifier(
     /** The groups the camera asked about, in order. */
     val asked = mutableListOf<LifeGroup>()
 
-    override suspend fun identify(photo: Bitmap, group: LifeGroup): Identification {
+    /** Whether each photo was looked at for one plant or several, in order. */
+    val scopes = mutableListOf<PhotoScope>()
+
+    override suspend fun identify(photo: Bitmap, group: LifeGroup, scope: PhotoScope): Identification {
         asked += group
-        val regions = if (group == LifeGroup.PLANT) regionsFor(photo) else animalFor(photo, group)
+        scopes += scope
+        // A photo of one plant gives the strongest of the plants it shows, as the middle of the frame would.
+        val plants = if (scope == PhotoScope.ONE) regionsFor(photo).take(1) else regionsFor(photo)
+        val regions = if (group == LifeGroup.PLANT) plants else animalFor(photo, group)
         return Identification(found = regions.isNotEmpty(), regions = regions)
     }
 

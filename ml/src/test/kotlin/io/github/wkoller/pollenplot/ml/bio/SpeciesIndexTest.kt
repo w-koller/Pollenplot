@@ -34,6 +34,18 @@ class SpeciesIndexTest {
     }
 
     @Test
+    fun `flower vectors weigh a photo between flowering and leafy`() {
+        val halves = listOf(1f, 0f, 0f, 1f)
+        val bytes = ByteBuffer.allocate(halves.size * 2).order(ByteOrder.LITTLE_ENDIAN)
+        halves.forEach { bytes.putShort(toHalf(it)) }
+        val flowers = FlowerVectors.read(bytes.array(), dimensions = 2, yesBp = 7_000, noBp = 3_000)
+        assertEquals(7_000, flowers.yesBp)
+        assertEquals("Halfway between is an even belief", 5_000, flowers.flowerBp(floatArrayOf(0.7071f, 0.7071f), logitScale = 100f))
+        assertTrue(flowers.flowerBp(floatArrayOf(0.8f, 0.6f), logitScale = 100f) > 9_900)
+        assertTrue(flowers.flowerBp(floatArrayOf(0.6f, 0.8f), logitScale = 100f) < 100)
+    }
+
+    @Test
     fun `groups keep plants and animals apart`() {
         val tsv = listOf("name\tcommon\taliases\tgroup", "Grevillea robusta\tSilky oak\t\tplant", "Manorina melanocephala\tNoisy miner\t\tbird")
         val halves = listOf(1f, 0f, 0.8f, 0.6f)

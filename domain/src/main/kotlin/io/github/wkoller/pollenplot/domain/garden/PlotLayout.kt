@@ -2,7 +2,10 @@ package io.github.wkoller.pollenplot.domain.garden
 
 import kotlin.math.roundToInt
 
-/** Rules for laying out zones on the Plot canvas. Positions and sizes snap to a 50 cm grid. */
+/**
+ * Rules for laying out zones on the Plot canvas. Positions and sizes snap to a 50 cm grid. The canvas has no edges:
+ * zones may go anywhere, on either side of where the first one was placed.
+ */
 object PlotLayout {
     const val GRID_CM = 50
     const val MIN_SIDE_CM = 50
@@ -19,18 +22,15 @@ object PlotLayout {
 
     /** The rectangle with its position and size snapped to the grid, and each side at least [MIN_SIDE_CM]. */
     fun snapped(rect: ZoneRect): ZoneRect = ZoneRect(
-        xCm = snap(rect.xCm).coerceAtLeast(0),
-        yCm = snap(rect.yCm).coerceAtLeast(0),
+        xCm = snap(rect.xCm),
+        yCm = snap(rect.yCm),
         widthCm = snap(rect.widthCm).coerceAtLeast(MIN_SIDE_CM),
         heightCm = snap(rect.heightCm).coerceAtLeast(MIN_SIDE_CM),
     )
 
-    /** Moves by one grid step in each direction given, never past the top or left edge of the canvas. */
+    /** Moves by one grid step in each direction given. */
     fun nudged(rect: ZoneRect, stepsRight: Int, stepsDown: Int): ZoneRect =
-        rect.copy(
-            xCm = (rect.xCm + stepsRight * GRID_CM).coerceAtLeast(0),
-            yCm = (rect.yCm + stepsDown * GRID_CM).coerceAtLeast(0),
-        )
+        rect.copy(xCm = rect.xCm + stepsRight * GRID_CM, yCm = rect.yCm + stepsDown * GRID_CM)
 
     /** Grows or shrinks by one grid step on the right and bottom edges, never below [MIN_SIDE_CM]. */
     fun resizedBySteps(rect: ZoneRect, widerSteps: Int, tallerSteps: Int): ZoneRect =
@@ -40,15 +40,19 @@ object PlotLayout {
         )
 
     /**
-     * Where a new zone goes: the first spot in a tidy grid of rows that keeps [GAP_CM] clear of every other zone. With
-     * no zones yet, that is the top left.
+     * Where a new zone goes: the first spot in a tidy grid of rows that keeps [GAP_CM] clear of every other zone. The
+     * grid starts at the top left of the zones there are, so a new zone lands beside them wherever they were moved;
+     * with no zones yet, it starts at the origin.
      */
     fun placeNew(existing: List<ZoneRect>, widthCm: Int = DEFAULT_WIDTH_CM, heightCm: Int = DEFAULT_HEIGHT_CM): ZoneRect {
         val cellWidth = DEFAULT_WIDTH_CM + GAP_CM
         val cellHeight = DEFAULT_HEIGHT_CM + GAP_CM
+        val origin = bounds(existing)
+        val left = origin?.let { snap(it.xCm) } ?: 0
+        val top = origin?.let { snap(it.yCm) } ?: 0
         var index = 0
         while (true) {
-            val candidate = ZoneRect((index % ZONES_PER_ROW) * cellWidth, (index / ZONES_PER_ROW) * cellHeight, widthCm, heightCm)
+            val candidate = ZoneRect(left + (index % ZONES_PER_ROW) * cellWidth, top + (index / ZONES_PER_ROW) * cellHeight, widthCm, heightCm)
             val padded = ZoneRect(candidate.xCm - GAP_CM / 2, candidate.yCm - GAP_CM / 2, widthCm + GAP_CM, heightCm + GAP_CM)
             if (existing.none { it.overlaps(padded) }) return candidate
             index++
