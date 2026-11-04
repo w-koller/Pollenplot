@@ -20,7 +20,7 @@ class KnowledgeBaseFilesTest {
     @Test
     fun `it covers a useful number of plants`() {
         val kb = parsed.knowledgeBase
-        assertTrue("Expected at least 150 species, found ${kb.allSpecies.size}", kb.allSpecies.size >= 150)
+        assertTrue("Expected at least 247 species, found ${kb.allSpecies.size}", kb.allSpecies.size >= 247)
         assertTrue(kb.allSpecies.count { it.isAustralianNative } >= 60)
         assertTrue(kb.companions.size >= 20)
     }
