@@ -33,6 +33,12 @@ import kotlinx.serialization.Serializable
 /** The user's corrections to a plant's facts, which apply to every plant of its species. */
 @Serializable data class EditFactsRoute(val plantId: String)
 
+/** The pot a plant grows in. */
+@Serializable data class PotEditRoute(val plantId: String)
+
+/** Records care done to a plant, such as repotting it. */
+@Serializable data class PlantEventRoute(val plantId: String)
+
 /** One photo a plant was found in, with the find outlined. */
 @Serializable data class PlantPhotoRoute(val photoId: String, val detectionId: String? = null)
 

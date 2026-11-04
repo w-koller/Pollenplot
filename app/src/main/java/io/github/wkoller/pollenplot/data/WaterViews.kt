@@ -17,6 +17,7 @@ import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
 import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import java.time.Clock
 import java.time.LocalDate
 
@@ -67,12 +68,20 @@ data class WaterState(
 }
 
 /** The Water tab's plans: each line's and each hand-watered zone's, worked out from the weather kept. */
-class WaterViews(water: WaterRepository, views: GardenViews, garden: GardenRepository, settings: SettingsStore, private val clock: Clock) {
+class WaterViews(
+    water: WaterRepository,
+    views: GardenViews,
+    garden: GardenRepository,
+    settings: SettingsStore,
+    private val clock: Clock,
+    /** Zones that hold a plant with a pot record, which count as pots before a hot day whatever their kind. */
+    pottedZones: Flow<Set<String>> = flowOf(emptySet()),
+) {
     private val records = combine(water.lines, water.waterings, water.weather, water.weatherFetchedAt) { lines, waterings, weather, fetchedAt ->
         Records(lines, waterings, weather, fetchedAt)
     }
 
-    val state: Flow<WaterState> = combine(records, views.plants, garden.zoneList, settings.settings) { records, plants, zones, current ->
+    val state: Flow<WaterState> = combine(records, views.plants, garden.zoneList, settings.settings, pottedZones) { records, plants, zones, current, potted ->
         val today = LocalDate.now(clock)
         val byZone = zones.associateBy { it.id }
         val growing = plants.filter { it.plant.status == PlantStatus.GROWING && it.plant.zoneId != null }
@@ -131,8 +140,8 @@ class WaterViews(water: WaterRepository, views: GardenViews, garden: GardenRepos
             window = current.wateringWindow,
             zones = zoneWatering,
             potsBeforeHeat = PotsBeforeHeat.hotTomorrow(records.weather, today)?.let { max ->
-                val potted = growing.mapNotNull { it.plant.zoneId }.toSet()
-                zones.filter { it.id in potted && PotsBeforeHeat.isPots(it.kind, it.soil) }.takeIf { it.isNotEmpty() }?.let { PotsWarning(it, max) }
+                val planted = growing.mapNotNull { it.plant.zoneId }.toSet()
+                zones.filter { it.id in planted && (PotsBeforeHeat.isPots(it.kind, it.soil) || it.id in potted) }.takeIf { it.isNotEmpty() }?.let { PotsWarning(it, max) }
             },
         )
     }

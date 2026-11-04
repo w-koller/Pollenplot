@@ -57,6 +57,7 @@ import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
+import io.github.wkoller.pollenplot.data.PotViews
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
@@ -83,6 +84,7 @@ import io.github.wkoller.pollenplot.ui.weeds.NativeAlternatives
 import io.github.wkoller.pollenplot.ui.weeds.WeedCard
 import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.ui.wildlife.PlantAnimalsCard
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
@@ -110,10 +112,16 @@ fun PlantDetailScreen(
     onEditFacts: (() -> Unit)? = null,
     onOpenPhoto: (photoId: String, detectionId: String) -> Unit = { _, _ -> },
     today: LocalDate = LocalDate.now(),
+    /** The plant's pot and the care recorded for it, with the screens that edit them. */
+    pots: PotViews? = null,
+    onEditPot: () -> Unit = {},
+    onRecordCare: () -> Unit = {},
+    onRemoveEvent: (String) -> Unit = {},
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
     val finds by remember(plantId) { garden.findsOf(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val flowered by garden.floweringList.collectAsStateWithLifecycle(initialValue = emptyList())
+    val pot by remember(plantId, pots) { pots?.plant(plantId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val draft by remember(plantId) { garden.careDraft(plantId) }.collectAsStateWithLifecycle(initialValue = null)
     var draftState by remember { mutableStateOf(DraftState.IDLE) }
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -145,6 +153,12 @@ fun PlantDetailScreen(
         ) {
             item { Header(loaded) }
             if (loaded.roles.isNotEmpty()) item { RoleBadges(loaded.roles) }
+            pot?.let { state ->
+                if (state.potted) {
+                    item { PotCard(state, today, onEdit = onEditPot, onRecord = onRecordCare) }
+                }
+                if (state.events.isNotEmpty()) item { PlantEventsCard(state.events, onRemoveEvent) }
+            }
             if (loaded.weed.isWeed) {
                 val name = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()
                 item { WeedCard(loaded.weed, locality, scientificName = name, onCompare = { onCompare(name) }) }
@@ -177,7 +191,7 @@ fun PlantDetailScreen(
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {
                 val seen = FloweringSeen.lastYear(flowered.filter { it.first == plantId }.map { it.second }, today)
-                facts(resolved, loaded, all, kb, locality.hemisphere, seen, onEditFacts) {
+                facts(resolved, loaded, all, kb, locality.hemisphere, seen, onEditFacts, onEditPot.takeIf { pots != null && pot?.potted == false }) {
                     if (finds.isNotEmpty()) item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
                 }
             }
@@ -271,6 +285,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(
     /** The months the plant was seen in flower in the last year, in the garden's own months. */
     seen: MonthSet,
     onEditFacts: (() -> Unit)?,
+    onAddPot: (() -> Unit)?,
     /** The plant's photo history, which goes after its facts and before where they came from. */
     history: androidx.compose.foundation.lazy.LazyListScope.() -> Unit,
 ) {
@@ -405,9 +420,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(
     history()
     onEditFacts?.let { edit ->
         item {
-            OutlinedButton(onClick = edit) {
-                Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.facts_edit), modifier = Modifier.padding(start = 8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                OutlinedButton(onClick = edit) {
+                    Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(stringResource(R.string.facts_edit), modifier = Modifier.padding(start = 8.dp))
+                }
+                // A plant outside a zone of pots can still be in one.
+                onAddPot?.let { add ->
+                    OutlinedButton(onClick = add) {
+                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(R.string.pot_add), modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
             }
         }
     }

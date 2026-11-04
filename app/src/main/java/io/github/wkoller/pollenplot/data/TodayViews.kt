@@ -3,9 +3,11 @@ package io.github.wkoller.pollenplot.data
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTaskKind
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
+import io.github.wkoller.pollenplot.domain.garden.PotTaskKind
 import io.github.wkoller.pollenplot.domain.irrigation.PlanReason
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import java.time.Clock
 import java.time.LocalDate
 
@@ -25,6 +27,9 @@ sealed interface TodayItem {
 
     /** Pot zones to water deeply today, because tomorrow is forecast to reach [maxTenthsC]. */
     data class PotsBeforeHeat(val zones: List<String>, val maxTenthsC: Int) : TodayItem
+
+    /** A potted plant due a flush, or a look at repotting. */
+    data class PotCare(val plantId: String, val plant: String, val kind: PotTaskKind) : TodayItem
 }
 
 /** What the Today card shows: the day's jobs from every part of the garden, the finds to review and the weeds. */
@@ -40,6 +45,8 @@ class TodayViews(
     views: GardenViews,
     settings: SettingsStore,
     private val clock: Clock,
+    /** The pot jobs due today or before. */
+    pots: Flow<List<PotDue>> = flowOf(emptyList()),
 ) {
     private val jobs: Flow<List<TodayItem>> = combine(waterViews.state, beeViews.hives, beeViews.hotels, beeViews.nativeHives, water.weather) { water, hives, hotels, natives, weather ->
         val today = LocalDate.now(clock)
@@ -61,9 +68,10 @@ class TodayViews(
         }
     }
 
-    val state: Flow<TodayState> = combine(jobs, garden.pendingReviewCount, views.plants, settings.settings) { items, reviews, plants, current ->
+    val state: Flow<TodayState> = combine(jobs, garden.pendingReviewCount, views.plants, settings.settings, pots) { items, reviews, plants, current, potsDue ->
         // A hot day counts only at the temperature the keeper chose to be warned at, and only while warnings are on.
-        val shown = items.filter { item -> item !is TodayItem.HotDay || (current.heatAlerts && item.maxTenthsC >= current.heatAlertTenthsC) }
+        val shown = items.filter { item -> item !is TodayItem.HotDay || (current.heatAlerts && item.maxTenthsC >= current.heatAlertTenthsC) } +
+            potsDue.map { TodayItem.PotCare(it.plantId, it.title, it.task.kind) }
         TodayState(shown, reviews, plants.count { it.isGrowing && it.weed.isWeed })
     }
 }

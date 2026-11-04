@@ -300,7 +300,7 @@ fun HotelUpkeepScreen(hotelId: String, hotels: HotelRepository, today: LocalDate
 }
 
 @Composable
-private fun DateRow(date: LocalDate, onChange: () -> Unit) {
+internal fun DateRow(date: LocalDate, onChange: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(stringResource(R.string.honey_date), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

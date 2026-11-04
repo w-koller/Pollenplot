@@ -22,6 +22,7 @@ import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -75,7 +76,9 @@ import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
 import io.github.wkoller.pollenplot.ui.plants.EditFactsScreen
+import io.github.wkoller.pollenplot.ui.plants.PlantEventScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantPhotoScreen
+import io.github.wkoller.pollenplot.ui.plants.PotEditScreen
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
@@ -110,6 +113,7 @@ import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
 import io.github.wkoller.pollenplot.ui.wishlist.WishScreen
 import io.github.wkoller.pollenplot.ui.wishlist.WishlistScreen
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 
 /** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
 private val WIDE_WINDOW = 600.dp
@@ -177,6 +181,7 @@ fun AppRoot(
             // A tab opens as if it were chosen in the navigation bar.
             open == MainActivity.OPEN_BEES -> openTab(TopLevelTab.BEES)
             open == MainActivity.OPEN_WATER -> openTab(TopLevelTab.WATER)
+            open == MainActivity.OPEN_PLOT -> openTab(TopLevelTab.PLOT)
             open != null && open.startsWith(MainActivity.OPEN_GUIDE) -> navController.navigate(GuideRoute(open.removePrefix(MainActivity.OPEN_GUIDE)))
             else -> return@LaunchedEffect
         }
@@ -278,6 +283,7 @@ fun AppRoot(
                 }
                 composable<PlantRoute> { entry ->
                     val id = entry.toRoute<PlantRoute>().id
+                    val scope = rememberCoroutineScope()
                     PlantDetailScreen(
                         views = container.views,
                         garden = container.garden,
@@ -294,7 +300,17 @@ fun AppRoot(
                         onEditFacts = { navController.navigate(EditFactsRoute(id)) },
                         onOpenPhoto = { photoId, detectionId -> navController.navigate(PlantPhotoRoute(photoId, detectionId)) },
                         today = LocalDate.now(container.clock),
+                        pots = container.potViews,
+                        onEditPot = { navController.navigate(PotEditRoute(id)) },
+                        onRecordCare = { navController.navigate(PlantEventRoute(id)) },
+                        onRemoveEvent = { eventId -> scope.launch { container.pots.deleteEvent(eventId) } },
                     )
+                }
+                composable<PotEditRoute> { entry ->
+                    PotEditScreen(entry.toRoute<PotEditRoute>().plantId, container.pots, onBack = back)
+                }
+                composable<PlantEventRoute> { entry ->
+                    PlantEventScreen(entry.toRoute<PlantEventRoute>().plantId, container.pots, LocalDate.now(container.clock), onBack = back)
                 }
                 composable<EditFactsRoute> { entry ->
                     EditFactsScreen(

@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
         const val OPEN_WEEDS = "weeds"
         const val OPEN_BEES = "bees"
         const val OPEN_WATER = "water"
+        const val OPEN_PLOT = "plot"
 
         /** Opens a guide page, named after this prefix, such as "guide:native/hive-care". */
         const val OPEN_GUIDE = "guide:"
