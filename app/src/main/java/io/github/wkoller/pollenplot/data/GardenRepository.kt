@@ -152,6 +152,8 @@ class GardenRepository(
     }
 
     suspend fun deletePlant(id: String) = db.withTransaction {
+        // The plant's problems go with it, so their entries leave the search index too.
+        db.problemDao().idsFor(id).forEach { search.delete(it) }
         plants.delete(id)
         search.delete(id)
     }

@@ -17,6 +17,7 @@ Version 1 includes:
   and the care recorded for it, and a potted plant says when its pot is due a flush or a look at repotting.
 - **Feeding**: a record of what each zone was fed and when, with a warning before too much phosphorus goes on
   grevilleas and their relatives, and reminders when citrus is due a feed.
+- **Problems**: pests logged with a photo and their treatments, with a warning before spraying plants in flower.
 - **A weed identifier** that checks plants against official weed sources for your area (Brisbane City Council,
   Weeds Australia and the Atlas of Living Australia), with native alternatives from the Grow Me Instead booklets.
 - **A wishlist** of plants to grow, including plants identified away from home, with whether each is native or a

@@ -57,6 +57,7 @@ data class BackupContents(
     val corrections: Int = 0,
     val pots: Int = 0,
     val feeds: Int = 0,
+    val problems: Int = 0,
 )
 
 /** A backup that has been read and checked, kept aside in the app's own storage until it is restored or put away. */
@@ -388,6 +389,7 @@ class BackupService(
             corrections = count("care_corrections"),
             pots = count("plant_pots"),
             feeds = count("soil_feeds"),
+            problems = count("plant_problems"),
         )
     }
 
@@ -530,6 +532,6 @@ class BackupService(
 
         /** Every photo and cut-out that a record shows. */
         const val STORED_PATHS = "SELECT path FROM photos UNION SELECT thumbnail FROM plants " +
-            "UNION SELECT thumbnail FROM detections UNION SELECT thumbnail FROM sightings UNION SELECT thumbnail FROM wishes"
+            "UNION SELECT thumbnail FROM detections UNION SELECT thumbnail FROM sightings UNION SELECT thumbnail FROM wishes UNION SELECT photo FROM plant_problems"
     }
 }

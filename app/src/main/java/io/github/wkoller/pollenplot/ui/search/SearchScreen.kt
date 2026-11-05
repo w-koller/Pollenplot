@@ -66,6 +66,7 @@ fun SearchScreen(
     onOpenNativeHive: (String) -> Unit = {},
     onOpenHotel: (String) -> Unit = {},
     onOpenWish: (String) -> Unit = {},
+    onOpenProblem: (String) -> Unit = {},
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val hits by produceState(initialValue = emptyList<SearchHit>(), query) { value = garden.search(query) }
@@ -110,10 +111,10 @@ fun SearchScreen(
             if (hits.isEmpty()) {
                 item { Text(stringResource(R.string.search_none, query.trim()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
             }
-            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish) }
+            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem) }
             if (related.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_related)) }
-                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish) }
+                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem) }
             }
             if (species.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_could_add)) }
@@ -136,6 +137,7 @@ private fun HitRow(
     onOpenNativeHive: (String) -> Unit,
     onOpenHotel: (String) -> Unit,
     onOpenWish: (String) -> Unit,
+    onOpenProblem: (String) -> Unit,
 ) {
     val plant = plants.firstOrNull { it.plant.id == hit.recordId }
     val zone = zones.firstOrNull { it.zone.id == hit.recordId }
@@ -151,6 +153,7 @@ private fun HitRow(
                     SearchKind.NATIVE_HIVE.name -> onOpenNativeHive(hit.recordId)
                     SearchKind.HOTEL.name -> onOpenHotel(hit.recordId)
                     SearchKind.WISH.name -> onOpenWish(hit.recordId)
+                    SearchKind.PROBLEM.name -> onOpenProblem(hit.recordId)
                     else -> onOpenPlant(hit.recordId)
                 }
             },
@@ -162,6 +165,7 @@ private fun HitRow(
                     SearchKind.NATIVE_HIVE.name -> R.drawable.ic_emoji_nature
                     SearchKind.HOTEL.name -> R.drawable.ic_cottage
                     SearchKind.WISH.name -> R.drawable.ic_bookmark
+                    SearchKind.PROBLEM.name -> R.drawable.ic_bug_report
                     else -> R.drawable.ic_potted_plant
                 }
                 Icon(painterResource(icon), contentDescription = null)

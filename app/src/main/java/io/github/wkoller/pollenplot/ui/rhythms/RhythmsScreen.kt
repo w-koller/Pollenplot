@@ -49,6 +49,7 @@ import io.github.wkoller.pollenplot.domain.rhythms.BeeGroup
 import io.github.wkoller.pollenplot.domain.rhythms.ForageLevel
 import io.github.wkoller.pollenplot.domain.rhythms.Lane
 import io.github.wkoller.pollenplot.domain.rhythms.RhythmPlant
+import io.github.wkoller.pollenplot.domain.rhythms.RhythmsEngine
 import io.github.wkoller.pollenplot.domain.season.MonthSet
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.EmptyState
@@ -92,6 +93,33 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
+            }
+            if (loaded.lanes.any { it.fed }) {
+                item(key = "offers") {
+                    val words = listWords()
+                    val locale = locale()
+                    val never = stringResource(R.string.rhythms_offers_never)
+                    fun months(set: MonthSet) = if (set.isEmpty) never else UiFormat.months(set, words, locale)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionHeading(stringResource(R.string.rhythms_offers))
+                        loaded.lanes.filter { it.fed }.forEach { lane ->
+                            val group = stringResource(lane.group.label)
+                            val offers = RhythmsEngine.offers(loaded.plants, lane.group)
+                            Text(
+                                stringResource(R.string.rhythms_offers_line, group, months(offers.nectar), months(offers.pollen)),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
+                            if (lane.lean.isNotEmpty()) {
+                                Text(
+                                    stringResource(R.string.rhythms_lean, group.lowercase(), UiFormat.months(MonthSet.of(lane.lean), words, locale)),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                )
+                            }
+                        }
+                    }
+                }
             }
             for (lane in loaded.lanes) {
                 if (lane.gaps.isEmpty()) continue

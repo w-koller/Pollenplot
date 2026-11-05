@@ -85,6 +85,9 @@ is always ready to tag.
     found by species, genus or family), `FeedPlanner` (zones due a feed; a conditioner does not count),
     `PhosphorusGuard` (more than about 4% P on Proteaceae, after an Australian Native Plants Society article) and
     `ConditionerBeforeHeat` (the user's own reminder; its numbers are Pollenplot's choice).
+  - `problems/`: `ProblemCatalogue` (pests in `assets/kb/problems.json`, each from a state government page),
+    `PlantProblem` and `Treatment` (no amounts), `ProblemTasks` (follow-ups; seven days is Pollenplot's choice) and
+    `SprayCheck` (plants likely in flower before a spray, after BeeAware).
   - `hotels/`: `BeeHotels` (hotels, their sections, looks and upkeep), `SealGuide` (who a nest's seal says is likely
     inside) and `HotelCare` (a hotel worth cleaning out in spring).
   - `irrigation/`: `WaterPlanner` (a line's daily soil-water account, after FAO 56: when watering is due and how much,
@@ -121,7 +124,8 @@ is always ready to tag.
   corrections to species' facts, which `KnowledgeRepository` puts into the knowledge base it sends, so every view that
   resolves care uses them), `WishRepository` (the wishlist), `PotRepository` and `PotViews` (pots, plant events and
   the pot jobs due), `FeedRepository` and `FeedViews` (feeds, the user's own products, each zone's last feed and the
-  zones due one), `WaterRepository`
+  zones due one), `ProblemRepository` and `ProblemViews` (problems on plants, their treatments, follow-ups and the
+  plants in flower near one), `WaterRepository`
   (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
   `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
@@ -157,7 +161,7 @@ is always ready to tag.
   settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which runs at about seven each
   morning while there is something to remind or warn about: `HiveReminderCheck` for honey bee checks due,
   `HeatAlertCheck` for hot days ahead of stingless bee hives, `WaterPlanCheck` for watering due, `PotCareCheck` for
-  pots due a flush or a look at repotting and `FeedPlanCheck` for zones due a feed.
+  pots due a flush or a look at repotting, `FeedPlanCheck` for zones due a feed and `ProblemCheck` for follow-ups.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed

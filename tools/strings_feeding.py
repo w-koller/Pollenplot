@@ -45,6 +45,7 @@ STRINGS = {
     "reach %1$s °C.",
     "feed_schedule_source": "Feeding times come from %1$s.",
     "notify_conditioner_title": "A hot day is coming",
+    "settings_reminders": "Reminders",
     "settings_feed_reminders": "Remind me about feeding",
     "settings_feed_reminders_body": "Pollenplot sends a notification in the morning when a zone with citrus is due a "
     "feed.",

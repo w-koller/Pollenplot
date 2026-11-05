@@ -34,6 +34,9 @@ sealed interface TodayItem {
     /** A zone due a feed, for the plants in it that want one. */
     data class Feed(val zoneId: String, val zone: String, val plants: List<String>) : TodayItem
 
+    /** A treated problem due a second look. */
+    data class ProblemFollowUp(val problemId: String, val problem: String, val plant: String?) : TodayItem
+
     /** The user's own reminder: a hot day is coming and no conditioner was given lately. */
     data class Conditioner(val today: Boolean, val maxTenthsC: Int) : TodayItem
 }

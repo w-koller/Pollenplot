@@ -39,6 +39,15 @@ import kotlinx.serialization.Serializable
 /** A fertiliser or conditioner the user adds. */
 @Serializable data object OwnProductRoute
 
+/** Logs a problem on a plant. */
+@Serializable data class LogProblemRoute(val plantId: String)
+
+/** One problem and its treatments. */
+@Serializable data class ProblemRoute(val id: String)
+
+/** Records a treatment of a problem on a plant. */
+@Serializable data class TreatmentRoute(val problemId: String, val plantId: String)
+
 /** The pot a plant grows in. */
 @Serializable data class PotEditRoute(val plantId: String)
 

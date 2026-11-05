@@ -65,6 +65,15 @@
 - Zones with citrus are due a feed every six weeks from spring to autumn, as Gardening Australia's Citrus Care advises,
   on the Today card and in a morning notification. Settings can turn this off, and can turn on your own reminder to
   give a conditioner before a day of 35 °C.
+- Log a problem on a plant's page: a pest from a short catalogue (aphids, soft scale, mealybugs, whitefly, two-spotted
+  mite, citrus leafminer and snails, each described from a state government page that the problem links), or
+  something else by name, with a photo and notes. Pollenplot does not diagnose from the photo.
+- Record a treatment and when to look again (seven days unless you choose otherwise, Pollenplot's own choice). Before
+  a spray, it asks first when plants nearby are likely in flower, with BeeAware's advice to spray in the evening.
+  Follow-ups due show on the Today card and in a morning notification. Problems are in search, backups and the JSON-LD
+  export.
+- Pollen Rhythms shows the months each group of bees finds nectar and the months it finds pollen, and names the lean
+  months, when only a little is in flower.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 

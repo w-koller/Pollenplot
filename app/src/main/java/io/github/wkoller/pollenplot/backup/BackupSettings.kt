@@ -38,6 +38,7 @@ data class BackupSettings(
     val potReminders: Boolean? = null,
     val feedReminders: Boolean? = null,
     val conditionerBeforeHeat: Boolean? = null,
+    val problemReminders: Boolean? = null,
 ) {
     fun json(): String = format.encodeToString(serializer(), this)
 
@@ -68,6 +69,7 @@ data class BackupSettings(
             potReminders = potReminders ?: current.potReminders,
             feedReminders = feedReminders ?: current.feedReminders,
             conditionerBeforeHeat = conditionerBeforeHeat ?: current.conditionerBeforeHeat,
+            problemReminders = problemReminders ?: current.problemReminders,
             wateringWindow = wateringFromMinute?.let { from ->
                 wateringToMinute?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
             } ?: current.wateringWindow,
@@ -102,6 +104,7 @@ data class BackupSettings(
             potReminders = settings.potReminders,
             feedReminders = settings.feedReminders,
             conditionerBeforeHeat = settings.conditionerBeforeHeat,
+            problemReminders = settings.problemReminders,
             wateringFromMinute = settings.wateringWindow.fromMinute,
             wateringToMinute = settings.wateringWindow.toMinute,
             petsAtHome = settings.petsAtHome,

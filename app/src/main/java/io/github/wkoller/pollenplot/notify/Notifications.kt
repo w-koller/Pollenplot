@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.ConditionerReminder
+import io.github.wkoller.pollenplot.data.FollowUpDue
 import io.github.wkoller.pollenplot.data.PotDue
 import io.github.wkoller.pollenplot.data.ZoneFeedDue
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
@@ -209,6 +210,17 @@ class Notifications(private val context: Context) {
         return true
     }
 
+    /** Tells which treated problems are due a second look, and opens the Plot when tapped. Returns whether it could be shown. */
+    fun showFollowUps(due: List<FollowUpDue>): Boolean {
+        if (due.isEmpty() || !allowed) return false
+        val res = context.resources
+        val lines = due.map { item ->
+            item.plantTitle?.let { res.getString(R.string.today_follow_up, item.name, it) } ?: res.getString(R.string.today_follow_up_no_plant, item.name)
+        }
+        show(FOLLOW_UPS, res.getQuantityString(R.plurals.notify_follow_up_title, due.size, due.size), lines.joinToString("\n"), channel = POTS_CHANNEL, open = MainActivity.OPEN_PLOT, icon = R.drawable.ic_bug_report)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -250,6 +262,7 @@ class Notifications(private val context: Context) {
         const val WATERING = 6
         const val POT_CARE = 7
         const val FEEDS = 8
+        const val FOLLOW_UPS = 9
 
         /** The guide page on caring for a stingless bee hive, which says how to cool one. */
         const val HEAT_GUIDE = "native/hive-care"

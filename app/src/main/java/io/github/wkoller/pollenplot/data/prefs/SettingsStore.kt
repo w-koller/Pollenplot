@@ -69,6 +69,10 @@ data class Settings(
     val feedReminders: Boolean = true,
     /** The feeds still due that a notification has told about, as `FeedDue.key` gives them, and hot days as "heat:" dates. */
     val feedTasksTold: Set<String> = emptySet(),
+    /** Send a notification on a morning when a treated problem is due a second look. */
+    val problemReminders: Boolean = true,
+    /** The follow-ups still due that a notification has told about, as `FollowUpDue.key` gives them. */
+    val problemTasksTold: Set<String> = emptySet(),
     /** The user's own reminder to give a conditioner before a hot day. */
     val conditionerBeforeHeat: Boolean = false,
     /** When a backup file was last saved on this phone, or the newest backup restored here, in epoch milliseconds. */
@@ -127,6 +131,8 @@ class SettingsStore(context: Context) {
         val feedReminders = booleanPreferencesKey("feed_reminders")
         val feedTasksTold = stringSetPreferencesKey("feed_tasks_told")
         val conditionerBeforeHeat = booleanPreferencesKey("conditioner_before_heat")
+        val problemReminders = booleanPreferencesKey("problem_reminders")
+        val problemTasksTold = stringSetPreferencesKey("problem_tasks_told")
         val lastBackupAt = longPreferencesKey("last_backup_at")
         val wateringFromMinute = intPreferencesKey("watering_from_minute")
         val wateringToMinute = intPreferencesKey("watering_to_minute")
@@ -171,6 +177,8 @@ class SettingsStore(context: Context) {
             feedReminders = this[Keys.feedReminders] ?: defaults.feedReminders,
             feedTasksTold = this[Keys.feedTasksTold] ?: defaults.feedTasksTold,
             conditionerBeforeHeat = this[Keys.conditionerBeforeHeat] ?: defaults.conditionerBeforeHeat,
+            problemReminders = this[Keys.problemReminders] ?: defaults.problemReminders,
+            problemTasksTold = this[Keys.problemTasksTold] ?: defaults.problemTasksTold,
             lastBackupAt = this[Keys.lastBackupAt],
             wateringWindow = this[Keys.wateringFromMinute]?.let { from ->
                 this[Keys.wateringToMinute]?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
@@ -208,6 +216,8 @@ class SettingsStore(context: Context) {
         this[Keys.feedReminders] = settings.feedReminders
         this[Keys.feedTasksTold] = settings.feedTasksTold
         this[Keys.conditionerBeforeHeat] = settings.conditionerBeforeHeat
+        this[Keys.problemReminders] = settings.problemReminders
+        this[Keys.problemTasksTold] = settings.problemTasksTold
         setOrRemove(Keys.lastBackupAt, settings.lastBackupAt)
         this[Keys.wateringFromMinute] = settings.wateringWindow.fromMinute
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute
