@@ -13,8 +13,10 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.data.PotDue
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTaskKind
+import io.github.wkoller.pollenplot.domain.garden.PotTaskKind
 import io.github.wkoller.pollenplot.domain.irrigation.WateringWindow
 import io.github.wkoller.pollenplot.domain.weather.DayForecast
 import io.github.wkoller.pollenplot.domain.weeds.NearbyWeed
@@ -42,6 +44,10 @@ class Notifications(private val context: Context) {
         system.createNotificationChannel(
             NotificationChannel(WATERING_CHANNEL, context.getString(R.string.notify_water_channel), NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { description = context.getString(R.string.notify_water_channel_description) },
+        )
+        system.createNotificationChannel(
+            NotificationChannel(POTS_CHANNEL, context.getString(R.string.notify_pots_channel), NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { description = context.getString(R.string.notify_pots_channel_description) },
         )
         system.createNotificationChannel(
             NotificationChannel(HIVES_CHANNEL, context.getString(R.string.notify_hive_channel), NotificationManager.IMPORTANCE_DEFAULT)
@@ -177,6 +183,16 @@ class Notifications(private val context: Context) {
         return true
     }
 
+    /** Tells which pots are due a flush or a look at repotting, and opens the Plot when tapped. Returns whether it could be shown. */
+    fun showPotCare(due: List<PotDue>): Boolean {
+        if (due.isEmpty() || !allowed) return false
+        val res = context.resources
+        fun line(item: PotDue) = res.getString(if (item.task.kind == PotTaskKind.FLUSH) R.string.today_pot_flush else R.string.today_pot_repot, item.title)
+        val title = res.getQuantityString(R.plurals.notify_pots_title, due.size, due.size)
+        show(POT_CARE, title, due.joinToString("\n") { line(it) }, channel = POTS_CHANNEL, open = MainActivity.OPEN_PLOT, icon = R.drawable.ic_potted_plant)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -209,12 +225,14 @@ class Notifications(private val context: Context) {
         const val WEEDS_CHANNEL = "weeds_nearby"
         const val HIVES_CHANNEL = "hive_tasks"
         const val WATERING_CHANNEL = "watering"
+        const val POTS_CHANNEL = "pot_care"
         const val SCAN_RESULT = 1
         const val ADDED_RESULT = 2
         const val WEEDS_NEARBY = 3
         const val HIVE_TASKS = 4
         const val HEAT = 5
         const val WATERING = 6
+        const val POT_CARE = 7
 
         /** The guide page on caring for a stingless bee hive, which says how to cool one. */
         const val HEAT_GUIDE = "native/hive-care"

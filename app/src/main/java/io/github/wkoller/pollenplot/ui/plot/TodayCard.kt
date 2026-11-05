@@ -31,13 +31,14 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.TodayItem
 import io.github.wkoller.pollenplot.data.TodayState
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTaskKind
+import io.github.wkoller.pollenplot.domain.garden.PotTaskKind
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.bees.degrees
 import io.github.wkoller.pollenplot.ui.listWords
 
 /**
  * What the garden needs today, at the top of the Plot: watering due, hive checks due or overdue, a hot day for
- * stingless bees, hotels to clean out in spring, finds to review and weeds. Each line opens where it is done.
+ * stingless bees, hotels to clean out in spring, pots to flush or look at repotting, finds to review and weeds. Each line opens where it is done.
  */
 @Composable
 fun TodayCard(
@@ -50,6 +51,7 @@ fun TodayCard(
     onHeat: () -> Unit,
     onReview: () -> Unit,
     onWeeds: () -> Unit,
+    onPlant: (String) -> Unit = {},
 ) {
     if (state.isEmpty) return
     Surface(
@@ -92,6 +94,11 @@ fun TodayCard(
                         onClick = onHeat,
                     )
                     is TodayItem.CleanHotel -> Line(R.drawable.ic_cottage, stringResource(R.string.today_clean_hotel, item.hotel), onClick = onBees)
+                    is TodayItem.PotCare -> Line(
+                        R.drawable.ic_potted_plant,
+                        stringResource(if (item.kind == PotTaskKind.FLUSH) R.string.today_pot_flush else R.string.today_pot_repot, item.plant),
+                        onClick = { onPlant(item.plantId) },
+                    )
                     is TodayItem.PotsBeforeHeat -> Line(
                         R.drawable.ic_potted_plant,
                         stringResource(R.string.today_pots_heat, UiFormat.joinAnd(item.zones, listWords()), degrees(item.maxTenthsC)),

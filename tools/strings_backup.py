@@ -60,4 +60,5 @@ PLURALS = {
     "backup_lines": {"one": "%d watering line", "other": "%d watering lines"},
     "backup_wishes": {"one": "%d plant on the wishlist", "other": "%d plants on the wishlist"},
     "backup_corrections": {"one": "%d fact you corrected", "other": "%d facts you corrected"},
+    "backup_pots": {"one": "%d pot", "other": "%d pots"},
 }

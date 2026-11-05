@@ -55,7 +55,9 @@ is always ready to tag.
     corrections, then species, then genus, then family), `CareCorrections` (the facts a user may correct, stored as
     the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges) and `Companions`.
   - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
-    `Wishlist` and `FloweringSeen` (the months a plant was seen in flower in the last year).
+    `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year) and `Pots` (a plant's pot,
+    the care done to plants, and `PotCare`: a flush four months after the last flush or fresh mix, after the
+    University of New Hampshire Extension, and a repot check two years after fresh mix, after Scotts' Australian guide).
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `HoneyGraph`
     (honey bee records, with mite checks as SOSA observations), `NativeBeeGraph`, `HotelGraph`, `JsonLd`,
     `DarwinCore` (sightings as a Darwin Core CSV) and `SearchText` (what the search index holds for each record).
@@ -112,7 +114,8 @@ is always ready to tag.
   `HotelRepository` (bee hotels and their records), `BeeViews` (hives and hotels with their zones, and what each
   honey bee hive is due for today), `RhythmsViews` (the Rhythms tab's lanes and suggestions), `CorrectionRepository` (the user's
   corrections to species' facts, which `KnowledgeRepository` puts into the knowledge base it sends, so every view that
-  resolves care uses them), `WishRepository` (the wishlist), `WaterRepository`
+  resolves care uses them), `WishRepository` (the wishlist), `PotRepository` and `PotViews` (pots, plant events and
+  the pot jobs due), `WaterRepository`
   (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
   `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
@@ -147,7 +150,8 @@ is always ready to tag.
   `LibraryWatchWorker` (a content-URI trigger that re-arms itself) and `ScanScheduler`, which matches them to the
   settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which runs at about seven each
   morning while there is something to remind or warn about: `HiveReminderCheck` for honey bee checks due,
-  `HeatAlertCheck` for hot days ahead of stingless bee hives and `WaterPlanCheck` for watering due.
+  `HeatAlertCheck` for hot days ahead of stingless bee hives, `WaterPlanCheck` for watering due and `PotCareCheck` for
+  pots due a flush or a look at repotting.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed

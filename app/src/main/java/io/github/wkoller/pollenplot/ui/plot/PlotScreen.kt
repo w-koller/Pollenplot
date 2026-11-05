@@ -183,7 +183,7 @@ fun PlotScreen(
                 Column(Modifier.fillMaxSize()) {
                     if (!editing) {
                         todayState?.let {
-                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), cardLimit)
+                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), cardLimit)
                         }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -210,7 +210,7 @@ fun PlotScreen(
             }
             else -> PlotList(
                 loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState,
-                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } },
+                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } },
             )
         }
     }
@@ -336,10 +336,11 @@ private fun TodayOnPlot(
     onGuide: (String) -> Unit,
     onReview: () -> Unit,
     onWeeds: () -> Unit,
+    onPlant: (String) -> Unit,
     modifier: Modifier,
     maxHeight: Dp = Dp.Unspecified,
 ) {
-    TodayCard(state, modifier, maxHeight, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds)
+    TodayCard(state, modifier, maxHeight, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds, onPlant = onPlant)
 }
 
 /** The most of the Plot's height the Today card takes above the canvas. */

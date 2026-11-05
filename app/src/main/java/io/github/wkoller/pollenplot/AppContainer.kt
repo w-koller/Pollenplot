@@ -16,6 +16,8 @@ import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
+import io.github.wkoller.pollenplot.data.PotRepository
+import io.github.wkoller.pollenplot.data.PotViews
 import io.github.wkoller.pollenplot.data.RhythmsViews
 import io.github.wkoller.pollenplot.data.TodayViews
 import io.github.wkoller.pollenplot.data.WaterRepository
@@ -51,6 +53,7 @@ import io.github.wkoller.pollenplot.report.PdfReportWriter
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
+import io.github.wkoller.pollenplot.notify.PotCareCheck
 import io.github.wkoller.pollenplot.notify.WaterPlanCheck
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PhoneLocation
@@ -134,7 +137,9 @@ class AppContainer(
     val guides = GuideLibrary(appContext)
     val rhythms = RhythmsViews(garden, views, bees, nativeBees, knowledge, settingsStore, clock)
     val places = PlaceFinder(this.web) { weeds.sources }
-    val waterViews = WaterViews(water, views, garden, settingsStore, clock)
+    val pots = PotRepository(this.database, clock)
+    val potViews = PotViews(pots, views, clock)
+    val waterViews = WaterViews(water, views, garden, settingsStore, clock, potViews.pottedZones)
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
     val weedPhotos = WeedPhotos(this.web) { weeds.sources }
@@ -167,8 +172,9 @@ class AppContainer(
     val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
     val waterPlan = WaterPlanCheck(water, waterViews, settingsStore, notifications)
+    val potCare = PotCareCheck(potViews, settingsStore, notifications)
     val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews)
-    val today = TodayViews(water, waterViews, beeViews, garden, views, settingsStore, clock)
+    val today = TodayViews(water, waterViews, beeViews, garden, views, settingsStore, clock, potViews.due)
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
@@ -211,7 +217,8 @@ class AppContainer(
             combine(settingsStore.settings, bees.hives, nativeBees.hives, garden.plantList) { settings, honey, natives, plants ->
                 (settings.hiveReminders && honey.isNotEmpty()) ||
                     (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE }) ||
-                    (settings.waterReminders && settings.gardenPlace != null && plants.isNotEmpty())
+                    (settings.waterReminders && settings.gardenPlace != null && plants.isNotEmpty()) ||
+                    (settings.potReminders && plants.isNotEmpty())
             }
                 .distinctUntilChanged()
                 .collect { HiveReminderWorker.update(appContext, it, clock) }
@@ -263,7 +270,7 @@ class AppContainer(
         return false
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {

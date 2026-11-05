@@ -52,6 +52,11 @@
   and width for every plant of that species. Corrected facts are marked Your correction, and the badges, calendar,
   watering, search and the assistant use them. Each can go back to the knowledge base. Corrections are in backups and
   the JSON-LD export as your own statements.
+- A potted plant's page has a Pot card: its size, material and potting mix, and when it is due a flush (about every
+  four months, as the University of New Hampshire Extension advises) or a look at repotting (every two to three years,
+  as Scotts' Australian guide suggests). Record care keeps repotting, potting up, root pruning, topping up and flushing
+  in the plant's history. Pots due show on the Today card and in a morning notification, which Settings can turn off.
+- A zone holding a plant with pot details counts as pots before a day of 35 °C, whatever kind of zone it is.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 

@@ -94,6 +94,15 @@ fun SettingsScreen(
                     trailingContent = { Switch(checked = settings.petsAtHome, onCheckedChange = null) },
                 ) { Text(stringResource(R.string.settings_pets)) }
             }
+            item {
+                ListItem(
+                    checked = settings.potReminders,
+                    onCheckedChange = { on -> update { it.copy(potReminders = on) } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_pot_reminders_body)) },
+                    trailingContent = { Switch(checked = settings.potReminders, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_pot_reminders)) }
+            }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_photos)) }
             item {
