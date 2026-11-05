@@ -57,7 +57,7 @@ class PlotScreenFlowTest {
         waitFor(hasContentDescription("Front Native Strip", substring = true))
         shot("plot_canvas")
 
-        compose.onNodeWithContentDescription("Show as a list").performClick()
+        compose.pressWhenShown(hasContentDescription("Show as a list"))
         waitFor(hasText("Back Citrus Patch"))
         compose.onNodeWithText("Back Citrus Patch").assertIsDisplayed()
         shot("plot_list")
@@ -76,8 +76,7 @@ class PlotScreenFlowTest {
     fun plantPagesInFull() {
         seed()
         show()
-        waitFor(hasContentDescription("Show as a list"))
-        compose.onNodeWithContentDescription("Show as a list").performClick()
+        compose.pressWhenShown(hasContentDescription("Show as a list"))
         waitFor(hasText("Front Native Strip"))
         compose.onNodeWithText("Front Native Strip").performClick()
         // The zone's plants come from the database, which can take a moment on a busy machine.
@@ -118,7 +117,7 @@ class PlotScreenFlowTest {
     fun searchTheGarden() {
         seed()
         show()
-        compose.onNodeWithContentDescription("Search your garden").performClick()
+        compose.pressWhenShown(hasContentDescription("Search your garden"))
         // On a busy machine the search screen can take a moment to open.
         waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("lemon")
@@ -136,7 +135,7 @@ class PlotScreenFlowTest {
         val ids = seed()
         show()
         waitFor(hasContentDescription("Hive Corner", substring = true))
-        compose.onNodeWithContentDescription("Edit layout").performClick()
+        compose.pressWhenShown(hasContentDescription("Edit layout"))
         compose.onNodeWithContentDescription("Hive Corner", substring = true).performClick()
         shot("plot_edit_selected")
         compose.onNodeWithContentDescription("Move and resize").performClick()
@@ -151,8 +150,7 @@ class PlotScreenFlowTest {
 
         // The canvas has no edge: a zone at the origin moves past it, with the screen reader's action as with a drag.
         // Done closed the sheet and the editing both, so the layout is edited again.
-        waitFor(hasContentDescription("Edit layout"))
-        compose.onNodeWithContentDescription("Edit layout").performClick()
+        compose.pressWhenShown(hasContentDescription("Edit layout"))
         compose.onNodeWithContentDescription("Front Native Strip", substring = true).performClick()
         val front = compose.onNodeWithContentDescription("Front Native Strip", substring = true).fetchSemanticsNode()
         compose.runOnIdle { front.config[SemanticsActions.CustomActions].single { it.label == "Move left" }.action() }

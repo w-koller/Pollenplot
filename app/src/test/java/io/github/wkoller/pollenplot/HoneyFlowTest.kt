@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -146,7 +147,7 @@ class HoneyFlowTest {
     fun aHiveFoundInSearchOpensItsPage() {
         runBlocking { bees.addHive("Sugarloaf", HiveType.FLOW, null, null, 2026, null) }
         show()
-        compose.onNodeWithContentDescription("Search your garden").performClick()
+        compose.pressWhenShown(hasContentDescription("Search your garden"))
         waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("sugarloaf")
         waitFor(hasText("Sugarloaf"))

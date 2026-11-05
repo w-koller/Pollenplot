@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The Plot's top-bar buttons appear once its zones have loaded, so no button moves along the bar as the screen opens.
+
 ## 1.0.0-rc.3
 
 - The Plot has no edges. Zones can be moved anywhere, including above and to the left of where the first ones were

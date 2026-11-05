@@ -97,7 +97,7 @@ class AccessibilityFlowTest {
         compose.setContent { PollenplotTheme(Settings()) { Surface { AppRoot(app.container) } } }
         waitFor(hasText("Today"))
         visit("plot")
-        compose.onNodeWithContentDescription("Wishlist").performClick()
+        compose.pressWhenShown(hasContentDescription("Wishlist"))
         reach(hasText("Snake vine"))
         visit("wishlist")
         compose.onNodeWithText("Snake vine").performClick()
@@ -111,7 +111,7 @@ class AccessibilityFlowTest {
         visit("feed")
         compose.onNodeWithContentDescription("Back").performClick()
         waitFor(hasText("Today"))
-        compose.onNodeWithContentDescription("Show as a list").performClick()
+        compose.pressWhenShown(hasContentDescription("Show as a list"))
         reach(hasText("Back Citrus Patch"))
         visit("plot_list")
         compose.onNodeWithText("Back Citrus Patch").performClick()

@@ -171,7 +171,7 @@ class WildlifeFlowTest {
     fun aSightingFoundInSearchOpensItsPage() {
         seed()
         show()
-        compose.onNodeWithContentDescription("Search your garden").performClick()
+        compose.pressWhenShown(hasContentDescription("Search your garden"))
         waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("lorikeet")
         waitFor(hasText("Rainbow lorikeet"))

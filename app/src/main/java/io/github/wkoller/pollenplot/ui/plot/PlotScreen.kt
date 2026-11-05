@@ -126,7 +126,9 @@ fun PlotScreen(
         compact = showCanvas,
         search = false,
         actions = {
-            if (!editing) {
+            // The buttons wait for the zones, because the zone buttons at the end would otherwise arrive after the
+            // others and move them along the bar, under a finger about to press one.
+            if (!editing && loadedZones != null) {
                 // Shown only while plants found in photos are waiting, with how many.
                 if (waiting > 0) {
                     val description = pluralStringResource(R.plurals.review_waiting, waiting, waiting)
