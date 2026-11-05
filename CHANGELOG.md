@@ -84,6 +84,15 @@
   bee Code of Practice does. The Plot's tiles show a hive or hotel kept in a zone.
 - The Wildlife tab has a Wildlife corridor summary of the layers and features anywhere in your yard.
 - Water features are in search, backups and the JSON-LD export.
+- A plant's page records what was picked from it, with the weight, how many, a rating out of 5 and notes on the taste,
+  for plants with something edible and for plants in a veg patch or orchard. It adds them up by season and says the
+  months anything was picked. Harvests are in reports, backups and the JSON-LD export, and their notes never go to the
+  assistant.
+- A plant's page has a Pruning card: when to prune and the page that says so (roses in July and August after
+  Centennial Parklands, citrus after harvest after WA's Department of Primary Industries and Regional Development, and
+  grevilleas, bottlebrushes, paperbarks, native rosemaries and native fuchsias after flowering, after the Australian
+  Native Plants Society), when it was last pruned, and Record pruning. A plant falls due in its pruning months until a
+  prune is recorded, on the Today card and in a morning notification. Pruning months can be set in Edit facts.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 

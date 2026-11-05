@@ -17,6 +17,8 @@ import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HabitatRepository
 import io.github.wkoller.pollenplot.data.HabitatViews
+import io.github.wkoller.pollenplot.data.HarvestRepository
+import io.github.wkoller.pollenplot.data.HarvestViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.FeedLibrary
@@ -51,6 +53,7 @@ import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
+import io.github.wkoller.pollenplot.domain.garden.PruningGuide
 import io.github.wkoller.pollenplot.domain.garden.WishStatus
 import io.github.wkoller.pollenplot.domain.report.XlsxWriter
 import io.github.wkoller.pollenplot.domain.season.Hemisphere
@@ -68,6 +71,7 @@ import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.notify.FeedPlanCheck
 import io.github.wkoller.pollenplot.notify.PotCareCheck
 import io.github.wkoller.pollenplot.notify.ProblemCheck
+import io.github.wkoller.pollenplot.notify.PruneCheck
 import io.github.wkoller.pollenplot.notify.WaterPlanCheck
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PhoneLocation
@@ -168,6 +172,11 @@ class AppContainer(
         readAsset("kb/problems.json")?.let { text -> ProblemCatalogue.parse(text).also { logProblems(it.second) }.first } ?: ProblemCatalogue.EMPTY
     }
     val catalogue: ProblemCatalogue get() = problemCatalogue
+
+    /** The sourced pruning times, read from the assets once they are first needed. */
+    val pruningGuide: PruningGuide by lazy {
+        readAsset("kb/pruning.json")?.let { text -> PruningGuide.parse(text).also { logProblems(it.second) }.first } ?: PruningGuide.EMPTY
+    }
     val waterViews = WaterViews(water, views, garden, settingsStore, clock, potViews.pottedZones)
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
@@ -207,13 +216,17 @@ class AppContainer(
     val feedPlan = FeedPlanCheck(feedViews, settingsStore, notifications)
     val problemViews = ProblemViews(problems, views, garden, settingsStore, { problemCatalogue }, clock)
     val problemCheck = ProblemCheck(problemViews, settingsStore, notifications)
-    val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews)
+    val harvests = HarvestRepository(this.database, clock)
+    val harvestViews = HarvestViews(harvests, views, pots, { pruningGuide }, clock)
+    val pruneCheck = PruneCheck(harvestViews, settingsStore, notifications)
+    val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews, harvests)
     val today = TodayViews(
         water, waterViews, beeViews, garden, views, settingsStore, clock,
-        combine(potViews.due, feedViews.due, feedViews.conditioner, problemViews.due) { potsDue, feedsDue, conditioner, followUps ->
+        combine(potViews.due, feedViews.due, feedViews.conditioner, problemViews.due, harvestViews.due) { potsDue, feedsDue, conditioner, followUps, prunes ->
             potsDue.map { TodayItem.PotCare(it.plantId, it.title, it.task.kind) } +
                 feedsDue.map { TodayItem.Feed(it.due.zoneId, it.zoneName, it.due.plants) } +
                 followUps.map { TodayItem.ProblemFollowUp(it.problemId, it.name, it.plantTitle) } +
+                prunes.map { TodayItem.Prune(it.plantId, it.title) } +
                 listOfNotNull(conditioner?.let { TodayItem.Conditioner(it.day == LocalDate.now(clock), it.maxTenthsC) })
         },
     )
@@ -255,7 +268,7 @@ class AppContainer(
                 (settings.hiveReminders && honey.isNotEmpty()) ||
                     (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE }) ||
                     (settings.waterReminders && settings.gardenPlace != null && plants.isNotEmpty()) ||
-                    ((settings.potReminders || settings.feedReminders || settings.problemReminders) && plants.isNotEmpty())
+                    ((settings.potReminders || settings.feedReminders || settings.problemReminders || settings.pruneReminders) && plants.isNotEmpty())
             }
                 .distinctUntilChanged()
                 .collect { HiveReminderWorker.update(appContext, it, clock) }
@@ -328,7 +341,7 @@ class AppContainer(
         if (problems.isNotEmpty()) Log.w("Feeding", problems.joinToString("\n"))
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples() + habitat.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples() + habitat.triples() + harvests.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {

@@ -42,6 +42,8 @@ import io.github.wkoller.pollenplot.data.CorrectionRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
+import io.github.wkoller.pollenplot.domain.garden.PruneTasks
+import io.github.wkoller.pollenplot.domain.garden.PruningGuide
 import io.github.wkoller.pollenplot.domain.plants.CareCorrections
 import io.github.wkoller.pollenplot.domain.plants.CareField
 import io.github.wkoller.pollenplot.domain.plants.CareProfile
@@ -82,7 +84,15 @@ private val DraftSaver = Saver<Map<CareField, String?>?, ArrayList<String>>(
  * knowledge base's value. Safety facts are not offered.
  */
 @Composable
-fun EditFactsScreen(plantId: String, views: GardenViews, knowledge: KnowledgeRepository, corrections: CorrectionRepository, onBack: () -> Unit) {
+fun EditFactsScreen(
+    plantId: String,
+    views: GardenViews,
+    knowledge: KnowledgeRepository,
+    corrections: CorrectionRepository,
+    /** The sourced pruning times, which give the pruning months a correction replaces. */
+    pruning: PruningGuide = PruningGuide.EMPTY,
+    onBack: () -> Unit,
+) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
@@ -122,7 +132,12 @@ fun EditFactsScreen(plantId: String, views: GardenViews, knowledge: KnowledgeRep
                 FactSection(
                     title = stringResource(field.title),
                     corrected = corrected,
-                    kbValue = describe(field, own, locality.hemisphere),
+                    kbValue = if (field == CareField.PRUNING_MONTHS) {
+                        PruneTasks.months(pruning.forPlant(species.name, species.genus, species.family), null, own.flowering, locality.hemisphere)
+                            ?.let { UiFormat.months(it, listWords(), LocalConfiguration.current.locales[0]) }
+                    } else {
+                        describe(field, own, locality.hemisphere)
+                    },
                     onUseKb = {
                         change(field, own)
                         sizeError = sizeError - field
@@ -142,6 +157,13 @@ fun EditFactsScreen(plantId: String, views: GardenViews, knowledge: KnowledgeRep
                             val locale = LocalConfiguration.current.locales[0]
                             ManyChips(Month.entries, shown, { it.getDisplayName(TextStyle.SHORT, locale) }) { months ->
                                 change(field, CareProfile(flowering = MonthSet.of(months).takeIf { !it.isEmpty }?.toSouthern(locality.hemisphere)))
+                            }
+                        }
+                        CareField.PRUNING_MONTHS -> {
+                            val shown = care.pruningMonths?.fromSouthern(locality.hemisphere)?.months.orEmpty().toSet()
+                            val locale = LocalConfiguration.current.locales[0]
+                            ManyChips(Month.entries, shown, { it.getDisplayName(TextStyle.SHORT, locale) }) { months ->
+                                change(field, CareProfile(pruningMonths = MonthSet.of(months).takeIf { !it.isEmpty }?.toSouthern(locality.hemisphere)))
                             }
                         }
                         CareField.HEIGHT, CareField.WIDTH -> SizeFields(
@@ -185,6 +207,7 @@ private val CareField.title: Int
         CareField.FERTILISER -> R.string.facts_fertiliser
         CareField.FLOWERING -> R.string.facts_flowering
         CareField.HEIGHT -> R.string.facts_height
+        CareField.PRUNING_MONTHS -> R.string.facts_pruning_months
         else -> R.string.facts_width
     }
 

@@ -106,6 +106,8 @@ data class CareProfile(
     val flowering: MonthSet? = null,
     val peakFlowering: MonthSet? = null,
     val pruning: String? = null,
+    /** The months the user prunes in, written for the Southern Hemisphere. Only a correction sets them. */
+    val pruningMonths: MonthSet? = null,
     val toxicPets: Toxicity? = null,
     val toxicPeople: Toxicity? = null,
     val toxicNote: String? = null,

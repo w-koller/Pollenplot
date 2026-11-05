@@ -38,6 +38,8 @@ internal data class CareJson(
     val edible: String? = null,
     val description: String? = null,
     @SerialName("care_note") val careNote: String? = null,
+    /** Only a user's correction sets this: the months they prune in, for the Southern Hemisphere. */
+    @SerialName("pruning_months") val pruningMonths: List<String>? = null,
 )
 
 @Serializable
@@ -193,6 +195,7 @@ internal class KbReader(val problems: MutableList<String>) {
             flowering = json.flowers?.let { months(where, "flowers", it) },
             peakFlowering = json.peak?.let { months(where, "peak", it) },
             pruning = json.pruning,
+            pruningMonths = json.pruningMonths?.let { months(where, "pruning_months", it) },
             toxicPets = json.toxic?.pets?.let { enumOf<Toxicity>(where, "toxic.pets", it) },
             toxicPeople = json.toxic?.people?.let { enumOf<Toxicity>(where, "toxic.people", it) },
             toxicNote = json.toxic?.note,

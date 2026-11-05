@@ -60,7 +60,10 @@ is always ready to tag.
     University of New Hampshire Extension, and a repot check two years after fresh mix, after Scotts' Australian guide)
     and `Corridor` (a zone's habitat layers from its plants' growth forms, its ground features and water, the gap to
     the nearest water between zone rectangles, and the yard's summary; the layers and features follow NSW
-    Environment's Backyards for nature, and which growth form makes which layer is Pollenplot's reading of it).
+    Environment's Backyards for nature, and which growth form makes which layer is Pollenplot's reading of it),
+    `Harvests` (what was picked, added up by season) and `Pruning` (`PruningGuide`, the sourced pruning times in
+    `assets/kb/pruning.json`, and `PruneTasks`: a plant's pruning months, the user's own first, and whether a prune
+    is due; "after flowering" is the month after each flowering run ends, Pollenplot's reading).
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `HoneyGraph`
     (honey bee records, with mite checks as SOSA observations), `NativeBeeGraph`, `HotelGraph`, `JsonLd`,
     `DarwinCore` (sightings as a Darwin Core CSV) and `SearchText` (what the search index holds for each record).
@@ -129,7 +132,8 @@ is always ready to tag.
   the pot jobs due), `FeedRepository` and `FeedViews` (feeds, the user's own products, each zone's last feed and the
   zones due one), `ProblemRepository` and `ProblemViews` (problems on plants, their treatments, follow-ups and the
   plants in flower near one), `HabitatRepository` and `HabitatViews` (water features, and each zone's habitat, bees
-  kept and bee food), `WaterRepository`
+  kept and bee food), `HarvestRepository` and `HarvestViews` (harvests, and each plant's pruning and the prunes due),
+  `WaterRepository`
   (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
   `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
@@ -165,7 +169,7 @@ is always ready to tag.
   settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which runs at about seven each
   morning while there is something to remind or warn about: `HiveReminderCheck` for honey bee checks due,
   `HeatAlertCheck` for hot days ahead of stingless bee hives, `WaterPlanCheck` for watering due, `PotCareCheck` for
-  pots due a flush or a look at repotting, `FeedPlanCheck` for zones due a feed and `ProblemCheck` for follow-ups.
+  pots due a flush or a look at repotting, `FeedPlanCheck` for zones due a feed, `ProblemCheck` for follow-ups and `PruneCheck` for prunes due.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed

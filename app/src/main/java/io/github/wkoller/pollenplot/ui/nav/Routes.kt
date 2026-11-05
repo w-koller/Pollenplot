@@ -54,8 +54,11 @@ import kotlinx.serialization.Serializable
 /** The pot a plant grows in. */
 @Serializable data class PotEditRoute(val plantId: String)
 
-/** Records care done to a plant, such as repotting it. */
-@Serializable data class PlantEventRoute(val plantId: String)
+/** Records care done to a plant, such as repotting it, or with [pruning] a prune. */
+@Serializable data class PlantEventRoute(val plantId: String, val pruning: Boolean = false)
+
+/** Records a harvest from a plant, or with [harvestId] opens one. */
+@Serializable data class HarvestRoute(val plantId: String, val harvestId: String? = null)
 
 /** One photo a plant was found in, with the find outlined. */
 @Serializable data class PlantPhotoRoute(val photoId: String, val detectionId: String? = null)

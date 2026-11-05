@@ -15,6 +15,7 @@ import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.ConditionerReminder
 import io.github.wkoller.pollenplot.data.FollowUpDue
+import io.github.wkoller.pollenplot.data.PruneDue
 import io.github.wkoller.pollenplot.data.PotDue
 import io.github.wkoller.pollenplot.data.ZoneFeedDue
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
@@ -221,6 +222,14 @@ class Notifications(private val context: Context) {
         return true
     }
 
+    /** Tells which plants are due a prune, and opens the Plot when tapped. Returns whether it could be shown. */
+    fun showPruning(due: List<PruneDue>): Boolean {
+        if (due.isEmpty() || !allowed) return false
+        val res = context.resources
+        show(PRUNING, res.getQuantityString(R.plurals.notify_prune_title, due.size, due.size), due.joinToString("\n") { it.title }, channel = POTS_CHANNEL, open = MainActivity.OPEN_PLOT, icon = R.drawable.ic_content_cut)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -263,6 +272,7 @@ class Notifications(private val context: Context) {
         const val POT_CARE = 7
         const val FEEDS = 8
         const val FOLLOW_UPS = 9
+        const val PRUNING = 10
 
         /** The guide page on caring for a stingless bee hive, which says how to cool one. */
         const val HEAT_GUIDE = "native/hive-care"

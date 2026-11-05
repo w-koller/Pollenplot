@@ -12,7 +12,7 @@ object CareCorrections {
     /** The facts the plant page offers to correct, in the order it shows them. */
     val EDITABLE: List<CareField> = listOf(
         CareField.SUN, CareField.WATER, CareField.FROST, CareField.SOILS, CareField.FERTILISER, CareField.FLOWERING,
-        CareField.HEIGHT, CareField.WIDTH,
+        CareField.HEIGHT, CareField.WIDTH, CareField.PRUNING_MONTHS,
     )
 
     // Defaults are not written, so a stored value holds only its own field.
@@ -29,6 +29,7 @@ object CareCorrections {
             CareField.FLOWERING -> care.flowering?.let { CareJson(flowers = months(it)) }
             CareField.HEIGHT -> care.height?.let { CareJson(height = listOf(it.minMm, it.maxMm)) }
             CareField.WIDTH -> care.width?.let { CareJson(width = listOf(it.minMm, it.maxMm)) }
+            CareField.PRUNING_MONTHS -> care.pruningMonths?.let { CareJson(pruningMonths = months(it)) }
             else -> null
         } ?: return null
         return json.encodeToString(CareJson.serializer(), value)
@@ -52,6 +53,7 @@ object CareCorrections {
             flowering = parts.firstNotNullOfOrNull { it.flowering },
             height = parts.firstNotNullOfOrNull { it.height },
             width = parts.firstNotNullOfOrNull { it.width },
+            pruningMonths = parts.firstNotNullOfOrNull { it.pruningMonths },
         )
     }
 

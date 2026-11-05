@@ -141,6 +141,15 @@ fun SettingsScreen(
             }
             item {
                 ListItem(
+                    checked = settings.pruneReminders,
+                    onCheckedChange = { on -> update { it.copy(pruneReminders = on) } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_content_cut), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_prune_reminders_body)) },
+                    trailingContent = { Switch(checked = settings.pruneReminders, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_prune_reminders)) }
+            }
+            item {
+                ListItem(
                     checked = settings.conditionerBeforeHeat,
                     onCheckedChange = { on -> update { it.copy(conditionerBeforeHeat = on) } },
                     leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },

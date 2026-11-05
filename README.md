@@ -18,6 +18,7 @@ Version 1 includes:
 - **Feeding**: a record of what each zone was fed and when, with a warning before too much phosphorus goes on
   grevilleas and their relatives, and reminders when citrus is due a feed.
 - **Problems**: pests logged with a photo and their treatments, with a warning before spraying plants in flower.
+- **Harvests and pruning**: what each plant gave by season, and when to prune it, with reminders.
 - **Habitat**: each zone's canopy, midstorey and understorey, its shelter on the ground and its water for wildlife,
   with the hives and hotels kept in it and a summary of your yard as a wildlife corridor.
 - **A weed identifier** that checks plants against official weed sources for your area (Brisbane City Council,

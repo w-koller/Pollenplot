@@ -1,0 +1,23 @@
+[
+  { "group": "Rosa", "timing": "winter", "months": ["jul", "aug"],
+    "source": "Rose Pruning Techniques, Centennial Parklands: winter pruning over July and August, once the threat of frost has passed",
+    "url": "https://www.centennialparklands.com.au/About-us/Planning/Environmental-Management/Rose-Pruning-Techniques" },
+  { "group": "Citrus", "timing": "after_harvest",
+    "source": "Citrus pruning, Factsheet DPIRD-203, Department of Primary Industries and Regional Development, Western Australia (2020): best done after harvest",
+    "url": "https://library.dpird.wa.gov.au/hc_factsheets/6/" },
+  { "group": "Grevillea", "timing": "after_flowering",
+    "source": "Pruning Australian Plants, Diana Snape, Australian Plants online (2008): after flowering is the accepted rule",
+    "url": "https://anpsa.org.au/APOL2008/oct08-s1.html" },
+  { "group": "Callistemon", "timing": "after_flowering",
+    "source": "Pruning Australian Plants, Diana Snape, Australian Plants online (2008): after flowering is the accepted rule",
+    "url": "https://anpsa.org.au/APOL2008/oct08-s1.html" },
+  { "group": "Melaleuca", "timing": "after_flowering",
+    "source": "Pruning Australian Plants, Diana Snape, Australian Plants online (2008): after flowering is the accepted rule",
+    "url": "https://anpsa.org.au/APOL2008/oct08-s1.html" },
+  { "group": "Westringia", "timing": "after_flowering",
+    "source": "Pruning Australian Plants, Diana Snape, Australian Plants online (2008): after flowering is the accepted rule",
+    "url": "https://anpsa.org.au/APOL2008/oct08-s1.html" },
+  { "group": "Correa", "timing": "after_flowering",
+    "source": "Pruning Australian Plants, Diana Snape, Australian Plants online (2008): after flowering is the accepted rule",
+    "url": "https://anpsa.org.au/APOL2008/oct08-s1.html" }
+]
