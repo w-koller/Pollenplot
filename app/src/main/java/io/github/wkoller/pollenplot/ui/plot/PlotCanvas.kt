@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.WaterState
+import io.github.wkoller.pollenplot.data.ZoneHabitatView
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.garden.PlotLayout
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
@@ -122,6 +123,8 @@ fun PlotCanvas(
     onChangeZone: (String, ZoneRect) -> Unit,
     modifier: Modifier = Modifier,
     water: WaterState? = null,
+    /** Each zone's habitat, for the hives and hotels kept in it. */
+    habitat: Map<String, ZoneHabitatView> = emptyMap(),
 ) {
     BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
         val density = LocalDensity.current.density
@@ -231,6 +234,7 @@ fun PlotCanvas(
                     val shownView = landed?.takeIf { it.first == id }?.let { view.copy(zone = view.zone.copy(rect = it.second)) } ?: view
                     ZoneTile(
                         view = shownView,
+                        habitat = habitat[id],
                         scale = scale,
                         offsetX = offsetX,
                         offsetY = offsetY,
@@ -376,6 +380,7 @@ private fun DragReadout(from: ZoneRect, to: ZoneRect, part: DragPart, modifier: 
 @Composable
 private fun ZoneTile(
     view: ZoneView,
+    habitat: ZoneHabitatView?,
     scale: Float,
     offsetX: Float,
     offsetY: Float,
@@ -399,6 +404,8 @@ private fun ZoneTile(
     val heightDp = with(density) { (shown.heightCm * scale).toDp() }
     val (container, content) = kindColours(view.zone.kind)
     val kinds = view.sightings.map { it.key }.distinct().size
+    val hives = habitat?.let { it.hives.size + it.nativeHives.size } ?: 0
+    val hotels = habitat?.hotels?.size ?: 0
     val watering = water?.zones?.get(view.zone.id)
     val next = watering?.next
     val description = stringResource(
@@ -407,6 +414,8 @@ private fun ZoneTile(
         stringResource(view.zone.kind.label),
         pluralStringResource(R.plurals.plant_count, view.plants.size, view.plants.size),
     ) + (if (kinds > 0) ", " + pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds) else "") +
+        (if (hives > 0) ", " + pluralStringResource(R.plurals.zone_tile_hives, hives, hives) else "") +
+        (if (hotels > 0) ", " + pluralStringResource(R.plurals.zone_tile_hotels, hotels, hotels) else "") +
         (next?.let { ". " + nextWateringSentence(it, water.today, water.window, watering.byHand) } ?: "")
     val moves = listOf(
         stringResource(R.string.move_left) to (-1 to 0),
@@ -471,7 +480,7 @@ private fun ZoneTile(
                     },
                 ),
         ) {
-            TileContent(view, kinds, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value)
+            TileContent(view, kinds, hives, hotels, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value)
         }
         if (selected) {
             Surface(
@@ -502,11 +511,14 @@ private fun ZoneTile(
  * plants, then badges, then how many [kinds] of animals have been seen there.
  */
 @Composable
-private fun TileContent(view: ZoneView, kinds: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float) {
+private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float) {
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (widthDp >= 72) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
-            Text(view.zone.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(view.zone.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            // Hives and hotels stay in sight on a small tile, beside the name; the tile's description counts them.
+            if (widthDp >= 96 && hives > 0) BeeHomeCount(R.drawable.ic_hive, hives)
+            if (widthDp >= 96 && hotels > 0) BeeHomeCount(R.drawable.ic_cottage, hotels)
         }
         // The next watering takes a line, so what comes after it needs that much more room.
         val watering = next?.takeIf { heightDp >= 56 }
@@ -535,6 +547,14 @@ private fun TileContent(view: ZoneView, kinds: Int, next: Pair<PlannedWatering, 
                 Text(pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
+    }
+}
+
+@Composable
+private fun BeeHomeCount(icon: Int, count: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(16.dp))
+        if (count > 1) Text(count.toString(), style = MaterialTheme.typography.labelMedium)
     }
 }
 

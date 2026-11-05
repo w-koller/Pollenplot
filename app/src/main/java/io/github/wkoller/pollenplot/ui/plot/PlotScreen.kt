@@ -47,6 +47,7 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.HabitatViews
 import io.github.wkoller.pollenplot.data.LastFed
 import io.github.wkoller.pollenplot.data.TodayViews
 import io.github.wkoller.pollenplot.data.WaterViews
@@ -88,11 +89,13 @@ fun PlotScreen(
     water: WaterViews? = null,
     feeding: FeedViews? = null,
     onOpenProblem: (String) -> Unit = {},
+    habitat: HabitatViews? = null,
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
     val fed by remember(feeding) { feeding?.lastFed ?: flowOf(emptyMap()) }.collectAsStateWithLifecycle(initialValue = emptyMap())
     val todayState by remember(today) { today?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
+    val habitats by remember(habitat) { habitat?.zones ?: flowOf(emptyMap()) }.collectAsStateWithLifecycle(initialValue = emptyMap())
     val waiting by garden.pendingReviewCount.collectAsStateWithLifecycle(initialValue = 0)
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = null)
     var listMode by rememberSaveable { mutableStateOf(false) }
@@ -199,6 +202,7 @@ fun PlotScreen(
                             onTapZone = { id -> if (editing) selectedId = id else onOpenZone(id) },
                             onChangeZone = { id, rect -> scope.launch { garden.moveZone(id, rect) } },
                             water = waterState,
+                            habitat = habitats,
                         )
                         if (editing && selectedZone == null) {
                             Surface(

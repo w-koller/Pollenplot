@@ -74,6 +74,16 @@
   export.
 - Pollen Rhythms shows the months each group of bees finds nectar and the months it finds pollen, and names the lean
   months, when only a little is in flower.
+- A zone's page has a Habitat section: its canopy, midstorey and understorey, worked out from its plants' growth forms,
+  the mulch or leaf litter, rocks and logs and dense shrubs marked on it, and its water. Each shows as present or
+  missing, after NSW Environment's Backyards for nature. Water for wildlife, such as a bird bath, pond or water for
+  bees, can be added to a zone, with when it was last cleaned, and other zones say how far it is to the nearest water.
+- A zone with all three layers gets the Layered habitat badge.
+- A zone's page lists the honey bee hives, stingless bee hives and bee hotels kept in it, and the months its plants
+  give each group of bees nectar and pollen. A zone with honey bee hives asks for water while the yard has none, as the
+  bee Code of Practice does. The Plot's tiles show a hive or hotel kept in a zone.
+- The Wildlife tab has a Wildlife corridor summary of the layers and features anywhere in your yard.
+- Water features are in search, backups and the JSON-LD export.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 

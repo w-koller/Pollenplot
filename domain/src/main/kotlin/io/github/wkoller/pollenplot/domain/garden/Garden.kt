@@ -31,7 +31,10 @@ data class Zone(
     val rect: ZoneRect,
     val sun: Sun? = null,
     val soil: Soil? = null,
+    /** Mulch or leaf litter on the ground, which is shelter for small animals as well as a cover for the soil. */
     val mulched: Boolean = false,
+    val rocksAndLogs: Boolean = false,
+    val denseShrubs: Boolean = false,
     /** An area the user measured, which takes the place of the area worked out from the canvas. */
     val measuredAreaCm2: Long? = null,
     val notes: String = "",

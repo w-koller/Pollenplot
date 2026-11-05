@@ -67,6 +67,7 @@ fun SearchScreen(
     onOpenHotel: (String) -> Unit = {},
     onOpenWish: (String) -> Unit = {},
     onOpenProblem: (String) -> Unit = {},
+    onOpenWaterFeature: (String) -> Unit = {},
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val hits by produceState(initialValue = emptyList<SearchHit>(), query) { value = garden.search(query) }
@@ -111,10 +112,10 @@ fun SearchScreen(
             if (hits.isEmpty()) {
                 item { Text(stringResource(R.string.search_none, query.trim()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
             }
-            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem) }
+            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
             if (related.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_related)) }
-                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem) }
+                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
             }
             if (species.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_could_add)) }
@@ -138,6 +139,7 @@ private fun HitRow(
     onOpenHotel: (String) -> Unit,
     onOpenWish: (String) -> Unit,
     onOpenProblem: (String) -> Unit,
+    onOpenWaterFeature: (String) -> Unit,
 ) {
     val plant = plants.firstOrNull { it.plant.id == hit.recordId }
     val zone = zones.firstOrNull { it.zone.id == hit.recordId }
@@ -154,6 +156,7 @@ private fun HitRow(
                     SearchKind.HOTEL.name -> onOpenHotel(hit.recordId)
                     SearchKind.WISH.name -> onOpenWish(hit.recordId)
                     SearchKind.PROBLEM.name -> onOpenProblem(hit.recordId)
+                    SearchKind.WATER_FEATURE.name -> onOpenWaterFeature(hit.recordId)
                     else -> onOpenPlant(hit.recordId)
                 }
             },
@@ -166,6 +169,7 @@ private fun HitRow(
                     SearchKind.HOTEL.name -> R.drawable.ic_cottage
                     SearchKind.WISH.name -> R.drawable.ic_bookmark
                     SearchKind.PROBLEM.name -> R.drawable.ic_bug_report
+                    SearchKind.WATER_FEATURE.name -> R.drawable.ic_water_drop
                     else -> R.drawable.ic_potted_plant
                 }
                 Icon(painterResource(icon), contentDescription = null)

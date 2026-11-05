@@ -50,6 +50,7 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.HabitatViews
 import io.github.wkoller.pollenplot.ui.feeding.LastFedLine
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.domain.garden.Zone
@@ -90,10 +91,18 @@ fun ZoneDetailScreen(
     onOpenWater: () -> Unit = {},
     feeding: FeedViews? = null,
     onRecordFeed: () -> Unit = {},
+    habitat: HabitatViews? = null,
+    onAddWater: () -> Unit = {},
+    onOpenWaterFeature: (String) -> Unit = {},
+    onWaterCleaned: (String) -> Unit = {},
+    onOpenHive: (String) -> Unit = {},
+    onOpenNativeHive: (String) -> Unit = {},
+    onOpenHotel: (String) -> Unit = {},
 ) {
     val view by views.zone(zoneId).collectAsStateWithLifecycle(initialValue = null)
     val fed by remember(feeding, zoneId) { feeding?.zoneLastFed(zoneId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val schedules by remember(feeding, zoneId) { feeding?.zoneSchedules(zoneId) ?: flowOf(emptyList()) }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val habitatView by remember(habitat, zoneId) { habitat?.zone(zoneId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val loaded = view
     DetailScaffold(
@@ -183,6 +192,18 @@ fun ZoneDetailScreen(
                     }
                 }
             }
+            habitatView?.let { here ->
+                item { SectionHeading(stringResource(R.string.habitat_heading)) }
+                item { HabitatCard(here, onAddWater, onOpenWaterFeature, onWaterCleaned) }
+                if (here.beeHomes > 0) {
+                    item { SectionHeading(stringResource(R.string.zone_bees_heading)) }
+                    item { ZoneBees(here, onOpenHive, onOpenNativeHive, onOpenHotel) }
+                }
+                if (loaded.plants.isNotEmpty()) {
+                    item { SectionHeading(stringResource(R.string.zone_bee_food)) }
+                    item { ZoneBeeFood(here.food) }
+                }
+            }
             item { SectionHeading(stringResource(R.string.zone_wildlife_heading)) }
             if (loaded.sightings.isEmpty()) {
                 item { Text(stringResource(R.string.zone_no_wildlife), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
@@ -215,6 +236,8 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
     var sun by rememberSaveable { mutableStateOf<Sun?>(null) }
     var soil by rememberSaveable { mutableStateOf<Soil?>(null) }
     var mulched by rememberSaveable { mutableStateOf(false) }
+    var rocksAndLogs by rememberSaveable { mutableStateOf(false) }
+    var denseShrubs by rememberSaveable { mutableStateOf(false) }
     var area by rememberSaveable { mutableStateOf("") }
     var notes by rememberSaveable { mutableStateOf("") }
     var nameError by rememberSaveable { mutableStateOf(false) }
@@ -231,6 +254,8 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
             sun = zone.sun
             soil = zone.soil
             mulched = zone.mulched
+            rocksAndLogs = zone.rocksAndLogs
+            denseShrubs = zone.denseShrubs
             area = zone.measuredAreaCm2?.let(UiFormat::squareMetres).orEmpty()
             notes = zone.notes
             initialised = true
@@ -262,8 +287,18 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
             item { ChipGroup(stringResource(R.string.zone_sun), listOf(null) + Sun.entries, sun, { it?.let { s -> stringResource(s.label) } ?: stringResource(R.string.zone_not_set) }) { sun = it } }
             item { ChipGroup(stringResource(R.string.zone_soil), listOf(null) + Soil.entries, soil, { it?.let { s -> stringResource(s.label) } ?: stringResource(R.string.zone_not_set) }) { soil = it } }
             item {
-                ListItem(checked = mulched, onCheckedChange = { mulched = it }, trailingContent = { Switch(checked = mulched, onCheckedChange = null) }) {
-                    Text(stringResource(R.string.zone_mulched))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.zone_shelter), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+                    Text(stringResource(R.string.zone_shelter_help), style = MaterialTheme.typography.bodyMedium)
+                    ListItem(checked = mulched, onCheckedChange = { mulched = it }, trailingContent = { Switch(checked = mulched, onCheckedChange = null) }) {
+                        Text(stringResource(R.string.zone_mulched))
+                    }
+                    ListItem(checked = rocksAndLogs, onCheckedChange = { rocksAndLogs = it }, trailingContent = { Switch(checked = rocksAndLogs, onCheckedChange = null) }) {
+                        Text(stringResource(R.string.zone_rocks_logs))
+                    }
+                    ListItem(checked = denseShrubs, onCheckedChange = { denseShrubs = it }, trailingContent = { Switch(checked = denseShrubs, onCheckedChange = null) }) {
+                        Text(stringResource(R.string.zone_dense_shrubs))
+                    }
                 }
             }
             item {
@@ -298,7 +333,7 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
                         areaError = area.isNotBlank() && measured == null
                         if (!nameError && !areaError) {
                             scope.launch {
-                                garden.updateZone(zone.copy(name = name.trim(), kind = kind, sun = sun, soil = soil, mulched = mulched, measuredAreaCm2 = measured, notes = notes.trim()))
+                                garden.updateZone(zone.copy(name = name.trim(), kind = kind, sun = sun, soil = soil, mulched = mulched, rocksAndLogs = rocksAndLogs, denseShrubs = denseShrubs, measuredAreaCm2 = measured, notes = notes.trim()))
                                 // The database finishes on its own thread; going back has to happen on the main one.
                                 withContext(Dispatchers.Main) { onBack() }
                             }

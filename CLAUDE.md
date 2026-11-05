@@ -57,7 +57,10 @@ is always ready to tag.
   - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
     `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year) and `Pots` (a plant's pot,
     the care done to plants, and `PotCare`: a flush four months after the last flush or fresh mix, after the
-    University of New Hampshire Extension, and a repot check two years after fresh mix, after Scotts' Australian guide).
+    University of New Hampshire Extension, and a repot check two years after fresh mix, after Scotts' Australian guide)
+    and `Corridor` (a zone's habitat layers from its plants' growth forms, its ground features and water, the gap to
+    the nearest water between zone rectangles, and the yard's summary; the layers and features follow NSW
+    Environment's Backyards for nature, and which growth form makes which layer is Pollenplot's reading of it).
   - `semantic/`: IRIs, the vocabularies, `GardenGraph` (records as Darwin Core and schema.org triples), `HoneyGraph`
     (honey bee records, with mite checks as SOSA observations), `NativeBeeGraph`, `HotelGraph`, `JsonLd`,
     `DarwinCore` (sightings as a Darwin Core CSV) and `SearchText` (what the search index holds for each record).
@@ -125,7 +128,8 @@ is always ready to tag.
   resolves care uses them), `WishRepository` (the wishlist), `PotRepository` and `PotViews` (pots, plant events and
   the pot jobs due), `FeedRepository` and `FeedViews` (feeds, the user's own products, each zone's last feed and the
   zones due one), `ProblemRepository` and `ProblemViews` (problems on plants, their treatments, follow-ups and the
-  plants in flower near one), `WaterRepository`
+  plants in flower near one), `HabitatRepository` and `HabitatViews` (water features, and each zone's habitat, bees
+  kept and bee food), `WaterRepository`
   (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
   `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.

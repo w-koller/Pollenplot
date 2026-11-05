@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "22c5088450ab123c62228a83aad606f5",
+    "identityHash": "e6af14126cea0ecdf8b7bd5934986c88",
     "entities": [
       {
         "tableName": "zones",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `kind` TEXT NOT NULL, `xCm` INTEGER NOT NULL, `yCm` INTEGER NOT NULL, `widthCm` INTEGER NOT NULL, `heightCm` INTEGER NOT NULL, `sun` TEXT, `soil` TEXT, `mulched` INTEGER NOT NULL, `measuredAreaCm2` INTEGER, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `kind` TEXT NOT NULL, `xCm` INTEGER NOT NULL, `yCm` INTEGER NOT NULL, `widthCm` INTEGER NOT NULL, `heightCm` INTEGER NOT NULL, `sun` TEXT, `soil` TEXT, `mulched` INTEGER NOT NULL, `rocksAndLogs` INTEGER NOT NULL, `denseShrubs` INTEGER NOT NULL, `measuredAreaCm2` INTEGER, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -63,6 +63,18 @@
           {
             "fieldPath": "mulched",
             "columnName": "mulched",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rocksAndLogs",
+            "columnName": "rocksAndLogs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "denseShrubs",
+            "columnName": "denseShrubs",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -2963,11 +2975,88 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "water_features",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `zoneId` TEXT NOT NULL, `kind` TEXT NOT NULL, `notes` TEXT NOT NULL, `cleanedOnEpochDay` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`zoneId`) REFERENCES `zones`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zoneId",
+            "columnName": "zoneId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cleanedOnEpochDay",
+            "columnName": "cleanedOnEpochDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_water_features_zoneId",
+            "unique": false,
+            "columnNames": [
+              "zoneId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_water_features_zoneId` ON `${TABLE_NAME}` (`zoneId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "zones",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "zoneId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '22c5088450ab123c62228a83aad606f5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e6af14126cea0ecdf8b7bd5934986c88')"
     ]
   }
 }

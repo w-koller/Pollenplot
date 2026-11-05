@@ -24,6 +24,8 @@ fun ZoneEntity.toDomain() = Zone(
     sun = enumOrNull<Sun>(sun),
     soil = enumOrNull<Soil>(soil),
     mulched = mulched,
+    rocksAndLogs = rocksAndLogs,
+    denseShrubs = denseShrubs,
     measuredAreaCm2 = measuredAreaCm2,
     notes = notes,
 )
@@ -39,6 +41,8 @@ fun Zone.toEntity(createdAt: Long, updatedAt: Long) = ZoneEntity(
     sun = sun?.name,
     soil = soil?.name,
     mulched = mulched,
+    rocksAndLogs = rocksAndLogs,
+    denseShrubs = denseShrubs,
     measuredAreaCm2 = measuredAreaCm2,
     notes = notes,
     createdAt = createdAt,
