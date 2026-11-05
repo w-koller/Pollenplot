@@ -144,10 +144,11 @@ class HarvestFlowTest {
         waitFor(hasText("Tip-pruned"))
         compose.onNodeWithText("Tip-pruned").performClick()
         compose.onNodeWithText("Save").performScrollTo().performClick()
-        waitFor(hasText("Last pruned on 28 October 2026."))
-        runBlocking { app.container.harvestViews.due.first { it.isEmpty() } }
+        // The prune is stored first, then the page shows it once the database's flow reaches it.
         val event = runBlocking { app.container.pots.events.first { it.isNotEmpty() } }.single()
         assertEquals(PlantEventKind.TIP_PRUNED, event.kind)
+        runBlocking { app.container.harvestViews.due.first { it.isEmpty() } }
+        compose.scrollTo(hasText("Last pruned on 28 October 2026."))
     }
 
     @Test
