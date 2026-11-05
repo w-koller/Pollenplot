@@ -11,16 +11,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -88,8 +85,8 @@ class HarvestFlowTest {
         val ids = seed()
         show(ids.lemon)
         waitFor(hasText("Citrus × limon"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Record a harvest"))
-        compose.onNodeWithText("No harvests recorded yet.").assertExists()
+        compose.scrollTo(hasText("Record a harvest"))
+        compose.scrollTo(hasText("No harvests recorded yet."))
         compose.onNodeWithText("Record a harvest").performClick()
         waitFor(hasText("Weight in kilograms (optional)"))
         val fields = compose.onAllNodes(hasSetTextAction())
@@ -100,10 +97,10 @@ class HarvestFlowTest {
         shot("harvest_form")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         waitFor(hasText("Citrus × limon"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("In spring 2026 you recorded 1 harvest, which gave 400 g and 3 pieces."))
+        compose.scrollTo(hasText("In spring 2026 you recorded 1 harvest, which gave 400 g and 3 pieces."))
         compose.onNodeWithText("You picked from it in October.").assertExists()
         compose.onNodeWithText("400 g · 3 pieces · Rated 4 out of 5 · Very juicy").assertExists()
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Please prune it after the harvest", substring = true))
+        compose.scrollTo(hasText("Please prune it after the harvest", substring = true))
         shot("plant_harvests")
 
         val harvest = runBlocking { app.container.harvests.harvests.first { it.isNotEmpty() } }.single()
@@ -136,7 +133,7 @@ class HarvestFlowTest {
 
         show(correa)
         waitFor(hasText("Correa reflexa"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Record pruning"))
+        compose.scrollTo(hasText("Record pruning"))
         compose.onNodeWithText("Due for a prune").assertExists()
         compose.onNodeWithText("Prune it in October.").assertExists()
         shot("plant_pruning")
@@ -173,7 +170,7 @@ class HarvestFlowTest {
             }
         }
         waitFor(hasText("Citrus × limon"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("These are your own months, set in Edit facts."))
+        compose.scrollTo(hasText("These are your own months, set in Edit facts."))
         shot("plant_pruning_dark")
     }
 
