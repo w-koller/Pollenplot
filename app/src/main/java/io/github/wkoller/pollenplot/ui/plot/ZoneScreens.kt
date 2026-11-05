@@ -48,7 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
+import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.ui.feeding.LastFedLine
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
@@ -86,8 +88,12 @@ fun ZoneDetailScreen(
     onAddSighting: () -> Unit = {},
     water: WaterViews? = null,
     onOpenWater: () -> Unit = {},
+    feeding: FeedViews? = null,
+    onRecordFeed: () -> Unit = {},
 ) {
     val view by views.zone(zoneId).collectAsStateWithLifecycle(initialValue = null)
+    val fed by remember(feeding, zoneId) { feeding?.zoneLastFed(zoneId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
+    val schedules by remember(feeding, zoneId) { feeding?.zoneSchedules(zoneId) ?: flowOf(emptyList()) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val loaded = view
     DetailScaffold(
@@ -162,6 +168,18 @@ fun ZoneDetailScreen(
                             )
                         }
                         TextButton(onClick = onOpenWater) { Text(stringResource(R.string.zone_open_water)) }
+                    }
+                }
+            }
+            if (feeding != null && loaded.plants.isNotEmpty()) {
+                item { SectionHeading(stringResource(R.string.zone_feeding)) }
+                item {
+                    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        fed?.let { LastFedLine(it) } ?: Text(stringResource(R.string.zone_not_fed), style = MaterialTheme.typography.bodyMedium)
+                        schedules.forEach { schedule ->
+                            Text(stringResource(R.string.feed_schedule_source, schedule.sourceTitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        TextButton(onClick = onRecordFeed) { Text(stringResource(R.string.add_feed)) }
                     }
                 }
             }

@@ -45,7 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
+import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.LastFed
 import io.github.wkoller.pollenplot.data.TodayViews
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.WaterState
@@ -84,8 +86,10 @@ fun PlotScreen(
     onOpenBees: () -> Unit = {},
     onOpenGuide: (String) -> Unit = {},
     water: WaterViews? = null,
+    feeding: FeedViews? = null,
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
+    val fed by remember(feeding) { feeding?.lastFed ?: flowOf(emptyMap()) }.collectAsStateWithLifecycle(initialValue = emptyMap())
     val todayState by remember(today) { today?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waiting by garden.pendingReviewCount.collectAsStateWithLifecycle(initialValue = 0)
@@ -183,7 +187,7 @@ fun PlotScreen(
                 Column(Modifier.fillMaxSize()) {
                     if (!editing) {
                         todayState?.let {
-                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), cardLimit)
+                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), cardLimit)
                         }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -209,8 +213,8 @@ fun PlotScreen(
                 }
             }
             else -> PlotList(
-                loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState,
-                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } },
+                loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState, fed = fed,
+                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } },
             )
         }
     }
@@ -269,6 +273,7 @@ private fun PlotList(
     onWeeds: () -> Unit,
     header: @Composable () -> Unit = {},
     water: WaterState? = null,
+    fed: Map<String, LastFed> = emptyMap(),
 ) {
     val unzoned = plants.filter { it.plant.zoneId == null && it.isGrowing }
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
@@ -287,7 +292,7 @@ private fun PlotList(
             }
         }
         items(zones, key = { it.zone.id }) { view ->
-            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = 16.dp), water = water)
+            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = 16.dp), water = water, fed = fed[view.zone.id])
         }
         if (unzoned.isNotEmpty()) {
             item { SectionHeading(stringResource(R.string.plot_unzoned)) }
@@ -337,10 +342,12 @@ private fun TodayOnPlot(
     onReview: () -> Unit,
     onWeeds: () -> Unit,
     onPlant: (String) -> Unit,
+    onZone: (String) -> Unit,
+    onFeed: () -> Unit,
     modifier: Modifier,
     maxHeight: Dp = Dp.Unspecified,
 ) {
-    TodayCard(state, modifier, maxHeight, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds, onPlant = onPlant)
+    TodayCard(state, modifier, maxHeight, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds, onPlant = onPlant, onZone = onZone, onFeed = onFeed)
 }
 
 /** The most of the Plot's height the Today card takes above the canvas. */

@@ -1,0 +1,60 @@
+# Copy for feeding: products, recording a feed, the phosphorus warning, zones due a feed and the conditioner reminder.
+STRINGS = {
+    "add_feed": "Record a feed",
+    "feed_title": "Record a feed",
+    "feed_product": "Product",
+    "feed_npk": "N %1$s · P %2$s · K %3$s",
+    "feed_npk_unknown": "No analysis on the maker's page",
+    "feed_own_product": "Add your own product",
+    "feed_your_product": "Your product",
+    "feed_zones": "Zones",
+    "feed_rate": "How much you used",
+    "feed_rate_hint": "As you measured it, such as 2 capfuls in 9 L.",
+    "feed_no_amounts": "Pollenplot does not suggest amounts. Please follow the directions on the label.",
+    "feed_choose_product": "Please choose a product.",
+    "feed_choose_zone": "Please choose at least one zone.",
+    "feed_saved": "Feed recorded.",
+    "feed_phosphorus_title": "Too much phosphorus?",
+    "feed_phosphorus_body": "%1$s has %2$s%% phosphorus. Plants such as grevilleas and banksias are harmed by "
+    "phosphorus, and an Australian Native Plants Society article calls about 4%% safe for them. These plants are in "
+    "the zones you chose: %3$s.",
+    "feed_phosphorus_save": "Record anyway",
+    "feed_kind_conditioner": "Conditioner",
+    "feed_kind_liquid": "Liquid fertiliser",
+    "feed_kind_slow_release": "Slow-release fertiliser",
+    "feed_kind_organic": "Organic fertiliser",
+    "feed_kind_compost": "Compost or manure",
+    "product_title": "Your product",
+    "product_name": "Name",
+    "product_maker": "Maker",
+    "product_kind": "Kind",
+    "product_n": "Nitrogen (N), per cent",
+    "product_p": "Phosphorus (P), per cent",
+    "product_k": "Potassium (K), per cent",
+    "product_npk_body": "Please copy the analysis from the label, or leave all three empty if it has none.",
+    "product_npk_error": "Please enter all three as per cent from 0 to 100, or none.",
+    "product_name_error": "Please enter the product's name.",
+    "zone_fed": "Fed %1$s",
+    "zone_fed_with": "Fed %1$s · %2$s",
+    "fed_today": "today",
+    "zone_feeding": "Feeding",
+    "zone_not_fed": "No feed recorded for this zone yet.",
+    "today_feed": "Please feed %1$s, for %2$s.",
+    "today_conditioner": "You asked to be reminded to give a conditioner before hot days. A day of %1$s °C is forecast.",
+    "today_conditioner_today": "You asked to be reminded to give a conditioner before hot days. Today is forecast to "
+    "reach %1$s °C.",
+    "feed_schedule_source": "Feeding times come from %1$s.",
+    "notify_conditioner_title": "A hot day is coming",
+    "settings_feed_reminders": "Remind me about feeding",
+    "settings_feed_reminders_body": "Pollenplot sends a notification in the morning when a zone with citrus is due a "
+    "feed.",
+    "settings_conditioner": "Remind me about conditioner before hot days",
+    "settings_conditioner_body": "Your own reminder: Pollenplot tells you when a day of 35 °C or more is forecast within "
+    "three days and you have not given a conditioner such as seaweed in the last two weeks.",
+}
+
+PLURALS = {
+    "fed_days_ago": {"one": "%d day ago", "other": "%d days ago"},
+    "notify_feed_title": {"one": "%d zone is due a feed", "other": "%d zones are due a feed"},
+    "backup_feeds": {"one": "%d feed", "other": "%d feeds"},
+}

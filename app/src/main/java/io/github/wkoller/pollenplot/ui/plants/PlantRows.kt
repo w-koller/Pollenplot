@@ -26,7 +26,9 @@ import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.WaterState
+import io.github.wkoller.pollenplot.data.LastFed
 import io.github.wkoller.pollenplot.data.ZoneView
+import io.github.wkoller.pollenplot.ui.feeding.LastFedLine
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.BadgeItem
@@ -87,9 +89,9 @@ fun SpeciesRow(species: Species, roles: List<io.github.wkoller.pollenplot.domain
     }
 }
 
-/** A zone in the list view of the Plot: its kind, size, plants and badges, and its next watering. */
+/** A zone in the list view of the Plot: its kind, size, plants and badges, its next watering and its last feed. */
 @Composable
-fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier, water: WaterState? = null) {
+fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier, water: WaterState? = null, fed: LastFed? = null) {
     ElevatedCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -121,6 +123,7 @@ fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier,
                 }
                 val watering = water?.zones?.get(view.zone.id)
                 watering?.next?.let { NextWateringLine(it, water.today, water.window, watering.byHand) }
+                fed?.let { LastFedLine(it) }
             }
         }
     }

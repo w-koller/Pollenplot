@@ -15,6 +15,8 @@ Version 1 includes:
 - **Plant requirements**: sun, water, fertiliser, compost, wildlife value, ground cover and companion plants, which
   you can correct for your own garden. Each plant keeps the photos it was found in, the months it was seen in flower
   and the care recorded for it, and a potted plant says when its pot is due a flush or a look at repotting.
+- **Feeding**: a record of what each zone was fed and when, with a warning before too much phosphorus goes on
+  grevilleas and their relatives, and reminders when citrus is due a feed.
 - **A weed identifier** that checks plants against official weed sources for your area (Brisbane City Council,
   Weeds Australia and the Atlas of Living Australia), with native alternatives from the Grow Me Instead booklets.
 - **A wishlist** of plants to grow, including plants identified away from home, with whether each is native or a

@@ -33,6 +33,12 @@ import kotlinx.serialization.Serializable
 /** The user's corrections to a plant's facts, which apply to every plant of its species. */
 @Serializable data class EditFactsRoute(val plantId: String)
 
+/** Records a feed, starting with [zoneId] chosen when it opens from a zone. */
+@Serializable data class FeedRoute(val zoneId: String? = null)
+
+/** A fertiliser or conditioner the user adds. */
+@Serializable data object OwnProductRoute
+
 /** The pot a plant grows in. */
 @Serializable data class PotEditRoute(val plantId: String)
 
@@ -161,13 +167,14 @@ enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
     ANIMAL_PHOTOS(R.string.add_animal_photos, R.drawable.ic_add_photo_alternate),
     WEED(R.string.add_check_weed, R.drawable.ic_grass),
     FIELD(R.string.add_field, R.drawable.ic_travel_explore),
+    FEED(R.string.add_feed, R.drawable.ic_compost),
     PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant),
     SIGHTING(R.string.add_sighting_by_name, R.drawable.ic_edit),
     ;
 
     companion object {
         /** The Plot's add menu. */
-        val PLOT = listOf(IDENTIFY, PHOTOS, WEED, FIELD, PLANT)
+        val PLOT = listOf(IDENTIFY, PHOTOS, WEED, FIELD, PLANT, FEED)
 
         /** The Wildlife tab's add menu. Photos from the gallery are looked at for the kind of animal the user chooses. */
         val WILDLIFE = listOf(IDENTIFY, ANIMAL_PHOTOS, SIGHTING)

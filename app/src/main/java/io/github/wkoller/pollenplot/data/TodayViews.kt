@@ -30,6 +30,12 @@ sealed interface TodayItem {
 
     /** A potted plant due a flush, or a look at repotting. */
     data class PotCare(val plantId: String, val plant: String, val kind: PotTaskKind) : TodayItem
+
+    /** A zone due a feed, for the plants in it that want one. */
+    data class Feed(val zoneId: String, val zone: String, val plants: List<String>) : TodayItem
+
+    /** The user's own reminder: a hot day is coming and no conditioner was given lately. */
+    data class Conditioner(val today: Boolean, val maxTenthsC: Int) : TodayItem
 }
 
 /** What the Today card shows: the day's jobs from every part of the garden, the finds to review and the weeds. */
@@ -45,8 +51,8 @@ class TodayViews(
     views: GardenViews,
     settings: SettingsStore,
     private val clock: Clock,
-    /** The pot jobs due today or before. */
-    pots: Flow<List<PotDue>> = flowOf(emptyList()),
+    /** Garden care due today: pots, feeds and the conditioner reminder. */
+    care: Flow<List<TodayItem>> = flowOf(emptyList()),
 ) {
     private val jobs: Flow<List<TodayItem>> = combine(waterViews.state, beeViews.hives, beeViews.hotels, beeViews.nativeHives, water.weather) { water, hives, hotels, natives, weather ->
         val today = LocalDate.now(clock)
@@ -68,10 +74,10 @@ class TodayViews(
         }
     }
 
-    val state: Flow<TodayState> = combine(jobs, garden.pendingReviewCount, views.plants, settings.settings, pots) { items, reviews, plants, current, potsDue ->
+    val state: Flow<TodayState> = combine(jobs, garden.pendingReviewCount, views.plants, settings.settings, care) { items, reviews, plants, current, careDue ->
         // A hot day counts only at the temperature the keeper chose to be warned at, and only while warnings are on.
         val shown = items.filter { item -> item !is TodayItem.HotDay || (current.heatAlerts && item.maxTenthsC >= current.heatAlertTenthsC) } +
-            potsDue.map { TodayItem.PotCare(it.plantId, it.title, it.task.kind) }
+            careDue
         TodayState(shown, reviews, plants.count { it.isGrowing && it.weed.isWeed })
     }
 }

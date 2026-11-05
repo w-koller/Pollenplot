@@ -57,6 +57,14 @@
   as Scotts' Australian guide suggests). Record care keeps repotting, potting up, root pruning, topping up and flushing
   in the plant's history. Pots due show on the Today card and in a morning notification, which Settings can turn off.
 - A zone holding a plant with pot details counts as pots before a day of 35 °C, whatever kind of zone it is.
+- Record a feed, from the Plot's add menu or a zone, keeps the product, the zones it went on, the day and the amount
+  as you measured it; Pollenplot never suggests an amount. The list starts with five products whose analysis comes from
+  the maker's page, and you can add your own. Each zone shows when it was last fed and with what.
+- A product with more than about 4% phosphorus asks first before it goes on a zone with grevilleas, banksias or other
+  Proteaceae, as an Australian Native Plants Society article advises.
+- Zones with citrus are due a feed every six weeks from spring to autumn, as Gardening Australia's Citrus Care advises,
+  on the Today card and in a morning notification. Settings can turn this off, and can turn on your own reminder to
+  give a conditioner before a day of 35 °C.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 

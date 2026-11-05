@@ -19,6 +19,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -97,8 +98,12 @@ class ShellScreenFlowTest {
     fun settingsAboutAndLicences() {
         show()
         compose.onNodeWithContentDescription("Settings").performClick()
+        // Settings has grown longer than the screen, so the row is scrolled to first.
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Battery saver"))
         compose.onNodeWithText("Battery saver").assertIsDisplayed()
         shot("settings")
+        // Back at the top, the whole row shows below the top bar.
+        compose.onNode(hasScrollToNodeAction()).performScrollToIndex(0)
         compose.onNodeWithText("Models").performClick()
         // Search by meaning, accurate identification and the garden assistant can each be downloaded.
         compose.onAllNodesWithText("Download").assertCountEquals(3)

@@ -41,6 +41,7 @@ class HiveReminderWorker(context: Context, params: WorkerParameters) : Coroutine
         container.heatAlerts.run()
         container.waterPlan.run()
         container.potCare.run()
+        container.feedPlan.run()
         return Result.success()
     }
 
