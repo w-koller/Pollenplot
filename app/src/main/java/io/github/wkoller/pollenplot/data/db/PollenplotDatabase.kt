@@ -21,6 +21,7 @@ import androidx.room.migration.Migration
         HotelUpkeepEntity::class, WateringLineEntity::class, WateringEventEntity::class, WeatherDayEntity::class, WishEntity::class,
         CareCorrectionEntity::class, PlantPotEntity::class, PlantEventEntity::class, SoilProductEntity::class, SoilFeedEntity::class,
         SoilFeedZoneEntity::class, PlantProblemEntity::class, ProblemTreatmentEntity::class, WaterFeatureEntity::class,
+        PlantHarvestEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -46,6 +47,7 @@ abstract class PollenplotDatabase : RoomDatabase() {
     abstract fun feedDao(): FeedDao
     abstract fun problemDao(): ProblemDao
     abstract fun habitatDao(): HabitatDao
+    abstract fun harvestDao(): HarvestDao
 
     companion object {
         const val FILE_NAME = "pollenplot.db"

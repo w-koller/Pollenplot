@@ -53,6 +53,7 @@ import io.github.wkoller.pollenplot.AppContainer
 import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.ai.AskSubject
 import io.github.wkoller.pollenplot.domain.assistant.RecordKind
+import io.github.wkoller.pollenplot.domain.garden.PlantEventKind
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
@@ -81,6 +82,7 @@ import io.github.wkoller.pollenplot.ui.problems.LogProblemScreen
 import io.github.wkoller.pollenplot.ui.problems.ProblemScreen
 import io.github.wkoller.pollenplot.ui.problems.TreatmentScreen
 import io.github.wkoller.pollenplot.ui.plants.EditFactsScreen
+import io.github.wkoller.pollenplot.ui.plants.HarvestScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantEventScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantPhotoScreen
 import io.github.wkoller.pollenplot.ui.plants.PotEditScreen
@@ -341,7 +343,15 @@ fun AppRoot(
                         problems = container.problemViews,
                         onOpenProblem = { navController.navigate(ProblemRoute(it)) },
                         onLogProblem = { navController.navigate(LogProblemRoute(id)) },
+                        crops = container.harvestViews,
+                        onRecordHarvest = { navController.navigate(HarvestRoute(id)) },
+                        onOpenHarvest = { navController.navigate(HarvestRoute(id, it)) },
+                        onRecordPruning = { navController.navigate(PlantEventRoute(id, pruning = true)) },
                     )
+                }
+                composable<HarvestRoute> { entry ->
+                    val route = entry.toRoute<HarvestRoute>()
+                    HarvestScreen(route.plantId, route.harvestId, container.harvests, LocalDate.now(container.clock), onBack = back)
                 }
                 composable<LogProblemRoute> { entry ->
                     LogProblemScreen(
@@ -377,7 +387,9 @@ fun AppRoot(
                     PotEditScreen(entry.toRoute<PotEditRoute>().plantId, container.pots, onBack = back)
                 }
                 composable<PlantEventRoute> { entry ->
-                    PlantEventScreen(entry.toRoute<PlantEventRoute>().plantId, container.pots, LocalDate.now(container.clock), onBack = back)
+                    val route = entry.toRoute<PlantEventRoute>()
+                    val kinds = if (route.pruning) PlantEventKind.PRUNING else PlantEventKind.POT
+                    PlantEventScreen(route.plantId, container.pots, LocalDate.now(container.clock), kinds, onBack = back)
                 }
                 composable<EditFactsRoute> { entry ->
                     EditFactsScreen(
@@ -386,6 +398,7 @@ fun AppRoot(
                         knowledge = container.knowledge,
                         corrections = container.corrections,
                         onBack = back,
+                        pruning = container.pruningGuide,
                     )
                 }
                 composable<PlantPhotoRoute> { entry ->

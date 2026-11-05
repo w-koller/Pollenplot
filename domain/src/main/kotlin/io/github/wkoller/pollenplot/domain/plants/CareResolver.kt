@@ -8,7 +8,7 @@ enum class FactLevel { USER, SPECIES, GENUS, FAMILY }
 
 enum class CareField {
     SUN, WATER, DROUGHT, FROST, SALT, SOILS, PH, FERTILISER, COMPOST, WILDLIFE, FORAGE, GROUND_COVER, HEIGHT, WIDTH,
-    FLOWERING, PRUNING, TOXICITY, EDIBLE, DESCRIPTION, CARE_NOTE,
+    FLOWERING, PRUNING, PRUNING_MONTHS, TOXICITY, EDIBLE, DESCRIPTION, CARE_NOTE,
 }
 
 /** A plant's care profile with every gap filled where possible, and the level each fact came from. */
@@ -93,6 +93,7 @@ object CareResolver {
             flowering = flowering?.flowering,
             peakFlowering = flowering?.peakFlowering,
             pruning = pick(CareField.PRUNING) { it.pruning },
+            pruningMonths = pick(CareField.PRUNING_MONTHS) { it.pruningMonths },
             toxicPets = toxic?.toxicPets,
             toxicPeople = toxic?.toxicPeople,
             toxicNote = toxic?.toxicNote,

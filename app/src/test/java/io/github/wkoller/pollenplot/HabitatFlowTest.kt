@@ -10,15 +10,12 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -81,7 +78,7 @@ class HabitatFlowTest {
         runBlocking { app.container.bees.addHive("Hive one", HiveType.LANGSTROTH_8, ids.hive, null, null, null) }
         show(ids.front)
         waitFor(hasText("Lomandra", substring = true))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Add water for wildlife"))
+        compose.scrollTo(hasText("Add water for wildlife"))
         compose.onNodeWithText("No water for wildlife has been recorded in your yard yet.").assertExists()
         compose.onNode(hasContentDescription("Canopy, Missing")).assertExists()
         compose.onNode(hasContentDescription("Mulch or leaf litter, Present")).assertExists()
@@ -94,7 +91,7 @@ class HabitatFlowTest {
         shot("water_feature")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         waitFor(hasText("This zone has water for wildlife."))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Cleaned today"))
+        compose.scrollTo(hasText("Cleaned today"))
         compose.onNodeWithText("Cleaned today").performClick()
         waitFor(hasText("Cleaned on 28 October 2026"))
 
@@ -123,10 +120,10 @@ class HabitatFlowTest {
         runBlocking { app.container.bees.addHive("Hive one", HiveType.LANGSTROTH_8, ids.hive, null, null, null) }
         show(ids.hive)
         waitFor(hasText("Lantana", substring = true))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Hive one"))
+        compose.scrollTo(hasText("Hive one"))
         compose.onNodeWithText("Honey bee hive").assertExists()
         compose.onNodeWithText("Your bees need water they can reach", substring = true).assertExists()
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Bee food here"))
+        compose.scrollTo(hasText("Bee food here"))
         compose.onNodeWithText("Honey bees find nectar all year, and pollen all year.").assertExists()
         shot("habitat_hive_corner")
     }

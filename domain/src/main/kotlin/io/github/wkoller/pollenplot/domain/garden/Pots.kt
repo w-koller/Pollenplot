@@ -34,10 +34,26 @@ enum class PlantEventKind {
 
     /** Water run through the pot to wash out the salts that fertiliser and tap water leave. */
     FLUSHED,
+
+    PRUNED,
+
+    /** The growing tips pinched or clipped off, which keeps a shrub dense. */
+    TIP_PRUNED,
     ;
 
     /** The pot got fresh mix all through, which starts both the flush and the repot count again. */
     val freshMix: Boolean get() = this == POTTED_UP || this == REPOTTED
+
+    /** The plant itself was pruned, which ends a prune that was due. */
+    val pruning: Boolean get() = this == PRUNED || this == TIP_PRUNED
+
+    companion object {
+        /** The care a pot gets, offered from the Pot card. */
+        val POT: List<PlantEventKind> = listOf(POTTED_UP, REPOTTED, ROOT_PRUNED, TOP_DRESSED, FLUSHED)
+
+        /** Pruning, offered from the Pruning card. */
+        val PRUNING: List<PlantEventKind> = listOf(PRUNED, TIP_PRUNED)
+    }
 }
 
 data class PlantEvent(val id: String, val plantId: String, val kind: PlantEventKind, val date: LocalDate, val notes: String = "")

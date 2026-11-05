@@ -55,6 +55,7 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.HarvestViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.PotViews
@@ -123,12 +124,19 @@ fun PlantDetailScreen(
     problems: ProblemViews? = null,
     onOpenProblem: (String) -> Unit = {},
     onLogProblem: () -> Unit = {},
+    /** The plant's harvests and pruning, with the screens that record them. */
+    crops: HarvestViews? = null,
+    onRecordHarvest: () -> Unit = {},
+    onOpenHarvest: (String) -> Unit = {},
+    onRecordPruning: () -> Unit = {},
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
     val finds by remember(plantId) { garden.findsOf(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val flowered by garden.floweringList.collectAsStateWithLifecycle(initialValue = emptyList())
     val pot by remember(plantId, pots) { pots?.plant(plantId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val plantProblems by remember(plantId, problems) { problems?.forPlant(plantId) ?: flowOf(emptyList()) }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val harvest by remember(plantId, crops) { crops?.harvest(plantId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
+    val prune by remember(plantId, crops) { crops?.prune(plantId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val draft by remember(plantId) { garden.careDraft(plantId) }.collectAsStateWithLifecycle(initialValue = null)
     var draftState by remember { mutableStateOf(DraftState.IDLE) }
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -167,6 +175,8 @@ fun PlantDetailScreen(
                 if (state.events.isNotEmpty()) item { PlantEventsCard(state.events, onRemoveEvent) }
             }
             if (problems != null) item { ProblemsCard(plantProblems, onOpenProblem, onLogProblem) }
+            harvest?.takeIf { it.offered }?.let { state -> item { HarvestCard(state, onRecordHarvest, onOpenHarvest) } }
+            prune?.takeIf { it.schedule != null || it.months != null || it.lastPruned != null }?.let { state -> item { PruningCard(state, onRecordPruning) } }
             if (loaded.weed.isWeed) {
                 val name = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()
                 item { WeedCard(loaded.weed, locality, scientificName = name, onCompare = { onCompare(name) }) }

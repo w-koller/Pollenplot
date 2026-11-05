@@ -5,6 +5,7 @@ import androidx.annotation.StringRes
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.BeeRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.HarvestRepository
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.RhythmsViews
@@ -47,6 +48,7 @@ enum class ReportPart(@StringRes val label: Int) {
     HOTELS(R.string.report_part_hotels),
     WATER(R.string.report_part_water),
     WISHLIST(R.string.report_part_wishlist),
+    HARVESTS(R.string.report_part_harvests),
 }
 
 /**
@@ -65,6 +67,7 @@ class ReportBuilder(
     private val settings: SettingsStore,
     private val clock: Clock,
     private val wishes: WishViews? = null,
+    private val harvests: HarvestRepository? = null,
 ) {
     private fun s(@StringRes id: Int, vararg args: Any): String = context.getString(id, *args)
 
@@ -98,6 +101,7 @@ class ReportBuilder(
                 ReportPart.HOTELS -> hotels(::inPeriod)
                 ReportPart.WATER -> water(::inPeriod)
                 ReportPart.WISHLIST -> wishlist()
+                ReportPart.HARVESTS -> harvests(::inPeriod)
             }
         }
         // A part with nothing recorded says so, rather than showing a heading with nothing under it.
@@ -286,6 +290,31 @@ class ReportBuilder(
             },
         )
         return ReportSection(s(R.string.report_part_wishlist), emptyList(), listOf(table))
+    }
+
+    /** What was picked in the period: each plant's totals, then each harvest. */
+    private suspend fun harvests(inPeriod: (LocalDate) -> Boolean): ReportSection {
+        val picked = harvests?.harvests?.first().orEmpty().filter { inPeriod(it.date) }.sortedBy { it.date }
+        val titles = views.plants.first().associate { it.plant.id to it.title }
+        fun kilograms(grams: Long?) = grams?.takeIf { it > 0 }?.let { ReportCell.Number(BigDecimal.valueOf(it, 3)) } ?: text(null)
+        val totals = table(
+            R.string.report_harvest_totals,
+            listOf(R.string.col_plant, R.string.col_harvests, R.string.col_weight_kg, R.string.col_picked),
+            picked.groupBy { it.plantId }.toList().sortedBy { titles[it.first].orEmpty() }.map { (plantId, list) ->
+                listOf(
+                    text(titles[plantId]), number(list.size), kilograms(list.sumOf { (it.weightG ?: 0).toLong() }),
+                    list.sumOf { it.count ?: 0 }.takeIf { it > 0 }?.let(::number) ?: text(null),
+                )
+            },
+        )
+        val each = table(
+            R.string.report_part_harvests,
+            listOf(R.string.col_day, R.string.col_plant, R.string.col_weight_kg, R.string.col_picked, R.string.col_rating, R.string.col_notes),
+            picked.map {
+                listOf(day(it.date), text(titles[it.plantId]), kilograms(it.weightG?.toLong()), number(it.count), number(it.rating), text(it.notes))
+            },
+        )
+        return ReportSection(s(R.string.report_part_harvests), emptyList(), if (picked.isEmpty()) emptyList() else listOf(totals, each))
     }
 
     private suspend fun water(inPeriod: (LocalDate) -> Boolean): ReportSection {

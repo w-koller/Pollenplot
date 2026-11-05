@@ -101,7 +101,10 @@ class PlotScreenFlowTest {
     fun addAPlantByName() {
         seed()
         show()
+        // The add button shows once the Plot has loaded, and its menu once pressed; both can take a moment in CI.
+        waitFor(hasContentDescription("Open the add menu"))
         compose.onNodeWithContentDescription("Open the add menu").performClick()
+        waitFor(hasText("Add a plant by name"))
         compose.onNodeWithText("Add a plant by name").performClick()
         waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("bottle")
@@ -127,7 +130,9 @@ class PlotScreenFlowTest {
         compose.onNodeWithText("Plants you could add").assertExists()
         shot("search_lemon")
         compose.onNodeWithText("Mum's lemon").performClick()
-        waitFor(hasText("Citrus food"))
+        // The plant's page opens with its harvests and pruning above its facts.
+        waitFor(hasText("Citrus × limon"))
+        compose.scrollTo(hasText("Citrus food"))
     }
 
     @Test

@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollAction
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
@@ -127,7 +129,9 @@ class PlantPageFlowTest {
         // Scrolled to Edit facts, just below the history, so the whole card is on the screen.
         compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Edit facts"))
         shot("plant_history")
-        compose.onNodeWithText("Photo from ", substring = true).performClick()
+        // The photo may sit under the top bar once scrolled to, so its click is sent as an action rather than a tap.
+        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Photo from ", substring = true))
+        compose.onNodeWithText("Photo from ", substring = true).performSemanticsAction(SemanticsActions.OnClick)
         waitFor(hasText("What the models suggested"))
         compose.onNodeWithText("Taken on ", substring = true).assertExists()
         shot("plant_photo")

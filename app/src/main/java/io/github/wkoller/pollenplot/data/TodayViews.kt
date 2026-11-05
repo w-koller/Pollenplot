@@ -37,6 +37,9 @@ sealed interface TodayItem {
     /** A treated problem due a second look. */
     data class ProblemFollowUp(val problemId: String, val problem: String, val plant: String?) : TodayItem
 
+    /** A plant in its pruning months with no prune recorded yet. */
+    data class Prune(val plantId: String, val plant: String) : TodayItem
+
     /** The user's own reminder: a hot day is coming and no conditioner was given lately. */
     data class Conditioner(val today: Boolean, val maxTenthsC: Int) : TodayItem
 }

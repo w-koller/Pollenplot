@@ -92,6 +92,8 @@ val PlantEventKind.label: Int
         PlantEventKind.ROOT_PRUNED -> R.string.event_root_pruned
         PlantEventKind.TOP_DRESSED -> R.string.event_top_dressed
         PlantEventKind.FLUSHED -> R.string.event_flushed
+        PlantEventKind.PRUNED -> R.string.event_pruned
+        PlantEventKind.TIP_PRUNED -> R.string.event_tip_pruned
     }
 
 /**
@@ -159,11 +161,11 @@ fun PlantEventsCard(events: List<PlantEvent>, onRemove: (String) -> Unit) {
 
 /** Records care done to a plant on a day, such as repotting it or flushing its pot. */
 @Composable
-fun PlantEventScreen(plantId: String, pots: PotRepository, today: LocalDate, onBack: () -> Unit) {
+fun PlantEventScreen(plantId: String, pots: PotRepository, today: LocalDate, kinds: List<PlantEventKind> = PlantEventKind.POT, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     var day by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
     var pickingDate by rememberSaveable { mutableStateOf(false) }
-    var kind by rememberSaveable { mutableStateOf(PlantEventKind.REPOTTED) }
+    var kind by rememberSaveable { mutableStateOf(if (PlantEventKind.REPOTTED in kinds) PlantEventKind.REPOTTED else kinds.first()) }
     var notes by rememberSaveable { mutableStateOf("") }
     val date = LocalDate.ofEpochDay(day)
 
@@ -172,7 +174,7 @@ fun PlantEventScreen(plantId: String, pots: PotRepository, today: LocalDate, onB
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            ChipGroup(stringResource(R.string.event_kind), PlantEventKind.entries, kind, { stringResource(it.label) }) { kind = it }
+            ChipGroup(stringResource(R.string.event_kind), kinds, kind, { stringResource(it.label) }) { kind = it }
             DateRow(date) { pickingDate = true }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(onClick = {

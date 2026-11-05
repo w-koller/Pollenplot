@@ -107,6 +107,7 @@ fun TodayCard(
                         item.plant?.let { stringResource(R.string.today_follow_up, item.problem, it) } ?: stringResource(R.string.today_follow_up_no_plant, item.problem),
                         onClick = { onProblem(item.problemId) },
                     )
+                    is TodayItem.Prune -> Line(R.drawable.ic_content_cut, stringResource(R.string.today_prune, item.plant), onClick = { onPlant(item.plantId) })
                     is TodayItem.Feed -> Line(
                         R.drawable.ic_compost,
                         stringResource(R.string.today_feed, item.zone, UiFormat.joinAnd(item.plants, listWords())),
