@@ -29,8 +29,10 @@ Version 1 includes:
 - **Bees**: separate guides and trackers for European honey bees and Australian native bees, and a logger for bee
   and insect hotels.
 - **Water**: irrigation options, and watering times and amounts from your plants and the weather.
-- **Search** across your zones, plants, sightings, hives, hotels and wishlist by their words, and by meaning once
-  the optional text model is on the phone, and garden reports as PDF or Excel.
+- **Search** from every tab across your zones, plants, sightings, hives, hotels, wishlist, problems and water for
+  wildlife, including the notes of hive inspections, stingless hive logs, hotel observations and harvests, narrowed by
+  kind of record or zone. It searches by words, and by meaning once the optional text model is on the phone.
+- **Reports** as PDF or Excel, opening with a summary and listing the tasks due, saved or shared with another app.
 
 Pollenplot needs Android 12 or newer.
 

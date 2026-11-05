@@ -111,15 +111,24 @@ class BeeRepository(private val db: PollenplotDatabase, private val clock: Clock
         search.delete(id)
     }
 
-    suspend fun saveInspection(inspection: Inspection) = honey.upsertInspection(
+    suspend fun saveInspection(inspection: Inspection) = db.withTransaction {
+        upsertInspection(inspection)
+        indexHive(inspection.hiveId)
+    }
+
+    suspend fun deleteInspection(id: String) = db.withTransaction {
+        val hiveId = honey.inspectionHive(id)
+        honey.deleteInspection(id)
+        hiveId?.let { indexHive(it) }
+    }
+
+    private suspend fun upsertInspection(inspection: Inspection) = honey.upsertInspection(
         InspectionEntity(
             inspection.id, inspection.hiveId, inspection.date.toEpochDay(), inspection.queenSeen, inspection.eggsSeen, inspection.brood?.name,
             inspection.temperament?.name, inspection.framesOfBees, inspection.framesOfStores, inspection.queenCells.name,
             inspection.signs.sortedBy { it.ordinal }.joinToString(",") { it.name }, inspection.actions.trim(), inspection.notes.trim(), now(),
         ),
     )
-
-    suspend fun deleteInspection(id: String) = honey.deleteInspection(id)
 
     suspend fun saveCheck(check: VarroaCheck) = honey.upsertCheck(
         VarroaCheckEntity(check.id, check.hiveId, check.date.toEpochDay(), check.method.name, check.sample, check.mites, check.reportedOn?.toEpochDay(), now()),
@@ -174,10 +183,12 @@ class BeeRepository(private val db: PollenplotDatabase, private val clock: Clock
     /** Puts every hive in the search index again, after the garden's index has been rebuilt. */
     suspend fun reindex() = honey.hives().forEach { index(it.toDomain()) }
 
+    private suspend fun indexHive(id: String) = honey.hives().firstOrNull { it.id == id }?.let { index(it.toDomain()) }
+
     private suspend fun index(hive: HoneyHive) {
         val zoneName = hive.zoneId?.let { zones.get(it)?.name }
         val apiaryName = hive.apiaryId?.let { honey.apiary(it)?.name }
-        val doc = SearchText.hive(hive, zoneName, apiaryName)
+        val doc = SearchText.hive(hive, zoneName, apiaryName, honey.inspectionNotes(hive.id))
         search.delete(hive.id)
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }

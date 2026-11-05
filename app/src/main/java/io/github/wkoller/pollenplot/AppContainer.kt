@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import androidx.core.content.FileProvider
 import androidx.room.withTransaction
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
@@ -13,6 +14,9 @@ import io.github.wkoller.pollenplot.backup.BackupService
 import io.github.wkoller.pollenplot.data.BeeRepository
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.CorrectionRepository
+import io.github.wkoller.pollenplot.data.FeedLibrary
+import io.github.wkoller.pollenplot.data.FeedRepository
+import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HabitatRepository
@@ -20,31 +24,38 @@ import io.github.wkoller.pollenplot.data.HabitatViews
 import io.github.wkoller.pollenplot.data.HarvestRepository
 import io.github.wkoller.pollenplot.data.HarvestViews
 import io.github.wkoller.pollenplot.data.HotelRepository
+import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
-import io.github.wkoller.pollenplot.data.FeedLibrary
-import io.github.wkoller.pollenplot.data.FeedRepository
-import io.github.wkoller.pollenplot.data.FeedViews
+import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.PotRepository
+import io.github.wkoller.pollenplot.data.PotViews
 import io.github.wkoller.pollenplot.data.ProblemRepository
 import io.github.wkoller.pollenplot.data.ProblemViews
-import io.github.wkoller.pollenplot.domain.problems.ProblemCatalogue
-import io.github.wkoller.pollenplot.data.TodayItem
-import io.github.wkoller.pollenplot.domain.feeding.FeedingGuide
-import io.github.wkoller.pollenplot.domain.feeding.Products
-import io.github.wkoller.pollenplot.data.PotViews
 import io.github.wkoller.pollenplot.data.RhythmsViews
+import io.github.wkoller.pollenplot.data.SearchPlaces
+import io.github.wkoller.pollenplot.data.TodayItem
 import io.github.wkoller.pollenplot.data.TodayViews
 import io.github.wkoller.pollenplot.data.WaterRepository
+import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.WishRepository
 import io.github.wkoller.pollenplot.data.WishViews
-import io.github.wkoller.pollenplot.data.WaterViews
-import io.github.wkoller.pollenplot.data.guides.GuideLibrary
-import io.github.wkoller.pollenplot.data.Locality
-import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
+import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
+import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
+import io.github.wkoller.pollenplot.domain.feeding.FeedingGuide
+import io.github.wkoller.pollenplot.domain.feeding.Products
+import io.github.wkoller.pollenplot.domain.garden.PotTaskKind
+import io.github.wkoller.pollenplot.domain.garden.PruningGuide
+import io.github.wkoller.pollenplot.domain.garden.WishStatus
+import io.github.wkoller.pollenplot.domain.problems.ProblemCatalogue
+import io.github.wkoller.pollenplot.domain.report.XlsxWriter
+import io.github.wkoller.pollenplot.domain.season.Hemisphere
+import io.github.wkoller.pollenplot.domain.semantic.DarwinCore
+import io.github.wkoller.pollenplot.domain.semantic.JsonLd
+import io.github.wkoller.pollenplot.domain.weeds.WeedAlternatives
 import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.ml.AccuratePack
 import io.github.wkoller.pollenplot.ml.AccuratePlantIdentifier
@@ -52,23 +63,11 @@ import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.Identifier
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.ml.text.Embedder
-import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
-import io.github.wkoller.pollenplot.domain.garden.PruningGuide
-import io.github.wkoller.pollenplot.domain.garden.WishStatus
-import io.github.wkoller.pollenplot.domain.report.XlsxWriter
-import io.github.wkoller.pollenplot.domain.season.Hemisphere
-import io.github.wkoller.pollenplot.domain.semantic.DarwinCore
-import io.github.wkoller.pollenplot.domain.semantic.JsonLd
-import io.github.wkoller.pollenplot.domain.weeds.WeedAlternatives
-import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
+import io.github.wkoller.pollenplot.notify.FeedPlanCheck
 import io.github.wkoller.pollenplot.notify.HeatAlertCheck
-import io.github.wkoller.pollenplot.report.ReportPart
-import io.github.wkoller.pollenplot.report.ReportBuilder
-import io.github.wkoller.pollenplot.report.PdfReportWriter
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
-import io.github.wkoller.pollenplot.notify.FeedPlanCheck
 import io.github.wkoller.pollenplot.notify.PotCareCheck
 import io.github.wkoller.pollenplot.notify.ProblemCheck
 import io.github.wkoller.pollenplot.notify.PruneCheck
@@ -76,12 +75,20 @@ import io.github.wkoller.pollenplot.notify.WaterPlanCheck
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PhoneLocation
 import io.github.wkoller.pollenplot.place.PlaceFinder
+import io.github.wkoller.pollenplot.report.PdfReportWriter
+import io.github.wkoller.pollenplot.report.ReportBuilder
+import io.github.wkoller.pollenplot.report.ReportPart
+import io.github.wkoller.pollenplot.report.ReportTask
 import io.github.wkoller.pollenplot.scan.AccurateScanWorker
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.MediaStoreGallery
 import io.github.wkoller.pollenplot.scan.PhotoScanner
 import io.github.wkoller.pollenplot.search.MeaningIndexWorker
 import io.github.wkoller.pollenplot.search.MeaningSearch
+import io.github.wkoller.pollenplot.ui.ListWords
+import io.github.wkoller.pollenplot.ui.UiFormat
+import io.github.wkoller.pollenplot.ui.bees.label
+import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.web.HttpWeb
 import io.github.wkoller.pollenplot.web.Web
 import io.github.wkoller.pollenplot.weeds.WeedLibrary
@@ -186,6 +193,7 @@ class AppContainer(
     val wishes = WishRepository(this.database, clock, { knowledge.await() }, photos::delete)
 
     val wishViews = WishViews(wishes, views, knowledge, settingsStore)
+    val searchPlaces = SearchPlaces(views, beeViews, wishes, problems, habitat)
 
     /** Native plants to grow instead of garden weeds, read from the assets once they are first needed. */
     val weedHelp = WeedHelp(
@@ -216,10 +224,10 @@ class AppContainer(
     val feedPlan = FeedPlanCheck(feedViews, settingsStore, notifications)
     val problemViews = ProblemViews(problems, views, garden, settingsStore, { problemCatalogue }, clock)
     val problemCheck = ProblemCheck(problemViews, settingsStore, notifications)
-    val harvests = HarvestRepository(this.database, clock)
+    val harvests = HarvestRepository(this.database, clock, garden::reindexPlant)
     val harvestViews = HarvestViews(harvests, views, pots, { pruningGuide }, clock)
     val pruneCheck = PruneCheck(harvestViews, settingsStore, notifications)
-    val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews, harvests)
+    val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews, harvests, ::dueTasks)
     val today = TodayViews(
         water, waterViews, beeViews, garden, views, settingsStore, clock,
         combine(potViews.due, feedViews.due, feedViews.conditioner, problemViews.due, harvestViews.due) { potsDue, feedsDue, conditioner, followUps, prunes ->
@@ -359,6 +367,36 @@ class AppContainer(
         withContext(Dispatchers.IO) {
             if (pdf) PdfReportWriter(appContext.getString(R.string.report_footer)).write(report, out) else XlsxWriter.write(report, out)
         }
+    }
+
+    /**
+     * Writes a report into the cache for sharing and returns its address for the app the user picks. Only the latest
+     * report is kept there.
+     */
+    suspend fun reportForSharing(parts: Set<ReportPart>, from: LocalDate, to: LocalDate, pdf: Boolean, pictures: Boolean): Uri = withContext(Dispatchers.IO) {
+        val folder = File(appContext.cacheDir, "reports").apply { mkdirs() }
+        folder.listFiles()?.forEach { it.delete() }
+        val file = File(folder, "pollenplot-report-${LocalDate.now(clock)}.${if (pdf) "pdf" else "xlsx"}")
+        file.outputStream().use { writeReport(parts, from, to, pdf, it, pictures) }
+        FileProvider.getUriForFile(appContext, "${appContext.packageName}.files", file)
+    }
+
+    /** Every job due today or before, worded as the Today card words it, for the report's Tasks part. */
+    private suspend fun dueTasks(): List<ReportTask> {
+        val today = LocalDate.now(clock)
+        fun s(id: Int, vararg args: Any) = appContext.getString(id, *args)
+        val hives = beeViews.hives.first().flatMap { view ->
+            view.tasks.filter { !it.due.isAfter(today) }.map { ReportTask(s(R.string.today_hive_due, view.hive.name, s(it.kind.label).lowercase()), it.due) }
+        }
+        val pots = potViews.due.first().map { ReportTask(s(if (it.task.kind == PotTaskKind.FLUSH) R.string.today_pot_flush else R.string.today_pot_repot, it.title), it.task.due) }
+        // The joining words are patterns themselves, so they are read without filling them in.
+        val words = ListWords(appContext.getString(R.string.list_and), appContext.getString(R.string.list_range), appContext.getString(R.string.list_all_year))
+        val feeds = feedViews.due.first().map { ReportTask(s(R.string.today_feed, it.zoneName, UiFormat.joinAnd(it.due.plants, words)), it.due.due) }
+        val followUps = problemViews.due.first().map { due ->
+            ReportTask(due.plantTitle?.let { s(R.string.today_follow_up, due.name, it) } ?: s(R.string.today_follow_up_no_plant, due.name), due.due)
+        }
+        val prunes = harvestViews.due.first().map { ReportTask(s(R.string.today_prune, it.title), it.since) }
+        return (hives + pots + feeds + followUps + prunes).sortedBy { it.due }
     }
 
     /** How many times a plant has been recorded near the garden, as the last weed update found. */

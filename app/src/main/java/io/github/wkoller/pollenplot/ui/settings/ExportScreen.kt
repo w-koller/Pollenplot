@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -8,11 +10,13 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -25,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -32,12 +37,12 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.report.ReportPart
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
-import java.io.IOException
-import java.io.OutputStream
-import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.io.OutputStream
+import java.time.LocalDate
 
 /** How far back a report reaches. */
 private enum class ReportPeriod(val months: Long, val label: Int) {
@@ -57,15 +62,35 @@ fun ExportScreen(
     jsonLd: suspend () -> String,
     darwinCore: suspend () -> String,
     onBack: () -> Unit,
+    /** Writes the report for sharing and gives its address, or null when sharing is not offered. */
+    share: (suspend (Set<ReportPart>, LocalDate, LocalDate, Boolean, Boolean) -> Uri)? = null,
+    /** The parts chosen when the screen opens, such as the bees' parts from the Bees tab. */
+    initialParts: Set<ReportPart> = ReportPart.entries.toSet(),
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var period by rememberSaveable { mutableStateOf(ReportPeriod.QUARTER) }
-    var parts by rememberSaveable { mutableStateOf(ReportPart.entries.toSet()) }
+    var parts by rememberSaveable { mutableStateOf(initialParts) }
     var pictures by rememberSaveable { mutableStateOf(true) }
     var reportSaved by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var jsonLdSaved by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var darwinCoreSaved by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var shareFailed by rememberSaveable { mutableStateOf(false) }
+    val shareTitle = stringResource(R.string.report_share_title)
+    fun shareReport(pdf: Boolean) {
+        val write = share ?: return
+        scope.launch {
+            val uri = runCatching { write(parts, today.minusMonths(period.months), today, pdf, pictures) }.getOrNull()
+            shareFailed = uri == null
+            if (uri != null) {
+                val send = Intent(Intent.ACTION_SEND)
+                    .setType(if (pdf) "application/pdf" else XLSX)
+                    .putExtra(Intent.EXTRA_STREAM, uri)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                context.startActivity(Intent.createChooser(send, shareTitle))
+            }
+        }
+    }
 
     fun save(uri: android.net.Uri?, write: suspend (OutputStream) -> Unit, done: (Boolean) -> Unit) {
         if (uri == null) return
@@ -129,8 +154,19 @@ fun ExportScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(enabled = parts.isNotEmpty(), onClick = { savePdf.launch("pollenplot-report-$today.pdf") }) { Text(stringResource(R.string.report_save_pdf)) }
                         OutlinedButton(enabled = parts.isNotEmpty(), onClick = { saveXlsx.launch("pollenplot-report-$today.xlsx") }) { Text(stringResource(R.string.report_save_xlsx)) }
+                        if (share != null) {
+                            OutlinedButton(enabled = parts.isNotEmpty(), onClick = { shareReport(pdf = true) }) {
+                                Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(18.dp))
+                                Text(stringResource(R.string.report_share_pdf), modifier = Modifier.padding(start = 8.dp))
+                            }
+                            OutlinedButton(enabled = parts.isNotEmpty(), onClick = { shareReport(pdf = false) }) {
+                                Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(18.dp))
+                                Text(stringResource(R.string.report_share_xlsx), modifier = Modifier.padding(start = 8.dp))
+                            }
+                        }
                     }
                     reportSaved?.let { Saved(it) }
+                    if (shareFailed) StatusLine(false, stringResource(R.string.report_share_failed))
                 }
             }
             item {

@@ -110,8 +110,14 @@ import kotlinx.serialization.Serializable
 /** Upkeep of a bee hotel. */
 @Serializable data class HotelUpkeepRoute(val hotelId: String)
 
-/** Exporting the garden's records as files. */
-@Serializable data object ExportRoute
+/** Exporting the garden's records as files, with [focus] naming the tab it was opened from. */
+@Serializable data class ExportRoute(val focus: String? = null)
+
+/** The report opened from the Bees tab, with the bees' parts chosen. */
+const val FOCUS_BEES = "bees"
+
+/** The report opened from the Water tab, with watering chosen. */
+const val FOCUS_WATER = "water"
 
 /** Saving a backup of everything, and restoring one. */
 @Serializable data object BackupRoute

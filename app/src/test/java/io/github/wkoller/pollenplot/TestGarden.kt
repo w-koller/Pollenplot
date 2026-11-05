@@ -7,8 +7,12 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import io.github.wkoller.pollenplot.ai.AskSubject
 import io.github.wkoller.pollenplot.ai.Assistant
@@ -29,12 +33,12 @@ import io.github.wkoller.pollenplot.scan.Album
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.scan.GalleryPhoto
-import java.time.Instant
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.time.Instant
 
 /**
  * The app with a gallery of painted photos and a stand-in for the models, for tests of scanning and review. Tests that
@@ -280,3 +284,19 @@ fun ComposeContentTestRule.scrollTo(matcher: SemanticsMatcher) {
         (0 until scrollers.fetchSemanticsNodes().size).any { runCatching { scrollers[it].performScrollToNode(matcher) }.isSuccess }
     }
 }
+
+/**
+ * Presses [matcher] once it is on the screen. Right after a press, what it opened, such as a menu, may still be on its
+ * way on a busy machine, and pressing too soon finds nothing.
+ */
+fun ComposeContentTestRule.pressWhenShown(matcher: SemanticsMatcher) {
+    waitUntil(WAIT_MS) { onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty() }
+    onAllNodes(matcher).onFirst().performClick()
+}
+
+/** Opens a tab's add menu and presses its [item], each once it is on the screen. */
+fun ComposeContentTestRule.addFromMenu(item: String) {
+    pressWhenShown(hasContentDescription("Open the add menu"))
+    pressWhenShown(hasText(item))
+}
+

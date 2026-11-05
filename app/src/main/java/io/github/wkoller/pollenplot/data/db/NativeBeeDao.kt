@@ -32,4 +32,10 @@ interface NativeBeeDao {
 
     @Query("DELETE FROM native_logs WHERE id = :id")
     suspend fun deleteLog(id: String)
+
+    @Query("SELECT hiveId FROM native_logs WHERE id = :id")
+    suspend fun logHive(id: String): String?
+
+    @Query("SELECT notes FROM native_logs WHERE hiveId = :hiveId AND notes != ''")
+    suspend fun logNotes(hiveId: String): List<String>
 }

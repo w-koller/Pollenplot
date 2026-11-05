@@ -97,9 +97,9 @@ class HarvestFlowTest {
         shot("harvest_form")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         waitFor(hasText("Citrus × limon"))
-        compose.scrollTo(hasText("In spring 2026 you recorded 1 harvest, which gave 400 g and 3 pieces."))
+        compose.scrollTo(hasText("In spring 2026 you recorded 1 harvest, which gave 400\u00a0g and 3 pieces."))
         compose.onNodeWithText("You picked from it in October.").assertExists()
-        compose.onNodeWithText("400 g · 3 pieces · Rated 4 out of 5 · Very juicy").assertExists()
+        compose.onNodeWithText("400\u00a0g · 3 pieces · Rated 4 out of 5 · Very juicy").assertExists()
         compose.scrollTo(hasText("Please prune it after the harvest", substring = true))
         shot("plant_harvests")
 
@@ -109,7 +109,7 @@ class HarvestFlowTest {
         assertEquals(4, harvest.rating)
 
         val report = runBlocking { app.container.reports.build(setOf(ReportPart.HARVESTS), today.minusMonths(1), today) }
-        val section = report.sections.single()
+        val section = report.sections.last()
         assertEquals("Harvests", section.title)
         assertEquals(2, section.tables.size)
         assertTrue(runBlocking { app.container.exportJsonLd() }.contains("PlantHarvest"))

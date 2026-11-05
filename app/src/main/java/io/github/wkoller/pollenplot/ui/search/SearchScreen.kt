@@ -1,11 +1,17 @@
 package io.github.wkoller.pollenplot.ui.search
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -25,6 +31,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,6 +52,8 @@ import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.plants.SpeciesRow
 import io.github.wkoller.pollenplot.ui.plants.ZoneCard
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /**
@@ -68,8 +78,13 @@ fun SearchScreen(
     onOpenWish: (String) -> Unit = {},
     onOpenProblem: (String) -> Unit = {},
     onOpenWaterFeature: (String) -> Unit = {},
+    /** The zone each record belongs to, for the zone filter. */
+    places: Flow<Map<String, String>> = flowOf(emptyMap()),
 ) {
     var query by rememberSaveable { mutableStateOf("") }
+    var kindFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    var zoneFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    val zoneOf by places.collectAsStateWithLifecycle(initialValue = emptyMap())
     val hits by produceState(initialValue = emptyList<SearchHit>(), query) { value = garden.search(query) }
     // With the text model on the phone, records related in meaning follow the ones the words found.
     val related by produceState(initialValue = emptyList<SearchHit>(), query, hits) { value = meaning.related(query, hits.map { it.recordId }.toSet()) }
@@ -108,18 +123,81 @@ fun SearchScreen(
                 }
                 return@LazyColumn
             }
+            val found = hits + related
+            val kinds = SearchKind.entries.filter { kind -> found.any { it.kind == kind.name } }
+            val foundZones = zones.filter { zone -> found.any { zoneOf[it.recordId] == zone.zone.id } }
+            fun shown(hit: SearchHit) = (kindFilter == null || hit.kind == kindFilter) && (zoneFilter == null || zoneOf[hit.recordId] == zoneFilter)
+            val filtered = kindFilter != null || zoneFilter != null
+            if (kinds.size > 1 || foundZones.isNotEmpty() || filtered) {
+                item(key = "filters") {
+                    SearchFilters(
+                        kinds = kinds,
+                        kind = kindFilter,
+                        onKind = { kindFilter = it },
+                        zones = foundZones.map { it.zone.id to it.zone.name },
+                        zone = zoneFilter,
+                        onZone = { zoneFilter = it },
+                    )
+                }
+            }
+            val shownHits = hits.filter(::shown)
+            val shownRelated = related.filter(::shown)
             item { SectionHeading(stringResource(R.string.search_in_garden)) }
             if (hits.isEmpty()) {
                 item { Text(stringResource(R.string.search_none, query.trim()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+            } else if (shownHits.isEmpty()) {
+                item { Text(stringResource(R.string.search_none_filtered), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
             }
-            items(hits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
-            if (related.isNotEmpty()) {
+            items(shownHits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
+            if (shownRelated.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_related)) }
-                items(related, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
+                items(shownRelated, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
             }
-            if (species.isNotEmpty()) {
+            // Plants to add are not records in a zone, so a filter leaves them out.
+            if (species.isNotEmpty() && !filtered) {
                 item { SectionHeading(stringResource(R.string.search_could_add)) }
                 items(species, key = { "species:" + it.first.name }) { (s, roles) -> SpeciesRow(s, roles, onClick = { onAddSpecies(s.name) }) }
+            }
+        }
+    }
+}
+
+val SearchKind.label: Int
+    get() = when (this) {
+        SearchKind.ZONE -> R.string.search_kind_zones
+        SearchKind.PLANT -> R.string.search_kind_plants
+        SearchKind.SIGHTING -> R.string.search_kind_sightings
+        SearchKind.HIVE -> R.string.search_kind_hives
+        SearchKind.NATIVE_HIVE -> R.string.search_kind_native_hives
+        SearchKind.HOTEL -> R.string.search_kind_hotels
+        SearchKind.WISH -> R.string.search_kind_wishes
+        SearchKind.PROBLEM -> R.string.search_kind_problems
+        SearchKind.WATER_FEATURE -> R.string.search_kind_water
+    }
+
+/** Chips that narrow the results to one kind of record, or to the records in one zone. Choosing a chip again clears it. */
+@Composable
+private fun SearchFilters(
+    kinds: List<SearchKind>,
+    kind: String?,
+    onKind: (String?) -> Unit,
+    zones: List<Pair<String, String>>,
+    zone: String?,
+    onZone: (String?) -> Unit,
+) {
+    Column(Modifier.padding(bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(stringResource(R.string.search_filter_kind), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 16.dp).semantics { heading() })
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            kinds.forEach { option ->
+                FilterChip(selected = kind == option.name, onClick = { onKind(if (kind == option.name) null else option.name) }, label = { Text(stringResource(option.label)) })
+            }
+        }
+        if (zones.isNotEmpty() || zone != null) {
+            Text(stringResource(R.string.search_filter_zone), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 16.dp).semantics { heading() })
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                zones.forEach { (id, name) ->
+                    FilterChip(selected = zone == id, onClick = { onZone(if (zone == id) null else id) }, label = { Text(name) })
+                }
             }
         }
     }

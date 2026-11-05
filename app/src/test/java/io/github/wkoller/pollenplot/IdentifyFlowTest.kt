@@ -194,8 +194,7 @@ class IdentifyFlowTest {
         }
         // The Plot opens once the app knows the garden needs no setup.
         waitFor(hasContentDescription("Open the add menu"))
-        compose.onNodeWithContentDescription("Open the add menu").performClick()
-        compose.onNodeWithText("Identify with the camera").performClick()
+        compose.addFromMenu("Identify with the camera")
         compose.onNodeWithText("Pollenplot needs the camera to identify plants.").assertIsDisplayed()
     }
 

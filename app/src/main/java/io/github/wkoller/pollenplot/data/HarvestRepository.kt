@@ -11,8 +11,16 @@ import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
 
-/** What was picked from each plant. Harvests go with their plant when it is removed. */
-class HarvestRepository(db: PollenplotDatabase, private val clock: Clock) {
+/**
+ * What was picked from each plant. Harvests go with their plant when it is removed, and their notes are in the search
+ * index under the plant.
+ */
+class HarvestRepository(
+    db: PollenplotDatabase,
+    private val clock: Clock,
+    /** Puts a plant in the search index again, with its harvests' notes. */
+    private val reindexPlant: suspend (String) -> Unit = {},
+) {
     private val dao = db.harvestDao()
 
     /** Every harvest, the latest first. */
@@ -23,15 +31,21 @@ class HarvestRepository(db: PollenplotDatabase, private val clock: Clock) {
     suspend fun add(plantId: String, date: LocalDate, weightG: Int?, count: Int?, rating: Int?, notes: String): Harvest {
         val harvest = Harvest(UUID.randomUUID().toString(), plantId, date, weightG, count, rating, notes.trim())
         write(harvest, clock.millis())
+        reindexPlant(plantId)
         return harvest
     }
 
     suspend fun update(harvest: Harvest) {
         val stored = dao.get(harvest.id) ?: return
         write(harvest.copy(notes = harvest.notes.trim()), stored.createdAt)
+        reindexPlant(harvest.plantId)
     }
 
-    suspend fun delete(id: String) = dao.delete(id)
+    suspend fun delete(id: String) {
+        val plantId = dao.get(id)?.plantId
+        dao.delete(id)
+        plantId?.let { reindexPlant(it) }
+    }
 
     /** Every harvest as linked data. */
     suspend fun triples(): List<Triple> = dao.all().flatMap { HarvestGraph.harvest(it.toDomain()) }

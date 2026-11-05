@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,6 +59,7 @@ import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeLogKind
+import io.github.wkoller.pollenplot.report.ReportPart
 import io.github.wkoller.pollenplot.ui.assistant.AskModel
 import io.github.wkoller.pollenplot.ui.assistant.AskScreen
 import io.github.wkoller.pollenplot.ui.bees.BeesScreen
@@ -72,6 +74,7 @@ import io.github.wkoller.pollenplot.ui.bees.HoneyRecordScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeHiveEditorScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeHiveScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeLogScreen
+import io.github.wkoller.pollenplot.ui.components.LocalOpenSearch
 import io.github.wkoller.pollenplot.ui.guides.GuideScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
@@ -229,594 +232,606 @@ fun AppRoot(
             },
         ) { padding ->
             val railInsets = if (wide && showTabs) Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)) else Modifier
-            NavHost(
-                navController = navController,
-                startDestination = if (setup) SetupRoute() else PlotRoute,
-                modifier = Modifier.padding(padding).consumeWindowInsets(padding).then(railInsets),
-            ) {
-                val openSettings = { navController.navigate(SettingsRoute) }
-                val back: () -> Unit = { navController.popBackStack() }
-                composable<PlotRoute> {
-                    PlotScreen(
-                        garden = container.garden,
-                        views = container.views,
-                        onOpenSettings = openSettings,
-                        onAdd = { action ->
-                            when (action) {
-                                AddAction.IDENTIFY -> navController.navigate(IdentifyRoute())
-                                AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
-                                AddAction.ANIMAL_PHOTOS -> askingAnimal = true
-                                AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
-                                AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
-                                AddAction.FEED -> navController.navigate(FeedRoute())
-                                AddAction.PLANT -> navController.navigate(AddPlantRoute())
-                                AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
-                            }
-                        },
-                        onOpenZone = { navController.navigate(ZoneRoute(it)) },
-                        onEditZone = { navController.navigate(ZoneEditRoute(it)) },
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onSearch = { navController.navigate(SearchRoute) },
-                        onReview = { navController.navigate(ReviewRoute) },
-                        onWeeds = { navController.navigate(WeedsRoute) },
-                        onWishlist = { navController.navigate(WishlistRoute) },
-                        today = container.today,
-                        onOpenWater = { openTab(TopLevelTab.WATER) },
-                        onOpenBees = { openTab(TopLevelTab.BEES) },
-                        onOpenGuide = { navController.navigate(GuideRoute(it)) },
-                        water = container.waterViews,
-                        feeding = container.feedViews,
-                        onOpenProblem = { navController.navigate(ProblemRoute(it)) },
-                        habitat = container.habitatViews,
-                    )
-                }
-                composable<FeedRoute> { entry ->
-                    FeedScreen(
-                        zoneId = entry.toRoute<FeedRoute>().zoneId,
-                        feeds = container.feeds,
-                        views = container.views,
-                        today = LocalDate.now(container.clock),
-                        onAddProduct = { navController.navigate(OwnProductRoute) },
-                        onBack = back,
-                    )
-                }
-                composable<OwnProductRoute> { OwnProductScreen(container.feeds, onBack = back) }
-                composable<ZoneRoute> { entry ->
-                    val id = entry.toRoute<ZoneRoute>().id
-                    ZoneDetailScreen(
-                        views = container.views,
-                        zoneId = id,
-                        onBack = back,
-                        onEdit = { navController.navigate(ZoneEditRoute(id)) },
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onAddPlant = { navController.navigate(AddPlantRoute(zoneId = id)) },
-                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
-                        onAddSighting = { navController.navigate(AddSightingRoute(zoneId = id)) },
-                        water = container.waterViews,
-                        onOpenWater = { openTab(TopLevelTab.WATER) },
-                        feeding = container.feedViews,
-                        onRecordFeed = { navController.navigate(FeedRoute(id)) },
-                        habitat = container.habitatViews,
-                        onAddWater = { navController.navigate(WaterFeatureRoute(zoneId = id)) },
-                        onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
-                        onWaterCleaned = { container.waterCleaned(it) },
-                        onOpenHive = { navController.navigate(HiveRoute(it)) },
-                        onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
-                        onOpenHotel = { navController.navigate(HotelRoute(it)) },
-                    )
-                }
-                composable<WaterFeatureRoute> { entry ->
-                    val route = entry.toRoute<WaterFeatureRoute>()
-                    WaterFeatureScreen(container.habitat, route.zoneId, route.featureId, LocalDate.now(container.clock), onBack = back)
-                }
-                composable<ZoneEditRoute> { entry ->
-                    ZoneEditorScreen(
-                        garden = container.garden,
-                        zoneId = entry.toRoute<ZoneEditRoute>().id,
-                        onBack = back,
-                        onRemoved = { navController.popBackStack(PlotRoute, inclusive = false) },
-                    )
-                }
-                composable<PlantRoute> { entry ->
-                    val id = entry.toRoute<PlantRoute>().id
-                    val scope = rememberCoroutineScope()
-                    PlantDetailScreen(
-                        views = container.views,
-                        garden = container.garden,
-                        knowledge = container.knowledge,
-                        plantId = id,
-                        onBack = back,
-                        onCompare = { navController.navigate(CompareRoute(it, plantId = id)) },
-                        help = container.weedHelp,
-                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
-                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
-                        onAsk = { navController.navigate(AskRoute(plantId = id)) },
-                        assistant = container.assistant,
-                        onOpenModels = { navController.navigate(ModelsRoute) },
-                        onEditFacts = { navController.navigate(EditFactsRoute(id)) },
-                        onOpenPhoto = { photoId, detectionId -> navController.navigate(PlantPhotoRoute(photoId, detectionId)) },
-                        today = LocalDate.now(container.clock),
-                        pots = container.potViews,
-                        onEditPot = { navController.navigate(PotEditRoute(id)) },
-                        onRecordCare = { navController.navigate(PlantEventRoute(id)) },
-                        onRemoveEvent = { eventId -> scope.launch { container.pots.deleteEvent(eventId) } },
-                        problems = container.problemViews,
-                        onOpenProblem = { navController.navigate(ProblemRoute(it)) },
-                        onLogProblem = { navController.navigate(LogProblemRoute(id)) },
-                        crops = container.harvestViews,
-                        onRecordHarvest = { navController.navigate(HarvestRoute(id)) },
-                        onOpenHarvest = { navController.navigate(HarvestRoute(id, it)) },
-                        onRecordPruning = { navController.navigate(PlantEventRoute(id, pruning = true)) },
-                    )
-                }
-                composable<HarvestRoute> { entry ->
-                    val route = entry.toRoute<HarvestRoute>()
-                    HarvestScreen(route.plantId, route.harvestId, container.harvests, LocalDate.now(container.clock), onBack = back)
-                }
-                composable<LogProblemRoute> { entry ->
-                    LogProblemScreen(
-                        plantId = entry.toRoute<LogProblemRoute>().plantId,
-                        catalogue = container.catalogue,
-                        problems = container.problems,
-                        today = LocalDate.now(container.clock),
-                        savePhoto = container::saveProblemPhoto,
-                        onBack = back,
-                    )
-                }
-                composable<ProblemRoute> { entry ->
-                    val id = entry.toRoute<ProblemRoute>().id
-                    val scope = rememberCoroutineScope()
-                    ProblemScreen(
-                        id = id,
-                        views = container.problemViews,
-                        problems = container.problems,
-                        onBack = back,
-                        onRecordTreatment = {
-                            scope.launch {
-                                container.problems.problem(id)?.let { navController.navigate(TreatmentRoute(id, it.plantId)) }
-                            }
-                        },
-                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
-                    )
-                }
-                composable<TreatmentRoute> { entry ->
-                    val route = entry.toRoute<TreatmentRoute>()
-                    TreatmentScreen(route.problemId, route.plantId, container.problemViews, container.problems, LocalDate.now(container.clock), onBack = back)
-                }
-                composable<PotEditRoute> { entry ->
-                    PotEditScreen(entry.toRoute<PotEditRoute>().plantId, container.pots, onBack = back)
-                }
-                composable<PlantEventRoute> { entry ->
-                    val route = entry.toRoute<PlantEventRoute>()
-                    val kinds = if (route.pruning) PlantEventKind.PRUNING else PlantEventKind.POT
-                    PlantEventScreen(route.plantId, container.pots, LocalDate.now(container.clock), kinds, onBack = back)
-                }
-                composable<EditFactsRoute> { entry ->
-                    EditFactsScreen(
-                        plantId = entry.toRoute<EditFactsRoute>().plantId,
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        corrections = container.corrections,
-                        onBack = back,
-                        pruning = container.pruningGuide,
-                    )
-                }
-                composable<PlantPhotoRoute> { entry ->
-                    val route = entry.toRoute<PlantPhotoRoute>()
-                    PlantPhotoScreen(container.garden, container.knowledge, route.photoId, route.detectionId, onBack = back)
-                }
-                composable<AddPlantRoute> { entry ->
-                    val route = entry.toRoute<AddPlantRoute>()
-                    AddPlantScreen(
-                        knowledge = container.knowledge,
-                        garden = container.garden,
-                        views = container.views,
-                        initialZoneId = route.zoneId,
-                        initialSpecies = route.species,
-                        onBack = back,
-                        onAdded = { plantId ->
-                            // A plant added from the wishlist marks its wish planted.
-                            route.wishId?.let(container::wishPlanted)
-                            navController.navigate(PlantRoute(plantId)) { popUpTo<AddPlantRoute> { inclusive = true } }
-                        },
-                    )
-                }
-                composable<SearchRoute> {
-                    SearchScreen(
-                        garden = container.garden,
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        meaning = container.meaning,
-                        onBack = back,
-                        onOpenZone = { navController.navigate(ZoneRoute(it)) },
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
-                        onAskGarden = { navController.navigate(AskRoute()) },
-                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
-                        onOpenHive = { navController.navigate(HiveRoute(it)) },
-                        onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
-                        onOpenHotel = { navController.navigate(HotelRoute(it)) },
-                        onOpenWish = { navController.navigate(WishRoute(it)) },
-                        onOpenProblem = { navController.navigate(ProblemRoute(it)) },
-                        onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
-                    )
-                }
-                composable<IdentifyRoute> { entry ->
-                    val route = entry.toRoute<IdentifyRoute>()
-                    val model = viewModel {
-                        IdentifyModel(
-                            container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore,
-                            createSavedStateHandle(), container::recordsNearby,
-                            field = route.field,
-                            wishes = container.wishes,
-                            readPhoto = container::readChosenPhoto,
-                            discardFieldPhoto = container::discardFieldPhoto,
+            CompositionLocalProvider(LocalOpenSearch provides { navController.navigate(SearchRoute) }) {
+                NavHost(
+                    navController = navController,
+                    startDestination = if (setup) SetupRoute() else PlotRoute,
+                    modifier = Modifier.padding(padding).consumeWindowInsets(padding).then(railInsets),
+                ) {
+                    val openSettings = { navController.navigate(SettingsRoute) }
+                    val back: () -> Unit = { navController.popBackStack() }
+                    composable<PlotRoute> {
+                        PlotScreen(
+                            garden = container.garden,
+                            views = container.views,
+                            onOpenSettings = openSettings,
+                            onAdd = { action ->
+                                when (action) {
+                                    AddAction.IDENTIFY -> navController.navigate(IdentifyRoute())
+                                    AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
+                                    AddAction.ANIMAL_PHOTOS -> askingAnimal = true
+                                    AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
+                                    AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
+                                    AddAction.FEED -> navController.navigate(FeedRoute())
+                                    AddAction.PLANT -> navController.navigate(AddPlantRoute())
+                                    AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
+                                }
+                            },
+                            onOpenZone = { navController.navigate(ZoneRoute(it)) },
+                            onEditZone = { navController.navigate(ZoneEditRoute(it)) },
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onSearch = { navController.navigate(SearchRoute) },
+                            onReview = { navController.navigate(ReviewRoute) },
+                            onWeeds = { navController.navigate(WeedsRoute) },
+                            onWishlist = { navController.navigate(WishlistRoute) },
+                            today = container.today,
+                            onOpenWater = { openTab(TopLevelTab.WATER) },
+                            onOpenBees = { openTab(TopLevelTab.BEES) },
+                            onOpenGuide = { navController.navigate(GuideRoute(it)) },
+                            water = container.waterViews,
+                            feeding = container.feedViews,
+                            onOpenProblem = { navController.navigate(ProblemRoute(it)) },
+                            habitat = container.habitatViews,
                         )
                     }
-                    IdentifyScreen(
-                        model = model,
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        settings = container.settingsStore,
-                        onBack = back,
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
-                        checkingWeed = route.checkingWeed,
-                        help = container.weedHelp,
-                        onOpenWishlist = { navController.navigate(WishlistRoute) { popUpTo<IdentifyRoute> { inclusive = true } } },
-                        accurateReady = container.accurate.state.collectAsStateWithLifecycle().value == PackState.Ready,
-                        onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
-                        onOpenFinder = { navController.navigate(WeedFinderRoute(it)) },
-                    )
-                }
-                composable<ReviewRoute> {
-                    val model = viewModel { ReviewModel(container.garden, container.settingsStore, WorkManager.getInstance(container.appContext)) }
-                    ReviewScreen(
-                        model = model,
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        settings = container.settingsStore,
-                        onBack = back,
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onAddPhotos = { addPhotos(LifeGroup.PLANT) },
-                        onIdentify = { navController.navigate(IdentifyRoute()) },
-                        onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
-                    )
-                }
-                composable<RhythmsRoute> {
-                    RhythmsScreen(
-                        rhythms = container.rhythms,
-                        onOpenSettings = openSettings,
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
-                    )
-                }
-                composable<WildlifeRoute> {
-                    WildlifeScreen(
-                        habitat = container.habitatViews,
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        settings = container.settingsStore,
-                        clock = container.clock,
-                        onOpenSettings = openSettings,
-                        onAdd = { action ->
-                            when (action) {
-                                // Birds are what most people photograph first; the camera's chips change it.
-                                AddAction.IDENTIFY -> navController.navigate(IdentifyRoute(group = LifeGroup.BIRD.name))
-                                AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
-                                AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
-                                AddAction.ANIMAL_PHOTOS -> askingAnimal = true
-                                AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
-                                AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
-                                AddAction.FEED -> navController.navigate(FeedRoute())
-                                AddAction.PLANT -> navController.navigate(AddPlantRoute())
-                            }
-                        },
-                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
-                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
-                        onSetLocation = { navController.navigate(GardenLocationRoute) },
-                    )
-                }
-                composable<AnimalRoute> { entry ->
-                    val key = entry.toRoute<AnimalRoute>().key
-                    AnimalScreen(
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        key = key,
-                        onBack = back,
-                        onOpenSighting = { navController.navigate(SightingRoute(it)) },
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onAsk = { navController.navigate(AskRoute(animalKey = key)) },
-                    )
-                }
-                composable<AskRoute> { entry ->
-                    val route = entry.toRoute<AskRoute>()
-                    val subject = when {
-                        route.plantId != null -> AskSubject.Plant(route.plantId)
-                        route.animalKey != null -> AskSubject.Animal(route.animalKey)
-                        else -> AskSubject.Garden
+                    composable<FeedRoute> { entry ->
+                        FeedScreen(
+                            zoneId = entry.toRoute<FeedRoute>().zoneId,
+                            feeds = container.feeds,
+                            views = container.views,
+                            today = LocalDate.now(container.clock),
+                            onAddProduct = { navController.navigate(OwnProductRoute) },
+                            onBack = back,
+                        )
                     }
-                    val model = viewModel { AskModel(container.assistant, subject) }
-                    AskScreen(
-                        model = model,
-                        assistant = container.assistant,
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        onBack = back,
-                        onOpenModels = { navController.navigate(ModelsRoute) },
-                        onOpenRecord = { record ->
-                            when (record.kind) {
-                                RecordKind.PLANT -> navController.navigate(PlantRoute(record.id))
-                                RecordKind.ZONE -> navController.navigate(ZoneRoute(record.id))
-                                RecordKind.SIGHTING -> navController.navigate(SightingRoute(record.id))
+                    composable<OwnProductRoute> { OwnProductScreen(container.feeds, onBack = back) }
+                    composable<ZoneRoute> { entry ->
+                        val id = entry.toRoute<ZoneRoute>().id
+                        ZoneDetailScreen(
+                            views = container.views,
+                            zoneId = id,
+                            onBack = back,
+                            onEdit = { navController.navigate(ZoneEditRoute(id)) },
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onAddPlant = { navController.navigate(AddPlantRoute(zoneId = id)) },
+                            onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                            onAddSighting = { navController.navigate(AddSightingRoute(zoneId = id)) },
+                            water = container.waterViews,
+                            onOpenWater = { openTab(TopLevelTab.WATER) },
+                            feeding = container.feedViews,
+                            onRecordFeed = { navController.navigate(FeedRoute(id)) },
+                            habitat = container.habitatViews,
+                            onAddWater = { navController.navigate(WaterFeatureRoute(zoneId = id)) },
+                            onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
+                            onWaterCleaned = { container.waterCleaned(it) },
+                            onOpenHive = { navController.navigate(HiveRoute(it)) },
+                            onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
+                            onOpenHotel = { navController.navigate(HotelRoute(it)) },
+                        )
+                    }
+                    composable<WaterFeatureRoute> { entry ->
+                        val route = entry.toRoute<WaterFeatureRoute>()
+                        WaterFeatureScreen(container.habitat, route.zoneId, route.featureId, LocalDate.now(container.clock), onBack = back)
+                    }
+                    composable<ZoneEditRoute> { entry ->
+                        ZoneEditorScreen(
+                            garden = container.garden,
+                            zoneId = entry.toRoute<ZoneEditRoute>().id,
+                            onBack = back,
+                            onRemoved = { navController.popBackStack(PlotRoute, inclusive = false) },
+                        )
+                    }
+                    composable<PlantRoute> { entry ->
+                        val id = entry.toRoute<PlantRoute>().id
+                        val scope = rememberCoroutineScope()
+                        PlantDetailScreen(
+                            views = container.views,
+                            garden = container.garden,
+                            knowledge = container.knowledge,
+                            plantId = id,
+                            onBack = back,
+                            onCompare = { navController.navigate(CompareRoute(it, plantId = id)) },
+                            help = container.weedHelp,
+                            onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                            onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                            onAsk = { navController.navigate(AskRoute(plantId = id)) },
+                            assistant = container.assistant,
+                            onOpenModels = { navController.navigate(ModelsRoute) },
+                            onEditFacts = { navController.navigate(EditFactsRoute(id)) },
+                            onOpenPhoto = { photoId, detectionId -> navController.navigate(PlantPhotoRoute(photoId, detectionId)) },
+                            today = LocalDate.now(container.clock),
+                            pots = container.potViews,
+                            onEditPot = { navController.navigate(PotEditRoute(id)) },
+                            onRecordCare = { navController.navigate(PlantEventRoute(id)) },
+                            onRemoveEvent = { eventId -> scope.launch { container.pots.deleteEvent(eventId) } },
+                            problems = container.problemViews,
+                            onOpenProblem = { navController.navigate(ProblemRoute(it)) },
+                            onLogProblem = { navController.navigate(LogProblemRoute(id)) },
+                            crops = container.harvestViews,
+                            onRecordHarvest = { navController.navigate(HarvestRoute(id)) },
+                            onOpenHarvest = { navController.navigate(HarvestRoute(id, it)) },
+                            onRecordPruning = { navController.navigate(PlantEventRoute(id, pruning = true)) },
+                        )
+                    }
+                    composable<HarvestRoute> { entry ->
+                        val route = entry.toRoute<HarvestRoute>()
+                        HarvestScreen(route.plantId, route.harvestId, container.harvests, LocalDate.now(container.clock), onBack = back)
+                    }
+                    composable<LogProblemRoute> { entry ->
+                        LogProblemScreen(
+                            plantId = entry.toRoute<LogProblemRoute>().plantId,
+                            catalogue = container.catalogue,
+                            problems = container.problems,
+                            today = LocalDate.now(container.clock),
+                            savePhoto = container::saveProblemPhoto,
+                            onBack = back,
+                        )
+                    }
+                    composable<ProblemRoute> { entry ->
+                        val id = entry.toRoute<ProblemRoute>().id
+                        val scope = rememberCoroutineScope()
+                        ProblemScreen(
+                            id = id,
+                            views = container.problemViews,
+                            problems = container.problems,
+                            onBack = back,
+                            onRecordTreatment = {
+                                scope.launch {
+                                    container.problems.problem(id)?.let { navController.navigate(TreatmentRoute(id, it.plantId)) }
+                                }
+                            },
+                            onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                        )
+                    }
+                    composable<TreatmentRoute> { entry ->
+                        val route = entry.toRoute<TreatmentRoute>()
+                        TreatmentScreen(route.problemId, route.plantId, container.problemViews, container.problems, LocalDate.now(container.clock), onBack = back)
+                    }
+                    composable<PotEditRoute> { entry ->
+                        PotEditScreen(entry.toRoute<PotEditRoute>().plantId, container.pots, onBack = back)
+                    }
+                    composable<PlantEventRoute> { entry ->
+                        val route = entry.toRoute<PlantEventRoute>()
+                        val kinds = if (route.pruning) PlantEventKind.PRUNING else PlantEventKind.POT
+                        PlantEventScreen(route.plantId, container.pots, LocalDate.now(container.clock), kinds, onBack = back)
+                    }
+                    composable<EditFactsRoute> { entry ->
+                        EditFactsScreen(
+                            plantId = entry.toRoute<EditFactsRoute>().plantId,
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            corrections = container.corrections,
+                            onBack = back,
+                            pruning = container.pruningGuide,
+                        )
+                    }
+                    composable<PlantPhotoRoute> { entry ->
+                        val route = entry.toRoute<PlantPhotoRoute>()
+                        PlantPhotoScreen(container.garden, container.knowledge, route.photoId, route.detectionId, onBack = back)
+                    }
+                    composable<AddPlantRoute> { entry ->
+                        val route = entry.toRoute<AddPlantRoute>()
+                        AddPlantScreen(
+                            knowledge = container.knowledge,
+                            garden = container.garden,
+                            views = container.views,
+                            initialZoneId = route.zoneId,
+                            initialSpecies = route.species,
+                            onBack = back,
+                            onAdded = { plantId ->
+                                // A plant added from the wishlist marks its wish planted.
+                                route.wishId?.let(container::wishPlanted)
+                                navController.navigate(PlantRoute(plantId)) { popUpTo<AddPlantRoute> { inclusive = true } }
+                            },
+                        )
+                    }
+                    composable<SearchRoute> {
+                        SearchScreen(
+                            garden = container.garden,
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            meaning = container.meaning,
+                            onBack = back,
+                            onOpenZone = { navController.navigate(ZoneRoute(it)) },
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
+                            onAskGarden = { navController.navigate(AskRoute()) },
+                            onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                            onOpenHive = { navController.navigate(HiveRoute(it)) },
+                            onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
+                            onOpenHotel = { navController.navigate(HotelRoute(it)) },
+                            onOpenWish = { navController.navigate(WishRoute(it)) },
+                            onOpenProblem = { navController.navigate(ProblemRoute(it)) },
+                            onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
+                            places = container.searchPlaces.zoneOf,
+                        )
+                    }
+                    composable<IdentifyRoute> { entry ->
+                        val route = entry.toRoute<IdentifyRoute>()
+                        val model = viewModel {
+                            IdentifyModel(
+                                container.analysis, { container.identifier }, container.garden, container.knowledge, container.settingsStore,
+                                createSavedStateHandle(), container::recordsNearby,
+                                field = route.field,
+                                wishes = container.wishes,
+                                readPhoto = container::readChosenPhoto,
+                                discardFieldPhoto = container::discardFieldPhoto,
+                            )
+                        }
+                        IdentifyScreen(
+                            model = model,
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            settings = container.settingsStore,
+                            onBack = back,
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onAddByName = { navController.navigate(AddPlantRoute()) { popUpTo<IdentifyRoute> { inclusive = true } } },
+                            checkingWeed = route.checkingWeed,
+                            help = container.weedHelp,
+                            onOpenWishlist = { navController.navigate(WishlistRoute) { popUpTo<IdentifyRoute> { inclusive = true } } },
+                            accurateReady = container.accurate.state.collectAsStateWithLifecycle().value == PackState.Ready,
+                            onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
+                            onOpenFinder = { navController.navigate(WeedFinderRoute(it)) },
+                        )
+                    }
+                    composable<ReviewRoute> {
+                        val model = viewModel { ReviewModel(container.garden, container.settingsStore, WorkManager.getInstance(container.appContext)) }
+                        ReviewScreen(
+                            model = model,
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            settings = container.settingsStore,
+                            onBack = back,
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onAddPhotos = { addPhotos(LifeGroup.PLANT) },
+                            onIdentify = { navController.navigate(IdentifyRoute()) },
+                            onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
+                        )
+                    }
+                    composable<RhythmsRoute> {
+                        RhythmsScreen(
+                            rhythms = container.rhythms,
+                            onOpenSettings = openSettings,
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onAddSpecies = { navController.navigate(AddPlantRoute(species = it)) },
+                        )
+                    }
+                    composable<WildlifeRoute> {
+                        WildlifeScreen(
+                            habitat = container.habitatViews,
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            settings = container.settingsStore,
+                            clock = container.clock,
+                            onOpenSettings = openSettings,
+                            onAdd = { action ->
+                                when (action) {
+                                    // Birds are what most people photograph first; the camera's chips change it.
+                                    AddAction.IDENTIFY -> navController.navigate(IdentifyRoute(group = LifeGroup.BIRD.name))
+                                    AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
+                                    AddAction.PHOTOS -> addPhotos(LifeGroup.PLANT)
+                                    AddAction.ANIMAL_PHOTOS -> askingAnimal = true
+                                    AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
+                                    AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
+                                    AddAction.FEED -> navController.navigate(FeedRoute())
+                                    AddAction.PLANT -> navController.navigate(AddPlantRoute())
+                                }
+                            },
+                            onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                            onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                            onSetLocation = { navController.navigate(GardenLocationRoute) },
+                        )
+                    }
+                    composable<AnimalRoute> { entry ->
+                        val key = entry.toRoute<AnimalRoute>().key
+                        AnimalScreen(
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            key = key,
+                            onBack = back,
+                            onOpenSighting = { navController.navigate(SightingRoute(it)) },
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onAsk = { navController.navigate(AskRoute(animalKey = key)) },
+                        )
+                    }
+                    composable<AskRoute> { entry ->
+                        val route = entry.toRoute<AskRoute>()
+                        val subject = when {
+                            route.plantId != null -> AskSubject.Plant(route.plantId)
+                            route.animalKey != null -> AskSubject.Animal(route.animalKey)
+                            else -> AskSubject.Garden
+                        }
+                        val model = viewModel { AskModel(container.assistant, subject) }
+                        AskScreen(
+                            model = model,
+                            assistant = container.assistant,
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            onBack = back,
+                            onOpenModels = { navController.navigate(ModelsRoute) },
+                            onOpenRecord = { record ->
+                                when (record.kind) {
+                                    RecordKind.PLANT -> navController.navigate(PlantRoute(record.id))
+                                    RecordKind.ZONE -> navController.navigate(ZoneRoute(record.id))
+                                    RecordKind.SIGHTING -> navController.navigate(SightingRoute(record.id))
+                                }
+                            },
+                        )
+                    }
+                    composable<SightingRoute> { entry ->
+                        SightingScreen(
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            garden = container.garden,
+                            clock = container.clock,
+                            sightingId = entry.toRoute<SightingRoute>().id,
+                            startZoneId = null,
+                            onBack = back,
+                            onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                        )
+                    }
+                    composable<AddSightingRoute> { entry ->
+                        SightingScreen(
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            garden = container.garden,
+                            clock = container.clock,
+                            sightingId = null,
+                            startZoneId = entry.toRoute<AddSightingRoute>().zoneId,
+                            onBack = back,
+                            onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                        )
+                    }
+                    composable<BeesRoute> {
+                        BeesScreen(
+                            beeViews = container.beeViews,
+                            views = container.views,
+                            settings = container.settingsStore,
+                            notifications = container.notifications,
+                            guides = container.guides,
+                            onOpenSettings = openSettings,
+                            onAddHive = { navController.navigate(HiveEditRoute()) },
+                            onOpenHive = { navController.navigate(HiveRoute(it)) },
+                            onAddNativeHive = { navController.navigate(NativeHiveEditRoute()) },
+                            onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
+                            onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                            onAddHotel = { navController.navigate(HotelEditRoute()) },
+                            onOpenHotel = { navController.navigate(HotelRoute(it)) },
+                            onOpenGuide = { navController.navigate(GuideRoute(it)) },
+                            onReport = { navController.navigate(ExportRoute(FOCUS_BEES)) },
+                        )
+                    }
+                    composable<HotelRoute> { entry ->
+                        val id = entry.toRoute<HotelRoute>().id
+                        HotelScreen(
+                            views = container.beeViews,
+                            hotels = container.hotels,
+                            hotelId = id,
+                            onBack = back,
+                            onEdit = { navController.navigate(HotelEditRoute(id)) },
+                            onLook = { navController.navigate(HotelLookRoute(id)) },
+                            onUpkeep = { navController.navigate(HotelUpkeepRoute(id)) },
+                        )
+                    }
+                    composable<HotelEditRoute> { entry ->
+                        HotelEditorScreen(
+                            hotels = container.hotels,
+                            views = container.views,
+                            hotelId = entry.toRoute<HotelEditRoute>().id,
+                            today = container.beeViews.today(),
+                            onBack = back,
+                            onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
+                            onCreated = { id -> navController.navigate(HotelRoute(id)) { popUpTo<HotelEditRoute> { inclusive = true } } },
+                        )
+                    }
+                    composable<HotelLookRoute> { entry ->
+                        HotelLookScreen(entry.toRoute<HotelLookRoute>().hotelId, container.hotels, container.beeViews.today(), onBack = back)
+                    }
+                    composable<HotelUpkeepRoute> { entry ->
+                        HotelUpkeepScreen(entry.toRoute<HotelUpkeepRoute>().hotelId, container.hotels, container.beeViews.today(), onBack = back)
+                    }
+                    composable<NativeHiveRoute> { entry ->
+                        val id = entry.toRoute<NativeHiveRoute>().id
+                        NativeHiveScreen(
+                            views = container.beeViews,
+                            natives = container.nativeBees,
+                            hiveId = id,
+                            onBack = back,
+                            onEdit = { navController.navigate(NativeHiveEditRoute(id)) },
+                            onRecord = { kind -> navController.navigate(NativeLogRoute(id, kind.name)) },
+                        )
+                    }
+                    composable<NativeHiveEditRoute> { entry ->
+                        NativeHiveEditorScreen(
+                            natives = container.nativeBees,
+                            views = container.views,
+                            hiveId = entry.toRoute<NativeHiveEditRoute>().id,
+                            today = container.beeViews.today(),
+                            onBack = back,
+                            onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
+                            onCreated = { id -> navController.navigate(NativeHiveRoute(id)) { popUpTo<NativeHiveEditRoute> { inclusive = true } } },
+                        )
+                    }
+                    composable<NativeLogRoute> { entry ->
+                        val route = entry.toRoute<NativeLogRoute>()
+                        NativeLogScreen(NativeLogKind.valueOf(route.kind), route.hiveId, container.nativeBees, container.beeViews.today(), onBack = back)
+                    }
+                    composable<GuideRoute> { entry -> GuideScreen(container.guides, entry.toRoute<GuideRoute>().id, onBack = back) }
+                    composable<HiveRoute> { entry ->
+                        val id = entry.toRoute<HiveRoute>().id
+                        HiveScreen(
+                            views = container.beeViews,
+                            bees = container.bees,
+                            hiveId = id,
+                            onBack = back,
+                            onEdit = { navController.navigate(HiveEditRoute(id)) },
+                            onRecord = { kind -> navController.navigate(HoneyRecordRoute(id, kind.name)) },
+                        )
+                    }
+                    composable<HiveEditRoute> { entry ->
+                        HiveEditorScreen(
+                            bees = container.bees,
+                            views = container.views,
+                            hiveId = entry.toRoute<HiveEditRoute>().id,
+                            today = container.beeViews.today(),
+                            onBack = back,
+                            onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
+                            onCreated = { id -> navController.navigate(HiveRoute(id)) { popUpTo<HiveEditRoute> { inclusive = true } } },
+                        )
+                    }
+                    composable<HoneyRecordRoute> { entry ->
+                        val route = entry.toRoute<HoneyRecordRoute>()
+                        HoneyRecordScreen(HoneyRecordKind.valueOf(route.kind), route.hiveId, container.bees, container.settingsStore, container.beeViews.today(), onBack = back)
+                    }
+                    composable<WaterRoute> {
+                        WaterScreen(
+                            views = container.waterViews,
+                            water = container.water,
+                            settings = container.settingsStore,
+                            notifications = container.notifications,
+                            onOpenSettings = openSettings,
+                            onAddLine = { navController.navigate(LineEditRoute()) },
+                            onEditLine = { navController.navigate(LineEditRoute(it)) },
+                            onOpenGuide = { navController.navigate(GuideRoute(it)) },
+                            onReport = { navController.navigate(ExportRoute(FOCUS_WATER)) },
+                        )
+                    }
+                    composable<LineEditRoute> { entry -> LineEditorScreen(container.water, container.views, entry.toRoute<LineEditRoute>().id, onBack = back) }
+                    composable<SettingsRoute> {
+                        SettingsScreen(
+                            store = container.settingsStore,
+                            onBack = back,
+                            onOpenLocation = { navController.navigate(GardenLocationRoute) },
+                            onOpenScanning = { navController.navigate(ScanSettingsRoute) },
+                            onOpenModels = { navController.navigate(ModelsRoute) },
+                            onOpenExport = { navController.navigate(ExportRoute()) },
+                            onOpenBackup = { navController.navigate(BackupRoute) },
+                            onOpenAbout = { navController.navigate(AboutRoute) },
+                            onSetUpAgain = { navController.navigate(SetupRoute(again = true)) },
+                        )
+                    }
+                    composable<SetupRoute> { entry ->
+                        val again = entry.toRoute<SetupRoute>().again
+                        val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
+                        SetupScreen(
+                            location = model,
+                            settings = container.settingsStore,
+                            meaning = container.meaning,
+                            accurate = container.accurate,
+                            gemma = container.gemma,
+                            garden = container.garden,
+                            gallery = container.gallery,
+                            notifications = container.notifications,
+                            clock = container.clock,
+                        ) {
+                            if (again) {
+                                navController.popBackStack()
+                            } else {
+                                navController.navigate(PlotRoute) { popUpTo<SetupRoute> { inclusive = true } }
                             }
-                        },
-                    )
-                }
-                composable<SightingRoute> { entry ->
-                    SightingScreen(
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        garden = container.garden,
-                        clock = container.clock,
-                        sightingId = entry.toRoute<SightingRoute>().id,
-                        startZoneId = null,
-                        onBack = back,
-                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
-                    )
-                }
-                composable<AddSightingRoute> { entry ->
-                    SightingScreen(
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        garden = container.garden,
-                        clock = container.clock,
-                        sightingId = null,
-                        startZoneId = entry.toRoute<AddSightingRoute>().zoneId,
-                        onBack = back,
-                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
-                    )
-                }
-                composable<BeesRoute> {
-                    BeesScreen(
-                        beeViews = container.beeViews,
-                        views = container.views,
-                        settings = container.settingsStore,
-                        notifications = container.notifications,
-                        guides = container.guides,
-                        onOpenSettings = openSettings,
-                        onAddHive = { navController.navigate(HiveEditRoute()) },
-                        onOpenHive = { navController.navigate(HiveRoute(it)) },
-                        onAddNativeHive = { navController.navigate(NativeHiveEditRoute()) },
-                        onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
-                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
-                        onAddHotel = { navController.navigate(HotelEditRoute()) },
-                        onOpenHotel = { navController.navigate(HotelRoute(it)) },
-                        onOpenGuide = { navController.navigate(GuideRoute(it)) },
-                    )
-                }
-                composable<HotelRoute> { entry ->
-                    val id = entry.toRoute<HotelRoute>().id
-                    HotelScreen(
-                        views = container.beeViews,
-                        hotels = container.hotels,
-                        hotelId = id,
-                        onBack = back,
-                        onEdit = { navController.navigate(HotelEditRoute(id)) },
-                        onLook = { navController.navigate(HotelLookRoute(id)) },
-                        onUpkeep = { navController.navigate(HotelUpkeepRoute(id)) },
-                    )
-                }
-                composable<HotelEditRoute> { entry ->
-                    HotelEditorScreen(
-                        hotels = container.hotels,
-                        views = container.views,
-                        hotelId = entry.toRoute<HotelEditRoute>().id,
-                        today = container.beeViews.today(),
-                        onBack = back,
-                        onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
-                        onCreated = { id -> navController.navigate(HotelRoute(id)) { popUpTo<HotelEditRoute> { inclusive = true } } },
-                    )
-                }
-                composable<HotelLookRoute> { entry ->
-                    HotelLookScreen(entry.toRoute<HotelLookRoute>().hotelId, container.hotels, container.beeViews.today(), onBack = back)
-                }
-                composable<HotelUpkeepRoute> { entry ->
-                    HotelUpkeepScreen(entry.toRoute<HotelUpkeepRoute>().hotelId, container.hotels, container.beeViews.today(), onBack = back)
-                }
-                composable<NativeHiveRoute> { entry ->
-                    val id = entry.toRoute<NativeHiveRoute>().id
-                    NativeHiveScreen(
-                        views = container.beeViews,
-                        natives = container.nativeBees,
-                        hiveId = id,
-                        onBack = back,
-                        onEdit = { navController.navigate(NativeHiveEditRoute(id)) },
-                        onRecord = { kind -> navController.navigate(NativeLogRoute(id, kind.name)) },
-                    )
-                }
-                composable<NativeHiveEditRoute> { entry ->
-                    NativeHiveEditorScreen(
-                        natives = container.nativeBees,
-                        views = container.views,
-                        hiveId = entry.toRoute<NativeHiveEditRoute>().id,
-                        today = container.beeViews.today(),
-                        onBack = back,
-                        onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
-                        onCreated = { id -> navController.navigate(NativeHiveRoute(id)) { popUpTo<NativeHiveEditRoute> { inclusive = true } } },
-                    )
-                }
-                composable<NativeLogRoute> { entry ->
-                    val route = entry.toRoute<NativeLogRoute>()
-                    NativeLogScreen(NativeLogKind.valueOf(route.kind), route.hiveId, container.nativeBees, container.beeViews.today(), onBack = back)
-                }
-                composable<GuideRoute> { entry -> GuideScreen(container.guides, entry.toRoute<GuideRoute>().id, onBack = back) }
-                composable<HiveRoute> { entry ->
-                    val id = entry.toRoute<HiveRoute>().id
-                    HiveScreen(
-                        views = container.beeViews,
-                        bees = container.bees,
-                        hiveId = id,
-                        onBack = back,
-                        onEdit = { navController.navigate(HiveEditRoute(id)) },
-                        onRecord = { kind -> navController.navigate(HoneyRecordRoute(id, kind.name)) },
-                    )
-                }
-                composable<HiveEditRoute> { entry ->
-                    HiveEditorScreen(
-                        bees = container.bees,
-                        views = container.views,
-                        hiveId = entry.toRoute<HiveEditRoute>().id,
-                        today = container.beeViews.today(),
-                        onBack = back,
-                        onDeleted = { navController.popBackStack(BeesRoute, inclusive = false) },
-                        onCreated = { id -> navController.navigate(HiveRoute(id)) { popUpTo<HiveEditRoute> { inclusive = true } } },
-                    )
-                }
-                composable<HoneyRecordRoute> { entry ->
-                    val route = entry.toRoute<HoneyRecordRoute>()
-                    HoneyRecordScreen(HoneyRecordKind.valueOf(route.kind), route.hiveId, container.bees, container.settingsStore, container.beeViews.today(), onBack = back)
-                }
-                composable<WaterRoute> {
-                    WaterScreen(
-                        views = container.waterViews,
-                        water = container.water,
-                        settings = container.settingsStore,
-                        notifications = container.notifications,
-                        onOpenSettings = openSettings,
-                        onAddLine = { navController.navigate(LineEditRoute()) },
-                        onEditLine = { navController.navigate(LineEditRoute(it)) },
-                        onOpenGuide = { navController.navigate(GuideRoute(it)) },
-                    )
-                }
-                composable<LineEditRoute> { entry -> LineEditorScreen(container.water, container.views, entry.toRoute<LineEditRoute>().id, onBack = back) }
-                composable<SettingsRoute> {
-                    SettingsScreen(
-                        store = container.settingsStore,
-                        onBack = back,
-                        onOpenLocation = { navController.navigate(GardenLocationRoute) },
-                        onOpenScanning = { navController.navigate(ScanSettingsRoute) },
-                        onOpenModels = { navController.navigate(ModelsRoute) },
-                        onOpenExport = { navController.navigate(ExportRoute) },
-                        onOpenBackup = { navController.navigate(BackupRoute) },
-                        onOpenAbout = { navController.navigate(AboutRoute) },
-                        onSetUpAgain = { navController.navigate(SetupRoute(again = true)) },
-                    )
-                }
-                composable<SetupRoute> { entry ->
-                    val again = entry.toRoute<SetupRoute>().again
-                    val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
-                    SetupScreen(
-                        location = model,
-                        settings = container.settingsStore,
-                        meaning = container.meaning,
-                        accurate = container.accurate,
-                        gemma = container.gemma,
-                        garden = container.garden,
-                        gallery = container.gallery,
-                        notifications = container.notifications,
-                        clock = container.clock,
-                    ) {
-                        if (again) {
-                            navController.popBackStack()
-                        } else {
-                            navController.navigate(PlotRoute) { popUpTo<SetupRoute> { inclusive = true } }
                         }
                     }
+                    composable<ExportRoute> { entry ->
+                        val focus = entry.toRoute<ExportRoute>().focus
+                        val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
+                        val stateName = current?.gardenState?.let { stringResource(it.label) }
+                        ExportScreen(
+                            today = container.beeViews.today(),
+                            report = { parts, from, to, pdf, pictures, out -> container.writeReport(parts, from, to, pdf, out, pictures) },
+                            jsonLd = { container.exportJsonLd() },
+                            darwinCore = { container.exportDarwinCore(stateName) },
+                            onBack = back,
+                            share = container::reportForSharing,
+                            initialParts = when (focus) {
+                                FOCUS_BEES -> setOf(ReportPart.HONEY, ReportPart.NATIVE, ReportPart.HOTELS, ReportPart.TASKS)
+                                FOCUS_WATER -> setOf(ReportPart.WATER, ReportPart.TASKS)
+                                else -> ReportPart.entries.toSet()
+                            },
+                        )
+                    }
+                    composable<BackupRoute> {
+                        val model = viewModel { BackupModel(container.backups, context.contentResolver) }
+                        val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
+                        BackupScreen(model, current?.lastBackupAt, container.clock.zone, onBack = back)
+                    }
+                    composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, container.gemma, onBack = back) }
+                    composable<GardenLocationRoute> {
+                        val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
+                        GardenLocationScreen(model, container.settingsStore, onBack = back)
+                    }
+                    composable<WeedsRoute> {
+                        WeedsScreen(
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            settings = container.settingsStore,
+                            onBack = back,
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
+                            onCheckWeed = { navController.navigate(IdentifyRoute(checkingWeed = true)) },
+                            onSetLocation = { navController.navigate(GardenLocationRoute) },
+                            onCompare = { navController.navigate(CompareRoute(it)) },
+                            onOpenFinder = { navController.navigate(WeedFinderRoute()) },
+                            help = container.weedHelp,
+                        )
+                    }
+                    composable<WishlistRoute> {
+                        WishlistScreen(
+                            views = container.wishViews,
+                            onBack = back,
+                            onOpenWish = { navController.navigate(WishRoute(it)) },
+                            onFindPlant = { navController.navigate(IdentifyRoute(field = true)) },
+                        )
+                    }
+                    composable<WishRoute> { entry ->
+                        val id = entry.toRoute<WishRoute>().id
+                        WishScreen(
+                            id = id,
+                            wishViews = container.wishViews,
+                            views = container.views,
+                            knowledge = container.knowledge,
+                            help = container.weedHelp,
+                            onBack = back,
+                            onPlant = { species, zoneId -> navController.navigate(AddPlantRoute(zoneId = zoneId, species = species, wishId = id)) },
+                        )
+                    }
+                    composable<CompareRoute> { entry ->
+                        val route = entry.toRoute<CompareRoute>()
+                        CompareScreen(
+                            species = route.species,
+                            botanical = route.botanical,
+                            detectionId = route.detectionId,
+                            plantId = route.plantId,
+                            views = container.views,
+                            garden = container.garden,
+                            knowledge = container.knowledge,
+                            photos = container.weedPhotos,
+                            onBack = back,
+                            onOpenFinder = { navController.navigate(WeedFinderRoute(route.detectionId)) },
+                        )
+                    }
+                    composable<WeedFinderRoute> { entry ->
+                        val detectionId = entry.toRoute<WeedFinderRoute>().detectionId
+                        WeedFinderScreen(
+                            views = container.views,
+                            garden = container.garden,
+                            detectionId = detectionId,
+                            onBack = back,
+                            onOpen = { species, botanical -> navController.navigate(CompareRoute(species, botanical = botanical, detectionId = detectionId)) },
+                        )
+                    }
+                    composable<ScanSettingsRoute> {
+                        ScanSettingsScreen(container.settingsStore, container.gallery, container.notifications, container.clock, onBack = back)
+                    }
+                    composable<AboutRoute> {
+                        AboutScreen(
+                            onBack = back,
+                            onOpenLicences = { navController.navigate(LicencesRoute) },
+                            onOpenSources = { navController.navigate(DataSourcesRoute) },
+                        )
+                    }
+                    composable<DataSourcesRoute> { DataSourcesScreen(container.weeds.sources, onBack = back) }
+                    composable<LicencesRoute> { LicencesScreen(onBack = back, onOpen = { navController.navigate(LicenceTextRoute(it)) }) }
+                    composable<LicenceTextRoute> { LicenceTextScreen(file = it.toRoute<LicenceTextRoute>().file, onBack = back) }
                 }
-                composable<ExportRoute> {
-                    val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
-                    val stateName = current?.gardenState?.let { stringResource(it.label) }
-                    ExportScreen(
-                        today = container.beeViews.today(),
-                        report = { parts, from, to, pdf, pictures, out -> container.writeReport(parts, from, to, pdf, out, pictures) },
-                        jsonLd = { container.exportJsonLd() },
-                        darwinCore = { container.exportDarwinCore(stateName) },
-                        onBack = back,
-                    )
-                }
-                composable<BackupRoute> {
-                    val model = viewModel { BackupModel(container.backups, context.contentResolver) }
-                    val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
-                    BackupScreen(model, current?.lastBackupAt, container.clock.zone, onBack = back)
-                }
-                composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, container.gemma, onBack = back) }
-                composable<GardenLocationRoute> {
-                    val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
-                    GardenLocationScreen(model, container.settingsStore, onBack = back)
-                }
-                composable<WeedsRoute> {
-                    WeedsScreen(
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        settings = container.settingsStore,
-                        onBack = back,
-                        onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                        onCheckWeed = { navController.navigate(IdentifyRoute(checkingWeed = true)) },
-                        onSetLocation = { navController.navigate(GardenLocationRoute) },
-                        onCompare = { navController.navigate(CompareRoute(it)) },
-                        onOpenFinder = { navController.navigate(WeedFinderRoute()) },
-                        help = container.weedHelp,
-                    )
-                }
-                composable<WishlistRoute> {
-                    WishlistScreen(
-                        views = container.wishViews,
-                        onBack = back,
-                        onOpenWish = { navController.navigate(WishRoute(it)) },
-                        onFindPlant = { navController.navigate(IdentifyRoute(field = true)) },
-                    )
-                }
-                composable<WishRoute> { entry ->
-                    val id = entry.toRoute<WishRoute>().id
-                    WishScreen(
-                        id = id,
-                        wishViews = container.wishViews,
-                        views = container.views,
-                        knowledge = container.knowledge,
-                        help = container.weedHelp,
-                        onBack = back,
-                        onPlant = { species, zoneId -> navController.navigate(AddPlantRoute(zoneId = zoneId, species = species, wishId = id)) },
-                    )
-                }
-                composable<CompareRoute> { entry ->
-                    val route = entry.toRoute<CompareRoute>()
-                    CompareScreen(
-                        species = route.species,
-                        botanical = route.botanical,
-                        detectionId = route.detectionId,
-                        plantId = route.plantId,
-                        views = container.views,
-                        garden = container.garden,
-                        knowledge = container.knowledge,
-                        photos = container.weedPhotos,
-                        onBack = back,
-                        onOpenFinder = { navController.navigate(WeedFinderRoute(route.detectionId)) },
-                    )
-                }
-                composable<WeedFinderRoute> { entry ->
-                    val detectionId = entry.toRoute<WeedFinderRoute>().detectionId
-                    WeedFinderScreen(
-                        views = container.views,
-                        garden = container.garden,
-                        detectionId = detectionId,
-                        onBack = back,
-                        onOpen = { species, botanical -> navController.navigate(CompareRoute(species, botanical = botanical, detectionId = detectionId)) },
-                    )
-                }
-                composable<ScanSettingsRoute> {
-                    ScanSettingsScreen(container.settingsStore, container.gallery, container.notifications, container.clock, onBack = back)
-                }
-                composable<AboutRoute> {
-                    AboutScreen(
-                        onBack = back,
-                        onOpenLicences = { navController.navigate(LicencesRoute) },
-                        onOpenSources = { navController.navigate(DataSourcesRoute) },
-                    )
-                }
-                composable<DataSourcesRoute> { DataSourcesScreen(container.weeds.sources, onBack = back) }
-                composable<LicencesRoute> { LicencesScreen(onBack = back, onOpen = { navController.navigate(LicenceTextRoute(it)) }) }
-                composable<LicenceTextRoute> { LicenceTextScreen(file = it.toRoute<LicenceTextRoute>().file, onBack = back) }
             }
         }
     }

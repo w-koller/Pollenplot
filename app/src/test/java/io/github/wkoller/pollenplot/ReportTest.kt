@@ -68,19 +68,33 @@ class ReportTest {
     @Test
     fun `a report covers each part chosen, with the records in its period`() = runBlocking {
         val report = app.container.reports.build(ReportPart.entries.toSet(), today.minusMonths(3), today)
-        assertEquals(ReportPart.entries.size, report.sections.size)
+        assertEquals("A summary, then each part", ReportPart.entries.size + 1, report.sections.size)
+        assertEquals("Summary", report.sections.first().title)
+        val garden = report.sections[1]
         assertEquals("Pollenplot garden report", report.title)
         val checks = report.tables.single { it.title == "Mite checks" }
         assertEquals(1, checks.rows.size)
         val plants = report.tables.single { it.title == "Plants" }
         assertTrue("Every plant in the demo yard is listed", plants.rows.size >= 12)
         assertTrue("A weed is marked", plants.rows.any { row -> (row[0] as io.github.wkoller.pollenplot.domain.report.ReportCell.Text).text == "Lantana" && (row[7] as io.github.wkoller.pollenplot.domain.report.ReportCell.Text).text == "Yes" })
-        val plot = report.sections.first().figures.filterIsInstance<ReportFigure.Plot>().single()
+        val plot = garden.figures.filterIsInstance<ReportFigure.Plot>().single()
         assertEquals("The demo yard's four zones, in their places", 4, plot.zones.size)
-        assertTrue("No plant has a cut-out yet", report.sections.first().figures.none { it is ReportFigure.Pictures })
+        assertTrue("No plant has a cut-out yet", garden.figures.none { it is ReportFigure.Pictures })
         val onlyBees = app.container.reports.build(setOf(ReportPart.HONEY), today.minusMonths(1), today)
-        assertEquals(listOf("Honey bees"), onlyBees.sections.map { it.title })
+        assertEquals(listOf("Summary", "Honey bees"), onlyBees.sections.map { it.title })
         assertEquals("A part with nothing recorded says so", listOf("Nothing was recorded in this period."), report.sections.single { it.title == "Bee hotels" }.paragraphs)
+    }
+
+    @Test
+    fun `a summary opens the report, and the jobs due are its tasks`() = runBlocking {
+        val report = app.container.reports.build(setOf(ReportPart.TASKS), today.minusMonths(1), today)
+        val summary = report.sections.first().paragraphs
+        assertTrue(summary.first(), summary.first().startsWith("Your garden has 4 zones and "))
+        assertTrue("Hive 1 is kept", summary.any { it == "You keep 1 hive." })
+        val tasks = report.tables.single { it.title == "Tasks" }
+        val texts = tasks.rows.map { (it[0] as io.github.wkoller.pollenplot.domain.report.ReportCell.Text).text }
+        assertTrue(texts.toString(), "Please prune Native fuchsia." in texts)
+        assertTrue("The summary counts them", summary.any { it.startsWith("${tasks.rows.size} tasks are due") })
     }
 
     @Test
@@ -103,11 +117,11 @@ class ReportTest {
         val cut = app.container.photos.saveThumbnail(TestPhotos.paintedPlant(TestPhotos.bottlebrush, 256))
         app.container.garden.updatePlant(lemon.copy(thumbnail = cut))
         val with = app.container.reports.build(setOf(ReportPart.GARDEN), today.minusMonths(3), today)
-        val pictures = with.sections.single().figures.filterIsInstance<ReportFigure.Pictures>().single()
+        val pictures = with.sections.last().figures.filterIsInstance<ReportFigure.Pictures>().single()
         assertEquals(listOf("Mum's lemon"), pictures.items.map { it.caption })
         assertTrue(File(pictures.items.single().path).isFile)
         val without = app.container.reports.build(setOf(ReportPart.GARDEN), today.minusMonths(3), today, pictures = false)
-        assertTrue(without.sections.single().figures.none { it is ReportFigure.Pictures })
+        assertTrue(without.sections.last().figures.none { it is ReportFigure.Pictures })
 
         val sink = PictureSink()
         PdfReportWriter("Pollenplot garden report").render(with, sink)

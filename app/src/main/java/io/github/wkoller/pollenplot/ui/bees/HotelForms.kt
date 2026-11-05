@@ -55,6 +55,7 @@ import io.github.wkoller.pollenplot.domain.hotels.UpkeepKind
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PastDateDialog
+import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.plants.QuantityStepper
 import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
 import io.github.wkoller.pollenplot.ui.plot.ChipGroup
@@ -303,9 +304,17 @@ fun HotelUpkeepScreen(hotelId: String, hotels: HotelRepository, today: LocalDate
 internal fun DateRow(date: LocalDate, onChange: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(stringResource(R.string.honey_date), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(UiFormat.longDate(date), style = MaterialTheme.typography.bodyLarge)
-            TextButton(onClick = onChange) { Text(stringResource(R.string.honey_change_date)) }
+        val day: @Composable () -> Unit = { Text(UiFormat.longDate(date), style = MaterialTheme.typography.bodyLarge) }
+        val change: @Composable () -> Unit = { TextButton(onClick = onChange) { Text(stringResource(R.string.honey_change_date)) } }
+        // With large text the button goes under the date, rather than being squeezed until its words break.
+        if (largeText()) {
+            day()
+            change()
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                day()
+                change()
+            }
         }
     }
 }

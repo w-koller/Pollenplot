@@ -90,6 +90,8 @@ fun WaterScreen(
     onAddLine: () -> Unit,
     onEditLine: (String) -> Unit,
     onOpenGuide: (String) -> Unit,
+    /** Opens the report with watering chosen. */
+    onReport: (() -> Unit)? = null,
 ) {
     val state by views.state.collectAsStateWithLifecycle(initialValue = null)
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
@@ -102,7 +104,14 @@ fun WaterScreen(
         if (fetchedAt == null || Instant.ofEpochMilli(fetchedAt).isBefore(Instant.now().minus(REFRESH_HOURS, ChronoUnit.HOURS))) refresh()
     }
 
-    TabScaffold(title = stringResource(R.string.water_title), subtitle = stringResource(R.string.water_subtitle), onOpenSettings = onOpenSettings) { padding ->
+    TabScaffold(
+        title = stringResource(R.string.water_title),
+        subtitle = stringResource(R.string.water_subtitle),
+        onOpenSettings = onOpenSettings,
+        actions = {
+            onReport?.let { report -> IconButton(onClick = report) { Icon(painterResource(R.drawable.ic_description), contentDescription = stringResource(R.string.report_open)) } }
+        },
+    ) { padding ->
         val loaded = state ?: return@TabScaffold
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
             if (!loaded.hasPlants) {

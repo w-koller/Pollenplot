@@ -39,7 +39,7 @@ object SearchText {
         ).joinToString(". "),
     )
 
-    fun plant(plant: GardenPlant, species: Species?, zoneName: String?, roles: List<EcoRole>): SearchDoc = SearchDoc(
+    fun plant(plant: GardenPlant, species: Species?, zoneName: String?, roles: List<EcoRole>, records: List<String> = emptyList()): SearchDoc = SearchDoc(
         id = plant.id,
         kind = SearchKind.PLANT,
         title = plant.customName?.takeIf { it.isNotBlank() } ?: species?.displayName ?: "",
@@ -51,11 +51,12 @@ object SearchText {
             zoneName?.let { "in $it" },
             roles.joinToString(", ") { words(it.name) }.ifBlank { null },
             plant.notes.ifBlank { null },
+            notes(records),
         ).joinToString(". "),
     )
 
     /** A honey bee hive, found by its name, its kind of hive, where it is and its queen's year. */
-    fun hive(hive: HoneyHive, zoneName: String?, apiaryName: String?): SearchDoc = SearchDoc(
+    fun hive(hive: HoneyHive, zoneName: String?, apiaryName: String?, records: List<String> = emptyList()): SearchDoc = SearchDoc(
         id = hive.id,
         kind = SearchKind.HIVE,
         title = hive.name,
@@ -67,11 +68,12 @@ object SearchText {
             hive.queenYear?.let { "queen from $it, marked ${words(hive.queenColour!!.name)}" },
             words(hive.status.name),
             hive.notes.ifBlank { null },
+            notes(records),
         ).joinToString(". "),
     )
 
     /** A stingless bee hive, found by its name, its bees, its box and where it is. */
-    fun nativeHive(hive: NativeHive, zoneName: String?): SearchDoc = SearchDoc(
+    fun nativeHive(hive: NativeHive, zoneName: String?, records: List<String> = emptyList()): SearchDoc = SearchDoc(
         id = hive.id,
         kind = SearchKind.NATIVE_HIVE,
         title = hive.name,
@@ -82,11 +84,12 @@ object SearchText {
             zoneName?.let { "in $it" },
             words(hive.status.name),
             hive.notes.ifBlank { null },
+            notes(records),
         ).joinToString(". "),
     )
 
     /** A bee hotel, found by its name, what it is made of and where it is. */
-    fun hotel(hotel: BeeHotel, zoneName: String?): SearchDoc = SearchDoc(
+    fun hotel(hotel: BeeHotel, zoneName: String?, records: List<String> = emptyList()): SearchDoc = SearchDoc(
         id = hotel.id,
         kind = SearchKind.HOTEL,
         title = hotel.name,
@@ -95,6 +98,7 @@ object SearchText {
             hotel.sections.map { words(it.material.name) }.distinct().joinToString(", ").ifBlank { null },
             zoneName?.let { "in $it" },
             hotel.notes.ifBlank { null },
+            notes(records),
         ).joinToString(". "),
     )
 
@@ -153,5 +157,8 @@ object SearchText {
     )
 
     /** An enum name as ordinary words, so GARDEN_BED is found by "garden bed". */
+    /** The notes of records kept under a hive, hotel or plant, such as inspections or harvests, so search finds them there. */
+    private fun notes(records: List<String>): String? = records.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(". ").ifBlank { null }
+
     fun words(name: String): String = name.lowercase().replace('_', ' ')
 }

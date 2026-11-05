@@ -23,6 +23,7 @@ import io.github.wkoller.pollenplot.domain.report.ReportSection
 import io.github.wkoller.pollenplot.domain.report.ReportTable
 import io.github.wkoller.pollenplot.domain.rhythms.BeeGroup
 import io.github.wkoller.pollenplot.domain.rhythms.ForageLevel
+import io.github.wkoller.pollenplot.ui.ListWords
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.bees.label
 import io.github.wkoller.pollenplot.ui.plants.label
@@ -49,7 +50,11 @@ enum class ReportPart(@StringRes val label: Int) {
     WATER(R.string.report_part_water),
     WISHLIST(R.string.report_part_wishlist),
     HARVESTS(R.string.report_part_harvests),
+    TASKS(R.string.report_part_tasks),
 }
+
+/** A job that has fallen due, as the Today card says it, and the day it fell due. */
+data class ReportTask(val text: String, val due: LocalDate)
 
 /**
  * Builds a garden report from the records, in the phone's language: each part chosen as its tables, with the records
@@ -68,7 +73,10 @@ class ReportBuilder(
     private val clock: Clock,
     private val wishes: WishViews? = null,
     private val harvests: HarvestRepository? = null,
+    /** Every job due as the report is prepared: hive checks, feeds, pot care, follow-ups and pruning. */
+    private val tasks: suspend () -> List<ReportTask> = { emptyList() },
 ) {
+    private fun plural(id: Int, count: Int): String = context.resources.getQuantityString(id, count, count)
     private fun s(@StringRes id: Int, vararg args: Any): String = context.getString(id, *args)
 
     private fun text(value: String?) = ReportCell.Text(value.orEmpty())
@@ -91,7 +99,8 @@ class ReportBuilder(
             place?.name?.let { s(R.string.report_place, it) },
         )
         fun inPeriod(date: LocalDate) = !date.isBefore(from) && !date.isAfter(to)
-        val sections = ReportPart.entries.filter { it in parts }.map { part ->
+        val due = tasks()
+        val sections = listOf(summary(::inPeriod, due)) + ReportPart.entries.filter { it in parts }.map { part ->
             when (part) {
                 ReportPart.GARDEN -> garden(pictures)
                 ReportPart.WILDLIFE -> wildlife(::inPeriod)
@@ -102,11 +111,39 @@ class ReportBuilder(
                 ReportPart.WATER -> water(::inPeriod)
                 ReportPart.WISHLIST -> wishlist()
                 ReportPart.HARVESTS -> harvests(::inPeriod)
+                ReportPart.TASKS -> tasks(due)
             }
         }
         // A part with nothing recorded says so, rather than showing a heading with nothing under it.
         val said = sections.map { section -> if (section.isEmpty) section.copy(paragraphs = listOf(s(R.string.report_none))) else section }
         return Report(s(R.string.report_title), lines, said)
+    }
+
+    /** A few sentences that open the report: the garden, the animals seen in the period, the bees kept and what is due. */
+    private suspend fun summary(inPeriod: (LocalDate) -> Boolean, due: List<ReportTask>): ReportSection {
+        val zones = views.zones.first().size
+        val plants = views.plants.first().filter { it.isGrowing }.sumOf { it.plant.quantity }
+        val kinds = views.sightings.first().filter { inPeriod(it.sighting.seenAt.atZone(clock.zone).toLocalDate()) }.map { it.key }.distinct().size
+        val hives = bees.hives.first().size + natives.hives.first().size
+        val hotelCount = hotels.hotels.first().size
+        // The joining words are patterns themselves, so they are read without filling them in.
+        val words = ListWords(context.getString(R.string.list_and), context.getString(R.string.list_range), context.getString(R.string.list_all_year))
+        val paragraphs = listOfNotNull(
+            s(R.string.report_summary_garden, plural(R.plurals.report_summary_zones, zones), plural(R.plurals.report_summary_plants, plants)),
+            plural(R.plurals.report_summary_animals, kinds).takeIf { kinds > 0 } ?: s(R.string.report_summary_no_animals),
+            listOfNotNull(
+                plural(R.plurals.report_summary_hives, hives).takeIf { hives > 0 },
+                plural(R.plurals.report_summary_hotels, hotelCount).takeIf { hotelCount > 0 },
+            ).takeIf { it.isNotEmpty() }?.let { s(R.string.report_summary_bees, UiFormat.joinAnd(it, words)) },
+            if (due.isEmpty()) s(R.string.report_summary_nothing_due) else plural(R.plurals.report_summary_due, due.size),
+        )
+        return ReportSection(s(R.string.report_summary), paragraphs, emptyList())
+    }
+
+    /** The jobs due as the report is prepared, the longest overdue first. */
+    private fun tasks(due: List<ReportTask>): ReportSection {
+        val table = table(R.string.report_part_tasks, listOf(R.string.col_task, R.string.col_due), due.map { listOf(text(it.text), day(it.due)) })
+        return ReportSection(s(R.string.report_part_tasks), emptyList(), if (due.isEmpty()) emptyList() else listOf(table))
     }
 
     private suspend fun garden(pictures: Boolean): ReportSection {

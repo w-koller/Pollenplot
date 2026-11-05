@@ -227,8 +227,8 @@
     <string name="guide_sources">Sources</string>
     <string name="harvest_title">Harvests</string>
     <string name="harvest_none">No harvests recorded yet.</string>
-    <string name="harvest_grams">%1$s g</string>
-    <string name="harvest_kilograms">%1$s kg</string>
+    <string name="harvest_grams">%1$s g</string>
+    <string name="harvest_kilograms">%1$s kg</string>
     <string name="harvest_spring">spring</string>
     <string name="harvest_summer">summer</string>
     <string name="harvest_autumn">autumn</string>
@@ -243,7 +243,7 @@
     <string name="harvest_record_title">Record a harvest</string>
     <string name="harvest_edit_title">Harvest</string>
     <string name="harvest_weight">Weight in kilograms (optional)</string>
-    <string name="harvest_weight_help">For example, 0.4 for 400 g.</string>
+    <string name="harvest_weight_help">For example, 0.4 for 400 g.</string>
     <string name="harvest_weight_error">Please enter the weight as a number, such as 0.4.</string>
     <string name="harvest_how_many">How many were picked (optional)</string>
     <string name="harvest_count_error">Please enter a whole number, such as 12.</string>
@@ -943,6 +943,18 @@
     <string name="zone_remove_title">Remove %1$s?</string>
     <string name="zone_remove_body">The zone is removed from your plot. The plants in it stay in your garden without a zone.</string>
     <string name="search_title">Search your garden</string>
+    <string name="search_filter_kind">Kind of record</string>
+    <string name="search_filter_zone">Zone</string>
+    <string name="search_none_filtered">Nothing found matches these filters. Please choose a chip again to clear it.</string>
+    <string name="search_kind_zones">Zones</string>
+    <string name="search_kind_plants">Plants</string>
+    <string name="search_kind_sightings">Sightings</string>
+    <string name="search_kind_hives">Honey bee hives</string>
+    <string name="search_kind_native_hives">Stingless bee hives</string>
+    <string name="search_kind_hotels">Bee hotels</string>
+    <string name="search_kind_wishes">Wishlist</string>
+    <string name="search_kind_problems">Problems</string>
+    <string name="search_kind_water">Water for wildlife</string>
     <string name="search_label">Search</string>
     <string name="search_hint">Please type a plant, a zone or anything you have noted.</string>
     <string name="search_in_garden">In your garden</string>
@@ -1335,6 +1347,19 @@
     <string name="setup_scanning_denied">Pollenplot cannot see your photos. You can allow them later in Settings › Photo scanning.</string>
     <string name="settings_setup_again">Set up again</string>
     <string name="settings_setup_again_body">Go through the first-launch setup again: location, models, zones and permissions.</string>
+    <string name="report_summary">Summary</string>
+    <string name="report_summary_garden">Your garden has %1$s and %2$s.</string>
+    <string name="report_summary_no_animals">No animals were recorded in this period.</string>
+    <string name="report_summary_bees">You keep %1$s.</string>
+    <string name="report_summary_nothing_due">Nothing is due as this report is prepared.</string>
+    <string name="report_part_tasks">Tasks</string>
+    <string name="col_task">Task</string>
+    <string name="col_due">Due on</string>
+    <string name="report_share_pdf">Share as a PDF</string>
+    <string name="report_share_xlsx">Share as a spreadsheet</string>
+    <string name="report_share_title">Share the garden report</string>
+    <string name="report_share_failed">The report could not be made. Please try again.</string>
+    <string name="report_open">Make a report</string>
     <string name="plot_title">Plot</string>
     <string name="plot_subtitle">Your backyard</string>
     <string name="plot_empty_title">Your plot has no zones yet.</string>
@@ -2001,6 +2026,30 @@
     <plurals name="setup_zones_add">
         <item quantity="one">Add %d zone</item>
         <item quantity="other">Add %d zones</item>
+    </plurals>
+    <plurals name="report_summary_zones">
+        <item quantity="one">%d zone</item>
+        <item quantity="other">%d zones</item>
+    </plurals>
+    <plurals name="report_summary_plants">
+        <item quantity="one">%d plant growing</item>
+        <item quantity="other">%d plants growing</item>
+    </plurals>
+    <plurals name="report_summary_animals">
+        <item quantity="one">%d kind of animal was seen in this period.</item>
+        <item quantity="other">%d kinds of animals were seen in this period.</item>
+    </plurals>
+    <plurals name="report_summary_hives">
+        <item quantity="one">%d hive</item>
+        <item quantity="other">%d hives</item>
+    </plurals>
+    <plurals name="report_summary_hotels">
+        <item quantity="one">%d bee hotel</item>
+        <item quantity="other">%d bee hotels</item>
+    </plurals>
+    <plurals name="report_summary_due">
+        <item quantity="one">%d task is due as this report is prepared. It is listed under Tasks.</item>
+        <item quantity="other">%d tasks are due as this report is prepared. They are listed under Tasks.</item>
     </plurals>
     <plurals name="today_water_minutes">
         <item quantity="one">Please water %1$s, for %2$d minute.</item>
