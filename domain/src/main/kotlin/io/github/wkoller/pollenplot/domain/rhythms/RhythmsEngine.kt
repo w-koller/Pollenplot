@@ -42,7 +42,13 @@ data class Lane(val group: BeeGroup, val points: List<Int>, val levels: List<For
 
     /** Whether anything in the garden feeds the group at all. */
     val fed: Boolean get() = points.any { it > 0 }
+
+    /** Lean months: something flowers for the group, but only a little. */
+    val lean: List<Month> get() = Month.entries.filter { levels[it.ordinal] == ForageLevel.LITTLE }
 }
+
+/** The months a group of bees finds nectar, and the months it finds pollen, in the garden. */
+data class Offers(val nectar: MonthSet, val pollen: MonthSet)
 
 /** A plant that would fill a group's gap, with the gap months it flowers in and a zone whose sun suits it. */
 data class Suggestion(val species: Species, val fills: List<Month>, val nativeHere: Boolean, val zoneName: String?)
@@ -92,6 +98,20 @@ object RhythmsEngine {
                 val score = maxOf(forage.solitaryNectar, forage.solitaryPollen)
                 if (score == 0) 0 else score + (if (forage.buzz) 1 else 0)
             }
+        }
+    }
+
+    /**
+     * The months the garden's flowers offer [group] nectar, and the months they offer it pollen, from the knowledge
+     * base's separate scores, so a month of pollen alone shows apart from one with nectar.
+     */
+    fun offers(plants: List<RhythmPlant>, group: BeeGroup): Offers {
+        fun months(score: (Forage) -> Int) = plants.filter { plant -> plant.forage?.let(score)?.let { it > 0 } == true }
+            .fold(MonthSet.NONE) { all, plant -> all + plant.allFlowering }
+        return when (group) {
+            BeeGroup.HONEY -> Offers(months { it.honeyNectar }, months { it.honeyPollen })
+            BeeGroup.STINGLESS -> Offers(months { it.stinglessNectar }, months { it.stinglessPollen })
+            BeeGroup.SOLITARY -> Offers(months { it.solitaryNectar }, months { it.solitaryPollen })
         }
     }
 

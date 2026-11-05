@@ -54,6 +54,7 @@ fun TodayCard(
     onPlant: (String) -> Unit = {},
     onZone: (String) -> Unit = {},
     onFeed: () -> Unit = {},
+    onProblem: (String) -> Unit = {},
 ) {
     if (state.isEmpty) return
     Surface(
@@ -100,6 +101,11 @@ fun TodayCard(
                         R.drawable.ic_potted_plant,
                         stringResource(if (item.kind == PotTaskKind.FLUSH) R.string.today_pot_flush else R.string.today_pot_repot, item.plant),
                         onClick = { onPlant(item.plantId) },
+                    )
+                    is TodayItem.ProblemFollowUp -> Line(
+                        R.drawable.ic_bug_report,
+                        item.plant?.let { stringResource(R.string.today_follow_up, item.problem, it) } ?: stringResource(R.string.today_follow_up_no_plant, item.problem),
+                        onClick = { onProblem(item.problemId) },
                     )
                     is TodayItem.Feed -> Line(
                         R.drawable.ic_compost,

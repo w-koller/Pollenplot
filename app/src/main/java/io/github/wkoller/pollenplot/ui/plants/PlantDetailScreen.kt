@@ -58,6 +58,8 @@ import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.PotViews
+import io.github.wkoller.pollenplot.data.ProblemViews
+import io.github.wkoller.pollenplot.ui.problems.ProblemsCard
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
@@ -117,11 +119,16 @@ fun PlantDetailScreen(
     onEditPot: () -> Unit = {},
     onRecordCare: () -> Unit = {},
     onRemoveEvent: (String) -> Unit = {},
+    /** The problems logged for the plant, with the screens that open and log them. */
+    problems: ProblemViews? = null,
+    onOpenProblem: (String) -> Unit = {},
+    onLogProblem: () -> Unit = {},
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
     val finds by remember(plantId) { garden.findsOf(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val flowered by garden.floweringList.collectAsStateWithLifecycle(initialValue = emptyList())
     val pot by remember(plantId, pots) { pots?.plant(plantId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
+    val plantProblems by remember(plantId, problems) { problems?.forPlant(plantId) ?: flowOf(emptyList()) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val draft by remember(plantId) { garden.careDraft(plantId) }.collectAsStateWithLifecycle(initialValue = null)
     var draftState by remember { mutableStateOf(DraftState.IDLE) }
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -159,6 +166,7 @@ fun PlantDetailScreen(
                 }
                 if (state.events.isNotEmpty()) item { PlantEventsCard(state.events, onRemoveEvent) }
             }
+            if (problems != null) item { ProblemsCard(plantProblems, onOpenProblem, onLogProblem) }
             if (loaded.weed.isWeed) {
                 val name = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()
                 item { WeedCard(loaded.weed, locality, scientificName = name, onCompare = { onCompare(name) }) }

@@ -19,6 +19,10 @@ STRINGS = {
     "flowers that need buzz pollination add one more. A month with no points has nothing, 1 to 3 points is a little, "
     "4 to 7 is some, and 8 or more is plenty.",
     "rhythms_gaps": "Gaps for %1$s",
+    "rhythms_offers": "Nectar and pollen",
+    "rhythms_offers_line": "%1$s find nectar in %2$s, and pollen in %3$s.",
+    "rhythms_offers_never": "no month yet",
+    "rhythms_lean": "Lean months for %1$s, with only a little in flower: %2$s.",
     "rhythms_gap_months": "Nothing in your garden flowers for them in %1$s. These plants would fill the gap.",
     "rhythms_gap_none": "Nothing in the knowledge base fills this gap yet.",
     "rhythms_fills": "Flowers in %1$s",

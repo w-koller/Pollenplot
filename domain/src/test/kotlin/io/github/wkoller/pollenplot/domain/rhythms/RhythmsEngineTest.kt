@@ -84,4 +84,15 @@ class RhythmsEngineTest {
         val withPets = RhythmsEngine.suggestions(BeeGroup.HONEY, gaps, candidates, emptySet(), AuState.QLD, emptyList(), pets = true)
         assertEquals(listOf("Banksia ericifolia"), withPets.map { it.species.name })
     }
+    @Test
+    fun `nectar and pollen months show apart, and lean months are the ones with a little`() {
+        // A wattle gives honey bees pollen only; a bottlebrush gives nectar and pollen.
+        val wattle = plant("Wattle", GrowthForm.SHRUB, 1, MonthSet.of(Month.JULY, Month.AUGUST), Forage(0, 3, 0, 2, 0, 0, 2, buzz = false))
+        val bottlebrush = plant("Bottlebrush", GrowthForm.SHRUB, 1, MonthSet.of(Month.OCTOBER), Forage(3, 2, 2, 1, 0, 2, 1, buzz = false))
+        val offers = RhythmsEngine.offers(listOf(wattle, bottlebrush), BeeGroup.HONEY)
+        assertEquals(MonthSet.of(Month.OCTOBER), offers.nectar)
+        assertEquals(MonthSet.of(Month.JULY, Month.AUGUST, Month.OCTOBER), offers.pollen)
+        val solitary = RhythmsEngine.lanes(listOf(wattle)).single { it.group == BeeGroup.SOLITARY }
+        assertEquals(listOf(Month.JULY, Month.AUGUST), solitary.lean)
+    }
 }

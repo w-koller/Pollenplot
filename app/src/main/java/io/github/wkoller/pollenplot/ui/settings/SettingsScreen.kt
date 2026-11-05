@@ -94,6 +94,24 @@ fun SettingsScreen(
                     trailingContent = { Switch(checked = settings.petsAtHome, onCheckedChange = null) },
                 ) { Text(stringResource(R.string.settings_pets)) }
             }
+            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+            item { SectionHeading(stringResource(R.string.settings_photos)) }
+            item {
+                ListItem(
+                    onClick = onOpenScanning,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
+                    supportingContent = { Text(stringResource(if (settings.scanLibrary) R.string.settings_scanning_on else R.string.settings_scanning_off)) },
+                ) { Text(stringResource(R.string.settings_scanning)) }
+            }
+            item {
+                ListItem(
+                    onClick = onOpenModels,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_models_body)) },
+                ) { Text(stringResource(R.string.models_title)) }
+            }
+            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+            item { SectionHeading(stringResource(R.string.settings_reminders)) }
             item {
                 ListItem(
                     checked = settings.potReminders,
@@ -114,28 +132,21 @@ fun SettingsScreen(
             }
             item {
                 ListItem(
+                    checked = settings.problemReminders,
+                    onCheckedChange = { on -> update { it.copy(problemReminders = on) } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_bug_report), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_problem_reminders_body)) },
+                    trailingContent = { Switch(checked = settings.problemReminders, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_problem_reminders)) }
+            }
+            item {
+                ListItem(
                     checked = settings.conditionerBeforeHeat,
                     onCheckedChange = { on -> update { it.copy(conditionerBeforeHeat = on) } },
                     leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
                     supportingContent = { Text(stringResource(R.string.settings_conditioner_body)) },
                     trailingContent = { Switch(checked = settings.conditionerBeforeHeat, onCheckedChange = null) },
                 ) { Text(stringResource(R.string.settings_conditioner)) }
-            }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.settings_photos)) }
-            item {
-                ListItem(
-                    onClick = onOpenScanning,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
-                    supportingContent = { Text(stringResource(if (settings.scanLibrary) R.string.settings_scanning_on else R.string.settings_scanning_off)) },
-                ) { Text(stringResource(R.string.settings_scanning)) }
-            }
-            item {
-                ListItem(
-                    onClick = onOpenModels,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_models_body)) },
-                ) { Text(stringResource(R.string.models_title)) }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_background)) }

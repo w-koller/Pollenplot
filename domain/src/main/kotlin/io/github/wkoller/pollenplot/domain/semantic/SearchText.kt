@@ -5,13 +5,15 @@ import io.github.wkoller.pollenplot.domain.bees.stingless.NativeHive
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.hotels.BeeHotel
 import io.github.wkoller.pollenplot.domain.garden.Wish
+import io.github.wkoller.pollenplot.domain.problems.PlantProblem
+import io.github.wkoller.pollenplot.domain.problems.Treatment
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 
-enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL, WISH }
+enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL, WISH, PROBLEM }
 
 /**
  * A record as the search index holds it: the record's key, its kind, the title shown in results and the words it
@@ -94,6 +96,20 @@ object SearchText {
     )
 
     /** A plant on the wishlist, found by its names, where it was seen, the zone it might go in and the notes. */
+    /** A problem seen on a plant, found by its name, the plant, the notes and the products used on it. */
+    fun problem(problem: PlantProblem, name: String, plantTitle: String?, treatments: List<Treatment>): SearchDoc = SearchDoc(
+        id = problem.id,
+        kind = SearchKind.PROBLEM,
+        title = name,
+        body = listOfNotNull(
+            "problem",
+            plantTitle?.let { "on $it" },
+            if (problem.open) "open" else "resolved",
+            problem.notes.ifBlank { null },
+            treatments.joinToString(". ") { listOf(words(it.method.name), it.productText, it.notes).filter(String::isNotBlank).joinToString(", ") }.ifBlank { null },
+        ).joinToString(". "),
+    )
+
     fun wish(wish: Wish, species: Species?, zoneName: String?): SearchDoc = SearchDoc(
         id = wish.id,
         kind = SearchKind.WISH,

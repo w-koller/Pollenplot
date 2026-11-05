@@ -77,6 +77,9 @@ import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
 import io.github.wkoller.pollenplot.ui.feeding.FeedScreen
 import io.github.wkoller.pollenplot.ui.feeding.OwnProductScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
+import io.github.wkoller.pollenplot.ui.problems.LogProblemScreen
+import io.github.wkoller.pollenplot.ui.problems.ProblemScreen
+import io.github.wkoller.pollenplot.ui.problems.TreatmentScreen
 import io.github.wkoller.pollenplot.ui.plants.EditFactsScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantEventScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantPhotoScreen
@@ -260,6 +263,7 @@ fun AppRoot(
                         onOpenGuide = { navController.navigate(GuideRoute(it)) },
                         water = container.waterViews,
                         feeding = container.feedViews,
+                        onOpenProblem = { navController.navigate(ProblemRoute(it)) },
                     )
                 }
                 composable<FeedRoute> { entry ->
@@ -321,7 +325,40 @@ fun AppRoot(
                         onEditPot = { navController.navigate(PotEditRoute(id)) },
                         onRecordCare = { navController.navigate(PlantEventRoute(id)) },
                         onRemoveEvent = { eventId -> scope.launch { container.pots.deleteEvent(eventId) } },
+                        problems = container.problemViews,
+                        onOpenProblem = { navController.navigate(ProblemRoute(it)) },
+                        onLogProblem = { navController.navigate(LogProblemRoute(id)) },
                     )
+                }
+                composable<LogProblemRoute> { entry ->
+                    LogProblemScreen(
+                        plantId = entry.toRoute<LogProblemRoute>().plantId,
+                        catalogue = container.catalogue,
+                        problems = container.problems,
+                        today = LocalDate.now(container.clock),
+                        savePhoto = container::saveProblemPhoto,
+                        onBack = back,
+                    )
+                }
+                composable<ProblemRoute> { entry ->
+                    val id = entry.toRoute<ProblemRoute>().id
+                    val scope = rememberCoroutineScope()
+                    ProblemScreen(
+                        id = id,
+                        views = container.problemViews,
+                        problems = container.problems,
+                        onBack = back,
+                        onRecordTreatment = {
+                            scope.launch {
+                                container.problems.problem(id)?.let { navController.navigate(TreatmentRoute(id, it.plantId)) }
+                            }
+                        },
+                        onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
+                    )
+                }
+                composable<TreatmentRoute> { entry ->
+                    val route = entry.toRoute<TreatmentRoute>()
+                    TreatmentScreen(route.problemId, route.plantId, container.problemViews, container.problems, LocalDate.now(container.clock), onBack = back)
                 }
                 composable<PotEditRoute> { entry ->
                     PotEditScreen(entry.toRoute<PotEditRoute>().plantId, container.pots, onBack = back)
@@ -374,6 +411,7 @@ fun AppRoot(
                         onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
                         onOpenHotel = { navController.navigate(HotelRoute(it)) },
                         onOpenWish = { navController.navigate(WishRoute(it)) },
+                        onOpenProblem = { navController.navigate(ProblemRoute(it)) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->

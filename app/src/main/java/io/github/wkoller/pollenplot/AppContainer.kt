@@ -21,6 +21,9 @@ import io.github.wkoller.pollenplot.data.FeedLibrary
 import io.github.wkoller.pollenplot.data.FeedRepository
 import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.PotRepository
+import io.github.wkoller.pollenplot.data.ProblemRepository
+import io.github.wkoller.pollenplot.data.ProblemViews
+import io.github.wkoller.pollenplot.domain.problems.ProblemCatalogue
 import io.github.wkoller.pollenplot.data.TodayItem
 import io.github.wkoller.pollenplot.domain.feeding.FeedingGuide
 import io.github.wkoller.pollenplot.domain.feeding.Products
@@ -62,6 +65,7 @@ import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.notify.FeedPlanCheck
 import io.github.wkoller.pollenplot.notify.PotCareCheck
+import io.github.wkoller.pollenplot.notify.ProblemCheck
 import io.github.wkoller.pollenplot.notify.WaterPlanCheck
 import io.github.wkoller.pollenplot.place.LocationSource
 import io.github.wkoller.pollenplot.place.PhoneLocation
@@ -154,11 +158,18 @@ class AppContainer(
         { readAsset("kb/feeding.json")?.let { text -> FeedingGuide.parse(text).also { logProblems(it.second) }.first } ?: FeedingGuide.EMPTY },
     )
     val feeds = FeedRepository(this.database, clock, feedLibrary)
+
+    /** The catalogue of pests and problems, read from the assets once it is first needed. */
+    private val problemCatalogue by lazy {
+        readAsset("kb/problems.json")?.let { text -> ProblemCatalogue.parse(text).also { logProblems(it.second) }.first } ?: ProblemCatalogue.EMPTY
+    }
+    val catalogue: ProblemCatalogue get() = problemCatalogue
     val waterViews = WaterViews(water, views, garden, settingsStore, clock, potViews.pottedZones)
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
     val weedPhotos = WeedPhotos(this.web) { weeds.sources }
     val photos = PhotoStore(appContext)
+    val problems = ProblemRepository(this.database, clock, { problemCatalogue }, { knowledge.await() }, photos::delete)
     val wishes = WishRepository(this.database, clock, { knowledge.await() }, photos::delete)
 
     val wishViews = WishViews(wishes, views, knowledge, settingsStore)
@@ -190,12 +201,15 @@ class AppContainer(
     val potCare = PotCareCheck(potViews, settingsStore, notifications)
     val feedViews = FeedViews(feeds, views, water, settingsStore, feedLibrary, clock)
     val feedPlan = FeedPlanCheck(feedViews, settingsStore, notifications)
+    val problemViews = ProblemViews(problems, views, garden, settingsStore, { problemCatalogue }, clock)
+    val problemCheck = ProblemCheck(problemViews, settingsStore, notifications)
     val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews)
     val today = TodayViews(
         water, waterViews, beeViews, garden, views, settingsStore, clock,
-        combine(potViews.due, feedViews.due, feedViews.conditioner) { potsDue, feedsDue, conditioner ->
+        combine(potViews.due, feedViews.due, feedViews.conditioner, problemViews.due) { potsDue, feedsDue, conditioner, followUps ->
             potsDue.map { TodayItem.PotCare(it.plantId, it.title, it.task.kind) } +
                 feedsDue.map { TodayItem.Feed(it.due.zoneId, it.zoneName, it.due.plants) } +
+                followUps.map { TodayItem.ProblemFollowUp(it.problemId, it.name, it.plantTitle) } +
                 listOfNotNull(conditioner?.let { TodayItem.Conditioner(it.day == LocalDate.now(clock), it.maxTenthsC) })
         },
     )
@@ -237,7 +251,7 @@ class AppContainer(
                 (settings.hiveReminders && honey.isNotEmpty()) ||
                     (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE }) ||
                     (settings.waterReminders && settings.gardenPlace != null && plants.isNotEmpty()) ||
-                    ((settings.potReminders || settings.feedReminders) && plants.isNotEmpty())
+                    ((settings.potReminders || settings.feedReminders || settings.problemReminders) && plants.isNotEmpty())
             }
                 .distinctUntilChanged()
                 .collect { HiveReminderWorker.update(appContext, it, clock) }
@@ -295,6 +309,7 @@ class AppContainer(
         nativeBees.reindex()
         hotels.reindex()
         wishes.reindex()
+        problems.reindex()
     }
 
     private fun readAsset(path: String): String? =
@@ -308,7 +323,7 @@ class AppContainer(
         if (problems.isNotEmpty()) Log.w("Feeding", problems.joinToString("\n"))
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {
@@ -335,6 +350,9 @@ class AppContainer(
     suspend fun readChosenPhoto(uri: Uri): Pair<Bitmap, Instant?>? = withContext(Dispatchers.IO) {
         gallery.load(uri, PhotoStore.MAX_SIDE)?.let { it to gallery.takenAt(uri) }
     }
+
+    /** Keeps a photo the user chose of a problem, without looking for plants in it, and returns where it is stored. */
+    suspend fun saveProblemPhoto(uri: Uri): String? = readChosenPhoto(uri)?.let { (bitmap, _) -> photos.savePhoto(bitmap).path }
 
     /** Lets go of a photo taken away from home with nothing saved from it, whatever the screen does meanwhile. */
     fun discardFieldPhoto(photoId: String) {
