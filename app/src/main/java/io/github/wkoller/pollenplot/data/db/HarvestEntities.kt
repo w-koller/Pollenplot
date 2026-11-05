@@ -43,4 +43,7 @@ interface HarvestDao {
 
     @Query("DELETE FROM plant_harvests WHERE id = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT notes FROM plant_harvests WHERE plantId = :plantId AND notes != ''")
+    suspend fun notes(plantId: String): List<String>
 }

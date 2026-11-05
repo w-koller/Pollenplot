@@ -124,6 +124,7 @@ fun PlotScreen(
         subtitle = stringResource(R.string.plot_subtitle),
         onOpenSettings = onOpenSettings,
         compact = showCanvas,
+        search = false,
         actions = {
             if (!editing) {
                 // Shown only while plants found in photos are waiting, with how many.

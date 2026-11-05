@@ -21,6 +21,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -38,7 +39,6 @@ import io.github.wkoller.pollenplot.domain.place.GardenPlace
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
 import io.github.wkoller.pollenplot.ui.theme.PollenplotTheme
-import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -46,6 +46,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.LocalDate
 
@@ -105,8 +106,7 @@ class AccessibilityFlowTest {
         compose.onNodeWithContentDescription("Back").performClick()
         compose.onNodeWithContentDescription("Back").performClick()
         waitFor(hasText("Today"))
-        compose.onNodeWithContentDescription("Open the add menu").performClick()
-        compose.onNodeWithText("Record a feed").performClick()
+        compose.addFromMenu("Record a feed")
         reach(hasText("Add your own product"))
         visit("feed")
         compose.onNodeWithContentDescription("Back").performClick()
@@ -141,8 +141,9 @@ class AccessibilityFlowTest {
         reach(hasText("What you saw"))
         visit("problem_log")
         compose.onNodeWithContentDescription("Back").performClick()
+        // The page's cards are still settling after Back, so the press is sent as an action rather than a tap.
         reach(hasText("Record a harvest"))
-        compose.onNodeWithText("Record a harvest").performClick()
+        compose.onNodeWithText("Record a harvest").performSemanticsAction(SemanticsActions.OnClick)
         reach(hasText("Taste and notes"))
         visit("harvest")
         compose.onNodeWithContentDescription("Back").performClick()

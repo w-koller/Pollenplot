@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-rc.3
 
 - The Plot has no edges. Zones can be moved anywhere, including above and to the left of where the first ones were
   placed, and new zones go beside the others. A grid shows every metre, with a stronger line every 5 m, and while the
@@ -93,6 +93,11 @@
   grevilleas, bottlebrushes, paperbarks, native rosemaries and native fuchsias after flowering, after the Australian
   Native Plants Society), when it was last pruned, and Record pruning. A plant falls due in its pruning months until a
   prune is recorded, on the Today card and in a morning notification. Pruning months can be set in Edit facts.
+- Every tab's top bar opens search. Results can be narrowed to one kind of record or to the records in one zone, and
+  search also finds the notes of hive inspections, stingless hive logs, hotel observations and harvests.
+- A report opens with a short summary of the garden, and its new Tasks part lists the hive checks, feeds, pot care,
+  follow-ups and pruning due as it is prepared. A report can be shared with another app as a PDF or a spreadsheet as
+  well as saved, and the Bees and Water tabs open a report with their own parts chosen.
 - The database may change between release candidates until 1.0.0. Please uninstall an earlier release candidate before
   installing this one, because its records and backups do not open in this version.
 

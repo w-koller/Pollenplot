@@ -28,14 +28,16 @@ search. Screens fed by Room flows use the classic `createComposeRule`, because t
 does not pick up database emissions while a test waits. Even so, a screen whose first data came only from a Room flow
 now and then stayed on its loading state under Robolectric (about one run in ten, more while Gradle was busy), so the
 Identify results are published by `IdentifyModel` as soon as the analysis returns, and the Room flow only brings later
-changes. Prefer that shape when a screen opens on data the app has just written. Robolectric also cannot load the native model interpreter, decode with `ImageDecoder` or settle a text field inside a
+changes. Prefer that shape when a screen opens on data the app has just written. Press what a press has just opened, such as a
+menu item, with `pressWhenShown` or `addFromMenu` in `TestGarden.kt`, which wait for it first. Robolectric also cannot load the native model interpreter, decode with `ImageDecoder` or settle a text field inside a
 dialog window, so screen tests use a fake `PlantIdentifier`, give Coil `imageDecoderEnabled(false)`, and searches open
 as full screens rather than in dialogs.
 
 Free disk space is short on this machine, so model exports and evaluations run in GitHub Actions, and the large models
 are never downloaded here.
 
-CI (`.github/workflows/android.yml`) runs the same tasks, checks that `strings.xml` matches `tools/strings_*.py`, and
+CI (`.github/workflows/android.yml`) runs the same tasks on pushes to `main`, on tags and on pull requests (a feature
+branch is tested through its pull request, so each commit runs once), checks that `strings.xml` matches `tools/strings_*.py`, and
 uploads the debug APK, reports and screenshots. It caches Robolectric's Android jar and fetches it with retries,
 because Robolectric's own download has no retry; its version in the workflow changes with Robolectric or the tests'
 SDK. It builds a signed release APK when the `KEYSTORE_BASE64`,
@@ -109,7 +111,8 @@ is always ready to tag.
     fill them; the measure is described in its KDoc and on the screen) and `RhythmsFeed` (this month's cards).
   - `guide/`: `Guide` and `GuideParser`, which reads a guide page (see Guides below).
   - `report/`: `Report` (sections of paragraphs and tables of text, numbers and days) and `XlsxWriter`, an Excel
-    writer on `java.util.zip` alone. `app/report` builds a report from the records (`ReportBuilder`) and draws it on
+    writer on `java.util.zip` alone. `app/report` builds a report from the records (`ReportBuilder`, which opens with a summary and lists the tasks
+    due, worded by `AppContainer.dueTasks` as the Today card words them) and draws it on
     A4 pages through a `PageSink` (`PdfReportWriter`), so `ReportTest` draws the pages as pictures. A section's
     `ReportFigure`s (the Plot to scale, the plants' cut-outs) are drawn in the PDF and left out of the spreadsheet.
   - `backup/`: `BackupArchive` (a backup file is a zip of its manifest, the garden's settings, every record as
@@ -133,7 +136,7 @@ is always ready to tag.
   zones due one), `ProblemRepository` and `ProblemViews` (problems on plants, their treatments, follow-ups and the
   plants in flower near one), `HabitatRepository` and `HabitatViews` (water features, and each zone's habitat, bees
   kept and bee food), `HarvestRepository` and `HarvestViews` (harvests, and each plant's pruning and the prunes due),
-  `WaterRepository`
+  `SearchPlaces` (the zone each search record belongs to, for search's zone filter), `WaterRepository`
   (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
   `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.

@@ -44,6 +44,13 @@ interface HoneyDao {
     @Query("DELETE FROM honey_inspections WHERE id = :id")
     suspend fun deleteInspection(id: String)
 
+    @Query("SELECT hiveId FROM honey_inspections WHERE id = :id")
+    suspend fun inspectionHive(id: String): String?
+
+    /** What was done and noted at each inspection of a hive, for the search index. */
+    @Query("SELECT actions FROM honey_inspections WHERE hiveId = :hiveId AND actions != '' UNION ALL SELECT notes FROM honey_inspections WHERE hiveId = :hiveId AND notes != ''")
+    suspend fun inspectionNotes(hiveId: String): List<String>
+
     @Query("SELECT * FROM varroa_checks ORDER BY dateEpochDay DESC, createdAt DESC")
     fun observeChecks(): Flow<List<VarroaCheckEntity>>
 

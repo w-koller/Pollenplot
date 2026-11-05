@@ -60,14 +60,24 @@ class NativeBeeRepository(private val db: PollenplotDatabase, private val clock:
         search.delete(id)
     }
 
-    suspend fun saveLog(log: NativeLog) = natives.upsertLog(
+    suspend fun saveLog(log: NativeLog) = db.withTransaction {
+        upsertLog(log)
+        indexHive(log.hiveId)
+    }
+
+    suspend fun deleteLog(id: String) = db.withTransaction {
+        val hiveId = natives.logHive(id)
+        natives.deleteLog(id)
+        hiveId?.let { indexHive(it) }
+    }
+
+    private suspend fun upsertLog(log: NativeLog) = natives.upsertLog(
         NativeLogEntity(
             log.id, log.hiveId, log.date.toEpochDay(), log.kind.name, log.beesPerMinute, log.weightGrams, log.honeyMl, log.pest?.name, log.swarm?.name,
             log.notes.trim(), now(),
         ),
     )
 
-    suspend fun deleteLog(id: String) = natives.deleteLog(id)
 
     /** A new record's key, for a form that saves a new record. */
     fun newRecordId(): String = UUID.randomUUID().toString()
@@ -81,8 +91,10 @@ class NativeBeeRepository(private val db: PollenplotDatabase, private val clock:
     /** Puts every native hive in the search index again, after the garden's index has been rebuilt. */
     suspend fun reindex() = natives.hives().forEach { index(it.toDomain()) }
 
+    private suspend fun indexHive(id: String) = natives.hives().firstOrNull { it.id == id }?.let { index(it.toDomain()) }
+
     private suspend fun index(hive: NativeHive) {
-        val doc = SearchText.nativeHive(hive, hive.zoneId?.let { zones.get(it)?.name })
+        val doc = SearchText.nativeHive(hive, hive.zoneId?.let { zones.get(it)?.name }, natives.logNotes(hive.id))
         search.delete(hive.id)
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }

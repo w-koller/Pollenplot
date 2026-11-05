@@ -4,6 +4,8 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,6 +60,8 @@ fun BeesScreen(
     onOpenHotel: (String) -> Unit,
     onOpenGuide: (String) -> Unit,
     initialSection: BeeSection = BeeSection.HONEY,
+    /** Opens the report with the bees' parts chosen. */
+    onReport: (() -> Unit)? = null,
 ) {
     var section by rememberSaveable { mutableStateOf(initialSection) }
     val hives by beeViews.hives.collectAsStateWithLifecycle(initialValue = null)
@@ -74,6 +79,9 @@ fun BeesScreen(
         title = stringResource(R.string.bees_title),
         subtitle = stringResource(R.string.bees_subtitle),
         onOpenSettings = onOpenSettings,
+        actions = {
+            onReport?.let { report -> IconButton(onClick = report) { Icon(painterResource(R.drawable.ic_description), contentDescription = stringResource(R.string.report_open)) } }
+        },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
             item {

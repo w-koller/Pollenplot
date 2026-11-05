@@ -12,15 +12,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import io.github.wkoller.pollenplot.R
 
+/** Opens search, given by the app frame so every tab's top bar can offer it. A screen shown on its own has none. */
+val LocalOpenSearch = staticCompositionLocalOf<(() -> Unit)?> { null }
+
 /**
  * The frame for a main tab: a large flexible top bar that shrinks as the content scrolls, with the tab's own [actions]
- * and Settings on the right, and an optional floating action button. A [compact] tab, such as the Plot canvas, which
+ * and search and Settings on the right, and an optional floating action button. A tab with its own search button
+ * passes [search] as false. A [compact] tab, such as the Plot canvas, which
  * does not scroll, gets a small top bar so the content has the room.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,13 +36,20 @@ fun TabScaffold(
     onOpenSettings: () -> Unit,
     actions: @Composable RowScope.() -> Unit = {},
     compact: Boolean = false,
+    search: Boolean = true,
     floatingActionButton: @Composable () -> Unit = {},
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val openSearch = LocalOpenSearch.current.takeIf { search }
     val allActions: @Composable RowScope.() -> Unit = {
         actions()
+        openSearch?.let { open ->
+            IconButton(onClick = open) {
+                Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.search_title))
+            }
+        }
         IconButton(onClick = onOpenSettings) {
             Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.settings))
         }

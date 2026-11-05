@@ -46,6 +46,12 @@ interface HotelDao {
     @Query("DELETE FROM hotel_observations WHERE id = :id")
     suspend fun deleteObservation(id: String)
 
+    @Query("SELECT hotelId FROM hotel_observations WHERE id = :id")
+    suspend fun observationHotel(id: String): String?
+
+    @Query("SELECT notes FROM hotel_observations WHERE hotelId = :hotelId AND notes != ''")
+    suspend fun observationNotes(hotelId: String): List<String>
+
     @Query("SELECT * FROM hotel_upkeep ORDER BY dateEpochDay DESC, createdAt DESC, rowid DESC")
     fun observeUpkeep(): Flow<List<HotelUpkeepEntity>>
 

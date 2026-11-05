@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -56,7 +57,8 @@ class ShellScreenFlowTest {
         shot("shell_plot")
         tab("Plot").assertIsSelected()
 
-        compose.onNodeWithContentDescription("Open the add menu").performClick()
+        compose.pressWhenShown(hasContentDescription("Open the add menu"))
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Identify with the camera").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Identify with the camera").assertIsDisplayed()
         compose.onNodeWithText("Check a weed").assertIsDisplayed()
         shot("shell_plot_add_menu")

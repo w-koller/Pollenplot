@@ -87,6 +87,18 @@ STRINGS = {
 
     # Search
     "search_title": "Search your garden",
+    "search_filter_kind": "Kind of record",
+    "search_filter_zone": "Zone",
+    "search_none_filtered": "Nothing found matches these filters. Please choose a chip again to clear it.",
+    "search_kind_zones": "Zones",
+    "search_kind_plants": "Plants",
+    "search_kind_sightings": "Sightings",
+    "search_kind_hives": "Honey bee hives",
+    "search_kind_native_hives": "Stingless bee hives",
+    "search_kind_hotels": "Bee hotels",
+    "search_kind_wishes": "Wishlist",
+    "search_kind_problems": "Problems",
+    "search_kind_water": "Water for wildlife",
     "search_label": "Search",
     "search_hint": "Please type a plant, a zone or anything you have noted.",
     "search_in_garden": "In your garden",

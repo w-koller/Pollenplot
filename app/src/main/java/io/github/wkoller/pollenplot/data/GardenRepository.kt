@@ -145,6 +145,9 @@ class GardenRepository(
         return plant
     }
 
+    /** Puts a plant in the search index again, after the records kept under it, such as its harvests, change. */
+    suspend fun reindexPlant(id: String) = db.withTransaction { plants.get(id)?.toDomain()?.let { index(it) } }
+
     suspend fun updatePlant(plant: GardenPlant) {
         val old = plants.get(plant.id) ?: return
         db.withTransaction {
@@ -536,7 +539,7 @@ class GardenRepository(
         val kb = knowledge()
         val species = plant.speciesName?.let(kb::species)
         val zoneName = plant.zoneId?.let { zones.get(it)?.name }
-        val doc = SearchText.plant(plant, species, zoneName, rolesOf(plant))
+        val doc = SearchText.plant(plant, species, zoneName, rolesOf(plant), db.harvestDao().notes(plant.id))
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }
 }

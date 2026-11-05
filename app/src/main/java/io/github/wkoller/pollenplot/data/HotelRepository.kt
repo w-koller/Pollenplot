@@ -76,7 +76,18 @@ class HotelRepository(private val db: PollenplotDatabase, private val clock: Clo
         search.delete(id)
     }
 
-    suspend fun saveObservation(observation: HotelObservation) = dao.upsertObservation(
+    suspend fun saveObservation(observation: HotelObservation) = db.withTransaction {
+        upsertObservation(observation)
+        indexHotel(observation.hotelId)
+    }
+
+    suspend fun deleteObservation(id: String) = db.withTransaction {
+        val hotelId = dao.observationHotel(id)
+        dao.deleteObservation(id)
+        hotelId?.let { indexHotel(it) }
+    }
+
+    private suspend fun upsertObservation(observation: HotelObservation) = dao.upsertObservation(
         HotelObservationEntity(
             observation.id, observation.hotelId, observation.date.toEpochDay(),
             observation.sealed.filterValues { it > 0 }.entries.sortedBy { it.key.ordinal }.joinToString(",") { "${it.key.name}=${it.value}" },
@@ -84,7 +95,6 @@ class HotelRepository(private val db: PollenplotDatabase, private val clock: Clo
         ),
     )
 
-    suspend fun deleteObservation(id: String) = dao.deleteObservation(id)
 
     suspend fun saveUpkeep(upkeep: HotelUpkeep) =
         dao.upsertUpkeep(HotelUpkeepEntity(upkeep.id, upkeep.hotelId, upkeep.date.toEpochDay(), upkeep.kind.name, upkeep.notes.trim(), now()))
@@ -101,8 +111,10 @@ class HotelRepository(private val db: PollenplotDatabase, private val clock: Clo
     /** Puts every hotel in the search index again, after the garden's index has been rebuilt. */
     suspend fun reindex() = dao.hotels().forEach { index(it.toDomain(dao.sections(it.id))) }
 
+    private suspend fun indexHotel(id: String) = dao.hotels().firstOrNull { it.id == id }?.let { index(it.toDomain(dao.sections(it.id))) }
+
     private suspend fun index(hotel: BeeHotel) {
-        val doc = SearchText.hotel(hotel, hotel.zoneId?.let { zones.get(it)?.name })
+        val doc = SearchText.hotel(hotel, hotel.zoneId?.let { zones.get(it)?.name }, dao.observationNotes(hotel.id))
         search.delete(hotel.id)
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }

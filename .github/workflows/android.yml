@@ -2,7 +2,8 @@ name: Android CI
 
 on:
   push:
-    branches: ["**"]
+    # A feature branch is tested through its pull request, so each commit runs once rather than twice.
+    branches: ["main"]
     # A tag such as v1.0.0 also publishes the signed APK as a GitHub Release, and v1.0.0-rc.1 as a pre-release.
     tags: ["v*"]
   pull_request:
