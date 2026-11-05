@@ -25,6 +25,8 @@ data class ZoneEntity(
     val sun: String?,
     val soil: String?,
     val mulched: Boolean,
+    val rocksAndLogs: Boolean,
+    val denseShrubs: Boolean,
     val measuredAreaCm2: Long?,
     val notes: String,
     val createdAt: Long,

@@ -23,6 +23,8 @@ object GardenGraph {
             .text(iri, Vocab.PP + "sun", zone.sun?.name?.lowercase())
             .text(iri, Vocab.PP + "soil", zone.soil?.name?.lowercase())
             .boolean(iri, Vocab.PP + "mulched", zone.mulched)
+            .boolean(iri, Vocab.PP + "rocksAndLogs", zone.rocksAndLogs)
+            .boolean(iri, Vocab.PP + "denseShrubs", zone.denseShrubs)
             // Area in square metres, the unit people expect to read in an export.
             .decimal(iri, Vocab.PP + "areaSquareMetres", BigDecimal(zone.areaCm2).movePointLeft(4).stripTrailingZeros().toPlainString())
             .text(iri, Vocab.SCHEMA + "description", zone.notes)

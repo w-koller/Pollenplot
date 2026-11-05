@@ -1,14 +1,15 @@
 package io.github.wkoller.pollenplot.domain.garden
 
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
+import io.github.wkoller.pollenplot.domain.plants.GrowthForm
 import io.github.wkoller.pollenplot.domain.plants.WaterNeed
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 
 /** Badges for a whole zone, shown on its tile on the Plot. Problems come first. */
-enum class ZoneBadge { WEED_FOUND, MIXED_THIRST, POLLINATOR_HOTSPOT, FROGS_SEEN }
+enum class ZoneBadge { WEED_FOUND, MIXED_THIRST, POLLINATOR_HOTSPOT, LAYERED_HABITAT, FROGS_SEEN }
 
 /** What a zone's badges are worked out from, for one plant in it. */
-data class PlantFacts(val water: WaterNeed?, val roles: List<EcoRole>)
+data class PlantFacts(val water: WaterNeed?, val roles: List<EcoRole>, val form: GrowthForm? = null)
 
 object ZoneBadges {
     /** A zone with at least this many plants that feed bees counts as a pollinator hotspot. */
@@ -28,6 +29,7 @@ object ZoneBadges {
         if (factors.isNotEmpty() && factors.max() >= MIXED_THIRST_RATIO * factors.min()) badges += ZoneBadge.MIXED_THIRST
         val feeders = plants.count { EcoRole.POLLINATOR_MAGNET in it.roles || EcoRole.NATIVE_BEE_FAVOURITE in it.roles }
         if (feeders >= HOTSPOT_PLANTS) badges += ZoneBadge.POLLINATOR_HOTSPOT
+        if (Corridor.layers(plants.map { it.form }).size == HabitatLayer.entries.size) badges += ZoneBadge.LAYERED_HABITAT
         // Frogs are a sign of a healthy, chemical-free patch, so seeing them confirms what the plants suggest.
         if (LifeGroup.FROG in seen) badges += ZoneBadge.FROGS_SEEN
         return ZoneBadge.entries.filter { it in badges }

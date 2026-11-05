@@ -58,6 +58,7 @@ data class BackupContents(
     val pots: Int = 0,
     val feeds: Int = 0,
     val problems: Int = 0,
+    val waterFeatures: Int = 0,
 )
 
 /** A backup that has been read and checked, kept aside in the app's own storage until it is restored or put away. */
@@ -390,6 +391,7 @@ class BackupService(
             pots = count("plant_pots"),
             feeds = count("soil_feeds"),
             problems = count("plant_problems"),
+            waterFeatures = count("water_features"),
         )
     }
 

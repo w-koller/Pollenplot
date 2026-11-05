@@ -115,6 +115,56 @@
     <string name="add_animal_photos">Add wildlife photos</string>
     <string name="add_check_weed">Check a weed</string>
     <string name="add_plant_by_name">Add a plant by name</string>
+    <string name="badge_layered_habitat">Layered habitat</string>
+    <string name="zone_shelter">Shelter for wildlife</string>
+    <string name="zone_shelter_help">Please mark what this zone has on the ground. Mulch or leaf litter, rocks and logs, and dense shrubs give small animals somewhere to shelter.</string>
+    <string name="zone_rocks_logs">Rocks and logs</string>
+    <string name="zone_dense_shrubs">Dense shrubs</string>
+    <string name="habitat_heading">Habitat</string>
+    <string name="habitat_layer_canopy">Canopy</string>
+    <string name="habitat_layer_midstorey">Midstorey</string>
+    <string name="habitat_layer_groundcover">Understorey and groundcover</string>
+    <string name="habitat_feature_leaf_litter">Mulch or leaf litter</string>
+    <string name="habitat_feature_rocks_logs">Rocks and logs</string>
+    <string name="habitat_feature_dense_shrubs">Dense shrubs</string>
+    <string name="habitat_feature_water">Water</string>
+    <string name="habitat_present">Present</string>
+    <string name="habitat_missing">Missing</string>
+    <string name="habitat_row">%1$s, %2$s</string>
+    <string name="habitat_layers_from">Each plant\'s growth form decides its layer: trees make the canopy, shrubs and climbers the midstorey, and smaller plants the understorey. Lawn and vegetables make none.</string>
+    <string name="habitat_source">Source: Backyards for nature, NSW Environment</string>
+    <string name="habitat_open_source">Open Backyards for nature</string>
+    <string name="habitat_water_here">This zone has water for wildlife.</string>
+    <string name="habitat_water_near">The nearest water for wildlife is in %1$s, %2$s away.</string>
+    <string name="habitat_water_none">No water for wildlife has been recorded in your yard yet.</string>
+    <string name="water_distance_m">%1$s m</string>
+    <string name="habitat_add_water">Add water for wildlife</string>
+    <string name="water_kind_bird_bath">Bird bath</string>
+    <string name="water_kind_pond">Pond</string>
+    <string name="water_kind_bee_water">Water for bees</string>
+    <string name="water_kind_other">Other water</string>
+    <string name="water_cleaned_on">Cleaned on %1$s</string>
+    <string name="water_not_cleaned">No cleaning recorded yet.</string>
+    <string name="water_mark_cleaned">Cleaned today</string>
+    <string name="water_feature_add_title">Add water for wildlife</string>
+    <string name="water_feature_title">Water for wildlife</string>
+    <string name="water_feature_kind">Kind of water</string>
+    <string name="water_feature_notes">Notes</string>
+    <string name="water_feature_save">Save</string>
+    <string name="water_feature_bee_help">Business Queensland suggests water close to the hive, such as wet sand or gravel, the edge of a concrete pond, or floating water plants.</string>
+    <string name="water_feature_delete">Delete</string>
+    <string name="water_feature_delete_title">Delete this water feature?</string>
+    <string name="water_feature_delete_body">It is removed from this zone and from Pollenplot.</string>
+    <string name="zone_bees_heading">Bees kept here</string>
+    <string name="zone_bee_honey">Honey bee hive</string>
+    <string name="zone_bee_stingless">Stingless bee hive</string>
+    <string name="zone_bee_hotel">Bee hotel</string>
+    <string name="zone_bees_need_water">Your bees need water they can reach, as the bee Code of Practice asks. Please set out water near the hive and record it here.</string>
+    <string name="zone_bee_food">Bee food here</string>
+    <string name="zone_bee_food_none">No plant in this zone is known to feed bees yet.</string>
+    <string name="corridor_heading">Wildlife corridor</string>
+    <string name="corridor_intro">These are the layers and features that NSW Environment describes for a backyard for nature, and whether any zone in your yard has each one.</string>
+    <string name="corridor_no_zones">Please add zones to your plot to see your yard as a home for wildlife.</string>
     <string name="settings_records">Your records</string>
     <string name="export_title">Export data</string>
     <string name="export_body">Pollenplot keeps your records on the phone. You can save a copy of them as a file, to keep or to share.</string>
@@ -1116,8 +1166,9 @@
     <string name="rhythms_how">Each plant that feeds honey bees adds its score while it flowers, doubled for a tree or shrub, for up to three plants. For stingless and solitary bees, each kind of plant adds its score once, and a resin source or flowers that need buzz pollination add one more. A month with no points has nothing, 1 to 3 points is a little, 4 to 7 is some, and 8 or more is plenty.</string>
     <string name="rhythms_gaps">Gaps for %1$s</string>
     <string name="rhythms_offers">Nectar and pollen</string>
-    <string name="rhythms_offers_line">%1$s find nectar in %2$s, and pollen in %3$s.</string>
-    <string name="rhythms_offers_never">no month yet</string>
+    <string name="rhythms_offers_line">%1$s find nectar %2$s, and pollen %3$s.</string>
+    <string name="rhythms_offers_in">in %1$s</string>
+    <string name="rhythms_offers_never">in no month yet</string>
     <string name="rhythms_lean">Lean months for %1$s, with only a little in flower: %2$s.</string>
     <string name="rhythms_gap_months">Nothing in your garden flowers for them in %1$s. These plants would fill the gap.</string>
     <string name="rhythms_gap_none">Nothing in the knowledge base fills this gap yet.</string>
@@ -1703,6 +1754,30 @@
     <plurals name="backup_pots">
         <item quantity="one">%d pot</item>
         <item quantity="other">%d pots</item>
+    </plurals>
+    <plurals name="backup_water_features">
+        <item quantity="one">%d water feature</item>
+        <item quantity="other">%d water features</item>
+    </plurals>
+    <plurals name="zone_tile_hives">
+        <item quantity="one">%d hive</item>
+        <item quantity="other">%d hives</item>
+    </plurals>
+    <plurals name="zone_tile_hotels">
+        <item quantity="one">%d bee hotel</item>
+        <item quantity="other">%d bee hotels</item>
+    </plurals>
+    <plurals name="corridor_layered">
+        <item quantity="one">%1$d of %2$d zones has all three layers.</item>
+        <item quantity="other">%1$d of %2$d zones have all three layers.</item>
+    </plurals>
+    <plurals name="corridor_water">
+        <item quantity="one">Your yard has %d water feature.</item>
+        <item quantity="other">Your yard has %d water features.</item>
+    </plurals>
+    <plurals name="habitat_count">
+        <item quantity="one">This zone has %1$d of the %2$d layers and features.</item>
+        <item quantity="other">This zone has %1$d of the %2$d layers and features.</item>
     </plurals>
     <plurals name="fed_days_ago">
         <item quantity="one">%d day ago</item>

@@ -130,7 +130,7 @@ class GardenViews(
             val inZone = byZone[zone.id].orEmpty()
             val seen = seenIn[zone.id].orEmpty()
             val groups = seen.map { it.animal?.group ?: it.sighting.group }.toSet()
-            ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles) }, groups), seen)
+            ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles, it.species?.form) }, groups), seen)
         }
     }
 

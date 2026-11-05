@@ -87,6 +87,7 @@ import io.github.wkoller.pollenplot.ui.plants.PotEditScreen
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
+import io.github.wkoller.pollenplot.ui.plot.WaterFeatureScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneEditorScreen
 import io.github.wkoller.pollenplot.ui.review.ReviewModel
@@ -264,6 +265,7 @@ fun AppRoot(
                         water = container.waterViews,
                         feeding = container.feedViews,
                         onOpenProblem = { navController.navigate(ProblemRoute(it)) },
+                        habitat = container.habitatViews,
                     )
                 }
                 composable<FeedRoute> { entry ->
@@ -292,7 +294,18 @@ fun AppRoot(
                         onOpenWater = { openTab(TopLevelTab.WATER) },
                         feeding = container.feedViews,
                         onRecordFeed = { navController.navigate(FeedRoute(id)) },
+                        habitat = container.habitatViews,
+                        onAddWater = { navController.navigate(WaterFeatureRoute(zoneId = id)) },
+                        onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
+                        onWaterCleaned = { container.waterCleaned(it) },
+                        onOpenHive = { navController.navigate(HiveRoute(it)) },
+                        onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
+                        onOpenHotel = { navController.navigate(HotelRoute(it)) },
                     )
+                }
+                composable<WaterFeatureRoute> { entry ->
+                    val route = entry.toRoute<WaterFeatureRoute>()
+                    WaterFeatureScreen(container.habitat, route.zoneId, route.featureId, LocalDate.now(container.clock), onBack = back)
                 }
                 composable<ZoneEditRoute> { entry ->
                     ZoneEditorScreen(
@@ -412,6 +425,7 @@ fun AppRoot(
                         onOpenHotel = { navController.navigate(HotelRoute(it)) },
                         onOpenWish = { navController.navigate(WishRoute(it)) },
                         onOpenProblem = { navController.navigate(ProblemRoute(it)) },
+                        onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
                     )
                 }
                 composable<IdentifyRoute> { entry ->
@@ -466,6 +480,7 @@ fun AppRoot(
                 }
                 composable<WildlifeRoute> {
                     WildlifeScreen(
+                        habitat = container.habitatViews,
                         views = container.views,
                         knowledge = container.knowledge,
                         settings = container.settingsStore,

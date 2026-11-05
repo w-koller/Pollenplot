@@ -4,6 +4,7 @@ import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeHive
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.hotels.BeeHotel
+import io.github.wkoller.pollenplot.domain.garden.WaterFeature
 import io.github.wkoller.pollenplot.domain.garden.Wish
 import io.github.wkoller.pollenplot.domain.problems.PlantProblem
 import io.github.wkoller.pollenplot.domain.problems.Treatment
@@ -13,7 +14,7 @@ import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 
-enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL, WISH, PROBLEM }
+enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL, WISH, PROBLEM, WATER_FEATURE }
 
 /**
  * A record as the search index holds it: the record's key, its kind, the title shown in results and the words it
@@ -32,6 +33,8 @@ object SearchText {
             zone.sun?.let { words(it.name) },
             zone.soil?.let { "${words(it.name)} soil" },
             if (zone.mulched) "mulched" else null,
+            if (zone.rocksAndLogs) "rocks and logs" else null,
+            if (zone.denseShrubs) "dense shrubs" else null,
             zone.notes.ifBlank { null },
         ).joinToString(". "),
     )
@@ -95,7 +98,14 @@ object SearchText {
         ).joinToString(". "),
     )
 
-    /** A plant on the wishlist, found by its names, where it was seen, the zone it might go in and the notes. */
+    /** Water set out for wildlife, found by its kind, its zone and the notes. */
+    fun waterFeature(feature: WaterFeature, zoneName: String?): SearchDoc = SearchDoc(
+        id = feature.id,
+        kind = SearchKind.WATER_FEATURE,
+        title = words(feature.kind.name).replaceFirstChar(Char::uppercase) + (zoneName?.let { " in $it" } ?: ""),
+        body = listOfNotNull("water for wildlife", "habitat", feature.notes.ifBlank { null }).joinToString(". "),
+    )
+
     /** A problem seen on a plant, found by its name, the plant, the notes and the products used on it. */
     fun problem(problem: PlantProblem, name: String, plantTitle: String?, treatments: List<Treatment>): SearchDoc = SearchDoc(
         id = problem.id,
@@ -110,6 +120,7 @@ object SearchText {
         ).joinToString(". "),
     )
 
+    /** A plant on the wishlist, found by its names, where it was seen, the zone it might go in and the notes. */
     fun wish(wish: Wish, species: Species?, zoneName: String?): SearchDoc = SearchDoc(
         id = wish.id,
         kind = SearchKind.WISH,

@@ -122,6 +122,8 @@ class GardenRepository(
     /** Removes a zone. Its plants stay in the garden without a zone. */
     suspend fun deleteZone(id: String) = db.withTransaction {
         val affected = plants.inZone(id).map { it.toDomain() }
+        // The zone's water features go with it, so their entries leave the search index too.
+        db.habitatDao().waterIdsIn(id).forEach { search.delete(it) }
         zones.delete(id)
         search.delete(id)
         affected.forEach { index(it.copy(zoneId = null)) }

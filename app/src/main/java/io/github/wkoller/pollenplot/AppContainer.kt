@@ -15,6 +15,8 @@ import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.CorrectionRepository
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.HabitatRepository
+import io.github.wkoller.pollenplot.data.HabitatViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.data.FeedLibrary
@@ -148,6 +150,8 @@ class AppContainer(
     val beeViews = BeeViews(bees, nativeBees, hotels, garden, settingsStore, clock)
     val guides = GuideLibrary(appContext)
     val rhythms = RhythmsViews(garden, views, bees, nativeBees, knowledge, settingsStore, clock)
+    val habitat = HabitatRepository(this.database, clock)
+    val habitatViews = HabitatViews(views, habitat, beeViews, rhythms)
     val places = PlaceFinder(this.web) { weeds.sources }
     val pots = PotRepository(this.database, clock)
     val potViews = PotViews(pots, views, clock)
@@ -301,7 +305,7 @@ class AppContainer(
 
     /**
      * Rebuilds the whole search index in one transaction, so a search made meanwhile sees the old index or the new one
-     * and never one part cleared: the garden's rebuild clears every record, hives, hotels and wishes included.
+     * and never one part cleared: the garden's rebuild clears every record, hives, hotels, wishes, problems and water features included.
      */
     private suspend fun rebuildSearch() = database.withTransaction {
         garden.reindexAll()
@@ -310,6 +314,7 @@ class AppContainer(
         hotels.reindex()
         wishes.reindex()
         problems.reindex()
+        habitat.reindex()
     }
 
     private fun readAsset(path: String): String? =
@@ -323,7 +328,7 @@ class AppContainer(
         if (problems.isNotEmpty()) Log.w("Feeding", problems.joinToString("\n"))
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples() + habitat.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {
@@ -357,6 +362,11 @@ class AppContainer(
     /** Lets go of a photo taken away from home with nothing saved from it, whatever the screen does meanwhile. */
     fun discardFieldPhoto(photoId: String) {
         scope.launch { wishes.discardFieldPhoto(photoId) }
+    }
+
+    /** Records that a water feature was cleaned and filled today. */
+    fun waterCleaned(id: String) {
+        scope.launch { habitat.cleaned(id, LocalDate.now(clock)) }
     }
 
     /** Marks a wish planted once its plant is in the garden. */

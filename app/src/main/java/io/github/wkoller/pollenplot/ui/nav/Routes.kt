@@ -45,6 +45,9 @@ import kotlinx.serialization.Serializable
 /** One problem and its treatments. */
 @Serializable data class ProblemRoute(val id: String)
 
+/** Adds water for wildlife to a zone, or with [featureId] opens one. */
+@Serializable data class WaterFeatureRoute(val zoneId: String? = null, val featureId: String? = null)
+
 /** Records a treatment of a problem on a plant. */
 @Serializable data class TreatmentRoute(val problemId: String, val plantId: String)
 

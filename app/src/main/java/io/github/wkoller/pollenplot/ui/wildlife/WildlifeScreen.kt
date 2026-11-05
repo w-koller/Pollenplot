@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.HabitatViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
@@ -60,7 +61,9 @@ import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.nav.AddAction
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
 import io.github.wkoller.pollenplot.ui.review.readable
+import io.github.wkoller.pollenplot.ui.plot.CorridorCard
 import io.github.wkoller.pollenplot.ui.settings.SectionHeading
+import kotlinx.coroutines.flow.flowOf
 import java.time.Clock
 import java.time.LocalDate
 import java.time.Month
@@ -81,7 +84,9 @@ fun WildlifeScreen(
     onOpenAnimal: (String) -> Unit,
     onOpenSighting: (String) -> Unit,
     onSetLocation: () -> Unit,
+    habitat: HabitatViews? = null,
 ) {
+    val corridorSummary by remember(habitat) { habitat?.summary ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = null)
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
@@ -97,6 +102,12 @@ fun WildlifeScreen(
     val yearsSeen = remember(records, zone) { Biodiversity.years(records, zone) }
     val summary = remember(records, fauna, year, zone) { Biodiversity.of(records, fauna, year, zone) }
     val seenKeys = remember(records, fauna) { records.map { Biodiversity.keyOf(it, fauna) }.toSet() }
+    val corridor: LazyListScope.() -> Unit = {
+        corridorSummary?.let { yard ->
+            item(key = "corridor") { SectionHeading(stringResource(R.string.corridor_heading)) }
+            item(key = "corridor-card") { CorridorCard(yard) }
+        }
+    }
     val nearby: LazyListScope.() -> Unit = {
         if (current != null) {
             nearbyAnimals(
@@ -147,6 +158,7 @@ fun WildlifeScreen(
                         OutlinedButton(onClick = { onAdd(AddAction.SIGHTING) }) { Text(stringResource(R.string.add_sighting_by_name)) }
                     }
                 }
+                corridor()
                 // What might visit, before anything has been seen.
                 nearby()
             }
@@ -210,6 +222,7 @@ fun WildlifeScreen(
                         item(key = "ideas") { SectionHeading(stringResource(R.string.wildlife_ideas)) }
                         items(missing, key = { "idea-$it" }) { group -> IdeaRow(group) }
                     }
+                    corridor()
                     nearby()
                 }
             }

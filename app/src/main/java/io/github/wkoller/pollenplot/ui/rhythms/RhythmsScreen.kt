@@ -98,15 +98,13 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
                 item(key = "offers") {
                     val words = listWords()
                     val locale = locale()
-                    val never = stringResource(R.string.rhythms_offers_never)
-                    fun months(set: MonthSet) = if (set.isEmpty) never else UiFormat.months(set, words, locale)
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionHeading(stringResource(R.string.rhythms_offers))
                         loaded.lanes.filter { it.fed }.forEach { lane ->
                             val group = stringResource(lane.group.label)
                             val offers = RhythmsEngine.offers(loaded.plants, lane.group)
                             Text(
-                                stringResource(R.string.rhythms_offers_line, group, months(offers.nectar), months(offers.pollen)),
+                                stringResource(R.string.rhythms_offers_line, group, offerMonths(offers.nectar), offerMonths(offers.pollen)),
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.padding(horizontal = 16.dp),
                             )
@@ -249,8 +247,19 @@ private fun FeedCard(icon: Int, title: String, body: String) {
     }
 }
 
+/** The months a group finds nectar or pollen, as they finish a sentence: "in September to May", or "all year". */
+@Composable
+internal fun offerMonths(set: MonthSet): String {
+    val words = listWords()
+    return when {
+        set.isEmpty -> stringResource(R.string.rhythms_offers_never)
+        set == MonthSet.ALL -> words.allYear
+        else -> stringResource(R.string.rhythms_offers_in, UiFormat.months(set, words, locale()))
+    }
+}
+
 @get:StringRes
-private val BeeGroup.label: Int
+internal val BeeGroup.label: Int
     get() = when (this) {
         BeeGroup.HONEY -> R.string.bee_group_honey
         BeeGroup.STINGLESS -> R.string.bee_group_stingless
