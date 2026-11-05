@@ -1,0 +1,16 @@
+[
+  { "key": "seasol", "name": "Seaweed Concentrate", "maker": "Seasol", "kind": "conditioner",
+    "source": "https://www.seasol.com.au/products/seasol/", "last_checked": "2026-11-05" },
+  { "key": "powerfeed-all-purpose", "name": "PowerFeed All Purpose", "maker": "Seasol", "kind": "liquid",
+    "npk": [12.0, 1.4, 7.0],
+    "source": "https://www.seasol.com.au/products/powerfeed/", "last_checked": "2026-11-05" },
+  { "key": "osmocote-native", "name": "Osmocote Controlled Release Fertiliser: Native", "maker": "Scotts", "kind": "slow_release",
+    "npk": [21.8, 0.7, 7.2],
+    "source": "https://www.lovethegarden.com/au-en/product/scotts-osmocote-controlled-release-fertiliser-native", "last_checked": "2026-11-05" },
+  { "key": "thrive-citrus-fruit-liquid", "name": "Thrive Citrus & Fruit Liquid Plant Food", "maker": "Yates", "kind": "liquid",
+    "npk": [12.0, 2.5, 9.0],
+    "source": "https://www.yates.com.au/yates-thrive-citrus-liquid-plant-food/", "last_checked": "2026-11-05" },
+  { "key": "dynamic-lifter", "name": "Dynamic Lifter Organic Plant Food & Soil Improver", "maker": "Yates", "kind": "organic",
+    "npk": [3.3, 1.7, 1.6],
+    "source": "https://www.yates.com.au/yates-15kg-dynamic-lifter-organic-plant-food-soil-improver-pellets-reduced-odour-1/", "last_checked": "2026-11-05" }
+]

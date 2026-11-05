@@ -13,7 +13,9 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import io.github.wkoller.pollenplot.MainActivity
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.data.ConditionerReminder
 import io.github.wkoller.pollenplot.data.PotDue
+import io.github.wkoller.pollenplot.data.ZoneFeedDue
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTask
 import io.github.wkoller.pollenplot.domain.bees.honey.HiveTaskKind
 import io.github.wkoller.pollenplot.domain.garden.PotTaskKind
@@ -193,6 +195,20 @@ class Notifications(private val context: Context) {
         return true
     }
 
+    /**
+     * Tells which zones are due a feed and, when the user asked for it, that a hot day is coming with no conditioner
+     * given lately, and opens the Plot when tapped. Returns whether it could be shown.
+     */
+    fun showFeeds(due: List<ZoneFeedDue>, conditioner: ConditionerReminder?, today: LocalDate): Boolean {
+        if ((due.isEmpty() && conditioner == null) || !allowed) return false
+        val res = context.resources
+        val lines = due.map { res.getString(R.string.today_feed, it.zoneName, it.due.plants.joinToString(", ")) } +
+            listOfNotNull(conditioner?.let { res.getString(if (it.day == today) R.string.today_conditioner_today else R.string.today_conditioner, degrees(it.maxTenthsC)) })
+        val title = if (due.isEmpty()) res.getString(R.string.notify_conditioner_title) else res.getQuantityString(R.plurals.notify_feed_title, due.size, due.size)
+        show(FEEDS, title, lines.joinToString("\n"), channel = POTS_CHANNEL, open = MainActivity.OPEN_PLOT, icon = R.drawable.ic_compost)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -233,6 +249,7 @@ class Notifications(private val context: Context) {
         const val HEAT = 5
         const val WATERING = 6
         const val POT_CARE = 7
+        const val FEEDS = 8
 
         /** The guide page on caring for a stingless bee hive, which says how to cool one. */
         const val HEAT_GUIDE = "native/hive-care"

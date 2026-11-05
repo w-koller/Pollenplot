@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import androidx.room.withTransaction
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
 import io.github.wkoller.pollenplot.ai.GemmaModel
@@ -16,7 +17,13 @@ import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
+import io.github.wkoller.pollenplot.data.FeedLibrary
+import io.github.wkoller.pollenplot.data.FeedRepository
+import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.PotRepository
+import io.github.wkoller.pollenplot.data.TodayItem
+import io.github.wkoller.pollenplot.domain.feeding.FeedingGuide
+import io.github.wkoller.pollenplot.domain.feeding.Products
 import io.github.wkoller.pollenplot.data.PotViews
 import io.github.wkoller.pollenplot.data.RhythmsViews
 import io.github.wkoller.pollenplot.data.TodayViews
@@ -53,6 +60,7 @@ import io.github.wkoller.pollenplot.report.PdfReportWriter
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
 import io.github.wkoller.pollenplot.notify.Notifications
+import io.github.wkoller.pollenplot.notify.FeedPlanCheck
 import io.github.wkoller.pollenplot.notify.PotCareCheck
 import io.github.wkoller.pollenplot.notify.WaterPlanCheck
 import io.github.wkoller.pollenplot.place.LocationSource
@@ -139,6 +147,13 @@ class AppContainer(
     val places = PlaceFinder(this.web) { weeds.sources }
     val pots = PotRepository(this.database, clock)
     val potViews = PotViews(pots, views, clock)
+
+    /** The built-in products and feeding schedules, read from the assets once they are first needed. */
+    val feedLibrary = FeedLibrary(
+        { readAsset("kb/products.json")?.let { text -> Products.parse(text).also { logProblems(it.problems) }.products }.orEmpty() },
+        { readAsset("kb/feeding.json")?.let { text -> FeedingGuide.parse(text).also { logProblems(it.second) }.first } ?: FeedingGuide.EMPTY },
+    )
+    val feeds = FeedRepository(this.database, clock, feedLibrary)
     val waterViews = WaterViews(water, views, garden, settingsStore, clock, potViews.pottedZones)
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
@@ -173,8 +188,17 @@ class AppContainer(
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
     val waterPlan = WaterPlanCheck(water, waterViews, settingsStore, notifications)
     val potCare = PotCareCheck(potViews, settingsStore, notifications)
+    val feedViews = FeedViews(feeds, views, water, settingsStore, feedLibrary, clock)
+    val feedPlan = FeedPlanCheck(feedViews, settingsStore, notifications)
     val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews)
-    val today = TodayViews(water, waterViews, beeViews, garden, views, settingsStore, clock, potViews.due)
+    val today = TodayViews(
+        water, waterViews, beeViews, garden, views, settingsStore, clock,
+        combine(potViews.due, feedViews.due, feedViews.conditioner) { potsDue, feedsDue, conditioner ->
+            potsDue.map { TodayItem.PotCare(it.plantId, it.title, it.task.kind) } +
+                feedsDue.map { TodayItem.Feed(it.due.zoneId, it.zoneName, it.due.plants) } +
+                listOfNotNull(conditioner?.let { TodayItem.Conditioner(it.day == LocalDate.now(clock), it.maxTenthsC) })
+        },
+    )
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
     val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
@@ -196,12 +220,7 @@ class AppContainer(
         scope.launch {
             knowledge.await()
             combine(views.locality.distinctUntilChanged(), knowledge.knowledge.filterNotNull()) { place, kb -> place to kb }.collectLatest {
-                garden.reindexAll()
-                // The rebuild clears the whole index, hives included.
-                bees.reindex()
-                nativeBees.reindex()
-                hotels.reindex()
-                wishes.reindex()
+                rebuildSearch()
             }
         }
         // The weed lists are brought up to date once a month on Wi-Fi, and straight away when the garden moves.
@@ -218,7 +237,7 @@ class AppContainer(
                 (settings.hiveReminders && honey.isNotEmpty()) ||
                     (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE }) ||
                     (settings.waterReminders && settings.gardenPlace != null && plants.isNotEmpty()) ||
-                    (settings.potReminders && plants.isNotEmpty())
+                    ((settings.potReminders || settings.feedReminders) && plants.isNotEmpty())
             }
                 .distinctUntilChanged()
                 .collect { HiveReminderWorker.update(appContext, it, clock) }
@@ -244,11 +263,7 @@ class AppContainer(
     private suspend fun afterRestore() {
         try {
             knowledge.await()
-            garden.reindexAll()
-            bees.reindex()
-            nativeBees.reindex()
-            hotels.reindex()
-            wishes.reindex()
+            rebuildSearch()
         } catch (e: RuntimeException) {
             // The index is rebuilt again when the app next starts, so search catches up then.
             Log.w("Backup", "The search index could not be rebuilt after a restore", e)
@@ -270,7 +285,30 @@ class AppContainer(
         return false
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples()).toString()
+    /**
+     * Rebuilds the whole search index in one transaction, so a search made meanwhile sees the old index or the new one
+     * and never one part cleared: the garden's rebuild clears every record, hives, hotels and wishes included.
+     */
+    private suspend fun rebuildSearch() = database.withTransaction {
+        garden.reindexAll()
+        bees.reindex()
+        nativeBees.reindex()
+        hotels.reindex()
+        wishes.reindex()
+    }
+
+    private fun readAsset(path: String): String? =
+        runCatching { appContext.assets.open(path).bufferedReader().use { it.readText() } }.getOrElse {
+            Log.w("Feeding", "$path could not be read", it)
+            null
+        }
+
+    // The tests stop a faulty file from shipping, so a problem is only logged.
+    private fun logProblems(problems: List<String>) {
+        if (problems.isNotEmpty()) Log.w("Feeding", problems.joinToString("\n"))
+    }
+
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {

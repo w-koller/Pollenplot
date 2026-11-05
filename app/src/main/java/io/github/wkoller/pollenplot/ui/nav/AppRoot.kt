@@ -74,6 +74,8 @@ import io.github.wkoller.pollenplot.ui.bees.NativeLogScreen
 import io.github.wkoller.pollenplot.ui.guides.GuideScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
+import io.github.wkoller.pollenplot.ui.feeding.FeedScreen
+import io.github.wkoller.pollenplot.ui.feeding.OwnProductScreen
 import io.github.wkoller.pollenplot.ui.plants.AddPlantScreen
 import io.github.wkoller.pollenplot.ui.plants.EditFactsScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantEventScreen
@@ -240,6 +242,7 @@ fun AppRoot(
                                 AddAction.ANIMAL_PHOTOS -> askingAnimal = true
                                 AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
                                 AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
+                                AddAction.FEED -> navController.navigate(FeedRoute())
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                 AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
                             }
@@ -256,8 +259,20 @@ fun AppRoot(
                         onOpenBees = { openTab(TopLevelTab.BEES) },
                         onOpenGuide = { navController.navigate(GuideRoute(it)) },
                         water = container.waterViews,
+                        feeding = container.feedViews,
                     )
                 }
+                composable<FeedRoute> { entry ->
+                    FeedScreen(
+                        zoneId = entry.toRoute<FeedRoute>().zoneId,
+                        feeds = container.feeds,
+                        views = container.views,
+                        today = LocalDate.now(container.clock),
+                        onAddProduct = { navController.navigate(OwnProductRoute) },
+                        onBack = back,
+                    )
+                }
+                composable<OwnProductRoute> { OwnProductScreen(container.feeds, onBack = back) }
                 composable<ZoneRoute> { entry ->
                     val id = entry.toRoute<ZoneRoute>().id
                     ZoneDetailScreen(
@@ -271,6 +286,8 @@ fun AppRoot(
                         onAddSighting = { navController.navigate(AddSightingRoute(zoneId = id)) },
                         water = container.waterViews,
                         onOpenWater = { openTab(TopLevelTab.WATER) },
+                        feeding = container.feedViews,
+                        onRecordFeed = { navController.navigate(FeedRoute(id)) },
                     )
                 }
                 composable<ZoneEditRoute> { entry ->
@@ -425,6 +442,7 @@ fun AppRoot(
                                 AddAction.ANIMAL_PHOTOS -> askingAnimal = true
                                 AddAction.WEED -> navController.navigate(IdentifyRoute(checkingWeed = true))
                                 AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
+                                AddAction.FEED -> navController.navigate(FeedRoute())
                                 AddAction.PLANT -> navController.navigate(AddPlantRoute())
                             }
                         },

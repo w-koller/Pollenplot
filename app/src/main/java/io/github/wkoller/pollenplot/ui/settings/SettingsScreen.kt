@@ -103,6 +103,24 @@ fun SettingsScreen(
                     trailingContent = { Switch(checked = settings.potReminders, onCheckedChange = null) },
                 ) { Text(stringResource(R.string.settings_pot_reminders)) }
             }
+            item {
+                ListItem(
+                    checked = settings.feedReminders,
+                    onCheckedChange = { on -> update { it.copy(feedReminders = on) } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_compost), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_feed_reminders_body)) },
+                    trailingContent = { Switch(checked = settings.feedReminders, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_feed_reminders)) }
+            }
+            item {
+                ListItem(
+                    checked = settings.conditionerBeforeHeat,
+                    onCheckedChange = { on -> update { it.copy(conditionerBeforeHeat = on) } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_conditioner_body)) },
+                    trailingContent = { Switch(checked = settings.conditionerBeforeHeat, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_conditioner)) }
+            }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_photos)) }
             item {

@@ -52,6 +52,8 @@ fun TodayCard(
     onReview: () -> Unit,
     onWeeds: () -> Unit,
     onPlant: (String) -> Unit = {},
+    onZone: (String) -> Unit = {},
+    onFeed: () -> Unit = {},
 ) {
     if (state.isEmpty) return
     Surface(
@@ -98,6 +100,16 @@ fun TodayCard(
                         R.drawable.ic_potted_plant,
                         stringResource(if (item.kind == PotTaskKind.FLUSH) R.string.today_pot_flush else R.string.today_pot_repot, item.plant),
                         onClick = { onPlant(item.plantId) },
+                    )
+                    is TodayItem.Feed -> Line(
+                        R.drawable.ic_compost,
+                        stringResource(R.string.today_feed, item.zone, UiFormat.joinAnd(item.plants, listWords())),
+                        onClick = { onZone(item.zoneId) },
+                    )
+                    is TodayItem.Conditioner -> Line(
+                        R.drawable.ic_compost,
+                        stringResource(if (item.today) R.string.today_conditioner_today else R.string.today_conditioner, degrees(item.maxTenthsC)),
+                        onClick = onFeed,
                     )
                     is TodayItem.PotsBeforeHeat -> Line(
                         R.drawable.ic_potted_plant,

@@ -55,8 +55,9 @@ STRINGS = {
     # Today, the morning notification and Settings
     "today_pot_flush": "Please flush the pot of %1$s.",
     "today_pot_repot": "Please look at whether %1$s needs repotting.",
-    "notify_pots_channel": "Pot care",
-    "notify_pots_channel_description": "Reminders when a pot is due a flush or a look at repotting.",
+    "notify_pots_channel": "Garden care",
+    "notify_pots_channel_description": "Reminders when a pot is due a flush or a look at repotting, or a zone is due a "
+    "feed.",
     "settings_pot_reminders": "Remind me about pots",
     "settings_pot_reminders_body": "Pollenplot sends a notification in the morning when a pot is due a flush or a look at "
     "repotting.",
