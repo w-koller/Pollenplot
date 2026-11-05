@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import androidx.room.withTransaction
 import io.github.wkoller.pollenplot.ai.Assistant
 import io.github.wkoller.pollenplot.ai.GardenAssistant
 import io.github.wkoller.pollenplot.ai.GemmaModel
@@ -219,12 +220,7 @@ class AppContainer(
         scope.launch {
             knowledge.await()
             combine(views.locality.distinctUntilChanged(), knowledge.knowledge.filterNotNull()) { place, kb -> place to kb }.collectLatest {
-                garden.reindexAll()
-                // The rebuild clears the whole index, hives included.
-                bees.reindex()
-                nativeBees.reindex()
-                hotels.reindex()
-                wishes.reindex()
+                rebuildSearch()
             }
         }
         // The weed lists are brought up to date once a month on Wi-Fi, and straight away when the garden moves.
@@ -267,11 +263,7 @@ class AppContainer(
     private suspend fun afterRestore() {
         try {
             knowledge.await()
-            garden.reindexAll()
-            bees.reindex()
-            nativeBees.reindex()
-            hotels.reindex()
-            wishes.reindex()
+            rebuildSearch()
         } catch (e: RuntimeException) {
             // The index is rebuilt again when the app next starts, so search catches up then.
             Log.w("Backup", "The search index could not be rebuilt after a restore", e)
@@ -291,6 +283,18 @@ class AppContainer(
         if (settings.gardenPlace == null && garden.zoneList.first().isEmpty()) return true
         settingsStore.update { it.copy(setupDone = true) }
         return false
+    }
+
+    /**
+     * Rebuilds the whole search index in one transaction, so a search made meanwhile sees the old index or the new one
+     * and never one part cleared: the garden's rebuild clears every record, hives, hotels and wishes included.
+     */
+    private suspend fun rebuildSearch() = database.withTransaction {
+        garden.reindexAll()
+        bees.reindex()
+        nativeBees.reindex()
+        hotels.reindex()
+        wishes.reindex()
     }
 
     private fun readAsset(path: String): String? =
