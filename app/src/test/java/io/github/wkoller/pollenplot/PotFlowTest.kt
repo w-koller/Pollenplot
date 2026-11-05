@@ -11,7 +11,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -21,7 +20,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -86,7 +84,7 @@ class PotFlowTest {
         val ids = seed()
         show(ids.lemon)
         waitFor(hasText("Light"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Add pot details"))
+        compose.scrollTo(hasText("Add pot details"))
         compose.onNodeWithText("Add pot details").performClick()
 
         waitFor(hasText("Material"))

@@ -11,7 +11,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -20,7 +19,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -82,14 +80,14 @@ class ProblemFlowTest {
         val ids = seed()
         show(ids.lemon)
         waitFor(hasText("Light"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Log a problem"))
+        compose.scrollTo(hasText("Log a problem"))
         compose.onNodeWithText("Log a problem").performClick()
         waitFor(hasText("What you saw"))
         compose.onNodeWithText("Aphids").performClick()
         shot("problem_log")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         waitFor(hasText("Light"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Aphids"))
+        compose.scrollTo(hasText("Aphids"))
         compose.onNodeWithText("Open").assertExists()
 
         compose.onNodeWithText("Aphids").performClick()

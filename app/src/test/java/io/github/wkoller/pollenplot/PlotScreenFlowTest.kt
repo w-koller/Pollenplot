@@ -12,7 +12,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
@@ -20,7 +19,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performTextInput
@@ -134,7 +132,7 @@ class PlotScreenFlowTest {
         compose.onNodeWithText("Mum's lemon").performClick()
         // The plant's page opens with its harvests and pruning above its facts.
         waitFor(hasText("Citrus × limon"))
-        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Citrus food"))
+        compose.scrollTo(hasText("Citrus food"))
     }
 
     @Test
