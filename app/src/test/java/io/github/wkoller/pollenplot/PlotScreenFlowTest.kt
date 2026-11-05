@@ -103,7 +103,10 @@ class PlotScreenFlowTest {
     fun addAPlantByName() {
         seed()
         show()
+        // The add button shows once the Plot has loaded, and its menu once pressed; both can take a moment in CI.
+        waitFor(hasContentDescription("Open the add menu"))
         compose.onNodeWithContentDescription("Open the add menu").performClick()
+        waitFor(hasText("Add a plant by name"))
         compose.onNodeWithText("Add a plant by name").performClick()
         waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("bottle")
