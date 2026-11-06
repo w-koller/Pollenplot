@@ -29,7 +29,8 @@ does not pick up database emissions while a test waits. Even so, a screen whose 
 now and then stayed on its loading state under Robolectric (about one run in ten, more while Gradle was busy), so the
 Identify results are published by `IdentifyModel` as soon as the analysis returns, and the Room flow only brings later
 changes. Prefer that shape when a screen opens on data the app has just written. Press what a press has just opened, such as a
-menu item, with `pressWhenShown` or `addFromMenu` in `TestGarden.kt`, which wait for it first. Robolectric also cannot load the native model interpreter, decode with `ImageDecoder` or settle a text field inside a
+menu item, with `pressWhenShown` or `addFromMenu` in `TestGarden.kt`, which wait for it first, and the Plot's top-bar
+buttons the same way, because they appear only once its zones have loaded. Robolectric also cannot load the native model interpreter, decode with `ImageDecoder` or settle a text field inside a
 dialog window, so screen tests use a fake `PlantIdentifier`, give Coil `imageDecoderEnabled(false)`, and searches open
 as full screens rather than in dialogs.
 

@@ -8,6 +8,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -62,7 +63,7 @@ class MeaningFlowTest {
 
     @Test
     fun relatedByMeaning() {
-        compose.onNodeWithContentDescription("Search your garden").performClick()
+        compose.pressWhenShown(hasContentDescription("Search your garden"))
         waitFor(hasSetTextAction())
         compose.onNode(hasSetTextAction()).performTextInput("poisonous to dogs")
         waitFor(hasText("Related by meaning"))

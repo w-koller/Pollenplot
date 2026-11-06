@@ -5,9 +5,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -150,7 +150,7 @@ class WildFindFlowTest {
         val ids = runBlocking { DemoGarden.seed(garden) }
         runBlocking { wishes.add("Hibbertia scandens", targetZoneId = ids.front) }
         showApp()
-        compose.onNodeWithContentDescription("Wishlist").performClick()
+        compose.pressWhenShown(hasContentDescription("Wishlist"))
         waitFor(hasText("Snake vine"))
         shot("wishlist")
         compose.onNodeWithText("Snake vine").performClick()
@@ -174,7 +174,7 @@ class WildFindFlowTest {
             wishes.add("Westringia fruticosa")
         }
         showApp(Settings(theme = ThemeChoice.DARK))
-        compose.onNodeWithContentDescription("Wishlist").performClick()
+        compose.pressWhenShown(hasContentDescription("Wishlist"))
         waitFor(hasText("Coastal rosemary"))
         shot("wishlist_dark")
     }
@@ -183,7 +183,7 @@ class WildFindFlowTest {
     fun anEmptyWishlistOffersToFindAPlant() {
         located()
         showApp()
-        compose.onNodeWithContentDescription("Wishlist").performClick()
+        compose.pressWhenShown(hasContentDescription("Wishlist"))
         waitFor(hasText("Your wishlist is empty."))
         shot("wishlist_empty")
     }

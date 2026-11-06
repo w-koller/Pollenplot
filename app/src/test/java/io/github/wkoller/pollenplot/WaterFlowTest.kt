@@ -14,7 +14,6 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -177,8 +176,7 @@ class WaterFlowTest {
         }
         show()
         // The button is there once the zones have loaded, which a busy machine takes a moment over.
-        waitFor(hasContentDescription("Show as a list"))
-        compose.onNodeWithContentDescription("Show as a list").performClick()
+        compose.pressWhenShown(hasContentDescription("Show as a list"))
         compose.scrollTo(hasText("Veg Patch"))
         waitFor(hasText("Water today at 5:00 am, about", substring = true))
         compose.onNodeWithText("Veg Patch").performClick()
