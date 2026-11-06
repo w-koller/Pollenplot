@@ -43,6 +43,7 @@ import io.github.wkoller.pollenplot.data.db.PollenplotDatabase
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
+import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeStatus
 import io.github.wkoller.pollenplot.domain.feeding.FeedingGuide
@@ -143,7 +144,10 @@ class AppContainer(
         settingsStore,
         scope,
     )
-    val database: PollenplotDatabase = database ?: PollenplotDatabase.create(appContext)
+
+    /** Whether an earlier release candidate's database, restored by Android's backup, was deleted at this start. */
+    private var restoredDatabaseDiscarded = false
+    val database: PollenplotDatabase = database ?: PollenplotDatabase.create(appContext) { restoredDatabaseDiscarded = true }
     val corrections = CorrectionRepository(this.database, clock)
     val knowledge = KnowledgeRepository(appContext, scope, corrections.profiles)
     val bees = BeeRepository(this.database, clock)
@@ -317,6 +321,11 @@ class AppContainer(
      * A garden that already has either never sees it, even if it is later emptied.
      */
     suspend fun setupNeeded(): Boolean {
+        // The settings restored with a database that was deleted describe a garden that is gone, so they go too.
+        if (restoredDatabaseDiscarded) {
+            settingsStore.update { Settings() }
+            restoredDatabaseDiscarded = false
+        }
         val settings = settingsStore.current()
         if (settings.setupDone) return false
         if (settings.gardenPlace == null && garden.zoneList.first().isEmpty()) return true

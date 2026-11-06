@@ -283,7 +283,9 @@ it, so check it again when `targetSdk` goes past 36.
 - The user database stays at schema version 1 until 1.0.0, the first tag without a pre-release suffix. Until then
   its tables may change in place, with `app/schemas/.../1.json` regenerated, because the release candidates go to a
   few testers who install each one afresh (an older candidate's database and backups do not open in a newer one, and
-  the changelog says so). From 1.0.0, every change needs a
+  the changelog says so). Android's own backup restores the database and settings when an app is installed again, so
+  `PollenplotDatabase.create` deletes a database a candidate cannot open, and `setupNeeded` resets the settings
+  restored with it. From 1.0.0, every change needs a
   migration in `PollenplotDatabase.MIGRATIONS`, which restored backups go through too, and a schema committed in
   `app/schemas/`, and there is no destructive migration fallback. The read-only
   knowledge database is rebuilt from `app/src/main/assets/kb/` whenever its version changes.
