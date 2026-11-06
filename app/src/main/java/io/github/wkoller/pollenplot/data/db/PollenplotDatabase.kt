@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
+import io.github.wkoller.pollenplot.BuildConfig
 
 /**
  * The user's garden records. It stays at version 1, and its tables may still change, until 1.0.0, the first tag
@@ -58,8 +59,28 @@ abstract class PollenplotDatabase : RoomDatabase() {
          */
         val MIGRATIONS: Array<Migration> = emptyArray()
 
-        fun create(context: Context): PollenplotDatabase =
-            Room.databaseBuilder(context, PollenplotDatabase::class.java, FILE_NAME).addMigrations(*MIGRATIONS).build()
+        /** Whether this is a release candidate, whose tables may differ from another candidate's at version 1. */
+        val RELEASE_CANDIDATE: Boolean = BuildConfig.VERSION_NAME.removeSuffix("-debug").contains('-')
+
+        /**
+         * The app's database. Android's own backup restores the database of the version backed up when the app is
+         * installed again, and in a release candidate that can be an earlier candidate's, whose tables at version 1
+         * Room refuses. That database is deleted, and [onDiscarded] is called, so the garden starts afresh as it would
+         * after a fresh install. From 1.0.0 an older database is brought up to date with [MIGRATIONS] instead.
+         */
+        fun create(context: Context, onDiscarded: () -> Unit = {}): PollenplotDatabase {
+            val database = Room.databaseBuilder(context, PollenplotDatabase::class.java, FILE_NAME).addMigrations(*MIGRATIONS).build()
+            if (!RELEASE_CANDIDATE) return database
+            try {
+                database.openHelper.writableDatabase
+                return database
+            } catch (e: IllegalStateException) {
+                database.close()
+                context.deleteDatabase(FILE_NAME)
+                onDiscarded()
+            }
+            return Room.databaseBuilder(context, PollenplotDatabase::class.java, FILE_NAME).addMigrations(*MIGRATIONS).build()
+        }
 
         /** A database in memory, for tests. */
         fun inMemory(context: Context): PollenplotDatabase =
