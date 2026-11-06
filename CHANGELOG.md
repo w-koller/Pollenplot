@@ -1,11 +1,13 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-rc.4
 
 - A release candidate no longer closes on launch when Android's own backup has restored an earlier candidate's
   records on installing it again. Those records cannot be opened by this version, so the garden starts afresh with
   setup, as after a fresh install.
 - The Plot's top-bar buttons appear once its zones have loaded, so no button moves along the bar as the screen opens.
+- The database is the same as in 1.0.0-rc.3, so this version installs over it and keeps its records. A phone that
+  had an earlier release candidate, or that restores one from Android's backup, starts afresh with setup.
 
 ## 1.0.0-rc.3
 
