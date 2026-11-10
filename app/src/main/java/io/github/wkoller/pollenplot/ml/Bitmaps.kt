@@ -35,9 +35,12 @@ object Bitmaps {
         return scaleDown(crop, side)
     }
 
-    /** The square around [box], scaled to [side] x [side], as ARGB pixels row by row, for BioCAP. */
-    fun squarePixels(bitmap: Bitmap, box: BoxBp, side: Int): IntArray {
-        val rect = ThumbnailMath.squareAround(box, bitmap.width, bitmap.height)
+    /**
+     * The square around [box], with [paddingBp] of the box's longer side added around it, scaled to [side] x [side],
+     * as ARGB pixels row by row, for BioCAP.
+     */
+    fun squarePixels(bitmap: Bitmap, box: BoxBp, side: Int, paddingBp: Int = 1_000): IntArray {
+        val rect = ThumbnailMath.squareAround(box, bitmap.width, bitmap.height, paddingBp)
         val square = smoothScale(Bitmap.createBitmap(bitmap, rect.left, rect.top, rect.size, rect.size), side, side)
         return IntArray(side * side).also { square.getPixels(it, 0, side, 0, 0, side, side) }
     }

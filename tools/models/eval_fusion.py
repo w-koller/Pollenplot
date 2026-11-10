@@ -13,7 +13,7 @@ The file holds names and numbers only, no photos. For each photo:
 - `biocap`: the 20 closest species of its group with their cosine similarities, for three looks: `centre` (the square
   around the middle box), `middle` (the whole middle square) and `tight` (the middle 40%, where a small animal or one
   flower is), and for `all`, the mean of the three looks' vectors, which is how the app looks at a photo of one plant
-  or animal (AccurateModels.lookAtOne).
+  (AccurateModels.lookAtOne). An animal gets the `centre` look alone.
 - `groups`: the groups of the 20 closest species of any group for the `centre` look, with their similarities.
 Names are numbers into `names`, to keep the file small.
 
@@ -209,7 +209,7 @@ def main():
             }
         records.append(record)
         # A first reading, BioCAP alone on the look the app uses, printed so a run can be checked at a glance.
-        ranked = [i for i, _ in record["biocap"]["all"]]
+        ranked = [i for i, _ in record["biocap"]["all" if group == "plant" else "centre"]]
         counts = tally.setdefault(group, [0, 0, 0])
         counts[0] += 1
         counts[1] += int(ranked[0] == record["species"])

@@ -19,12 +19,18 @@ data class Candidate(
 }
 
 /**
- * Combines the suggestions of each model into one ranked list. Each model's score is weighted, a species already
- * growing in the garden gets a boost because most photos show the same plants again, a species recorded near the
- * garden gets a smaller one, and labels that name the same species (such as a synonym) are merged.
+ * Combines the suggestions of each model into one ranked list. A species already growing in the garden gets a boost
+ * because most photos show the same plants again, a species recorded near the garden gets a smaller one, and labels
+ * that name the same species (such as a synonym) are merged.
+ *
+ * Once BioCAP has looked at a find, the quick model's suggestions for it are left out. On Australian photos of known
+ * species the quick models rarely have the species among their labels at all, and every way of adding them to
+ * BioCAP's was measured as no better than BioCAP alone, and for plants worse (`FusionEvalTest`). BioCAP's shares
+ * then stand as they are, which keeps the words for how sure a suggestion is honest: about seven in ten of its
+ * "Likely" suggestions were right, three in ten of its "Possibly" and one in six of its "Unsure".
  */
 object CandidateFusion {
-    /** How much each model counts, in relative units. The accurate model counts most once it is installed. */
+    /** How much each model counts, in relative units, among the models whose suggestions are combined. */
     val DEFAULT_WEIGHTS: Map<IdSource, Int> = mapOf(
         IdSource.BIOCAP to 6,
         IdSource.AIY_PLANTS to 3,
@@ -32,6 +38,9 @@ object CandidateFusion {
         IdSource.AIY_INSECTS to 3,
         IdSource.GEMMA to 1,
     )
+
+    /** The quick models, whose suggestions give way to BioCAP's once it has looked. */
+    val QUICK: Set<IdSource> = setOf(IdSource.AIY_PLANTS, IdSource.AIY_BIRDS, IdSource.AIY_INSECTS)
 
     /** A species already in the garden has its score multiplied by this, in basis points of 1. */
     const val GARDEN_BOOST_BP = 15_000
@@ -115,7 +124,8 @@ object CandidateFusion {
         limit: Int = 5,
         nearby: (String) -> Int = { 0 },
     ): List<Candidate> {
-        val present = results.filterValues { it.isNotEmpty() }
+        val answered = results.filterValues { it.isNotEmpty() }
+        val present = if (IdSource.BIOCAP in answered) answered - QUICK else answered
         val totalWeight = present.keys.sumOf { weights[it] ?: 1 }.coerceAtLeast(1)
         data class Entry(var label: String, val speciesName: String?, var weighted: Long, val sources: MutableSet<IdSource>, var common: String?)
         val entries = linkedMapOf<String, Entry>()

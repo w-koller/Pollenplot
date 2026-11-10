@@ -128,6 +128,8 @@ fun IdentifyScreen(
     onOpenFinder: ((detectionId: String?) -> Unit)? = null,
     /** Whether the accurate pack is on the phone, which names the groups the quick models do not cover. */
     accurateReady: Boolean = false,
+    /** Opens the models page, offered with the results while the accurate pack is not on the phone. */
+    onOpenModels: (() -> Unit)? = null,
     /** Native alternatives for a find that is a weed, and the wishlist to add them to. */
     help: WeedHelp? = null,
     onOpenWishlist: () -> Unit = {},
@@ -157,7 +159,7 @@ fun IdentifyScreen(
     when (val current = stage) {
         IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack, chooseGroup = !checkingWeed && !field)
         IdentifyStage.Analysing -> Analysing(model)
-        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed }, help, onOpenWishlist)
+        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed }, help, onOpenWishlist, accurateReady, onOpenModels)
         IdentifyStage.NoneFound -> Problem(
             screenTitle = screenTitle,
             title = if (group == LifeGroup.PLANT) stringResource(R.string.identify_none_title) else stringResource(R.string.identify_none_animal, stringResource(group.noun)),
@@ -422,6 +424,8 @@ private fun Results(
     onOpenFinder: ((detectionId: String?) -> Unit)?,
     help: WeedHelp?,
     onOpenWishlist: () -> Unit,
+    accurateReady: Boolean,
+    onOpenModels: (() -> Unit)?,
 ) {
     val result by model.results.collectAsStateWithLifecycle()
     PhotoReviewScreen(
@@ -454,12 +458,17 @@ private fun Results(
                     when {
                         animal != null -> R.string.identify_animal_note
                         model.field -> R.string.field_note
+                        accurateReady -> R.string.identify_accurate_note
                         else -> R.string.identify_model_note
                     },
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            // Without the pack the quick model rarely knows an Australian plant, so the pack is offered here.
+            if (animal == null && !accurateReady && onOpenModels != null) {
+                OutlinedButton(onClick = onOpenModels) { Text(stringResource(R.string.identify_get_pack)) }
+            }
         },
         bottom = {
             // Checking a weed: when no suggestion is right, the council's list can be searched by what the plant looks like.

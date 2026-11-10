@@ -79,8 +79,10 @@ is always ready to tag.
     `GardenRepository.mergePending` after the accurate pack or Gemma 4 changes suggestions; `keepOne` is the user's
     "This photo shows one plant"), `FlowerCall` (whether a found plant
     starts as in flower: BioCAP, then its flowering months, then `FlowerHint`'s colours, else not),
-    `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
-    plants recorded near it), `LiveLabels` (the camera's live suggestions steadied over frames: a running average, different levels to
+    `CandidateFusion` (the suggestions weighed, with a boost for plants in the garden, or animals seen in it, and a
+    smaller one for those recorded near it; once BioCAP has looked at a find the quick model's suggestions are left
+    out, because `FusionEvalTest` measured every way of adding them as no better), `GenusCall` (the genus named when
+    the species is unsure but one genus holds 60% of the belief), `LiveLabels` (the camera's live suggestions steadied over frames: a running average, different levels to
     appear and to leave, and a lead that must hold for two frames), `IdHistory` (the user's own decisions: a name the models put first that was corrected
     more often than accepted gives way to the correction, marked `IdSource.USER`, and a name turned down twice loses
     half its score; applied after fusion in `PhotoAnalysis`, the live suggestions and `AccuratePass`), `ThumbnailMath`, `FlowerHint`, `Confidence` and `ZoneSuggestion` (the zone offered for
@@ -233,6 +235,15 @@ to the other. The pack's evaluation measures each
 step from BioCAP as published to the model the phone runs, and ships the smallest form within half a point of the
 full model. Weights-only 8-bit (`MatMulNBits`, a contrib operator in the full ONNX Runtime the app uses) keeps
 BioCAP's accuracy; 8-bit activations lose about seven points of top-1 on transformers.
+
+`FusionEvalTest` in `:domain` measures the steps from the models' answers to the suggestions on 1,035 Australian
+photos of known species, whose answers are in `domain/src/test/resources/id/eval_outputs.json.gz` (names and numbers,
+no photos). The Fusion evaluation workflow (`tools/models/eval_fusion.py`) records them, and must be run again, and
+the file and the test's baseline replaced, after a change to a model or to how the phone looks at a photo: its looks
+mirror `FastPlantIdentifier` and `AccurateModels.lookAtOne` (three BioCAP looks as one for a photo of one plant, one
+look for an animal). Each run fetches the photos afresh, so numbers from two runs differ by a few photos.
+`tools/models/evaluation.md` says what was measured and decided. Change a weight, threshold or look only with a
+number from this test.
 
 Model files are not committed. The build downloads each one once, checks it against its published SHA-256
 (`VerifiedDownloadTask` in `buildSrc`) and extracts it into the generated assets (`ExtractModelTask`), which also

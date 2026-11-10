@@ -49,21 +49,46 @@ class CandidateFusionTest {
     }
 
     @Test
-    fun `models are weighted and their agreement is kept`() {
+    fun `once BioCAP has looked, its suggestions stand in place of the quick model's`() {
         val fused = CandidateFusion.fuse(
             mapOf(
-                IdSource.AIY_PLANTS to listOf(LabelScore("Rosmarinus officinalis", 9_000)),
-                IdSource.BIOCAP to listOf(LabelScore("Salvia rosmarinus", 6_000), LabelScore("Lavandula dentata", 3_000)),
+                // The quick model is sure of a plant it knows; it rarely knows the Australian one in the photo.
+                IdSource.AIY_PLANTS to listOf(LabelScore("Rosmarinus officinalis", 9_000), LabelScore("Lantana camara", 500)),
+                IdSource.BIOCAP to listOf(LabelScore("Westringia fruticosa", 5_500), LabelScore("Salvia rosmarinus", 3_000)),
             ),
             kb,
             emptySet(),
         )
-        // (9000 × 3 + 6000 × 6) / 9 = 7000 for rosemary, named both ways; lavender has only BioCAP's 3000 × 6 / 9.
-        assertEquals("Salvia rosmarinus", fused[0].speciesName)
-        assertEquals(7_000, fused[0].scoreBp)
-        assertEquals(setOf(IdSource.AIY_PLANTS, IdSource.BIOCAP), fused[0].sources)
-        assertEquals(2_000, fused[1].scoreBp)
+        assertEquals(listOf("Westringia fruticosa", "Salvia rosmarinus"), fused.map { it.label })
+        assertEquals("BioCAP's shares stand as they are", listOf(5_500, 3_000), fused.map { it.scoreBp })
+        assertTrue(fused.all { it.sources == setOf(IdSource.BIOCAP) })
         assertTrue(CandidateFusion.fuse(emptyMap(), kb, emptySet()).isEmpty())
+    }
+
+    @Test
+    fun `without BioCAP the quick model's suggestions are used, and a model that said nothing does not count`() {
+        val quick = mapOf(IdSource.AIY_PLANTS to listOf(LabelScore("Rosmarinus officinalis", 9_000)), IdSource.BIOCAP to emptyList())
+        val fused = CandidateFusion.fuse(quick, kb, emptySet())
+        assertEquals("Salvia rosmarinus", fused.single().speciesName)
+        assertEquals(9_000, fused.single().scoreBp)
+        assertEquals(setOf(IdSource.AIY_PLANTS), fused.single().sources)
+    }
+
+    @Test
+    fun `models that are combined are weighted and their agreement is kept`() {
+        // Gemma 4 counts for one part in seven beside BioCAP.
+        val fused = CandidateFusion.fuse(
+            mapOf(
+                IdSource.GEMMA to listOf(LabelScore("Rosmarinus officinalis", 10_000)),
+                IdSource.BIOCAP to listOf(LabelScore("Salvia rosmarinus", 6_300), LabelScore("Lavandula dentata", 3_500)),
+            ),
+            kb,
+            emptySet(),
+        )
+        assertEquals("Salvia rosmarinus", fused[0].speciesName)
+        assertEquals((10_000 * 1 + 6_300 * 6) / 7, fused[0].scoreBp)
+        assertEquals(setOf(IdSource.GEMMA, IdSource.BIOCAP), fused[0].sources)
+        assertEquals(3_500 * 6 / 7, fused[1].scoreBp)
     }
 
     @Test

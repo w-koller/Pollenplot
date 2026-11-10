@@ -90,6 +90,7 @@ internal fun UndecidedAnimal(
         )
     }
     animal?.let { SafetyNotice(it, locality.state) }
+    if (choice !is ReviewChoice.Picked) GenusNote(detection.candidates)
 
     if (shown.isNotEmpty() || choice is ReviewChoice.Picked) {
         Text(stringResource(R.string.review_suggestions), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })

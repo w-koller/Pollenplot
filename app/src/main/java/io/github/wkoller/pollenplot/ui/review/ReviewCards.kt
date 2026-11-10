@@ -60,6 +60,7 @@ import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.Confidence
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
+import io.github.wkoller.pollenplot.domain.id.GenusCall
 import io.github.wkoller.pollenplot.domain.id.ReviewPick
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
@@ -307,6 +308,7 @@ private fun Undecided(
             Text(stringResource(R.string.review_not_in_kb), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+    if (choice !is ReviewChoice.Picked) GenusNote(detection.candidates)
     // The suggestion's weed status where the garden is, before it is added.
     val weed = chosenSpecies?.let(locality::weed) ?: chosenSpeciesName?.let(locality::weed)
     val isWeed = weed != null && weed.isWeed && chosenSpeciesName != null
@@ -404,6 +406,19 @@ private fun Undecided(
         }
     }
 
+}
+
+/**
+ * Says which genus a find very likely is when the models are less sure of the species, so "Unsure" on each of three
+ * grevilleas does not read as knowing nothing.
+ */
+@Composable
+internal fun GenusNote(candidates: List<Candidate>) {
+    val lead = GenusCall.of(candidates) ?: return
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(R.drawable.ic_category), contentDescription = null, modifier = Modifier.size(18.dp))
+        Text(stringResource(R.string.review_genus, lead.genus), style = MaterialTheme.typography.bodyMedium)
+    }
 }
 
 /** Says a find looked at as a plant is an animal or a fungus, and of which kind, so it is looked at again as one. */

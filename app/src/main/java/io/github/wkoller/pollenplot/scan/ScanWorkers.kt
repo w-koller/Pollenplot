@@ -183,10 +183,9 @@ object ScanScheduler {
 /** How a find's suggestions are weighed again once BioCAP has looked at it. */
 object AccuratePass {
     /**
-     * [detection]'s suggestions with BioCAP's labels ([accurate]) alongside its quick model's, each for the find's own
-     * group: a bird is matched to the animal knowledge base and keeps its bird model's suggestions, and only a plant
-     * gets the boost for what grows in the garden. Null when BioCAP could not name this group, which leaves the find
-     * as it is.
+     * [detection]'s suggestions from BioCAP's labels ([accurate]), for the find's own group: a bird is matched to the
+     * animal knowledge base and boosted for the animals already [seen] in the garden, a plant to the plant one and
+     * boosted for what is [growing]. Null when BioCAP could not name this group, which leaves the find as it is.
      */
     fun candidates(
         detection: DetectionRecord,
@@ -196,17 +195,13 @@ object AccuratePass {
         growing: Set<String>,
         nearby: (String) -> Int,
         history: IdHistory = IdHistory.NONE,
+        seen: Set<String> = emptySet(),
     ): List<Candidate>? {
         if (accurate.isEmpty()) return null
         val plant = detection.group == LifeGroup.PLANT
-        val garden = if (plant) growing else emptySet()
-        val quickSource = AiyModel.of(detection.group)?.source
-        val quick = detection.candidates.filter { quickSource != null && quickSource in it.sources }
-            .map { LabelScore(it.label, CandidateFusion.withoutBoost(it, garden, nearby), it.common) }
-        val results = buildMap {
-            if (quickSource != null) put(quickSource, quick)
-            put(IdSource.BIOCAP, accurate)
-        }
+        val garden = if (plant) growing else seen
+        // BioCAP's suggestions stand in place of the quick model's (see CandidateFusion).
+        val results = mapOf(IdSource.BIOCAP to accurate)
         val nameOf: (String) -> String? = if (plant) { label -> kb.species(label)?.name } else { label -> fauna.animal(label)?.name }
         return history.apply(CandidateFusion.fuse(results, nameOf, garden, nearby = nearby), nameOf)
     }
@@ -230,6 +225,7 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
         val kb = container.knowledge.await()
         val fauna = container.knowledge.awaitFauna()
         val growing = container.garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+        val seen = container.garden.sightedSpecies()
         val history = container.garden.idHistory()
         val photos = mutableMapOf<String, Bitmap?>()
         for (detection in container.garden.pendingWithout(IdSource.BIOCAP)) {
@@ -242,7 +238,7 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
                 container.garden.photo(detection.photoId)?.let { BitmapFactory.decodeFile(container.photos.file(it.path).path) }
             } ?: continue
             val accurate = withContext(Dispatchers.Default) { models.labels(photo, detection.box, detection.group) }
-            AccuratePass.candidates(detection, accurate, kb, fauna, growing, container::recordsNearby, history)
+            AccuratePass.candidates(detection, accurate, kb, fauna, growing, container::recordsNearby, history, seen)
                 ?.let { container.garden.replaceCandidates(detection.id, it) }
         }
         // Finds in one photo that BioCAP now names as the same plant are made one.

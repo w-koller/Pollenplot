@@ -189,6 +189,22 @@ class IdentifyFlowTest {
     }
 
     @Test
+    fun aFindUnsureOfItsSpeciesSaysItsGenus() {
+        seed()
+        val grevilleas = TestPhotos.region(TestPhotos.bottlebrush, flowering = false, LabelScore("Grevillea robusta", 3_400), LabelScore("Grevillea banksii", 2_900), LabelScore("Hakea laurina", 1_200))
+        show(analysed(listOf(grevilleas), PhotoScope.ONE))
+        waitFor(hasText("This is very likely a Grevillea.", substring = true))
+        shot("identify_genus")
+        // Choosing a plant by name is the user's own answer, so the note goes.
+        compose.onNodeWithText("It is another plant").performScrollTo().performClick()
+        compose.onNode(hasSetTextAction()).performTextInput("snake vine")
+        waitFor(hasText("Hibbertia scandens"))
+        compose.onNodeWithText("Hibbertia scandens").performClick()
+        waitFor(hasText("Your choice"))
+        assertEquals(0, compose.onAllNodesWithText("This is very likely a Grevillea.", substring = true).fetchSemanticsNodes().size)
+    }
+
+    @Test
     fun liveSuggestionsStaySteadyWhileTheCameraIsStill() {
         seed()
         val identifier = ScriptedIdentifier()

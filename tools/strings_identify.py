@@ -16,8 +16,12 @@ STRINGS = {
     "identify_none_title": "No plant was found in this photo.",
     "identify_none_body": "Please try again closer to the plant and in good light, or add the plant by name.",
     "identify_try_again": "Take another photo",
-    "identify_model_note": "These suggestions come from the quick model on your phone, which knows few Australian "
-    "native plants. Please press “It is another plant” if none of them is right.",
+    "identify_model_note": "These suggestions come from the quick model on your phone, which knows few plants that "
+    "grow in Australia and is often wrong about them. The accurate pack knows many more. Please press “It is another "
+    "plant” if none of the suggestions is right.",
+    "identify_accurate_note": "These suggestions come from the accurate pack on your phone. Its first suggestion is "
+    "not always right, so please check the others, and press “It is another plant” if none of them is right.",
+    "identify_get_pack": "Get the accurate pack",
     "identify_failed_title": "The photo could not be identified.",
     "identify_failed": "Please try again. Nothing was added to your garden.",
 
@@ -54,6 +58,7 @@ STRINGS = {
     "review_add_to_existing": "Add the photo to it",
     "review_done": "Done",
     "review_one_plant": "This photo shows one plant",
+    "review_genus": "This is very likely a %1$s. Pollenplot is less sure which one, so please check the suggestions.",
 
     # Adding plant photos from the phone
     "plant_photos_title": "What do the photos show?",
