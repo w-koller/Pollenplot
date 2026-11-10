@@ -91,7 +91,11 @@ class PhotoAnalysis(
                 val fauna = knowledge.awaitFauna()
                 ({ label -> fauna.animal(label)?.name })
             }
-            val growing = if (!plant || away) emptySet() else garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+            val growing = when {
+                away -> emptySet()
+                plant -> garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+                else -> garden.sightedSpecies()
+            }
             garden.idHistory().apply(CandidateFusion.fuse(region.labels, nameOf, growing, nearby = if (away) { _ -> 0 } else nearby), nameOf)
         }
         garden.regroupDetection(detection.id, group, candidates)
@@ -128,13 +132,15 @@ class PhotoAnalysis(
         // species recorded near the garden a little. A photo taken away from home gets neither boost.
         val away = origin == PhotoOrigin.FIELD
         val gardenSpecies = if (away) emptySet() else garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+        // An animal already recorded in the garden gets the same boost as a plant growing in it.
+        val sighted = if (away || found.regions.all { it.group == LifeGroup.PLANT }) emptySet() else garden.sightedSpecies()
         val recorded: (String) -> Int = if (away) { _ -> 0 } else nearby
         // A name the user has corrected before is corrected here too.
         val history = garden.idHistory()
         val fused = found.regions.map { region ->
             val nameOf: (String) -> String? =
                 if (region.group == LifeGroup.PLANT) { label -> kb.species(label)?.name } else { label -> fauna.animal(label)?.name }
-            val growing = if (region.group == LifeGroup.PLANT) gardenSpecies else emptySet()
+            val growing = if (region.group == LifeGroup.PLANT) gardenSpecies else sighted
             val candidates = history.apply(CandidateFusion.fuse(region.labels, nameOf, growing, nearby = recorded), nameOf)
             Fused(region, candidates, region.flowering, region.modelFlowering)
         }

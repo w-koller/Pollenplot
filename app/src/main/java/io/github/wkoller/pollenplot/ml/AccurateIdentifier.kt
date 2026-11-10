@@ -8,6 +8,7 @@ import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.id.RegionPlanner
+import io.github.wkoller.pollenplot.domain.id.ThumbnailMath
 import io.github.wkoller.pollenplot.domain.id.TileResult
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.bio.BioCapEncoder
@@ -36,12 +37,43 @@ class AccurateModels(
     fun look(photo: Bitmap, box: BoxBp, group: LifeGroup = LifeGroup.PLANT): AccurateLook {
         if (!index.hasGroups && group != LifeGroup.PLANT) return AccurateLook(emptyList(), null)
         val vector = encoder.encode(Bitmaps.squarePixels(photo, box, BioCapEncoder.SIZE))
+        val flowering = flowers?.takeIf { group == LifeGroup.PLANT }?.let { FlowerCall.model(it.flowerBp(vector, logitScale), it.yesBp, it.noBp) }
+        return AccurateLook(labelsNear(vector, group), flowering)
+    }
+
+    /**
+     * BioCAP's look at a photo of one plant: three looks as one. It looks at the square around the middle box, at the
+     * whole middle square and at the middle 40%, where one flower or a few leaves fill the frame, and takes the mean
+     * of the three vectors, whose similarity to a species is the mean of the three looks'. On 360 Australian plant
+     * photos of known species that put the species among the first five in 22 photos where one look had not, and
+     * lost it in 8 (`FusionEvalTest`); for animals it gained and lost as many, so an animal gets one look.
+     * eval_fusion.py records the same three looks, so a change here needs the same change there. Whether the plant
+     * is in flower is asked of the first look alone, which the pack's flower thresholds were chosen with.
+     */
+    fun lookAtOne(photo: Bitmap): AccurateLook {
+        val group = LifeGroup.PLANT
+        val squares = listOf(
+            ThumbnailMath.squareAround(FastPlantIdentifier.CENTRE, photo.width, photo.height),
+            ThumbnailMath.squareAround(BoxBp.centreSquare(photo.width, photo.height, BoxBp.FULL), photo.width, photo.height, paddingBp = 0),
+            ThumbnailMath.squareAround(BoxBp.centreSquare(photo.width, photo.height, TIGHT_BP), photo.width, photo.height, paddingBp = 0),
+        )
+        // On a photo that is not square the first two are the same square, which is encoded once and counts twice.
+        val vectors = squares.distinct().associateWith { square ->
+            val pixels = Bitmaps.smoothScale(Bitmap.createBitmap(photo, square.left, square.top, square.size, square.size), BioCapEncoder.SIZE, BioCapEncoder.SIZE)
+            encoder.encode(IntArray(BioCapEncoder.SIZE * BioCapEncoder.SIZE).also { pixels.getPixels(it, 0, BioCapEncoder.SIZE, 0, 0, BioCapEncoder.SIZE, BioCapEncoder.SIZE) })
+        }
+        val mean = FloatArray(index.dimensions)
+        for (square in squares) vectors.getValue(square).forEachIndexed { i, value -> mean[i] += value / squares.size }
+        val flowering = flowers?.let { FlowerCall.model(it.flowerBp(vectors.getValue(squares.first()), logitScale), it.yesBp, it.noBp) }
+        return AccurateLook(labelsNear(mean, group), flowering)
+    }
+
+    /** The closest species of [group] to [vector] as shares, best first, with the index's common names. */
+    private fun labelsNear(vector: FloatArray, group: LifeGroup): List<LabelScore> {
         val wanted = group.name.lowercase()
         val near = index.nearest(vector, count = CONSIDERED) { species -> species.group == null || species.group == wanted }
         val common = near.associate { it.species.name to it.species.common }
-        val labels = AccurateRegions.shares(near.map { it.species.name to it.similarity }, logitScale).take(KEPT).map { it.copy(common = common[it.label]) }
-        val flowering = flowers?.takeIf { group == LifeGroup.PLANT }?.let { FlowerCall.model(it.flowerBp(vector, logitScale), it.yesBp, it.noBp) }
-        return AccurateLook(labels, flowering)
+        return AccurateRegions.shares(near.map { it.species.name to it.similarity }, logitScale).take(KEPT).map { it.copy(common = common[it.label]) }
     }
 
     /**
@@ -62,6 +94,9 @@ class AccurateModels(
         /** The closest species whose shares are worked out; the rest add next to nothing at BioCAP's scale. */
         const val CONSIDERED = 20
         const val KEPT = 5
+
+        /** The share of a photo's shorter side that the closest of the three looks at one plant takes. */
+        const val TIGHT_BP = 4_000
     }
 }
 
@@ -93,7 +128,7 @@ class AccuratePlantIdentifier(private val fast: FastPlantIdentifier, private val
     /** The one plant in the middle of the frame, named by the quick model, if it is sure of a plant, and by BioCAP. */
     private suspend fun identifyOne(photo: Bitmap, accurate: AccurateModels): Identification {
         val quick = fast.one(photo)
-        val look = withContext(Dispatchers.Default) { accurate.look(photo, FastPlantIdentifier.CENTRE) }
+        val look = withContext(Dispatchers.Default) { accurate.lookAtOne(photo) }
         val biocap = look.labels
         val labels = quick?.labels.orEmpty() + if (biocap.isEmpty()) emptyMap() else mapOf(IdSource.BIOCAP to biocap)
         // BioCAP names a species for any photo, so on its own it counts only when it is as sure as for a new region.
@@ -106,6 +141,7 @@ class AccuratePlantIdentifier(private val fast: FastPlantIdentifier, private val
     /** The animal in the middle of the frame, named by its quick model, if it has one, and by BioCAP. */
     private suspend fun identifyAnimal(photo: Bitmap, group: LifeGroup, accurate: AccurateModels): Identification {
         val quick = fast.identify(photo, group).regions.firstOrNull()
+        // One look: three looks as one named no more animals than this one did, so an animal is not looked at thrice.
         val biocap = withContext(Dispatchers.Default) { accurate.labels(photo, FastPlantIdentifier.CENTRE, group) }
         val labels = quick?.labels.orEmpty() + if (biocap.isEmpty()) emptyMap() else mapOf(IdSource.BIOCAP to biocap)
         if (labels.isEmpty()) return Identification(false, emptyList())

@@ -35,9 +35,12 @@ object Bitmaps {
         return scaleDown(crop, side)
     }
 
-    /** The square around [box], scaled to [side] x [side], as ARGB pixels row by row, for BioCAP. */
-    fun squarePixels(bitmap: Bitmap, box: BoxBp, side: Int): IntArray {
-        val rect = ThumbnailMath.squareAround(box, bitmap.width, bitmap.height)
+    /**
+     * The square around [box], with [paddingBp] of the box's longer side added around it, scaled to [side] x [side],
+     * as ARGB pixels row by row, for BioCAP.
+     */
+    fun squarePixels(bitmap: Bitmap, box: BoxBp, side: Int, paddingBp: Int = 1_000): IntArray {
+        val rect = ThumbnailMath.squareAround(box, bitmap.width, bitmap.height, paddingBp)
         val square = smoothScale(Bitmap.createBitmap(bitmap, rect.left, rect.top, rect.size, rect.size), side, side)
         return IntArray(side * side).also { square.getPixels(it, 0, side, 0, 0, side, side) }
     }
@@ -45,8 +48,8 @@ object Bitmaps {
     /**
      * [bitmap] scaled to [width] x [height] without skipping detail. Android's filtered scaling blends only the four
      * nearest pixels, so a large reduction misses most of the photo; halving first averages each 2 x 2 block, which
-     * matches the smooth resizing BioCAP's photos had in training. tools/models/export_biocap.py prepares photos the
-     * same way when it evaluates the pack.
+     * matches the smooth resizing BioCAP's photos had in training. tools/models/photos.py prepares photos the
+     * same way when the pack and the fusion are evaluated.
      */
     fun smoothScale(bitmap: Bitmap, width: Int, height: Int): Bitmap {
         var current = bitmap

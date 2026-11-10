@@ -533,7 +533,9 @@
     <string name="identify_none_title">No plant was found in this photo.</string>
     <string name="identify_none_body">Please try again closer to the plant and in good light, or add the plant by name.</string>
     <string name="identify_try_again">Take another photo</string>
-    <string name="identify_model_note">These suggestions come from the quick model on your phone, which knows few Australian native plants. Please press “It is another plant” if none of them is right.</string>
+    <string name="identify_model_note">These suggestions come from the quick model on your phone, which knows few plants that grow in Australia and is often wrong about them. The accurate pack knows many more. Please press “It is another plant” if none of the suggestions is right.</string>
+    <string name="identify_accurate_note">These suggestions come from the accurate pack on your phone. Its first suggestion is not always right, so please check the others, and press “It is another plant” if none of them is right.</string>
+    <string name="identify_get_pack">Get the accurate pack</string>
     <string name="identify_failed_title">The photo could not be identified.</string>
     <string name="identify_failed">Please try again. Nothing was added to your garden.</string>
     <string name="confidence_high">Likely</string>
@@ -566,6 +568,7 @@
     <string name="review_add_to_existing">Add the photo to it</string>
     <string name="review_done">Done</string>
     <string name="review_one_plant">This photo shows one plant</string>
+    <string name="review_genus">This is very likely a %1$s. Pollenplot is less sure which one, so please check the suggestions.</string>
     <string name="plant_photos_title">What do the photos show?</string>
     <string name="plant_photos_body">A photo of one plant gives one card, for the plant in the middle. A photo of a garden bed is looked at for each plant in it.</string>
     <string name="plant_photos_one">One plant in each photo</string>

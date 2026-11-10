@@ -462,6 +462,12 @@ class GardenRepository(
         if (entity.status == DetectionStatus.REJECTED.name) detections.setStatus(detectionId, DetectionStatus.NEEDS_REVIEW.name, null, null)
     }
 
+    /**
+     * The animals and fungi already recorded in the garden, by scientific name. An animal seen here before is likelier
+     * to be the one in the next photo, as a plant growing here is.
+     */
+    suspend fun sightedSpecies(): Set<String> = sightings.all().mapNotNull { it.speciesName }.toSet()
+
     /** Every sighting, the most recent first. */
     val sightingList: Flow<List<Sighting>> = sightings.observeAll().map { list -> list.map { it.toDomain() } }
 

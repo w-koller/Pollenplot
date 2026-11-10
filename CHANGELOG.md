@@ -25,6 +25,22 @@
   clearly led it for two frames, and one blurred frame no longer clears the list.
 - The quick models are shown the square in the middle of the frame, as the guide on the camera shows it. Before, the
   middle of a photo that is not square was squashed to fit.
+- Identification is now measured. The models' answers for 1,035 Australian photos of known species are kept with the
+  tests, and a change to how suggestions are made fails the tests when it names fewer of them
+  (`tools/models/evaluation.md`).
+- With the accurate pack, BioCAP's suggestions stand in place of the quick model's. The quick models rarely know an
+  Australian species, and mixing their guesses in pushed the right plant out of the list. With the pack, the right
+  plant is now among the first five suggestions for 70% of the plant photos, up from 60%, and first for 41%, up from
+  37%.
+- A photo of one plant is looked at three ways by BioCAP (the middle of the frame, the whole middle square and a
+  closer look), taken together.
+- When Pollenplot is unsure of the species but sure of the genus, the card says so, as in “This is very likely a
+  Grevillea.”
+- The words Likely, Possibly and Unsure mean more. They now follow BioCAP's own belief, and “Likely” was right for
+  about seven photos in ten.
+- An animal already recorded in the garden is a likelier answer for the next photo, as a plant growing in it is.
+- The results say which model the suggestions came from, and offer the accurate pack when it is not on the phone.
+  Without it, the quick model put the right plant first for 7% of the plant photos.
 - The database has changed, so this version does not install over 1.0.0-rc.4 and keep its records. Please install it
   afresh.
 

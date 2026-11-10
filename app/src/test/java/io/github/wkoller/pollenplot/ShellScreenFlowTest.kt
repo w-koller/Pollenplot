@@ -68,11 +68,14 @@ class ShellScreenFlowTest {
         shot("shell_check_weed")
         compose.onNodeWithContentDescription("Back").performClick()
 
+        // Each tab's first screen shows once its records have come from the database.
         tab("Rhythms").performClick()
+        waitFor(hasText("Pollen Rhythms needs plants in your plot."))
         compose.onNodeWithText("Pollen Rhythms needs plants in your plot.").assertIsDisplayed()
         shot("shell_rhythms")
 
         tab("Wildlife").performClick()
+        waitFor(hasText("No wildlife has been recorded yet."))
         compose.onNodeWithText("No wildlife has been recorded yet.").assertIsDisplayed()
         shot("shell_wildlife")
 

@@ -249,9 +249,13 @@ class PhotoScanningTest {
         // Rosemary grows in the garden, which must not count for a bird.
         val weighed = AccuratePass.candidates(stored, accurate, kb, fauna, growing = setOf("Salvia rosmarinus"), nearby = { 0 })!!
         assertEquals(listOf("Manorina melanocephala", "Manorina flavigula"), weighed.map { it.label })
-        assertEquals("The bird model's suggestion is kept alongside BioCAP's", setOf(IdSource.AIY_BIRDS, IdSource.BIOCAP), weighed.first().sources)
+        assertEquals("BioCAP's suggestions stand in place of the bird model's", setOf(IdSource.BIOCAP), weighed.first().sources)
         assertEquals("It is matched to the animal knowledge base", "Manorina melanocephala", weighed.first().speciesName)
-        assertEquals((5_400 * 3 + 7_000 * 6) / 9, weighed.first().scoreBp)
+        assertEquals(listOf(7_000, 1_500), weighed.map { it.scoreBp })
+
+        // A bird already recorded in the garden is likelier to be the one in the photo.
+        val seenBefore = AccuratePass.candidates(stored, accurate.map { it.copy(scoreBp = it.scoreBp / 2) }, kb, fauna, emptySet(), { 0 }, seen = setOf("Manorina melanocephala"))!!
+        assertEquals(listOf(5_250, 750), seenBefore.map { it.scoreBp })
 
         assertNull("A pack that cannot name the group leaves the find as it is", AccuratePass.candidates(stored, emptyList(), kb, fauna, emptySet(), { 0 }))
     }

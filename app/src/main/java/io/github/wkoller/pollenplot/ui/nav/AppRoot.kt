@@ -483,6 +483,7 @@ fun AppRoot(
                             help = container.weedHelp,
                             onOpenWishlist = { navController.navigate(WishlistRoute) { popUpTo<IdentifyRoute> { inclusive = true } } },
                             accurateReady = container.accurate.state.collectAsStateWithLifecycle().value == PackState.Ready,
+                            onOpenModels = { navController.navigate(ModelsRoute) },
                             onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
                             onOpenFinder = { navController.navigate(WeedFinderRoute(it)) },
                         )
