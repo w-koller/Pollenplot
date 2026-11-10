@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f6ffdd0301a2752ae45a951beda24204",
+    "identityHash": "34727f2ba0c42827526e4635cfff81c2",
     "entities": [
       {
         "tableName": "zones",
@@ -217,7 +217,7 @@
       },
       {
         "tableName": "photos",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `path` TEXT NOT NULL, `width` INTEGER NOT NULL, `height` INTEGER NOT NULL, `origin` TEXT NOT NULL, `takenAt` INTEGER NOT NULL, `addedAt` INTEGER NOT NULL, `latE7` INTEGER, `lonE7` INTEGER, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `path` TEXT NOT NULL, `width` INTEGER NOT NULL, `height` INTEGER NOT NULL, `origin` TEXT NOT NULL, `takenAt` INTEGER NOT NULL, `addedAt` INTEGER NOT NULL, `latE7` INTEGER, `lonE7` INTEGER, `contentHash` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -270,6 +270,11 @@
             "fieldPath": "lonE7",
             "columnName": "lonE7",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "contentHash",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -277,7 +282,18 @@
           "columnNames": [
             "id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_photos_contentHash",
+            "unique": false,
+            "columnNames": [
+              "contentHash"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_photos_contentHash` ON `${TABLE_NAME}` (`contentHash`)"
+          }
+        ]
       },
       {
         "tableName": "detections",
@@ -3152,7 +3168,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f6ffdd0301a2752ae45a951beda24204')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '34727f2ba0c42827526e4635cfff81c2')"
     ]
   }
 }

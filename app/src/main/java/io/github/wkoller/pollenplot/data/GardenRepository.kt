@@ -177,9 +177,10 @@ class GardenRepository(
         drafts: List<DetectionDraft>,
         latE7: Int? = null,
         lonE7: Int? = null,
+        contentHash: String? = null,
     ): List<DetectionRecord> = db.withTransaction {
         val time = now()
-        photos.insert(PhotoEntity(photo.id, photo.path, photo.width, photo.height, origin.name, takenAt.toEpochMilli(), time, latE7, lonE7))
+        photos.insert(PhotoEntity(photo.id, photo.path, photo.width, photo.height, origin.name, takenAt.toEpochMilli(), time, latE7, lonE7, contentHash))
         drafts.map { draft ->
             val id = UUID.randomUUID().toString()
             detections.insert(
@@ -196,6 +197,56 @@ class GardenRepository(
     }
 
     suspend fun photo(id: String): StoredPhoto? = photos.get(id)?.let { StoredPhoto(it.id, it.path, it.width, it.height) }
+
+    /** The photo already kept with the picture [contentHash] was made from, so the same picture is not kept twice. */
+    suspend fun photoWithHash(contentHash: String): StoredPhoto? = photos.withHash(contentHash)?.let { StoredPhoto(it.id, it.path, it.width, it.height) }
+
+    /** Every find in a photo, decided or not, from the left of the photo to the right. */
+    suspend fun findsInPhoto(photoId: String): List<DetectionRecord> = detections.inPhoto(photoId).map { record(it) }
+
+    /**
+     * Makes one of the plants waiting for review in a photo that the models now name as the same plant, as
+     * [FoundMerge] does when a photo is first looked at. The accurate pack and Gemma 4 change suggestions after that,
+     * so two finds they have brought to agree are one card. Returns how many finds were folded into others.
+     */
+    suspend fun mergePending(photoId: String): Int = db.withTransaction {
+        val pending = findsInPhoto(photoId).filter { it.status == DetectionStatus.NEEDS_REVIEW && it.group == LifeGroup.PLANT }
+        if (pending.size < 2) return@withTransaction 0
+        val folded = linkedMapOf<String, MutableList<DetectionRecord>>()
+        FoundMerge.merge(
+            pending,
+            box = { it.box },
+            candidates = { it.candidates },
+            fold = { kept, other -> kept.also { folded.getOrPut(it.id) { mutableListOf() } += other } },
+            max = pending.size,
+        )
+        fold(folded)
+    }
+
+    /**
+     * Keeps one find for a photo the user says shows one plant: the one the models are surest of, with the other
+     * finds' suggestions after its own. Returns how many finds were folded into it.
+     */
+    suspend fun keepOne(photoId: String): Int = db.withTransaction {
+        val pending = findsInPhoto(photoId).filter { it.status == DetectionStatus.NEEDS_REVIEW && it.group == LifeGroup.PLANT }
+            .sortedByDescending { it.candidates.firstOrNull()?.scoreBp ?: -1 }
+        if (pending.size < 2) return@withTransaction 0
+        val kept = pending.first()
+        val others = pending.drop(1)
+        val suggestions = (kept.candidates + others.flatMap { it.candidates }.sortedByDescending { it.scoreBp })
+            .distinctBy(FoundMerge::key).take(MAX_SUGGESTIONS)
+        replaceCandidates(kept.id, suggestions)
+        fold(mapOf(kept.id to others))
+    }
+
+    /** Removes the finds folded into each kept one, which keeps the flowers seen on any of them. */
+    private suspend fun fold(folded: Map<String, List<DetectionRecord>>): Int {
+        folded.forEach { (keptId, others) ->
+            if (others.any { it.flowering }) detections.setFlowering(keptId, true)
+            others.forEach { detections.delete(it.id) }
+        }
+        return folded.values.sumOf { it.size }
+    }
 
     /** Where a photo came from, such as the camera or a walk away from home. */
     suspend fun photoOrigin(id: String): PhotoOrigin? = photos.get(id)?.origin?.let { name -> PhotoOrigin.entries.firstOrNull { it.name == name } }
@@ -644,6 +695,9 @@ sealed interface BatchAdd {
 
     data class Sighting(override val detectionId: String, val speciesName: String?, val label: String, val group: LifeGroup) : BatchAdd
 }
+
+/** A find keeps at most this many suggestions when others are folded into it. */
+private const val MAX_SUGGESTIONS = 5
 
 /** A stored detection with its suggestions, for review. */
 data class DetectionRecord(

@@ -57,6 +57,10 @@ interface PhotoDao {
     @Query("SELECT * FROM photos WHERE id IN (:ids)")
     suspend fun getAll(ids: List<String>): List<PhotoEntity>
 
+    /** The photo already kept with this picture, if there is one. */
+    @Query("SELECT * FROM photos WHERE contentHash = :hash LIMIT 1")
+    suspend fun withHash(hash: String): PhotoEntity?
+
     /** Removes a photo with the finds in it and their suggestions. */
     @Query("DELETE FROM photos WHERE id = :id")
     suspend fun delete(id: String)
@@ -128,6 +132,15 @@ interface DetectionDao {
 
     @Query("UPDATE detections SET status = :status, plantId = :plantId, sightingId = :sightingId WHERE id = :id")
     suspend fun setStatus(id: String, status: String, plantId: String?, sightingId: String?)
+
+    @Query("SELECT * FROM detections WHERE photoId = :photoId ORDER BY leftBp, topBp")
+    suspend fun inPhoto(photoId: String): List<DetectionEntity>
+
+    @Query("DELETE FROM detections WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("UPDATE detections SET flowering = :flowering WHERE id = :id")
+    suspend fun setFlowering(id: String, flowering: Boolean)
 
     @Query("SELECT * FROM detections WHERE plantId = :plantId AND status = 'CONFIRMED'")
     suspend fun forPlant(plantId: String): List<DetectionEntity>

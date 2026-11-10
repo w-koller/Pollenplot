@@ -53,6 +53,14 @@ STRINGS = {
     "review_existing_body": "You can add this photo to it instead of adding the plant again.",
     "review_add_to_existing": "Add the photo to it",
     "review_done": "Done",
+    "review_one_plant": "This photo shows one plant",
+
+    # Adding plant photos from the phone
+    "plant_photos_title": "What do the photos show?",
+    "plant_photos_body": "A photo of one plant gives one card, for the plant in the middle. A photo of a garden bed is looked at for each plant in it.",
+    "plant_photos_one": "One plant in each photo",
+    "plant_photos_several": "Garden beds",
+    "plant_photos_choose": "Choose photos",
 
     # Choosing another plant
     "picker_title": "Choose a plant",

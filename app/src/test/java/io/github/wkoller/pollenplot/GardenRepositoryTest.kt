@@ -46,6 +46,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -277,6 +278,37 @@ class GardenRepositoryTest {
         // A name the knowledge base does not have replaces the species.
         garden.changeSpecies(plant.id, null, "Mystery mint")
         assertEquals(listOf(null, "Mystery mint"), garden.plant(plant.id)!!.let { listOf(it.speciesName, it.customName) })
+    }
+
+    @Test
+    fun `a photo the user says shows one plant keeps the surest find`() = runBlocking {
+        val found = recordBedPhoto()
+        assertEquals(1, garden.keepOne("photo-1"))
+
+        val kept = garden.detectionsInPhoto("photo-1").first().single()
+        assertEquals("The bottlebrush was the surer of the two", found[0].id, kept.id)
+        assertEquals("The other find's suggestions follow its own", listOf("Callistemon citrinus", "Hibiscus syriacus", "Rosmarinus officinalis"), kept.candidates.map { it.label })
+        assertTrue(kept.flowering)
+        assertEquals("One find is left as it is", 0, garden.keepOne("photo-1"))
+    }
+
+    @Test
+    fun `finds the models come to agree on are made one, and others stay`() = runBlocking {
+        val found = recordBedPhoto()
+        assertEquals("A bottlebrush and a rosemary are two plants", 0, garden.mergePending("photo-1"))
+
+        // The accurate pack now names the second find as the bottlebrush too.
+        garden.replaceCandidates(found[1].id, listOf(Candidate("Melaleuca citrina", "Melaleuca citrina", 5_000, setOf(IdSource.BIOCAP))))
+        assertEquals(1, garden.mergePending("photo-1"))
+        assertEquals(listOf(found[0].id), garden.detectionsInPhoto("photo-1").first().map { it.id })
+
+        // A find already added is never folded away.
+        val photo = StoredPhoto("photo-3", "photos/photo-3.jpg", 2_048, 1_536)
+        val twice = listOf(Candidate("Salvia rosmarinus", "Salvia rosmarinus", 6_000, aiy))
+        val both = garden.recordPhoto(photo, PhotoOrigin.IMPORT, Instant.EPOCH, listOf(DetectionDraft(BoxBp(0, 0, 5_000, 5_000), "thumbs/a.webp", false, twice), DetectionDraft(BoxBp(5_000, 5_000, 10_000, 10_000), "thumbs/b.webp", false, twice)))
+        garden.confirmDetection(both[1].id, "Salvia rosmarinus", null, null, flowering = false)
+        assertEquals(0, garden.mergePending("photo-3"))
+        assertEquals(2, garden.detectionsInPhoto("photo-3").first().size)
     }
 
     @Test

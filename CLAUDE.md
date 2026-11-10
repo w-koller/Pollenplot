@@ -75,7 +75,9 @@ is always ready to tag.
     notices for animals that are venomous or that the law in the garden's state asks about).
   - `id/`: identification. `PhotoScope` (a camera photo of one plant, or a garden bed or gallery photo of several),
     `RegionPlanner` (the tiles each photo is classified in, how regions are chosen, and `one` for a single plant),
-    `FoundMerge` (the same plant found twice in one photo made one, after fusion), `FlowerCall` (whether a found plant
+    `FoundMerge` (the same plant found twice in one photo made one, after fusion, and again by
+    `GardenRepository.mergePending` after the accurate pack or Gemma 4 changes suggestions; `keepOne` is the user's
+    "This photo shows one plant"), `FlowerCall` (whether a found plant
     starts as in flower: BioCAP, then its flowering months, then `FlowerHint`'s colours, else not),
     `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
     plants recorded near it), `IdHistory` (the user's own decisions: a name the models put first that was corrected
@@ -169,7 +171,8 @@ is always ready to tag.
   the photo folders, and the container rebuilds the index. `BackupSettings` holds the settings that go with the garden;
   photo scanning, the notifications already shown and the models stay with the phone.
 - `app/scan`: the phone's gallery behind the `Gallery` interface (`MediaStoreGallery`), `PhotoScanner` (gallery and
-  added photos through the analysis, each gallery photo recorded in `scanned_media` so it is looked at once), and the
+  added photos through the analysis, each gallery photo recorded in `scanned_media` so it is looked at once, and each
+  kept photo's `contentHash`, of its pixels as loaded, so the same picture is kept once however it arrives), and the
   WorkManager jobs: `AddPhotosWorker`, `LibraryScanWorker` (stops after eight minutes and queues the rest),
   `LibraryWatchWorker` (a content-URI trigger that re-arms itself) and `ScanScheduler`, which matches them to the
   settings. `app/notify` holds the notification channels and `HiveReminderWorker`, which runs at about seven each
