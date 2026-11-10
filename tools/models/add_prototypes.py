@@ -48,7 +48,7 @@ BASE_SHA256 = "e696fa92258372c1ede99c10ede97e2a8521470becffa1cc224a5a41974888d8"
 # A mean of fewer photos says more about one photo than about the species.
 MIN_PHOTOS = 3
 
-NEAR = [(alpha, beta) for beta in (2.0, 5.5, 10.0, 20.0) for alpha in (0.01, 0.02, 0.05, 0.1, 0.2, 0.4)]
+NEAR = [(alpha, beta) for beta in (2.0, 5.5, 10.0, 15.0, 20.0) for alpha in (0.02, 0.05, 0.1, 0.2, 0.4, 0.8, 1.6)]
 BLEND = [0.1, 0.2, 0.3, 0.5, 0.7]
 TEXT = "The text vectors alone"
 
