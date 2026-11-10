@@ -227,8 +227,9 @@ is always ready to tag.
 From pack 2 the BioCAP pack also holds `flowers.f16` (a flowering and a leafy text vector) and `flowers.yes_bp` and
 `no_bp` in its manifest, chosen by the export's evaluation on iNaturalist photos annotated for flowers; `FlowerVectors`
 reads them, and a pack without them leaves flowering to season and colour. BioCAP's input is prepared by `Bitmaps.squarePixels`: the square around the plant, halved while it is at least twice
-224 across, then scaled to 224 (`smoothScale`). `tools/models/export_biocap.py` prepares its evaluation photos the
-same way (`phone_square`), so a change to one needs the same change to the other. The pack's evaluation measures each
+224 across, then scaled to 224 (`smoothScale`). `tools/models/photos.py` prepares the evaluation photos the
+same way (`phone_square`, used by `export_biocap.py` and `eval_fusion.py`), so a change to one needs the same change
+to the other. The pack's evaluation measures each
 step from BioCAP as published to the model the phone runs, and ships the smallest form within half a point of the
 full model. Weights-only 8-bit (`MatMulNBits`, a contrib operator in the full ONNX Runtime the app uses) keeps
 BioCAP's accuracy; 8-bit activations lose about seven points of top-1 on transformers.

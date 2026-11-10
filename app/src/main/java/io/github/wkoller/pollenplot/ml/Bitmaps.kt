@@ -45,8 +45,8 @@ object Bitmaps {
     /**
      * [bitmap] scaled to [width] x [height] without skipping detail. Android's filtered scaling blends only the four
      * nearest pixels, so a large reduction misses most of the photo; halving first averages each 2 x 2 block, which
-     * matches the smooth resizing BioCAP's photos had in training. tools/models/export_biocap.py prepares photos the
-     * same way when it evaluates the pack.
+     * matches the smooth resizing BioCAP's photos had in training. tools/models/photos.py prepares photos the
+     * same way when the pack and the fusion are evaluated.
      */
     fun smoothScale(bitmap: Bitmap, width: Int, height: Int): Bitmap {
         var current = bitmap

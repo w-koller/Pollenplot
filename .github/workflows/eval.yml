@@ -1,0 +1,45 @@
+name: Fusion evaluation
+
+# Runs the models the app ships over Australian photos of known species and uploads what each model said
+# (eval_outputs.json.gz), which FusionEvalTest in :domain measures the fusion against. The models are not kept on a
+# development machine, so this runs here. It runs when asked, and on a pull request that changes the script, so a
+# change to it is tried before it is merged.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tools/models/eval_fusion.py
+      - tools/models/photos.py
+      - .github/workflows/eval.yml
+
+permissions:
+  contents: read
+
+jobs:
+  outputs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the model runtimes
+        run: |
+          # ONNX Runtime matches the app's version; LiteRT runs the AIY classifiers as the app does.
+          pip install "onnxruntime==1.31.0" numpy pillow ai-edge-litert
+          pip freeze > pip-freeze.txt
+
+      - name: Record each model's answers
+        run: python tools/models/eval_fusion.py --out build/eval
+
+      - name: Upload the answers
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-outputs
+          path: |
+            build/eval/eval_outputs.json.gz
+            build/eval/eval_outputs.md
+            pip-freeze.txt
