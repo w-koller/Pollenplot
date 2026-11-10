@@ -97,7 +97,16 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
         models ?: try {
             withContext(Dispatchers.IO) {
                 val manifest = JSONObject(File(directory, MANIFEST).readText())
-                val index = SpeciesIndex.read(File(directory, "species.tsv").readLines(), File(directory, "species.f16").readBytes(), manifest.getInt("embedding_dim"))
+                // Packs from pack 3 may also hold each species' prototype, the mean of BioCAP's vectors of its photos.
+                val prototypes = manifest.optJSONObject("prototypes")
+                val index = SpeciesIndex.read(
+                    File(directory, "species.tsv").readLines(),
+                    File(directory, "species.f16").readBytes(),
+                    manifest.getInt("embedding_dim"),
+                    prototypesF16 = prototypes?.let { File(directory, it.getString("file")).readBytes() },
+                    alpha = prototypes?.optDouble("alpha", 0.0)?.toFloat() ?: 0f,
+                    beta = prototypes?.optDouble("beta", 0.0)?.toFloat() ?: 0f,
+                )
                 // Packs from pack 2 also hold BioCAP's vectors for a plant in flower and one with only leaves.
                 val flowers = manifest.optJSONObject("flowers")?.let { about ->
                     FlowerVectors.read(File(directory, "flowers.f16").readBytes(), manifest.getInt("embedding_dim"), about.getInt("yes_bp"), about.getInt("no_bp"))

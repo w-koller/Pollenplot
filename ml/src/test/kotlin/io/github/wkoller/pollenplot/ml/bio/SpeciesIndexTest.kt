@@ -61,6 +61,26 @@ class SpeciesIndexTest {
     }
 
     @Test
+    fun `a prototype close to the photo lifts its species`() {
+        // The text puts the photo nearer the grevillea; the bottlebrush's own photos look just like it.
+        val tsv = listOf("name\tcommon\taliases\tgroup", "Grevillea robusta\t\t\tplant", "Melaleuca citrina\t\t\tplant", "Lantana camara\t\t\tplant")
+        fun bytes(halves: List<Float>) = ByteBuffer.allocate(halves.size * 2).order(ByteOrder.LITTLE_ENDIAN).also { b -> halves.forEach { b.putShort(toHalf(it)) } }.array()
+        val text = bytes(listOf(0.8f, 0.6f, 0.6f, 0.8f, 0f, 1f))
+        val prototypes = bytes(listOf(0f, 0f, 1f, 0f, 0f, 1f))
+        val photo = floatArrayOf(1f, 0f)
+
+        val plain = SpeciesIndex.read(tsv, text, dimensions = 2)
+        assertEquals(listOf("Grevillea robusta", "Melaleuca citrina", "Lantana camara"), plain.nearest(photo, count = 3).map { it.species.name })
+
+        val index = SpeciesIndex.read(tsv, text, dimensions = 2, prototypesF16 = prototypes, alpha = 0.5f, beta = 4f)
+        val matches = index.nearest(photo, count = 3)
+        assertEquals(listOf("Melaleuca citrina", "Grevillea robusta", "Lantana camara"), matches.map { it.species.name })
+        assertEquals("Its text similarity and all of alpha, as the photo is its prototype", 0.6f + 0.5f, matches[0].similarity, 1e-3f)
+        assertEquals("A species without a prototype gains nothing", 0.8f, matches[1].similarity, 1e-3f)
+        assertEquals("A prototype far from the photo adds next to nothing", 0.5f * kotlin.math.exp(-4f), matches[2].similarity, 1e-4f)
+    }
+
+    @Test
     fun `pixels are scaled and normalised plane by plane`() {
         val white = IntArray(BioCapEncoder.SIZE * BioCapEncoder.SIZE) { 0xFFFFFFFF.toInt() }
         val pixels = BioCapEncoder.pixels(white)
