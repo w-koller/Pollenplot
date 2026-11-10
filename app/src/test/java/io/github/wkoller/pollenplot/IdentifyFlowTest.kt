@@ -36,6 +36,7 @@ import io.github.wkoller.pollenplot.domain.id.DetectionStatus
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.id.TileResult
 import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
@@ -185,6 +186,37 @@ class IdentifyFlowTest {
         val find = runBlocking { garden.detectionsInPhoto(photoIds().single()).first().single() }
         assertEquals(LifeGroup.BIRD, find.group)
         assertEquals("Manorina melanocephala", find.candidates.first().speciesName)
+    }
+
+    @Test
+    fun liveSuggestionsStaySteadyWhileTheCameraIsStill() {
+        seed()
+        val identifier = ScriptedIdentifier()
+        val container = app.container
+        val analysis = PhotoAnalysis({ identifier }, container.photos, garden, container.knowledge, container.clock)
+        val model = IdentifyModel(analysis, { identifier }, garden, container.knowledge, container.settingsStore, SavedStateHandle())
+        val frame = TestPhotos.gardenPhoto()
+        // Two lookalikes the quick model cannot tell apart: each frame's noise puts the other one first.
+        var odd = false
+        identifier.glanceFor = { _, _ ->
+            odd = !odd
+            val labels = if (odd) listOf(LabelScore("Hibiscus trionum", 4_300), LabelScore("Hibiscus syriacus", 3_900)) else listOf(LabelScore("Hibiscus syriacus", 4_250), LabelScore("Hibiscus trionum", 3_950))
+            TileResult(FastPlantIdentifier.CENTRE, labels, backgroundBp = 600)
+        }
+        val shown = (0 until 14).map {
+            runBlocking { model.glance(frame) }
+            model.live.value.map { it.label }
+        }
+        val settled = shown.drop(3)
+        assertEquals("Once both are shown, the list does not change: $shown", 1, settled.distinct().size)
+        assertEquals("Both lookalikes are offered", setOf("Hibiscus trionum", "Hibiscus syriacus"), settled.first().toSet())
+
+        // One frame that shows nothing leaves the list; pointing the camera away clears it.
+        identifier.glanceFor = { _, _ -> TileResult(FastPlantIdentifier.CENTRE, emptyList(), backgroundBp = 9_000) }
+        runBlocking { model.glance(frame) }
+        assertEquals(settled.first(), model.live.value.map { it.label })
+        runBlocking { model.glance(frame) }
+        assertTrue(model.live.value.isEmpty())
     }
 
     @Test
