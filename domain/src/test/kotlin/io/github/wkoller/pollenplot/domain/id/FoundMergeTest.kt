@@ -61,6 +61,34 @@ class FoundMergeTest {
     }
 
     @Test
+    fun `a weaker look at the whole photo is folded into the tile it lies around`() {
+        // One grevillea: the tile over it is sure, and the whole photo, weaker, puts a lookalike first.
+        val tile = find(BoxBp(3_000, 3_000, 7_000, 7_000), "Grevillea robusta" to 6_500, "Hakea salicifolia" to 1_500)
+        val whole = find(BoxBp.WHOLE, "Hakea salicifolia" to 3_400, "Grevillea robusta" to 2_900)
+        val merged = merge(listOf(whole, tile))
+        assertEquals(listOf("Grevillea robusta"), merged.map { it.candidates.first().label })
+        assertEquals("The stronger find's box is kept", BoxBp(3_000, 3_000, 7_000, 7_000), merged.single().box)
+    }
+
+    @Test
+    fun `two finds over each other that name one genus are one plant`() {
+        val found = listOf(
+            find(BoxBp(0, 0, 6_000, 6_000), "Grevillea robusta" to 6_200),
+            find(BoxBp(0, 0, 4_000, 4_000), "Grevillea banksii" to 4_800),
+        )
+        assertEquals(listOf("Grevillea robusta"), merge(found).map { it.candidates.first().label })
+    }
+
+    @Test
+    fun `a suggestion far down another find's list does not join them`() {
+        val found = listOf(
+            find(BoxBp.WHOLE, "Grevillea robusta" to 7_000, "Hakea salicifolia" to 900, "Banksia serrata" to 700, "Lomandra longifolia" to 500),
+            find(BoxBp(0, 0, 4_000, 4_000), "Lomandra longifolia" to 6_000),
+        )
+        assertEquals(2, merge(found).size)
+    }
+
+    @Test
     fun `flowers seen on any part of a plant are kept`() {
         val found = listOf(
             find(BoxBp(0, 0, 4_000, 4_000), "Callistemon citrinus" to 8_000),

@@ -23,6 +23,8 @@ import io.github.wkoller.pollenplot.ml.Identifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import java.nio.ByteBuffer
+import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
 
@@ -30,7 +32,13 @@ import java.time.Instant
 data class NamedPlant(val name: String, val common: String? = null)
 
 /** A photo after analysis: whether it showed what was looked for, and each plant or animal found, waiting for review. */
-data class AnalysedPhoto(val photo: StoredPhoto?, val found: Boolean, val detections: List<DetectionRecord>)
+data class AnalysedPhoto(
+    val photo: StoredPhoto?,
+    val found: Boolean,
+    val detections: List<DetectionRecord>,
+    /** The same picture was already kept, and these are the finds it gave then; nothing new was recorded. */
+    val duplicate: Boolean = false,
+)
 
 /**
  * Identifies the plants or the animal in a photo, keeps the photo and a cut-out of each, and records them for review.
@@ -100,6 +108,16 @@ class PhotoAnalysis(
         group: LifeGroup? = null,
         scope: PhotoScope = PhotoScope.SEVERAL,
     ): AnalysedPhoto {
+        // A picture from the phone's photos that was already kept is not kept again: its finds are the ones it gave
+        // then, unless it is now looked at for another kind of thing. A photo from the camera is always a new one.
+        val hash = if (origin == PhotoOrigin.IMPORT || origin == PhotoOrigin.LIBRARY) withContext(Dispatchers.Default) { contentHash(bitmap) } else null
+        if (hash != null) {
+            val kept = garden.photoWithHash(hash)
+            val finds = kept?.let { garden.findsInPhoto(it.id) }.orEmpty()
+            if (kept != null && finds.isNotEmpty() && (group == null || finds.any { it.group == group })) {
+                return AnalysedPhoto(kept, true, finds, duplicate = true)
+            }
+        }
         val models = identifier()
         // The camera says what it was pointed at; a photo from the gallery is looked at for what it shows.
         val found = models.identify(bitmap, group ?: models.groupOf(bitmap), scope)
@@ -134,7 +152,22 @@ class PhotoAnalysis(
             val flowering = region.group == LifeGroup.PLANT && FlowerCall.decide(model, floweringMonths(kb, candidates), month, colour, hemisphere).flowering
             DetectionDraft(region.box, photos.saveThumbnail(region.thumbnail), flowering, candidates, region.group)
         }
-        return AnalysedPhoto(stored, found.found, garden.recordPhoto(stored, origin, takenAt, drafts))
+        return AnalysedPhoto(stored, found.found, garden.recordPhoto(stored, origin, takenAt, drafts, contentHash = hash))
+    }
+
+    /** SHA-256 of a picture's size and pixels, which is the same whenever the same file is read the same way. */
+    private fun contentHash(bitmap: Bitmap): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(ByteBuffer.allocate(8).putInt(bitmap.width).putInt(bitmap.height).array())
+        val row = IntArray(bitmap.width)
+        val bytes = ByteBuffer.allocate(bitmap.width * 4)
+        for (y in 0 until bitmap.height) {
+            bitmap.getPixels(row, 0, bitmap.width, 0, y, bitmap.width, 1)
+            bytes.clear()
+            bytes.asIntBuffer().put(row)
+            digest.update(bytes.array())
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
     /**

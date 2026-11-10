@@ -565,6 +565,12 @@
     <string name="review_existing_body">You can add this photo to it instead of adding the plant again.</string>
     <string name="review_add_to_existing">Add the photo to it</string>
     <string name="review_done">Done</string>
+    <string name="review_one_plant">This photo shows one plant</string>
+    <string name="plant_photos_title">What do the photos show?</string>
+    <string name="plant_photos_body">A photo of one plant gives one card, for the plant in the middle. A photo of a garden bed is looked at for each plant in it.</string>
+    <string name="plant_photos_one">One plant in each photo</string>
+    <string name="plant_photos_several">Garden beds</string>
+    <string name="plant_photos_choose">Choose photos</string>
     <string name="picker_title">Choose a plant</string>
     <string name="picker_label">Plant name</string>
     <string name="picker_hint">Please type a common or scientific name.</string>

@@ -8,9 +8,11 @@ import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
  * for each tile it fills.
  *
  * The strongest find comes first. A later find is folded into a kept one when its best suggestion names the same
- * species, wherever it is in the photo, or when it lies mostly inside the part of the photo the kept one covers (the box
- * around every find folded into it) and either names one of its suggestions or is itself unsure. At most [MAX_FOUND]
- * are kept.
+ * species, wherever it is in the photo. It is also folded when the two lie mostly over each other (either mostly inside
+ * the part of the photo the kept one covers, which is the box around every find folded into it, or mostly around it,
+ * as the whole photo is around a tile) and the models as good as agree: one of its leading suggestions is among the
+ * kept one's, their best suggestions are of one genus, or it is itself unsure. Two finds the models are sure are
+ * different plants stay two, however they lie. At most [MAX_FOUND] are kept.
  */
 object FoundMerge {
     /** The most finds one photo gives. */
@@ -18,6 +20,9 @@ object FoundMerge {
 
     /** A find with at least this share of its box inside a stronger one may be part of that plant. */
     const val INSIDE_SHARE = 0.6
+
+    /** How many of a find's suggestions, from the best, count when two finds are compared. */
+    const val LEADING = 3
 
     /** The key a suggestion is compared by: the knowledge base's name, or else the model's label. */
     fun key(candidate: Candidate): String = KnowledgeBase.normalise(candidate.speciesName ?: candidate.label)
@@ -38,8 +43,8 @@ object FoundMerge {
         // The part of the photo each kept find covers, which grows as finds are folded into it.
         val covers = mutableListOf<BoxBp>()
         for (find in ordered) {
-            val top = candidates(find).firstOrNull()
-            val into = kept.indices.firstOrNull { i -> top != null && samePlant(box(find), top, candidates(kept[i]), covers[i]) }
+            val mine = candidates(find)
+            val into = kept.indices.firstOrNull { i -> mine.isNotEmpty() && samePlant(box(find), mine, candidates(kept[i]), covers[i]) }
             when {
                 into != null -> {
                     kept[into] = fold(kept[into], find)
@@ -54,11 +59,16 @@ object FoundMerge {
         return kept
     }
 
-    private fun samePlant(box: BoxBp, top: Candidate, theirs: List<Candidate>, cover: BoxBp): Boolean {
-        val topKey = key(top)
-        if (theirs.firstOrNull()?.let(::key) == topKey) return true
-        if (box.coveredBy(cover) < INSIDE_SHARE) return false
-        return theirs.any { key(it) == topKey } || Confidence.of(top.scoreBp) == Confidence.LOW
+    private fun samePlant(box: BoxBp, mine: List<Candidate>, theirs: List<Candidate>, cover: BoxBp): Boolean {
+        val top = mine.first()
+        val theirTop = theirs.firstOrNull()
+        if (theirTop?.let(::key) == key(top)) return true
+        // A weak look at the whole photo lies around a strong tile, not inside it, and is the same plant as often.
+        if (maxOf(box.coveredBy(cover), cover.coveredBy(box)) < INSIDE_SHARE) return false
+        val leading = theirs.take(LEADING).map(::key).toSet()
+        return mine.take(LEADING).any { key(it) in leading } ||
+            (theirTop != null && top.genus.equals(theirTop.genus, ignoreCase = true)) ||
+            Confidence.of(top.scoreBp) == Confidence.LOW
     }
 
     private fun BoxBp.around(other: BoxBp) =

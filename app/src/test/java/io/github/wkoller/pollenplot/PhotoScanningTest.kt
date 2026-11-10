@@ -15,6 +15,7 @@ import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
@@ -140,6 +141,31 @@ class PhotoScanningTest {
         assertTrue("Both added photos count as scanned", runBlocking { garden.unscanned(listOf(1, 2)) }.isEmpty())
         scan()
         assertEquals("The scan added nothing twice", 2, runBlocking { garden.pendingReviewCount.first() })
+    }
+
+    @Test
+    fun `a photo added twice, or added and then found by the scan under another name, is kept once`() {
+        val bed = app.gallery.add(1, now.minus(Duration.ofDays(3)), bedPhoto)
+        // The same picture again, as a copy in the camera's album would be.
+        app.gallery.add(7, now.minus(Duration.ofDays(2)), bedPhoto)
+        runBlocking {
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(bed.uri))).build().doWork()
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(bed.uri))).build().doWork()
+        }
+        scan()
+        assertEquals(2, runBlocking { garden.pendingReviewCount.first() })
+        assertEquals("One copy of the photo is kept", 1, keptPhotos())
+        assertTrue("The copy counts as scanned", runBlocking { garden.unscanned(listOf(1, 7)) }.isEmpty())
+    }
+
+    @Test
+    fun `photos added as one plant each give one find each`() {
+        val bed = app.gallery.add(1, now, bedPhoto)
+        runBlocking {
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(bed.uri), LifeGroup.PLANT, PhotoScope.ONE)).build().doWork()
+        }
+        assertEquals(listOf(PhotoScope.ONE), app.identifier.scopes.toList())
+        assertEquals(1, runBlocking { garden.pendingReviewCount.first() })
     }
 
     @Test

@@ -35,6 +35,8 @@ class SecondOpinionWorker(context: Context, params: WorkerParameters) : Coroutin
         val growing = container.garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
         for (detection in container.garden.waitingForSecondOpinion(LIMIT)) {
             if (isStopped) return Result.success()
+            // A find made one with another in its photo, after Gemma 4's answer for that one, is no longer there.
+            if (container.garden.detection(detection.id) == null) continue
             if (container.clock.millis() - started > RUN_BUDGET_MS) {
                 enqueue(applicationContext)
                 return Result.success()
@@ -57,6 +59,7 @@ class SecondOpinionWorker(context: Context, params: WorkerParameters) : Coroutin
             }
             val garden = if (detection.group == LifeGroup.PLANT) growing else emptySet()
             container.garden.recordSecondOpinion(detection.id, CandidateFusion.withSecondOpinion(detection.candidates, choice, garden, container::recordsNearby))
+            container.garden.mergePending(detection.photoId)
         }
         return Result.success()
     }

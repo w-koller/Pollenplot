@@ -30,6 +30,7 @@ import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.AiyModel
 import kotlinx.coroutines.Dispatchers
@@ -50,10 +51,11 @@ class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWor
         val container = (applicationContext as PollenplotApp).container
         val uris = inputData.getStringArray(KEY_URIS).orEmpty().map(Uri::parse)
         val group = LifeGroup.of(inputData.getString(KEY_GROUP))
+        val scope = if (inputData.getBoolean(KEY_ONE, false)) PhotoScope.ONE else PhotoScope.SEVERAL
         var tally = ScanTally()
         uris.forEachIndexed { done, uri ->
             setProgress(workDataOf(KEY_DONE to done, KEY_TOTAL to uris.size))
-            tally = tally.withPhoto(container.scanner.scanAddedPhoto(uri, group))
+            tally = tally.withPhoto(container.scanner.scanAddedPhoto(uri, group, scope))
             // The app keeps its own copy of a photo with plants in it, so the picker's grant is given back once read.
             runCatching { applicationContext.contentResolver.releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
@@ -68,14 +70,15 @@ class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWor
         const val KEY_TOTAL = "total"
         private const val KEY_URIS = "uris"
         private const val KEY_GROUP = "group"
+        private const val KEY_ONE = "one"
 
-        fun input(uris: List<Uri>, group: LifeGroup? = null): Data =
-            workDataOf(KEY_URIS to uris.map { it.toString() }.toTypedArray(), KEY_GROUP to group?.name)
+        fun input(uris: List<Uri>, group: LifeGroup? = null, scope: PhotoScope = PhotoScope.SEVERAL): Data =
+            workDataOf(KEY_URIS to uris.map { it.toString() }.toTypedArray(), KEY_GROUP to group?.name, KEY_ONE to (scope == PhotoScope.ONE))
 
-        /** Queues [uris], photos of [group], behind any photos still being looked at. */
-        fun enqueue(context: Context, uris: List<Uri>, group: LifeGroup?) {
+        /** Queues [uris], photos of [group] that show one plant each or several ([scope]), behind any photos still being looked at. */
+        fun enqueue(context: Context, uris: List<Uri>, group: LifeGroup?, scope: PhotoScope = PhotoScope.SEVERAL) {
             val request = OneTimeWorkRequestBuilder<AddPhotosWorker>()
-                .setInputData(input(uris, group))
+                .setInputData(input(uris, group, scope))
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
@@ -242,6 +245,8 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
             AccuratePass.candidates(detection, accurate, kb, fauna, growing, container::recordsNearby, history)
                 ?.let { container.garden.replaceCandidates(detection.id, it) }
         }
+        // Finds in one photo that BioCAP now names as the same plant are made one.
+        photos.keys.forEach { container.garden.mergePending(it) }
 
         // Gallery photos the quick model saw no plant in get a second look.
         var tally = ScanTally()

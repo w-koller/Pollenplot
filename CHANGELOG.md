@@ -11,6 +11,15 @@
   notes and nickname stay with it.
 - An animal found before the accurate pack was installed keeps animal names when the pack looks at it. Before, it was
   given plant names.
+- One plant gives one card more often. Finds that lie over each other are made one when the models as good as agree:
+  one names a plant among the other's first suggestions, or both name the same genus. Finds are compared again after
+  the accurate pack and Gemma 4 have looked at them.
+- When a photo of one plant still gives several cards, “This photo shows one plant” under the photo keeps the surest
+  one, with the others' suggestions after its own.
+- Adding plant photos from the phone asks whether each shows one plant or a garden bed. One plant is the first
+  choice.
+- A photo is kept once. The same picture added twice, or added and later found by the gallery scan, gives its plants
+  once.
 - The database has changed, so this version does not install over 1.0.0-rc.4 and keep its records. Please install it
   afresh.
 

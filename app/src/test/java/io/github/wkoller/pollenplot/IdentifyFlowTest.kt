@@ -153,6 +153,23 @@ class IdentifyFlowTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h3200dp-xhdpi")
+    fun aPhotoOfOnePlantSeenAsSeveralIsMadeOneCard() {
+        seed()
+        show(analysed(TestPhotos.threePlants()))
+        waitFor(hasText("Pollenplot found 3 plants in this photo."))
+        compose.onNodeWithText("This photo shows one plant").performScrollTo().performClick()
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Plant 1 of", substring = true).fetchSemanticsNodes().isEmpty() }
+        compose.onAllNodesWithText("Add to garden").assertCountEquals(1)
+        shot("identify_made_one")
+        assertEquals("No card is numbered as one of several", 0, compose.onAllNodesWithText("Plant 1 of", substring = true).fetchSemanticsNodes().size)
+        assertEquals(0, compose.onAllNodesWithText("This photo shows one plant").fetchSemanticsNodes().size)
+        val find = runBlocking { garden.detectionsInPhoto(photoIds().single()).first().single() }
+        assertEquals("The surest find is kept, with the others' suggestions after its own", "Callistemon citrinus", find.candidates.first().label)
+        assertTrue(find.candidates.any { it.label == "Rosmarinus officinalis" })
+    }
+
+    @Test
     @Config(qualifiers = "w411dp-h2200dp-xhdpi")
     fun aFindLookedAtAsAPlantCanBeAnAnimal() {
         seed()

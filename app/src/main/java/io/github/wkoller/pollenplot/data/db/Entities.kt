@@ -54,7 +54,7 @@ data class PlantEntity(
 )
 
 /** A photo the app has kept, downscaled into its own storage so records survive if the original is deleted. */
-@Entity(tableName = "photos")
+@Entity(tableName = "photos", indices = [Index("contentHash")])
 data class PhotoEntity(
     @PrimaryKey val id: String,
     /** Relative to the app's files folder. */
@@ -66,6 +66,8 @@ data class PhotoEntity(
     val addedAt: Long,
     val latE7: Int?,
     val lonE7: Int?,
+    /** SHA-256 of the picture as it was looked at, for photos added or found in the gallery, so one is not kept twice. */
+    val contentHash: String? = null,
 )
 
 /**

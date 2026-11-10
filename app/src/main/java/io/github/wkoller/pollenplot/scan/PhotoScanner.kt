@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.scan
 
+import io.github.wkoller.pollenplot.domain.id.PhotoScope
+import io.github.wkoller.pollenplot.data.AnalysedPhoto
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
@@ -30,6 +32,9 @@ data class Found(val plants: Int, val animals: Int) {
 
     companion object {
         fun of(detections: List<DetectionRecord>) = Found(detections.count { !it.group.isWildlife }, detections.count { it.group.isWildlife })
+
+        /** What a photo newly showed: nothing for a picture that was already kept, whose finds were counted then. */
+        fun of(result: AnalysedPhoto) = if (result.duplicate) Found(0, 0) else of(result.detections)
     }
 }
 
@@ -57,7 +62,7 @@ class PhotoScanner(
         val result = quick.analyse(bitmap, PhotoOrigin.LIBRARY, photo.takenAt)
         val outcome = if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS
         garden.recordScan(photo.id, photo.takenAt, outcome, result.photo?.id)
-        return Found.of(result.detections)
+        return Found.of(result)
     }
 
     /**
@@ -74,22 +79,22 @@ class PhotoScanner(
         val result = analysis.analyse(bitmap, PhotoOrigin.LIBRARY, takenAt)
         val outcome = if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS
         garden.recordScan(mediaId, takenAt, outcome, result.photo?.id, accurate = true)
-        return Found.of(result.detections)
+        return Found.of(result)
     }
 
     /**
      * Scans a photo the user added and returns what it showed, or null if it could not be read. [group] is what the user
-     * said the photo shows; without it, the models decide.
+     * said the photo shows; without it, the models decide. [scope] is whether they said it shows one plant or several.
      */
-    suspend fun scanAddedPhoto(uri: Uri, group: LifeGroup? = null): Found? {
+    suspend fun scanAddedPhoto(uri: Uri, group: LifeGroup? = null, scope: PhotoScope = PhotoScope.SEVERAL): Found? {
         val bitmap = gallery.load(uri, PhotoStore.MAX_SIDE) ?: return null
         val takenAt = gallery.takenAt(uri) ?: clock.instant()
-        val result = analysis.analyse(bitmap, PhotoOrigin.IMPORT, takenAt, group)
+        val result = analysis.analyse(bitmap, PhotoOrigin.IMPORT, takenAt, group, scope)
         // A photo from the gallery is remembered, so a later scan of the gallery does not add its plants twice.
         mediaIdOf(uri)?.let { id ->
             garden.recordScan(id, takenAt, if (result.detections.isEmpty()) ScanOutcome.NO_PLANT else ScanOutcome.PLANTS, result.photo?.id)
         }
-        return Found.of(result.detections)
+        return Found.of(result)
     }
 
     /**

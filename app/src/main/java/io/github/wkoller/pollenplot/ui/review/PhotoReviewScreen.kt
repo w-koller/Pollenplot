@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import androidx.compose.material3.OutlinedButton
 import android.util.Log
 import androidx.compose.runtime.produceState
 import androidx.activity.compose.BackHandler
@@ -147,6 +148,11 @@ class DetectionActions(
 
     fun undoReject(detection: DetectionRecord) {
         scope.launch { garden.reopenDetection(detection.id) }
+    }
+
+    /** Keeps one find for a photo the user says shows one plant. */
+    fun keepOne(photoId: String) {
+        scope.launch { garden.keepOne(photoId) }
     }
 
     fun rejectAll(detections: List<DetectionRecord>) {
@@ -369,6 +375,14 @@ fun PhotoReviewScreen(
                         Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             MarkedPhoto(review)
                             photoHeading(review)
+                            // Several cards for one plant are made one here, by the person who can see the photo.
+                            val waiting = review.detections.count { it.status == DetectionStatus.NEEDS_REVIEW && !it.group.isWildlife }
+                            if (waiting > 1 && !selecting) {
+                                OutlinedButton(onClick = {
+                                    choices = choices - review.detections.map { it.id }.toSet()
+                                    actions.keepOne(review.photo.id)
+                                }) { Text(stringResource(R.string.review_one_plant)) }
+                            }
                         }
                     }
                     // Plants in one photo usually grow together, so the zone the photo's other plants went into comes first.
