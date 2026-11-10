@@ -214,6 +214,72 @@ class GardenRepositoryTest {
     }
 
     @Test
+    fun `what the user said a find is corrects the same suggestion next time`() = runBlocking {
+        val found = recordBedPhoto()
+        // The bottlebrush is accepted as suggested; the "rosemary" is really a lavender the user searched for.
+        garden.confirmDetection(found[0].id, "Melaleuca citrina", null, null, flowering = false)
+        garden.confirmDetection(found[1].id, "Lavandula angustifolia", null, null, flowering = false)
+
+        val rosemaryAgain = listOf(Candidate("Rosmarinus officinalis", "Salvia rosmarinus", 6_450, aiy), Candidate("Westringia fruticosa", null, 1_200, aiy))
+        val corrected = garden.idHistory().apply(rosemaryAgain)
+        assertEquals(listOf("Lavandula angustifolia", "Rosmarinus officinalis", "Westringia fruticosa"), corrected.map { it.label })
+        assertEquals("Lavandula angustifolia", corrected.first().speciesName)
+        assertEquals(setOf(IdSource.USER), corrected.first().sources)
+
+        val bottlebrushAgain = listOf(Candidate("Callistemon citrinus", "Melaleuca citrina", 7_400, aiy), Candidate("Hibiscus syriacus", null, 900, aiy))
+        assertEquals("An accepted suggestion stays as it is", bottlebrushAgain, garden.idHistory().apply(bottlebrushAgain))
+    }
+
+    @Test
+    fun `a name the user typed is kept as their choice`() = runBlocking {
+        val rosemary = recordBedPhoto()[1]
+        val plant = garden.confirmDetection(rosemary.id, null, "  Nan's lavender ", null, flowering = false)
+        assertEquals("Nan's lavender", garden.plant(plant.id)!!.customName)
+        val again = listOf(Candidate("Rosmarinus officinalis", "Salvia rosmarinus", 6_450, aiy))
+        assertEquals(listOf("Nan's lavender", "Rosmarinus officinalis"), garden.idHistory().apply(again).map { it.label })
+    }
+
+    @Test
+    fun `a find looked at as a plant can be an animal instead`() = runBlocking {
+        val rosemary = recordBedPhoto()[1]
+        garden.rejectDetection(rosemary.id)
+        val wren = Candidate("Malurus cyaneus", "Malurus cyaneus", 6_800, setOf(IdSource.AIY_BIRDS))
+        garden.regroupDetection(rosemary.id, LifeGroup.BIRD, listOf(wren))
+
+        val stored = garden.detection(rosemary.id)!!
+        assertEquals(LifeGroup.BIRD, stored.group)
+        assertEquals("It waits for review again", DetectionStatus.NEEDS_REVIEW, stored.status)
+        assertEquals(listOf(wren), stored.candidates)
+
+        // A find already added keeps what it is.
+        val bottlebrush = garden.detectionsInPhoto("photo-1").first().first { it.id != rosemary.id }
+        garden.confirmDetection(bottlebrush.id, "Melaleuca citrina", null, null, flowering = false)
+        garden.regroupDetection(bottlebrush.id, LifeGroup.BIRD, listOf(wren))
+        assertEquals(LifeGroup.PLANT, garden.detection(bottlebrush.id)!!.group)
+    }
+
+    @Test
+    fun `a plant added under the wrong name can be given the right one`() = runBlocking {
+        val rosemary = recordBedPhoto()[1]
+        val plant = garden.confirmDetection(rosemary.id, "Salvia rosmarinus", null, null, flowering = false)
+        garden.updatePlant(garden.plant(plant.id)!!.copy(customName = "By the gate", notes = "Planted in spring"))
+
+        garden.changeSpecies(plant.id, "Lavandula angustifolia", null)
+        val changed = garden.plant(plant.id)!!
+        assertEquals("Lavandula angustifolia", changed.speciesName)
+        assertEquals("Its nickname, notes and picture stay", listOf("By the gate", "Planted in spring", "thumbs/rosemary.webp"), listOf(changed.customName, changed.notes, changed.thumbnail))
+        assertTrue("Search finds it under its new name", garden.search("lavender").any { it.recordId == plant.id })
+        assertTrue(garden.search("rosemary").none { it.recordId == plant.id })
+
+        val again = listOf(Candidate("Rosmarinus officinalis", "Salvia rosmarinus", 6_450, aiy))
+        assertEquals("The models' mistake is corrected next time", "Lavandula angustifolia", garden.idHistory().apply(again).first().speciesName)
+
+        // A name the knowledge base does not have replaces the species.
+        garden.changeSpecies(plant.id, null, "Mystery mint")
+        assertEquals(listOf(null, "Mystery mint"), garden.plant(plant.id)!!.let { listOf(it.speciesName, it.customName) })
+    }
+
+    @Test
     fun `a photo added to a plant already in the garden does not replace its picture`() = runBlocking {
         val found = recordBedPhoto()
         val rosemary = garden.addPlant("Salvia rosmarinus", null, null)

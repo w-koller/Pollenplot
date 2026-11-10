@@ -107,7 +107,7 @@ internal fun FieldActions(canSave: Boolean, weed: Boolean, name: String?, onSave
 /** A find saved to the wishlist, with a way to open it. */
 @Composable
 internal fun SavedFind(detection: DetectionRecord, kb: KnowledgeBase?, choice: ReviewChoice?, callbacks: ReviewCallbacks) {
-    val pick = plantPick(detection, chosen(detection, choice))
+    val pick = plantPick(detection, chosen(detection, choice), kb)
     val species = pick?.speciesName?.let { kb?.species(it) }
     Header(detection.thumbnail, species?.displayName ?: pick?.customName ?: pick?.speciesName ?: stringResource(R.string.field_saved), species?.name?.takeIf { it != species.displayName })
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

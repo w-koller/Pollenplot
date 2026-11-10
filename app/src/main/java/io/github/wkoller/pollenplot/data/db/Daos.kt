@@ -62,6 +62,9 @@ interface PhotoDao {
     suspend fun delete(id: String)
 }
 
+/** A decided find as [DetectionDao.decided] reads it. */
+data class DecidedRow(val label: String, val speciesName: String?, val status: String, val chosenLabel: String?, val chosenSpecies: String?)
+
 @Dao
 interface DetectionDao {
     @Insert
@@ -125,6 +128,23 @@ interface DetectionDao {
 
     @Query("UPDATE detections SET status = :status, plantId = :plantId, sightingId = :sightingId WHERE id = :id")
     suspend fun setStatus(id: String, status: String, plantId: String?, sightingId: String?)
+
+    @Query("SELECT * FROM detections WHERE plantId = :plantId AND status = 'CONFIRMED'")
+    suspend fun forPlant(plantId: String): List<DetectionEntity>
+
+    /** Records what the user said a find is, and where that stood among the suggestions. */
+    @Query("UPDATE detections SET chosenLabel = :label, chosenSpecies = :species, chosenRank = :rank WHERE id = :id")
+    suspend fun setChoice(id: String, label: String?, species: String?, rank: Int?)
+
+    /** Each find the user has decided, with the name the models put first, for [io.github.wkoller.pollenplot.domain.id.IdHistory]. */
+    @Query(
+        "SELECT c.label AS label, c.speciesName AS speciesName, d.status AS status, d.chosenLabel AS chosenLabel, d.chosenSpecies AS chosenSpecies " +
+            "FROM detections d JOIN candidates c ON c.detectionId = d.id AND c.rank = 0 WHERE d.status IN ('CONFIRMED', 'REJECTED')",
+    )
+    suspend fun decided(): List<DecidedRow>
+
+    @Query("UPDATE detections SET lifeGroup = :group, secondOpinion = 0 WHERE id = :id")
+    suspend fun setGroup(id: String, group: String)
 
     @Query("SELECT COUNT(*) FROM detections WHERE photoId = :photoId AND status = 'SAVED'")
     suspend fun savedInPhoto(photoId: String): Int

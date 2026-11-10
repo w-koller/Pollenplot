@@ -1,10 +1,12 @@
 package io.github.wkoller.pollenplot.data
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.photos.PhotoStore
 import io.github.wkoller.pollenplot.data.photos.StoredPhoto
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
+import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.FlowerCall
@@ -18,9 +20,14 @@ import io.github.wkoller.pollenplot.domain.season.MonthSet
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.FoundRegion
 import io.github.wkoller.pollenplot.ml.Identifier
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.Instant
+
+/** A plant a model can name, by its scientific name, with a common name when the model has one. */
+data class NamedPlant(val name: String, val common: String? = null)
 
 /** A photo after analysis: whether it showed what was looked for, and each plant or animal found, waiting for review. */
 data class AnalysedPhoto(val photo: StoredPhoto?, val found: Boolean, val detections: List<DetectionRecord>)
@@ -40,7 +47,48 @@ class PhotoAnalysis(
     private val nearby: (String) -> Int = { 0 },
     /** The garden's hemisphere, which the month a photo was taken is read in. */
     private val hemisphere: suspend () -> Hemisphere = { Hemisphere.SOUTHERN },
+    /** The plants the models can name, for the search that corrects a suggestion. */
+    private val names: suspend () -> List<NamedPlant> = { emptyList() },
 ) {
+    /** The plants the models can name beyond the knowledge base, for the search that corrects a suggestion. */
+    suspend fun plantNames(): List<NamedPlant> = names()
+
+    /**
+     * Looks again at a find the user says is of another [group], such as an animal where a plant was looked for, and
+     * gives it that group's suggestions. A group no model on the phone can name leaves it with none, for the user to
+     * name.
+     */
+    suspend fun regroup(detection: DetectionRecord, group: LifeGroup) {
+        if (detection.group == group) return
+        val stored = garden.photo(detection.photoId) ?: return
+        val part = withContext(Dispatchers.IO) {
+            BitmapFactory.decodeFile(photos.file(stored.path).path)?.let { photo ->
+                val left = (photo.width.toLong() * detection.box.left / BoxBp.FULL).toInt().coerceIn(0, photo.width - 1)
+                val top = (photo.height.toLong() * detection.box.top / BoxBp.FULL).toInt().coerceIn(0, photo.height - 1)
+                val width = (photo.width.toLong() * detection.box.width / BoxBp.FULL).toInt().coerceIn(1, photo.width - left)
+                val height = (photo.height.toLong() * detection.box.height / BoxBp.FULL).toInt().coerceIn(1, photo.height - top)
+                Bitmap.createBitmap(photo, left, top, width, height)
+            }
+        } ?: return
+        val region = identifier().identify(part, group, PhotoScope.ONE).regions.firstOrNull()
+        val candidates = if (region == null) {
+            emptyList()
+        } else {
+            val plant = group == LifeGroup.PLANT
+            val away = garden.photoOrigin(detection.photoId) == PhotoOrigin.FIELD
+            val nameOf: (String) -> String? = if (plant) {
+                val kb = knowledge.await()
+                ({ label -> kb.species(label)?.name })
+            } else {
+                val fauna = knowledge.awaitFauna()
+                ({ label -> fauna.animal(label)?.name })
+            }
+            val growing = if (!plant || away) emptySet() else garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+            garden.idHistory().apply(CandidateFusion.fuse(region.labels, nameOf, growing, nearby = if (away) { _ -> 0 } else nearby), nameOf)
+        }
+        garden.regroupDetection(detection.id, group, candidates)
+    }
+
     /**
      * Looks for what [group] the camera was pointed at in [bitmap], or, for a photo nobody chose a group for, for what
      * the identifier says the photo shows. [scope] says whether a plant photo shows one plant or several.
@@ -63,12 +111,13 @@ class PhotoAnalysis(
         val away = origin == PhotoOrigin.FIELD
         val gardenSpecies = if (away) emptySet() else garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
         val recorded: (String) -> Int = if (away) { _ -> 0 } else nearby
+        // A name the user has corrected before is corrected here too.
+        val history = garden.idHistory()
         val fused = found.regions.map { region ->
-            val candidates = if (region.group == LifeGroup.PLANT) {
-                CandidateFusion.fuse(region.labels, kb, gardenSpecies, nearby = recorded)
-            } else {
-                CandidateFusion.fuse(region.labels, { label -> fauna.animal(label)?.name }, emptySet(), nearby = recorded)
-            }
+            val nameOf: (String) -> String? =
+                if (region.group == LifeGroup.PLANT) { label -> kb.species(label)?.name } else { label -> fauna.animal(label)?.name }
+            val growing = if (region.group == LifeGroup.PLANT) gardenSpecies else emptySet()
+            val candidates = history.apply(CandidateFusion.fuse(region.labels, nameOf, growing, nearby = recorded), nameOf)
             Fused(region, candidates, region.flowering, region.modelFlowering)
         }
         // Tiles overlap, so one plant is often found several times; once its suggestions are known it is shown once.

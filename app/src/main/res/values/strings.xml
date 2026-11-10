@@ -533,7 +533,7 @@
     <string name="identify_none_title">No plant was found in this photo.</string>
     <string name="identify_none_body">Please try again closer to the plant and in good light, or add the plant by name.</string>
     <string name="identify_try_again">Take another photo</string>
-    <string name="identify_model_note">These suggestions come from the quick model on your phone, which knows few Australian native plants. Please choose another plant if none of them is right.</string>
+    <string name="identify_model_note">These suggestions come from the quick model on your phone, which knows few Australian native plants. Please press “It is another plant” if none of them is right.</string>
     <string name="identify_failed_title">The photo could not be identified.</string>
     <string name="identify_failed">Please try again. Nothing was added to your garden.</string>
     <string name="confidence_high">Likely</string>
@@ -543,7 +543,8 @@
     <string name="review_suggestions">Suggestions</string>
     <string name="review_your_choice">Your choice</string>
     <string name="review_unnamed">Unnamed plant</string>
-    <string name="review_choose_another">Choose another plant</string>
+    <string name="review_choose_another">It is another plant</string>
+    <string name="review_is_animal">It is an animal</string>
     <string name="review_not_in_kb">Not in the knowledge base yet</string>
     <string name="review_flowering">In flower</string>
     <string name="review_flowering_body">Pollen Rhythms uses this to learn when your plants flower.</string>
@@ -567,7 +568,8 @@
     <string name="picker_title">Choose a plant</string>
     <string name="picker_label">Plant name</string>
     <string name="picker_hint">Please type a common or scientific name.</string>
-    <string name="picker_none">No plants in the knowledge base match “%1$s”.</string>
+    <string name="picker_none">Pollenplot has no plant called “%1$s” yet.</string>
+    <string name="picker_use">Use “%1$s”</string>
     <string name="models_title">Models</string>
     <string name="models_intro">Pollenplot\'s models run on your phone, so your photos and notes stay on it. Extra models are downloaded once, when you ask, and checked before they are used.</string>
     <string name="models_meaning">Search by meaning</string>
@@ -845,6 +847,8 @@
     <string name="level_family">For the family</string>
     <string name="unknown_species">Pollenplot does not know this plant yet. Its requirements will show once it is matched to a species.</string>
     <string name="plant_edit">Edit</string>
+    <string name="plant_change">Change what this plant is</string>
+    <string name="plant_change_title">Choose the right plant</string>
     <string name="plant_remove">Remove</string>
     <string name="plant_remove_title">Remove %1$s?</string>
     <string name="plant_remove_body">This removes the plant and its notes from your garden.</string>
@@ -1647,7 +1651,8 @@
     <string name="identify_none_animal">Pollenplot couldn\'t name the %1$s in this photo.</string>
     <string name="identify_found_animal">Suggestions for the %1$s in this photo</string>
     <string name="identify_animal_note">Please choose another if none of the suggestions is right. The quick models know few Australian animals, and the accurate pack knows many more.</string>
-    <string name="review_choose_another_animal">Choose another</string>
+    <string name="review_choose_another_animal">It is another animal</string>
+    <string name="review_is_plant">It is a plant</string>
     <string name="identify_none_animal_body">Please try again with it in the middle of the square, in good light.</string>
     <string name="review_unnamed_animal">Not named yet</string>
     <string name="review_rejected_wildlife_title">Not wildlife</string>

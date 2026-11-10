@@ -136,6 +136,8 @@ STRINGS = {
 
     # Editing and removing a plant
     "plant_edit": "Edit",
+    "plant_change": "Change what this plant is",
+    "plant_change_title": "Choose the right plant",
     "plant_remove": "Remove",
     "plant_remove_title": "Remove %1$s?",
     "plant_remove_body": "This removes the plant and its notes from your garden.",

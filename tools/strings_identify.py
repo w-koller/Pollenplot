@@ -17,7 +17,7 @@ STRINGS = {
     "identify_none_body": "Please try again closer to the plant and in good light, or add the plant by name.",
     "identify_try_again": "Take another photo",
     "identify_model_note": "These suggestions come from the quick model on your phone, which knows few Australian "
-    "native plants. Please choose another plant if none of them is right.",
+    "native plants. Please press “It is another plant” if none of them is right.",
     "identify_failed_title": "The photo could not be identified.",
     "identify_failed": "Please try again. Nothing was added to your garden.",
 
@@ -31,7 +31,8 @@ STRINGS = {
     "review_suggestions": "Suggestions",
     "review_your_choice": "Your choice",
     "review_unnamed": "Unnamed plant",
-    "review_choose_another": "Choose another plant",
+    "review_choose_another": "It is another plant",
+    "review_is_animal": "It is an animal",
     "review_not_in_kb": "Not in the knowledge base yet",
     "review_flowering": "In flower",
     "review_flowering_body": "Pollen Rhythms uses this to learn when your plants flower.",
@@ -57,7 +58,8 @@ STRINGS = {
     "picker_title": "Choose a plant",
     "picker_label": "Plant name",
     "picker_hint": "Please type a common or scientific name.",
-    "picker_none": "No plants in the knowledge base match “%1$s”.",
+    "picker_none": "Pollenplot has no plant called “%1$s” yet.",
+    "picker_use": "Use “%1$s”",
 }
 
 PLURALS = {

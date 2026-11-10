@@ -338,6 +338,7 @@ fun AppRoot(
                             assistant = container.assistant,
                             onOpenModels = { navController.navigate(ModelsRoute) },
                             onEditFacts = { navController.navigate(EditFactsRoute(id)) },
+                            plantNames = container::plantNames,
                             onOpenPhoto = { photoId, detectionId -> navController.navigate(PlantPhotoRoute(photoId, detectionId)) },
                             today = LocalDate.now(container.clock),
                             pots = container.potViews,
@@ -475,7 +476,7 @@ fun AppRoot(
                         )
                     }
                     composable<ReviewRoute> {
-                        val model = viewModel { ReviewModel(container.garden, container.settingsStore, WorkManager.getInstance(container.appContext)) }
+                        val model = viewModel { ReviewModel(container.garden, container.settingsStore, WorkManager.getInstance(container.appContext), container.analysis) }
                         ReviewScreen(
                             model = model,
                             views = container.views,

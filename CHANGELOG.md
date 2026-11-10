@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- A review card says plainly how to correct it. “It is another plant” opens a search of the knowledge base and of
+  every plant the models can name, and a name Pollenplot does not know can be used as it was typed. “It is an animal”
+  looks at the find again as a bird, insect or other animal, and “It is a plant” does the reverse.
+- Pollenplot remembers what you said a find is. When the models put the same wrong name first again, the name you
+  chose comes first, and a name turned down twice as not a plant counts for half as much.
+- A plant added under the wrong name can be changed from its Edit sheet with “Change what this plant is”. Its photos,
+  notes and nickname stay with it.
+- An animal found before the accurate pack was installed keeps animal names when the pack looks at it. Before, it was
+  given plant names.
+- The database has changed, so this version does not install over 1.0.0-rc.4 and keep its records. Please install it
+  afresh.
+
 ## 1.0.0-rc.4
 
 - A release candidate no longer closes on launch when Android's own backup has restored an earlier candidate's

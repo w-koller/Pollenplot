@@ -9,16 +9,23 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.testing.WorkManagerTestInitHelper
 import io.github.wkoller.pollenplot.TestPhotos.bottlebrush
 import io.github.wkoller.pollenplot.TestPhotos.rosemary
+import io.github.wkoller.pollenplot.data.DetectionDraft
+import io.github.wkoller.pollenplot.data.photos.StoredPhoto
+import io.github.wkoller.pollenplot.domain.id.BoxBp
+import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.IdSource
+import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
+import io.github.wkoller.pollenplot.scan.AccuratePass
 import io.github.wkoller.pollenplot.scan.AddPhotosWorker
 import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.scan.LibraryScanWorker
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -197,5 +204,29 @@ class PhotoScanningTest {
         val detection = runBlocking { garden.detectionsInPhoto(photoId).first().single() }
         assertEquals(LifeGroup.BIRD, detection.group)
         assertEquals("Manorina melanocephala", detection.candidates.first().speciesName)
+    }
+
+    @Test
+    fun `an animal keeps animal names when the accurate pack looks at it`() = runBlocking {
+        val kb = app.container.knowledge.await()
+        val fauna = app.container.knowledge.awaitFauna()
+        val quick = Candidate("Manorina melanocephala", "Manorina melanocephala", 5_400, setOf(IdSource.AIY_BIRDS))
+        val stored = garden.recordPhoto(
+            StoredPhoto("bird-photo", "photos/bird-photo.jpg", 1_024, 768),
+            PhotoOrigin.CAMERA,
+            now,
+            listOf(DetectionDraft(BoxBp(1_500, 1_500, 8_500, 8_500), "thumbs/bird.webp", false, listOf(quick), LifeGroup.BIRD)),
+        ).single()
+        assertEquals("It waits for the accurate pack with the plants", listOf(stored.id), garden.pendingWithout(IdSource.BIOCAP).map { it.id })
+
+        val accurate = listOf(LabelScore("Manorina melanocephala", 7_000, common = "Noisy miner"), LabelScore("Manorina flavigula", 1_500, common = "Yellow-throated miner"))
+        // Rosemary grows in the garden, which must not count for a bird.
+        val weighed = AccuratePass.candidates(stored, accurate, kb, fauna, growing = setOf("Salvia rosmarinus"), nearby = { 0 })!!
+        assertEquals(listOf("Manorina melanocephala", "Manorina flavigula"), weighed.map { it.label })
+        assertEquals("The bird model's suggestion is kept alongside BioCAP's", setOf(IdSource.AIY_BIRDS, IdSource.BIOCAP), weighed.first().sources)
+        assertEquals("It is matched to the animal knowledge base", "Manorina melanocephala", weighed.first().speciesName)
+        assertEquals((5_400 * 3 + 7_000 * 6) / 9, weighed.first().scoreBp)
+
+        assertNull("A pack that cannot name the group leaves the find as it is", AccuratePass.candidates(stored, emptyList(), kb, fauna, emptySet(), { 0 }))
     }
 }

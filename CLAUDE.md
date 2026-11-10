@@ -78,7 +78,9 @@ is always ready to tag.
     `FoundMerge` (the same plant found twice in one photo made one, after fusion), `FlowerCall` (whether a found plant
     starts as in flower: BioCAP, then its flowering months, then `FlowerHint`'s colours, else not),
     `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
-    plants recorded near it), `ThumbnailMath`, `FlowerHint`, `Confidence` and `ZoneSuggestion` (the zone offered for
+    plants recorded near it), `IdHistory` (the user's own decisions: a name the models put first that was corrected
+    more often than accepted gives way to the correction, marked `IdSource.USER`, and a name turned down twice loses
+    half its score; applied after fusion in `PhotoAnalysis`, the live suggestions and `AccuratePass`), `ThumbnailMath`, `FlowerHint`, `Confidence` and `ZoneSuggestion` (the zone offered for
     a plant found in a photo).
   - `bees/honey/`: `HoneyBees` (apiaries, hives and their records: inspections, mite checks, treatments, feeding,
     harvests and colony events) and `HiveTasks` (when each hive is due for an inspection, a brood check and a mite
@@ -178,7 +180,9 @@ is always ready to tag.
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
   finder, `ui/wildlife` the Wildlife tab, an animal's page, a sighting's page and the safety notice, and `ui/review`
-  the review cards (`AnimalCards` for animals), `PhotoReviewScreen` (shared by the Identify results and the Review
+  the review cards (`AnimalCards` for animals; a card's choice is stored on its detection as `chosenLabel`,
+  `chosenSpecies` and `chosenRank` when it is added, and `PhotoAnalysis.regroup` looks at a find again as another
+  group), `PhotoReviewScreen` (shared by the Identify results and the Review
   queue) and `ReviewModel`, `ui/bees` the Bees tab and its three sections (`HoneySection`, `NativeSection`,
   `HotelSection`), each with its pages, editors and forms, and `ui/guides` a guide page (`GuideScreen`).
 - `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a

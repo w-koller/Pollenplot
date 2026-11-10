@@ -22,6 +22,8 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -65,6 +67,9 @@ import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.season.Hemisphere
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ui.wildlife.CAMERA_GROUPS
+import io.github.wkoller.pollenplot.ui.wildlife.label
 import io.github.wkoller.pollenplot.ui.weeds.NativeAlternatives
 import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.ui.weeds.WeedNotice
@@ -100,6 +105,8 @@ class ReviewCallbacks(
     val onOpenWishlist: (() -> Unit)? = null,
     /** Opens a chooser of every plant in the garden, to add the find to whichever one the photo shows. */
     val onChoosePlant: ((detection: DetectionRecord, speciesName: String?, flowering: Boolean) -> Unit)? = null,
+    /** Says the find shows something of another group, such as an animal where a plant was looked for. */
+    val onRegroup: ((detection: DetectionRecord, group: LifeGroup) -> Unit)? = null,
 )
 
 /**
@@ -216,8 +223,8 @@ internal fun chosen(detection: DetectionRecord, saved: ReviewChoice?): ReviewCho
     saved ?: if (detection.candidates.isEmpty()) null else ReviewChoice.Suggestion(0)
 
 /** The plant a card adds for [choice]. A suggestion the knowledge base does not know keeps the model's name. */
-internal fun plantPick(detection: DetectionRecord, choice: ReviewChoice?): ReviewPick.Plant? = when (choice) {
-    is ReviewChoice.Picked -> ReviewPick.plant(detection.candidates, picked = choice.speciesName)
+internal fun plantPick(detection: DetectionRecord, choice: ReviewChoice?, kb: KnowledgeBase?): ReviewPick.Plant? = when (choice) {
+    is ReviewChoice.Picked -> ReviewPick.plant(detection.candidates, picked = choice.speciesName, known = { name -> kb?.species(name)?.name })
     is ReviewChoice.Suggestion -> ReviewPick.plant(detection.candidates, index = choice.index)
     null -> null
 }
@@ -281,20 +288,22 @@ private fun Undecided(
         null -> null
     }
     val chosenSpecies = chosenSpeciesName?.let { kb?.species(it) }
+    // A name the user searched for or typed that the knowledge base does not have.
+    val pickedName = (choice as? ReviewChoice.Picked)?.speciesName?.takeIf { chosenSpecies == null }
     val zoneId = if (zoneChosen) ownZone else suggestedZoneId
     // Away from home, the plant is not being added to the garden, so a plant of the same species there is not offered.
     val existing = if (field) null else chosenSpeciesName?.let { name -> plants.firstOrNull { it.isGrowing && it.plant.speciesName == name } }
 
     Header(
         thumbnail = detection.thumbnail,
-        title = chosenSpecies?.displayName ?: chosenCandidate?.common ?: chosenCandidate?.label ?: stringResource(R.string.review_unnamed),
+        title = chosenSpecies?.displayName ?: chosenCandidate?.common ?: chosenCandidate?.label ?: pickedName ?: stringResource(R.string.review_unnamed),
         subtitle = chosenSpecies?.let { species -> species.name.takeIf { it != species.displayName } }
             ?: chosenCandidate?.takeIf { chosenSpecies == null && it.common != null }?.label,
     ) {
         if (chosenCandidate != null) ConfidenceBadge(chosenCandidate.scoreBp)
         if (chosenSpecies != null && kb != null) {
             RoleIcons(locality.roles(chosenSpecies, CareResolver.resolve(kb, chosenSpecies).care), max = 4, size = 24.dp)
-        } else if (chosenCandidate != null) {
+        } else if (chosenCandidate != null || pickedName != null) {
             Text(stringResource(R.string.review_not_in_kb), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -321,15 +330,20 @@ private fun Undecided(
         Column(Modifier.selectableGroup()) {
             if (choice is ReviewChoice.Picked) {
                 kb?.species(choice.speciesName)?.let { SpeciesChoiceRow(it, selected = true, onClick = {}) }
+                    ?: ChoiceRow(choice.speciesName, stringResource(R.string.review_not_in_kb), italic = false, trailing = stringResource(R.string.review_your_choice), selected = true, onClick = {})
             }
             shown.forEach { (i, c) ->
                 SuggestionRow(c, kb, selected = choice == ReviewChoice.Suggestion(i), onClick = { onChoose(ReviewChoice.Suggestion(i)) })
             }
         }
     }
-    TextButton(onClick = { callbacks.onChooseAnother(detection) }, enabled = kb != null) {
-        Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
-        Text(stringResource(R.string.review_choose_another))
+    // Saying what it really is sits with the suggestions, as plain as adding it.
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        OutlinedButton(onClick = { callbacks.onChooseAnother(detection) }, enabled = kb != null) {
+            Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Text(stringResource(R.string.review_choose_another))
+        }
+        callbacks.onRegroup?.let { regroup -> AnimalInstead(onGroup = { regroup(detection, it) }) }
     }
 
     if (existing != null) {
@@ -352,7 +366,7 @@ private fun Undecided(
     }
     if (field) {
         FieldActions(choice != null, isWeed, chosenSpecies?.displayName ?: chosenCandidate?.common ?: chosenCandidate?.label, onSave = {
-            plantPick(detection, choice)?.let { callbacks.onSave?.invoke(detection, it.speciesName, it.customName, zoneId) }
+            plantPick(detection, choice, kb)?.let { callbacks.onSave?.invoke(detection, it.speciesName, it.customName, zoneId) }
         }, onLetGo = { callbacks.onReject(detection) })
         return
     }
@@ -371,7 +385,7 @@ private fun Undecided(
 
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val onAdd = {
-            plantPick(detection, choice)?.let { callbacks.onAdd(detection, it.speciesName, it.customName, zoneId, flowering) }
+            plantPick(detection, choice, kb)?.let { callbacks.onAdd(detection, it.speciesName, it.customName, zoneId, flowering) }
             Unit
         }
         // With the same species already growing, adding the photo to it is the main choice and a second plant the other.
@@ -390,6 +404,26 @@ private fun Undecided(
         }
     }
 
+}
+
+/** Says a find looked at as a plant is an animal or a fungus, and of which kind, so it is looked at again as one. */
+@Composable
+private fun AnimalInstead(onGroup: (LifeGroup) -> Unit) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    Box {
+        TextButton(onClick = { open = true }) { Text(stringResource(R.string.review_is_animal)) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            CAMERA_GROUPS.filter { it.isWildlife }.forEach { group ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(group.label)) },
+                    onClick = {
+                        open = false
+                        onGroup(group)
+                    },
+                )
+            }
+        }
+    }
 }
 
 /** The cut-out and the name of what was found, with extra lines such as the confidence underneath. */
