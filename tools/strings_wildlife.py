@@ -42,7 +42,8 @@ STRINGS = {
     "identify_found_animal": "Suggestions for the %1$s in this photo",
     "identify_animal_note": "Please choose another if none of the suggestions is right. The quick models know few "
     "Australian animals, and the accurate pack knows many more.",
-    "review_choose_another_animal": "Choose another",
+    "review_choose_another_animal": "It is another animal",
+    "review_is_plant": "It is a plant",
     "identify_none_animal_body": "Please try again with it in the middle of the square, in good light.",
 
     "review_unnamed_animal": "Not named yet",

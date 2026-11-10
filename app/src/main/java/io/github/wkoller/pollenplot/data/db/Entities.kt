@@ -130,6 +130,12 @@ data class DetectionEntity(
     val sightingId: String? = null,
     /** Gemma 4 has given its second opinion, or the suggestions were sure enough not to need one. */
     val secondOpinion: Boolean = false,
+    /** The name the user gave it when it was added: a species, or a name as it was typed. */
+    val chosenLabel: String? = null,
+    /** The knowledge base's name for what the user chose, when it has one. */
+    val chosenSpecies: String? = null,
+    /** Where the choice stood among the suggestions, from 0; null for a name the user searched for or typed. */
+    val chosenRank: Int? = null,
 )
 
 /** Care facts Gemma 4 drafted for a plant the knowledge base does not have, kept apart from the knowledge base. */

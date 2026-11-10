@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import io.github.wkoller.pollenplot.BuildConfig
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.data.NamedPlant
 import io.github.wkoller.pollenplot.download.DownloadSpec
 import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.download.VerifiedDownload
@@ -108,6 +109,22 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
         } catch (e: Exception) {
             Log.w(TAG, "The accurate pack could not be opened", e)
             null
+        }
+    }
+
+    /**
+     * The plants the pack can name, read from its species list without loading the model; none until the pack is
+     * ready.
+     */
+    suspend fun plantNames(): List<NamedPlant> = withContext(Dispatchers.IO) {
+        val list = File(directory, "species.tsv")
+        if (!ready || !list.isFile) return@withContext emptyList()
+        list.useLines { lines ->
+            lines.drop(1).filter { it.isNotBlank() }.mapNotNull { line ->
+                val cells = line.split('\t')
+                val group = cells.getOrNull(3)?.ifBlank { null }
+                if (group != null && group != "plant") null else NamedPlant(cells[0], cells.getOrNull(1)?.ifBlank { null })
+            }.toList()
         }
     }
 

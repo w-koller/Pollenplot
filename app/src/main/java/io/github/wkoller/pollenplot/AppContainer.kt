@@ -26,6 +26,7 @@ import io.github.wkoller.pollenplot.data.HarvestViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
+import io.github.wkoller.pollenplot.data.NamedPlant
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.PotRepository
 import io.github.wkoller.pollenplot.data.PotViews
@@ -59,6 +60,7 @@ import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.domain.weeds.WeedAlternatives
 import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.AiyModel
 import io.github.wkoller.pollenplot.ml.AccuratePlantIdentifier
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
 import io.github.wkoller.pollenplot.ml.Identifier
@@ -209,6 +211,18 @@ class AppContainer(
     val accurate = AccuratePack(appContext, scope)
 
     /**
+     * The plants the models can name, for the search that corrects a suggestion: the accurate pack's, which have
+     * common names, then the quick model's.
+     */
+    suspend fun plantNames(): List<NamedPlant> {
+        val quick = withContext(Dispatchers.IO) {
+            runCatching { appContext.assets.open(AiyModel.PLANTS.labels).bufferedReader().useLines { lines -> lines.map(String::trim).filter { it.isNotEmpty() && it != "None" }.map { NamedPlant(it) }.toList() } }
+                .getOrDefault(emptyList())
+        }
+        return (accurate.plantNames() + quick).distinctBy { it.name.lowercase() }
+    }
+
+    /**
      * The models are loaded the first time a photo is identified, not when the app starts. With the accurate pack on
      * the phone, BioCAP names what the quick model finds and looks again where it was unsure.
      */
@@ -216,7 +230,7 @@ class AppContainer(
     private val fast by lazy { FastPlantIdentifier(appContext) }
     private val quickIdentifier: Identifier by lazy { testIdentifier ?: fast }
     val identifier: Identifier by lazy { testIdentifier ?: AccuratePlantIdentifier(fast) { accurate.open() } }
-    val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock, ::recordsNearby, ::gardenHemisphere)
+    val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock, ::recordsNearby, ::gardenHemisphere, ::plantNames)
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
     val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby, ::gardenHemisphere), analysis, garden, clock)
     val notifications = Notifications(appContext)

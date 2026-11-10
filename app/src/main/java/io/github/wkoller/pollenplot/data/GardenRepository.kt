@@ -22,7 +22,10 @@ import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.id.Candidate
+import io.github.wkoller.pollenplot.domain.id.DecidedFind
 import io.github.wkoller.pollenplot.domain.id.DetectionStatus
+import io.github.wkoller.pollenplot.domain.id.FoundMerge
+import io.github.wkoller.pollenplot.domain.id.IdHistory
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
@@ -194,6 +197,9 @@ class GardenRepository(
 
     suspend fun photo(id: String): StoredPhoto? = photos.get(id)?.let { StoredPhoto(it.id, it.path, it.width, it.height) }
 
+    /** Where a photo came from, such as the camera or a walk away from home. */
+    suspend fun photoOrigin(id: String): PhotoOrigin? = photos.get(id)?.origin?.let { name -> PhotoOrigin.entries.firstOrNull { it.name == name } }
+
     /** How many plants found in photos wait for review. */
     val pendingReviewCount: Flow<Int> = detections.observePendingCount()
 
@@ -301,6 +307,7 @@ class GardenRepository(
         val time = now()
         plants.upsert(plant.toEntity(time, time))
         detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plant.id, null)
+        recordChoice(detection, speciesName, plant.customName)
         if (flowering) recordFlowering(plant.id, detection)
         index(plant)
         plant
@@ -311,8 +318,60 @@ class GardenRepository(
         val detection = detection(detectionId) ?: return@withTransaction
         val plant = plants.get(plantId) ?: return@withTransaction
         detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plantId, null)
+        recordChoice(detection, plant.speciesName, plant.customName)
         if (plant.thumbnail == null) plants.upsert(plant.copy(thumbnail = detection.thumbnail, updatedAt = now()))
         if (flowering) recordFlowering(plantId, detection)
+    }
+
+    /**
+     * Records what the user said a find is: the species, or else the name as it was given, and where that stood among
+     * the suggestions. A find added with no name at all records nothing.
+     */
+    private suspend fun recordChoice(detection: DetectionRecord, speciesName: String?, name: String?) {
+        val label = speciesName ?: name?.trim()?.ifBlank { null } ?: return
+        val key = KnowledgeBase.normalise(label)
+        val rank = detection.candidates.indexOfFirst { FoundMerge.key(it) == key || KnowledgeBase.normalise(it.label) == key }
+        detections.setChoice(detection.id, label, speciesName, rank.takeIf { it >= 0 })
+    }
+
+    /**
+     * What the user's decisions so far say about the models' suggestions: each find added or turned down, with the
+     * name the models had put first.
+     */
+    suspend fun idHistory(): IdHistory = IdHistory(
+        detections.decided().mapNotNull { row ->
+            when (row.status) {
+                DetectionStatus.REJECTED.name -> DecidedFind(row.speciesName ?: row.label, null)
+                else -> row.chosenLabel?.let { DecidedFind(row.speciesName ?: row.label, it, row.chosenSpecies) }
+            }
+        },
+    )
+
+    /**
+     * Says a find shows something of another [group], such as an animal where a plant was looked for, and gives it
+     * that group's [candidates], best first. It waits for review again.
+     */
+    suspend fun regroupDetection(detectionId: String, group: LifeGroup, candidates: List<Candidate>) = db.withTransaction {
+        val entity = detections.get(detectionId) ?: return@withTransaction
+        if (entity.status == DetectionStatus.CONFIRMED.name || entity.status == DetectionStatus.SAVED.name) return@withTransaction
+        detections.setGroup(detectionId, group.name)
+        detections.setStatus(detectionId, DetectionStatus.NEEDS_REVIEW.name, null, null)
+        replaceCandidates(detectionId, candidates)
+    }
+
+    /**
+     * Changes what a plant in the garden is, when it was added under the wrong name: to [speciesName], or to a
+     * [typedName] the knowledge base does not have. A nickname the user gave a known plant is kept. The finds added
+     * to the plant keep the suggestions they had and take the new name as the user's choice, so the same mistake is
+     * corrected next time.
+     */
+    suspend fun changeSpecies(plantId: String, speciesName: String?, typedName: String?) = db.withTransaction {
+        val old = plants.get(plantId)?.toDomain() ?: return@withTransaction
+        val typed = typedName?.trim()?.ifBlank { null }
+        if (speciesName == null && typed == null) return@withTransaction
+        val customName = if (speciesName == null) typed else old.customName.takeIf { old.speciesName != null }
+        updatePlant(old.copy(speciesName = speciesName, customName = customName))
+        detections.forPlant(plantId).forEach { recordChoice(record(it), speciesName, typed) }
     }
 
     /** Marks a detection as not a plant. */
@@ -434,6 +493,7 @@ class GardenRepository(
         )
         addSighting(sighting)
         detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, null, sighting.id)
+        recordChoice(detection, speciesName, label)
         sighting
     }
 

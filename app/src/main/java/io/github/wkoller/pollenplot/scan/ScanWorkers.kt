@@ -1,5 +1,10 @@
 package io.github.wkoller.pollenplot.scan
 
+import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
+import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
+import io.github.wkoller.pollenplot.domain.id.IdHistory
+import io.github.wkoller.pollenplot.domain.id.Candidate
+import io.github.wkoller.pollenplot.data.DetectionRecord
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -26,6 +31,7 @@ import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.ml.AiyModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -171,6 +177,38 @@ object ScanScheduler {
     }
 }
 
+/** How a find's suggestions are weighed again once BioCAP has looked at it. */
+object AccuratePass {
+    /**
+     * [detection]'s suggestions with BioCAP's labels ([accurate]) alongside its quick model's, each for the find's own
+     * group: a bird is matched to the animal knowledge base and keeps its bird model's suggestions, and only a plant
+     * gets the boost for what grows in the garden. Null when BioCAP could not name this group, which leaves the find
+     * as it is.
+     */
+    fun candidates(
+        detection: DetectionRecord,
+        accurate: List<LabelScore>,
+        kb: KnowledgeBase,
+        fauna: FaunaBase,
+        growing: Set<String>,
+        nearby: (String) -> Int,
+        history: IdHistory = IdHistory.NONE,
+    ): List<Candidate>? {
+        if (accurate.isEmpty()) return null
+        val plant = detection.group == LifeGroup.PLANT
+        val garden = if (plant) growing else emptySet()
+        val quickSource = AiyModel.of(detection.group)?.source
+        val quick = detection.candidates.filter { quickSource != null && quickSource in it.sources }
+            .map { LabelScore(it.label, CandidateFusion.withoutBoost(it, garden, nearby), it.common) }
+        val results = buildMap {
+            if (quickSource != null) put(quickSource, quick)
+            put(IdSource.BIOCAP, accurate)
+        }
+        val nameOf: (String) -> String? = if (plant) { label -> kb.species(label)?.name } else { label -> fauna.animal(label)?.name }
+        return history.apply(CandidateFusion.fuse(results, nameOf, garden, nearby = nearby), nameOf)
+    }
+}
+
 /**
  * The accurate pass, while the phone charges: BioCAP's suggestions for plants waiting for review, and a second look at
  * gallery photos the quick model saw no plant in, where Australian natives usually end up. Like the gallery scan, a
@@ -184,9 +222,12 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
         fun outOfTime() = SystemClock.elapsedRealtime() - started > RUN_BUDGET_MS
         var more = false
 
-        // Plants waiting for review get BioCAP's suggestions alongside the quick model's.
+        // Finds waiting for review get BioCAP's suggestions alongside the quick model's, each for its own group: a
+        // bird is named among the birds and matched to the animal knowledge base, never to the plants.
         val kb = container.knowledge.await()
+        val fauna = container.knowledge.awaitFauna()
         val growing = container.garden.plantList.first().filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+        val history = container.garden.idHistory()
         val photos = mutableMapOf<String, Bitmap?>()
         for (detection in container.garden.pendingWithout(IdSource.BIOCAP)) {
             if (isStopped) return Result.success()
@@ -197,13 +238,9 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
             val photo = photos.getOrPut(detection.photoId) {
                 container.garden.photo(detection.photoId)?.let { BitmapFactory.decodeFile(container.photos.file(it.path).path) }
             } ?: continue
-            val quick = detection.candidates.filter { IdSource.AIY_PLANTS in it.sources }
-                .map { LabelScore(it.label, CandidateFusion.withoutBoost(it, growing, container::recordsNearby)) }
-            val accurate = withContext(Dispatchers.Default) { models.labels(photo, detection.box) }
-            container.garden.replaceCandidates(
-                detection.id,
-                CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to quick, IdSource.BIOCAP to accurate), kb, growing, nearby = container::recordsNearby),
-            )
+            val accurate = withContext(Dispatchers.Default) { models.labels(photo, detection.box, detection.group) }
+            AccuratePass.candidates(detection, accurate, kb, fauna, growing, container::recordsNearby, history)
+                ?.let { container.garden.replaceCandidates(detection.id, it) }
         }
 
         // Gallery photos the quick model saw no plant in get a second look.

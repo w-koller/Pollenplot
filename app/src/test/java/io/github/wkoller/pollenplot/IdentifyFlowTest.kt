@@ -50,6 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -114,8 +115,8 @@ class IdentifyFlowTest {
         waitFor(hasText("This part of the photo will not be added to your garden."))
         shot("identify_results_decided")
         compose.onNodeWithText("Undo").performClick()
-        waitFor(hasText("Choose another plant"))
-        compose.onNodeWithText("Choose another plant").performClick()
+        waitFor(hasText("It is another plant"))
+        compose.onNodeWithText("It is another plant").performClick()
         compose.onNode(hasSetTextAction()).performTextInput("snake vine")
         waitFor(hasText("Hibbertia scandens"))
         shot("identify_choose_another")
@@ -128,6 +129,45 @@ class IdentifyFlowTest {
 
         val photoId = photoIdOf(crimson)
         assertTrue("Every plant in the photo was reviewed", runBlocking { garden.detectionsInPhoto(photoId).first() }.all { it.status == DetectionStatus.CONFIRMED })
+    }
+
+    @Test
+    fun aPlantPollenplotDoesNotKnowIsAddedByTheNameTyped() {
+        seed()
+        show(analysed(TestPhotos.threePlants(), PhotoScope.ONE))
+        waitFor(hasText("It is another plant"))
+        compose.onNodeWithText("It is another plant").performScrollTo().performClick()
+        compose.onNode(hasSetTextAction()).performTextInput("Nan's lavender")
+        waitFor(hasText("Use “Nan's lavender”"))
+        shot("identify_typed_name")
+        compose.onNodeWithText("Use “Nan's lavender”").performClick()
+        waitFor(hasText("Your choice"))
+        compose.onAllNodesWithText("Nan's lavender").assertCountEquals(2)
+        compose.onNodeWithText("Add to garden").performScrollTo().performClick()
+        waitFor(hasText("Added to", substring = true))
+        val added = plants().single { it.customName == "Nan's lavender" }
+        assertNull("A typed name is not a species", added.speciesName)
+        // The same suggestion is corrected the next time it comes up.
+        val top = runBlocking { garden.findsOf(added.id).first().single().candidates.first() }
+        assertEquals("Nan's lavender", runBlocking { garden.idHistory() }.apply(listOf(top)).first().label)
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h2200dp-xhdpi")
+    fun aFindLookedAtAsAPlantCanBeAnAnimal() {
+        seed()
+        val miner = mapOf(IdSource.AIY_BIRDS to listOf(LabelScore("Manorina melanocephala", 7_200)))
+        show(analysed(TestPhotos.threePlants(), PhotoScope.ONE, animalFor = { photo, group -> listOf(FastPlantIdentifier.region(photo, FastPlantIdentifier.CENTRE, miner, group)) }))
+        waitFor(hasText("It is an animal"))
+        compose.onNodeWithText("It is an animal").performScrollTo().performClick()
+        compose.pressWhenShown(hasText("Bird"))
+        waitFor(hasText("Noisy miner"))
+        shot("identify_plant_to_bird")
+        compose.onNodeWithText("Add sighting").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("It is a plant").assertExists()
+        val find = runBlocking { garden.detectionsInPhoto(photoIds().single()).first().single() }
+        assertEquals(LifeGroup.BIRD, find.group)
+        assertEquals("Manorina melanocephala", find.candidates.first().speciesName)
     }
 
     @Test
@@ -276,6 +316,8 @@ class IdentifyFlowTest {
 
     private fun plants(): List<GardenPlant> = runBlocking { garden.plantList.first() }
 
+    private fun photoIds(): List<String> = File(app.filesDir, "photos").listFiles()!!.map { it.nameWithoutExtension }
+
     private fun photoIdOf(plant: GardenPlant): String = runBlocking {
         val thumbnail = plant.thumbnail!!
         val photos = File(app.filesDir, "photos").listFiles()!!.map { it.nameWithoutExtension }
@@ -284,14 +326,18 @@ class IdentifyFlowTest {
 
     /** Runs a painted garden photo through the app's analysis, with [regions] as what the models found. */
     /** The model after a photo showing [regions], taken with the Garden bed chip unless [scope] says one plant. */
-    private fun analysed(regions: List<FoundRegion>, scope: PhotoScope = PhotoScope.SEVERAL): IdentifyModel {
-        val identifier = ScriptedIdentifier { regions }
+    private fun analysed(
+        regions: List<FoundRegion>,
+        scope: PhotoScope = PhotoScope.SEVERAL,
+        animalFor: (Bitmap, LifeGroup) -> List<FoundRegion> = { _, _ -> emptyList() },
+    ): IdentifyModel {
+        val identifier = ScriptedIdentifier(animalFor = animalFor) { regions }
         val container = app.container
         val analysis = PhotoAnalysis({ identifier }, container.photos, garden, container.knowledge, container.clock)
         val model = IdentifyModel(analysis, { identifier }, garden, container.knowledge, container.settingsStore, SavedStateHandle())
         model.choose(LifeGroup.PLANT, scope)
         runBlocking { model.analyse(TestPhotos.gardenPhoto()) }
-        assertEquals(listOf(scope), identifier.scopes)
+        assertEquals(listOf(scope), identifier.scopes.toList())
         if (regions.isNotEmpty()) assertTrue("The photo was analysed, not ${model.stage.value}", model.stage.value is IdentifyStage.Results)
         return model
     }

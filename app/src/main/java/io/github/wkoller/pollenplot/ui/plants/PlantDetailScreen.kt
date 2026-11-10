@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.produceState
+import io.github.wkoller.pollenplot.data.NamedPlant
+import io.github.wkoller.pollenplot.ui.review.SpeciesSearch
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -113,6 +117,8 @@ fun PlantDetailScreen(
     onOpenModels: () -> Unit = {},
     /** Opens the user's corrections to the plant's facts, for a plant in the knowledge base. */
     onEditFacts: (() -> Unit)? = null,
+    /** The plants the models can name beyond the knowledge base, for the search that changes what this plant is. */
+    plantNames: suspend () -> List<NamedPlant> = { emptyList() },
     onOpenPhoto: (photoId: String, detectionId: String) -> Unit = { _, _ -> },
     today: LocalDate = LocalDate.now(),
     /** The plant's pot and the care recorded for it, with the screens that edit them. */
@@ -146,9 +152,23 @@ fun PlantDetailScreen(
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     var editing by rememberSaveable { mutableStateOf(false) }
+    var changing by rememberSaveable { mutableStateOf(false) }
     var confirmRemove by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val loaded = view
+
+    // Changing what the plant is opens the search over the whole screen.
+    val searchKb = kb
+    if (changing && searchKb != null) {
+        val names by produceState(emptyList<NamedPlant>()) { value = plantNames() }
+        BackHandler { changing = false }
+        SpeciesSearch(searchKb, locality, onBack = { changing = false }, names = names, title = stringResource(R.string.plant_change_title)) { name ->
+            changing = false
+            val species = searchKb.species(name)?.name
+            scope.launch { garden.changeSpecies(plantId, species, name.takeIf { species == null }) }
+        }
+        return
+    }
 
     DetailScaffold(
         title = loaded?.title.orEmpty(),
@@ -236,6 +256,10 @@ fun PlantDetailScreen(
             view = loaded,
             zones = zones,
             onDismiss = { editing = false },
+            onChangeSpecies = {
+                editing = false
+                changing = true
+            },
             onSave = { updated ->
                 editing = false
                 scope.launch { garden.updatePlant(updated) }
@@ -613,7 +637,13 @@ private fun MonthStrip(flowering: MonthSet, peak: MonthSet) {
 /** Edits where a plant grows, how many there are, its name, notes and status. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditPlantSheet(view: PlantView, zones: List<io.github.wkoller.pollenplot.data.ZoneView>, onDismiss: () -> Unit, onSave: (io.github.wkoller.pollenplot.domain.garden.GardenPlant) -> Unit) {
+private fun EditPlantSheet(
+    view: PlantView,
+    zones: List<io.github.wkoller.pollenplot.data.ZoneView>,
+    onDismiss: () -> Unit,
+    onChangeSpecies: () -> Unit,
+    onSave: (io.github.wkoller.pollenplot.domain.garden.GardenPlant) -> Unit,
+) {
     val plant = view.plant
     var zoneId by rememberSaveable { mutableStateOf(plant.zoneId) }
     var quantity by rememberSaveable { mutableIntStateOf(plant.quantity) }
@@ -623,6 +653,13 @@ private fun EditPlantSheet(view: PlantView, zones: List<io.github.wkoller.pollen
     ModalBottomSheet(onDismissRequest = onDismiss) {
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item { Text(stringResource(R.string.edit_plant_title, view.title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() }) }
+            item {
+                // A plant added under the wrong name is given the right one here; its photos and notes stay with it.
+                OutlinedButton(onClick = onChangeSpecies) {
+                    Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                    Text(stringResource(R.string.plant_change))
+                }
+            }
             item { ZoneChooser(zones, zoneId) { zoneId = it } }
             item { QuantityStepper(quantity) { quantity = it } }
             item {

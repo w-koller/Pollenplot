@@ -14,8 +14,9 @@ object ReviewPick {
     data class Animal(val speciesName: String?, val label: String)
 
     /** The plant to add, or null when nothing is chosen because the models made no suggestion. */
-    fun plant(candidates: List<Candidate>, picked: String? = null, index: Int = 0): Plant? {
-        if (picked != null) return Plant(picked, null)
+    fun plant(candidates: List<Candidate>, picked: String? = null, index: Int = 0, known: (String) -> String? = { it }): Plant? {
+        // A name the user typed that the knowledge base does not have is kept as the plant's own name.
+        if (picked != null) return known(picked)?.let { Plant(it, null) } ?: Plant(null, picked.trim())
         val candidate = candidates.getOrNull(index) ?: return null
         return Plant(candidate.speciesName, if (candidate.speciesName == null) candidate.label else null)
     }

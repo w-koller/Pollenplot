@@ -31,6 +31,7 @@ import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.ui.wildlife.SafetyNotice
 import io.github.wkoller.pollenplot.ui.wildlife.SightingFields
 import io.github.wkoller.pollenplot.ui.wildlife.label
@@ -102,9 +103,14 @@ internal fun UndecidedAnimal(
             }
         }
     }
-    TextButton(onClick = { callbacks.onChooseAnother(detection) }, enabled = fauna != null) {
-        Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
-        Text(stringResource(R.string.review_choose_another_animal))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        OutlinedButton(onClick = { callbacks.onChooseAnother(detection) }, enabled = fauna != null) {
+            Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Text(stringResource(R.string.review_choose_another_animal))
+        }
+        callbacks.onRegroup?.let { regroup ->
+            TextButton(onClick = { regroup(detection, LifeGroup.PLANT) }) { Text(stringResource(R.string.review_is_plant)) }
+        }
     }
 
     SightingFields(

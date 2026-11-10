@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import android.util.Log
+import androidx.compose.runtime.produceState
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -60,6 +62,8 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.BatchAdd
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
+import io.github.wkoller.pollenplot.data.NamedPlant
+import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PhotoReview
@@ -76,6 +80,7 @@ import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
 import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -89,7 +94,29 @@ class DetectionActions(
     private val settings: SettingsStore,
     private val scope: CoroutineScope,
     private val wishes: WishRepository? = null,
+    /** Looks again at a find the user says is of another group; without it, the cards do not offer that. */
+    private val analysis: PhotoAnalysis? = null,
 ) {
+    /** Whether a find can be looked at again as an animal or as a plant. */
+    val canRegroup: Boolean get() = analysis != null
+
+    /** The plants the models can name beyond the knowledge base, for the search. */
+    suspend fun plantNames(): List<NamedPlant> = analysis?.plantNames().orEmpty()
+
+    /** Looks at a find again as something of [group], which gives it that group's suggestions. */
+    fun regroup(detection: DetectionRecord, group: LifeGroup) {
+        val analysis = analysis ?: return
+        scope.launch {
+            try {
+                analysis.regroup(detection, group)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("Review", "The find could not be looked at again", e)
+            }
+        }
+    }
+
     /** Saves a plant found away from home to the wishlist, with the zone it might go in. */
     fun save(detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?) {
         val wishes = wishes ?: return
@@ -179,6 +206,7 @@ fun PhotoReviewScreen(
     val sightings by views.sightings.collectAsStateWithLifecycle(initialValue = emptyList())
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
+    val names by produceState(emptyList<NamedPlant>(), actions) { value = actions.plantNames() }
     var choices by rememberSaveable(stateSaver = ChoicesSaver) { mutableStateOf(emptyMap<String, ReviewChoice>()) }
     var choosingFor by rememberSaveable { mutableStateOf<String?>(null) }
     var selecting by rememberSaveable { mutableStateOf(false) }
@@ -195,6 +223,15 @@ fun PhotoReviewScreen(
             onReject = actions::reject,
             onUndoReject = actions::undoReject,
             onChooseAnother = { choosingFor = it.id },
+            onRegroup = if (field || !actions.canRegroup) {
+                null
+            } else {
+                { detection, group ->
+                    // The choice made on the card was among the old suggestions.
+                    choices = choices - detection.id
+                    actions.regroup(detection, group)
+                }
+            },
             onOpenPlant = onOpenPlant,
             onCompare = onCompare?.let { compare -> { detection, species -> compare(detection.id, species) } },
             onAddSighting = actions::addSighting,
@@ -237,7 +274,7 @@ fun PhotoReviewScreen(
     }
     if (searchingFor != null && loadedKb != null) {
         BackHandler { choosingFor = null }
-        SpeciesSearch(loadedKb, locality, onBack = { choosingFor = null }) { name ->
+        SpeciesSearch(loadedKb, locality, onBack = { choosingFor = null }, names = names) { name ->
             choices = choices + (searchingFor to ReviewChoice.Picked(name))
             choosingFor = null
         }
@@ -262,7 +299,7 @@ fun PhotoReviewScreen(
             if (detection.group.isWildlife) {
                 animalPick(detection, choice, fauna)?.let { BatchAdd.Sighting(detection.id, it.speciesName, it.label, detection.group) }
             } else {
-                plantPick(detection, choice)?.let { BatchAdd.Plant(detection.id, it.speciesName, it.customName, detection.flowering) }
+                plantPick(detection, choice, kb)?.let { BatchAdd.Plant(detection.id, it.speciesName, it.customName, detection.flowering) }
             }
         }
         val zoneIds = zones.map { it.zone.id }.toSet()

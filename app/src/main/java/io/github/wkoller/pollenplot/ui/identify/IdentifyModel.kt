@@ -16,6 +16,7 @@ import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
+import io.github.wkoller.pollenplot.domain.id.IdHistory
 import io.github.wkoller.pollenplot.domain.id.IdSource
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.id.PhotoScope
@@ -105,12 +106,15 @@ class IdentifyModel(
     val results: StateFlow<PhotoReview?> = _results.asStateFlow()
 
     /** What the review cards do. */
-    val actions = DetectionActions(garden, settings, viewModelScope, wishes)
+    val actions = DetectionActions(garden, settings, viewModelScope, wishes, analysis)
 
     private var watching: Job? = null
 
     /** Species growing in the garden, read once per camera session; the live suggestions only need to be roughly right. */
     private var gardenSpecies: Set<String>? = null
+
+    /** What the user's earlier decisions say about the suggestions, read once per camera session like the garden's species. */
+    private var history: IdHistory? = null
 
     init {
         saved.get<String>(PHOTO_ID)?.let(::watch)
@@ -143,16 +147,20 @@ class IdentifyModel(
         if (group != _group.value) return
         _live.value = if (result.backgroundBp >= LIVE_MAX_BACKGROUND_BP) {
             emptyList()
-        } else if (group == LifeGroup.PLANT) {
-            val growing = gardenSpecies ?: garden.plantList.first()
-                .filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
-                .also { gardenSpecies = it }
-            CandidateFusion.fuse(mapOf(IdSource.AIY_PLANTS to result.labels), knowledge.knowledge.value, growing, nearby = nearby)
-                .filter { it.scoreBp >= LIVE_MIN_SCORE_BP }
-                .take(LIVE_COUNT)
         } else {
+            val plant = group == LifeGroup.PLANT
+            val growing = if (!plant) {
+                emptySet()
+            } else {
+                gardenSpecies ?: garden.plantList.first()
+                    .filter { it.status == PlantStatus.GROWING }.mapNotNull { it.speciesName }.toSet()
+                    .also { gardenSpecies = it }
+            }
+            val corrected = history ?: garden.idHistory().also { history = it }
+            val kb = knowledge.knowledge.value
             val fauna = knowledge.fauna.value
-            CandidateFusion.fuse(mapOf(model.source to result.labels), { label -> fauna?.animal(label)?.name }, emptySet(), nearby = nearby)
+            val nameOf: (String) -> String? = if (plant) { label -> kb?.species(label)?.name } else { label -> fauna?.animal(label)?.name }
+            corrected.apply(CandidateFusion.fuse(mapOf(model.source to result.labels), nameOf, growing, nearby = nearby), nameOf)
                 .filter { it.scoreBp >= LIVE_MIN_SCORE_BP }
                 .take(LIVE_COUNT)
         }
@@ -247,6 +255,7 @@ class IdentifyModel(
         _results.value = null
         _live.value = emptyList()
         gardenSpecies = null
+        history = null
         _stage.value = IdentifyStage.Camera
     }
 

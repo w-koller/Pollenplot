@@ -63,10 +63,11 @@ object CandidateFusion {
 
     /**
      * Whether a detection's suggestions are unsure enough to be worth a second opinion from Gemma 4: there is more
-     * than one, and the best is not of high confidence.
+     * than one, the best is not of high confidence, and the user has not already corrected this name themselves.
      */
     fun needsSecondOpinion(candidates: List<Candidate>): Boolean =
-        candidates.size > 1 && Confidence.of(candidates.maxOf { it.scoreBp }) != Confidence.HIGH
+        candidates.size > 1 && Confidence.of(candidates.maxOf { it.scoreBp }) != Confidence.HIGH &&
+            candidates.none { IdSource.USER in it.sources }
 
     /**
      * The suggestions after a second opinion from Gemma 4. Its choice, by index, counts as one more model's vote at

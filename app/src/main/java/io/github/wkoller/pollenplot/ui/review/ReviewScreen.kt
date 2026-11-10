@@ -31,6 +31,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
+import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.PhotoReview
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
@@ -53,8 +54,8 @@ import kotlinx.coroutines.launch
 data class AddProgress(val done: Int, val total: Int)
 
 /** The Review queue: photos with plants waiting for review, and the photos the user added that are still being looked at. */
-class ReviewModel(garden: GardenRepository, settings: SettingsStore, work: WorkManager) : ViewModel() {
-    val actions = DetectionActions(garden, settings, viewModelScope)
+class ReviewModel(garden: GardenRepository, settings: SettingsStore, work: WorkManager, analysis: PhotoAnalysis? = null) : ViewModel() {
+    val actions = DetectionActions(garden, settings, viewModelScope, analysis = analysis)
 
     /**
      * The photos shown: those with plants waiting when the queue opened, then any found while it is open. A photo stays
