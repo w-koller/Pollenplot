@@ -80,7 +80,8 @@ is always ready to tag.
     "This photo shows one plant"), `FlowerCall` (whether a found plant
     starts as in flower: BioCAP, then its flowering months, then `FlowerHint`'s colours, else not),
     `CandidateFusion` (each model's suggestions combined, with a boost for plants in the garden and a smaller one for
-    plants recorded near it), `IdHistory` (the user's own decisions: a name the models put first that was corrected
+    plants recorded near it), `LiveLabels` (the camera's live suggestions steadied over frames: a running average, different levels to
+    appear and to leave, and a lead that must hold for two frames), `IdHistory` (the user's own decisions: a name the models put first that was corrected
     more often than accepted gives way to the correction, marked `IdSource.USER`, and a name turned down twice loses
     half its score; applied after fusion in `PhotoAnalysis`, the live suggestions and `AccuratePass`), `ThumbnailMath`, `FlowerHint`, `Confidence` and `ZoneSuggestion` (the zone offered for
     a plant found in a photo).

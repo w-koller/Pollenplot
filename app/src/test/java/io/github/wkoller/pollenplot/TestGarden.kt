@@ -160,7 +160,10 @@ class ScriptedIdentifier(
         return Identification(found = regions.isNotEmpty(), regions = regions)
     }
 
-    override suspend fun glance(frame: Bitmap, group: LifeGroup) = TileResult(BoxBp.WHOLE, emptyList(), backgroundBp = 0)
+    /** What the quick model says of each camera frame, for the live suggestions. */
+    var glanceFor: (Bitmap, LifeGroup) -> TileResult = { _, _ -> TileResult(BoxBp.WHOLE, emptyList(), backgroundBp = 0) }
+
+    override suspend fun glance(frame: Bitmap, group: LifeGroup) = glanceFor(frame, group)
 
     override suspend fun groupOf(photo: Bitmap) = groupFor(photo)
 

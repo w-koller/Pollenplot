@@ -17,7 +17,7 @@ import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.domain.id.CandidateFusion
 import io.github.wkoller.pollenplot.domain.id.IdHistory
-import io.github.wkoller.pollenplot.domain.id.IdSource
+import io.github.wkoller.pollenplot.domain.id.LiveLabels
 import io.github.wkoller.pollenplot.domain.id.PhotoOrigin
 import io.github.wkoller.pollenplot.domain.id.PhotoScope
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
@@ -113,6 +113,9 @@ class IdentifyModel(
     /** Species growing in the garden, read once per camera session; the live suggestions only need to be roughly right. */
     private var gardenSpecies: Set<String>? = null
 
+    /** Steadies the live suggestions from frame to frame, so they do not swap and blink while the camera is still. */
+    private val steady = LiveLabels(LIVE_COUNT)
+
     /** What the user's earlier decisions say about the suggestions, read once per camera session like the garden's species. */
     private var history: IdHistory? = null
 
@@ -123,7 +126,10 @@ class IdentifyModel(
     /** Photographs a different kind of thing from now on, and for plants, one plant or a bed of several. */
     fun choose(group: LifeGroup, scope: PhotoScope = PhotoScope.ONE) {
         if (_group.value == group && _scope.value == scope) return
-        if (_group.value != group) _live.value = emptyList()
+        if (_group.value != group) {
+            steady.reset()
+            _live.value = emptyList()
+        }
         _group.value = group
         _scope.value = scope
         saved[GROUP] = group.name
@@ -146,7 +152,7 @@ class IdentifyModel(
         // The choice may have changed while the frame was looked at.
         if (group != _group.value) return
         _live.value = if (result.backgroundBp >= LIVE_MAX_BACKGROUND_BP) {
-            emptyList()
+            steady.update(emptyList(), background = true)
         } else {
             val plant = group == LifeGroup.PLANT
             val growing = if (!plant) {
@@ -160,9 +166,8 @@ class IdentifyModel(
             val kb = knowledge.knowledge.value
             val fauna = knowledge.fauna.value
             val nameOf: (String) -> String? = if (plant) { label -> kb?.species(label)?.name } else { label -> fauna?.animal(label)?.name }
-            corrected.apply(CandidateFusion.fuse(mapOf(model.source to result.labels), nameOf, growing, nearby = nearby), nameOf)
-                .filter { it.scoreBp >= LIVE_MIN_SCORE_BP }
-                .take(LIVE_COUNT)
+            // Each frame is weighed on its own; what is shown is steadied over the frames before it.
+            steady.update(corrected.apply(CandidateFusion.fuse(mapOf(model.source to result.labels), nameOf, growing, limit = LIVE_WEIGHED, nearby = nearby), nameOf))
         }
     }
 
@@ -253,6 +258,7 @@ class IdentifyModel(
         watching?.cancel()
         watching = null
         _results.value = null
+        steady.reset()
         _live.value = emptyList()
         gardenSpecies = null
         history = null
@@ -281,8 +287,8 @@ class IdentifyModel(
         const val GROUP = "group"
         const val SCOPE = "scope"
 
-        /** Live suggestions are shown only when the model is at least this sure, so the chips do not flicker with noise. */
-        const val LIVE_MIN_SCORE_BP = 1_500
+        /** How many of a frame's suggestions are weighed; the few shown are chosen from them over several frames. */
+        const val LIVE_WEIGHED = 8
 
         /** When the model thinks the frame shows no plant at least this strongly, no suggestions are shown. */
         const val LIVE_MAX_BACKGROUND_BP = 5_000

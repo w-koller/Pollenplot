@@ -20,6 +20,11 @@
   choice.
 - A photo is kept once. The same picture added twice, or added and later found by the gallery scan, gives its plants
   once.
+- The live suggestions on the camera hold steady while the camera is still. Each name's score is averaged over the
+  last few frames, a name appears and leaves at different levels, the first name changes only when another has
+  clearly led it for two frames, and one blurred frame no longer clears the list.
+- The quick models are shown the square in the middle of the frame, as the guide on the camera shows it. Before, the
+  middle of a photo that is not square was squashed to fit.
 - The database has changed, so this version does not install over 1.0.0-rc.4 and keep its records. Please install it
   afresh.
 

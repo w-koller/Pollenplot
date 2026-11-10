@@ -64,6 +64,18 @@ data class BoxBp(val left: Int, val top: Int, val right: Int, val bottom: Int) {
 
     companion object {
         const val FULL = 10_000
+
+        /**
+         * The square in the middle of an image [width] by [height] pixels, [shareBp] of its shorter side across. A
+         * model given a square is shown the plant as it is, where a wider box would be squashed to fit.
+         */
+        fun centreSquare(width: Int, height: Int, shareBp: Int = 7_000): BoxBp {
+            require(width > 0 && height > 0) { "An image has a size" }
+            val side = min(width, height).toLong() * shareBp / FULL
+            val halfAcross = (side * FULL / width / 2).toInt()
+            val halfDown = (side * FULL / height / 2).toInt()
+            return BoxBp(FULL / 2 - halfAcross, FULL / 2 - halfDown, FULL / 2 + halfAcross, FULL / 2 + halfDown)
+        }
         val WHOLE = BoxBp(0, 0, FULL, FULL)
     }
 }

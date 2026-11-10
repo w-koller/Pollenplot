@@ -103,9 +103,9 @@ class FastPlantIdentifier(private val context: Context) : Identifier {
         if (group == LifeGroup.PLANT && scope == PhotoScope.ONE) return Identification.of(one(photo)?.let { listOf(it) })
         if (group == LifeGroup.PLANT) return scan(photo).let { Identification(it.showsPlant, it.regions) }
         val model = AiyModel.of(group) ?: return Identification(false, emptyList())
-        val result = withContext(Dispatchers.Default) { lock.withLock { classifier(model).classify(Bitmaps.scaleDown(photo, WORKING_SIDE), CENTRE) } }
+        val result = withContext(Dispatchers.Default) { lock.withLock { classifier(model).classify(Bitmaps.scaleDown(photo, WORKING_SIDE), centre(photo)) } }
         if (result.labels.isEmpty()) return Identification(false, emptyList())
-        return Identification(true, listOf(region(photo, CENTRE, mapOf(model.source to result.labels), group)))
+        return Identification(true, listOf(region(photo, centre(photo), mapOf(model.source to result.labels), group)))
     }
 
     /** The quick model's look at every tile of [photo], which the accurate pass builds on. */
@@ -128,14 +128,14 @@ class FastPlantIdentifier(private val context: Context) : Identifier {
         val found = lock.withLock {
             val image = Bitmaps.scaleDown(photo, WORKING_SIDE)
             val plants = classifier(AiyModel.PLANTS)
-            RegionPlanner.one(plants.classify(image, CENTRE), plants.classify(image, BoxBp.WHOLE))
+            RegionPlanner.one(plants.classify(image, centre(image)), plants.classify(image, BoxBp.WHOLE))
         }
         found?.let { region(photo, it.box, mapOf(IdSource.AIY_PLANTS to it.labels)) }
     }
 
     override suspend fun glance(frame: Bitmap, group: LifeGroup): TileResult = withContext(Dispatchers.Default) {
         val model = AiyModel.of(group) ?: return@withContext TileResult(CENTRE, emptyList(), backgroundBp = 0)
-        lock.withLock { classifier(model).classify(frame, CENTRE) }
+        lock.withLock { classifier(model).classify(frame, centre(frame)) }
     }
 
     override fun close() = classifiers.values.forEach { it.close() }
@@ -146,6 +146,13 @@ class FastPlantIdentifier(private val context: Context) : Identifier {
 
         /** The middle of the frame, inside the camera's square guide, where the user points the camera. */
         val CENTRE = BoxBp(1_500, 1_500, 8_500, 8_500)
+
+        /**
+         * The square in the middle of [image] that the quick models are shown, the size of the camera's square guide.
+         * [CENTRE] is that share of each side, which on a photo that is not square is a rectangle the model would
+         * see squashed.
+         */
+        fun centre(image: Bitmap): BoxBp = BoxBp.centreSquare(image.width, image.height, CENTRE.width)
 
         /** A region of [photo] with its cut-out and, for a plant, its flowering hint and BioCAP's answer. */
         fun region(

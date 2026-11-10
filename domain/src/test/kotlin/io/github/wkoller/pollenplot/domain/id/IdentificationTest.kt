@@ -122,4 +122,15 @@ class IdentificationTest {
         assertEquals(Confidence.MEDIUM, Confidence.of(3_000))
         assertEquals(Confidence.LOW, Confidence.of(2_999))
     }
+
+    @Test
+    fun `the middle of a photo is a square whatever the photo's shape`() {
+        assertEquals(BoxBp(1_500, 1_500, 8_500, 8_500), BoxBp.centreSquare(1_000, 1_000))
+        // A 4:3 photo: 70% of its height across, which is less of its width.
+        val wide = BoxBp.centreSquare(1_600, 1_200)
+        assertEquals(BoxBp(2_375, 1_500, 7_625, 8_500), wide)
+        assertEquals("It is square in pixels", wide.width * 1_600 / BoxBp.FULL, wide.height * 1_200 / BoxBp.FULL)
+        // A portrait camera frame.
+        assertEquals(BoxBp(1_500, 2_375, 8_500, 7_625), BoxBp.centreSquare(480, 640))
+    }
 }
