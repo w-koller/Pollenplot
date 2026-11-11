@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Accurate identification pack 3 knows what each species looks like. For 7,931 of its 13,644 species it holds a
+  prototype made from photos of that species taken in Australia, beside the description it had before. On 1,029
+  Australian photos by other photographers, the right species came first for 51%, up from 45% with pack 2, and among
+  the first five for 78%, up from 74%. For plants it came first for 47%, up from 39%. The pack is about 142 MB, and a
+  look takes as long as before. The old pack is removed from the phone once the new one is on it.
+- The prototypes were made from 70,780 photos that iNaturalist's observers shared under CC0 and CC BY 4.0. The pack
+  holds a list of every photo with its photographer and licence, and About names iNaturalist under Sources.
 - A review card says plainly how to correct it. “It is another plant” opens a search of the knowledge base and of
   every plant the models can name, and a name Pollenplot does not know can be used as it was typed. “It is an animal”
   looks at the find again as a bird, insect or other animal, and “It is a plant” does the reverse.

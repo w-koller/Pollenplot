@@ -10,10 +10,10 @@ nothing (photos.held_for):
   (pack.Scorer), with the prototypes in prototypes.f16 beside the text vectors.
 - "blend": each species' text vector is replaced by a weighted mean of it and its prototype, in species.f16.
 
-The setting chosen is the best forecast (the mean log share given to the right species) among those that name
-nearly as many tuning photos as the one that names the most, so the pack gains what the prototypes offer without
-growing surer than it is right, which the words the app puts on a suggestion depend on. The strongest settings name
-a few more photos and forecast clearly worse. Each photo is scored as the app scores it: three looks as one
+The setting chosen is the one with the best forecast (the mean log share given to the right species) on the tuning
+photos, or the one naming the most photos among those that forecast about as well, so the pack gains what the
+prototypes offer without growing surer than it is right, which the words the app puts on a suggestion depend on. The
+strongest settings name a few more photos and forecast clearly worse. Each photo is scored as the app scores it: three looks as one
 for a plant, one look for an animal, among the species of its group.
 
 The encoder, the flower vectors and their thresholds are the base pack's, unchanged. The pack also holds

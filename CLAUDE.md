@@ -226,6 +226,17 @@ is always ready to tag.
 
 ## Models
 
+From pack 3 the BioCAP pack holds `prototypes.f16`: for each species with three or more photos, the unit mean of
+BioCAP's vectors of them, and in its manifest `prototypes.alpha` and `beta`. `SpeciesIndex` adds
+alpha × exp(−beta × (1 − closeness to the prototype)) to such a species' text similarity, and a pack without them
+scores by text alone. The pack is pack 2 with these added (`tools/models/add_prototypes.py`, after
+`prototype_photos.py` chose the photos from iNaturalist's open data, CC0 and CC BY only, and `prototype_vectors.py`
+encoded them); `prototype_photos.tsv.gz` in the pack credits each photo. iNaturalist's observers are divided by their
+number (`photos.held_for`): one in five is kept for evaluation and one for tuning, and prototypes come from the
+rest, so every evaluation uses photos by observers the pack never learned from. The setting is the best forecast
+(mean log share of the right species) on the tuning photos, because stronger settings named a few more photos and
+were surer than they were right. `tools/models/pack.py` scores a photo as the phone does, for every script.
+
 From pack 2 the BioCAP pack also holds `flowers.f16` (a flowering and a leafy text vector) and `flowers.yes_bp` and
 `no_bp` in its manifest, chosen by the export's evaluation on iNaturalist photos annotated for flowers; `FlowerVectors`
 reads them, and a pack without them leaves flowering to season and colour. BioCAP's input is prepared by `Bitmaps.squarePixels`: the square around the plant, halved while it is at least twice
@@ -236,9 +247,10 @@ step from BioCAP as published to the model the phone runs, and ships the smalles
 full model. Weights-only 8-bit (`MatMulNBits`, a contrib operator in the full ONNX Runtime the app uses) keeps
 BioCAP's accuracy; 8-bit activations lose about seven points of top-1 on transformers.
 
-`FusionEvalTest` in `:domain` measures the steps from the models' answers to the suggestions on 1,035 Australian
+`FusionEvalTest` in `:domain` measures the steps from the models' answers to the suggestions on 1,029 Australian
 photos of known species, whose answers are in `domain/src/test/resources/id/eval_outputs.json.gz` (names and numbers,
-no photos). The Fusion evaluation workflow (`tools/models/eval_fusion.py`) records them, and must be run again, and
+no photos). The Fusion evaluation workflow (`tools/models/eval_fusion.py`, which the Model pack workflow also runs on a pack it has
+just built) records them, and must be run again, and
 the file and the test's baseline replaced, after a change to a model or to how the phone looks at a photo: its looks
 mirror `FastPlantIdentifier` and `AccurateModels.lookAtOne` (three BioCAP looks as one for a photo of one plant, one
 look for an animal). Each run fetches the photos afresh, so numbers from two runs differ by a few photos.
