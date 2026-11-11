@@ -10,9 +10,10 @@ nothing (photos.held_for):
   (pack.Scorer), with the prototypes in prototypes.f16 beside the text vectors.
 - "blend": each species' text vector is replaced by a weighted mean of it and its prototype, in species.f16.
 
-The setting chosen is the one that names the most tuning photos (first, then among the first five) while the shares
-it gives are no worse a forecast than the text's alone (the mean log share of the right species), so the words the
-app puts on a suggestion stay as honest as they were. Each photo is scored as the app scores it: three looks as one
+The setting chosen is the best forecast (the mean log share given to the right species) among those that name
+nearly as many tuning photos as the one that names the most, so the pack gains what the prototypes offer without
+growing surer than it is right, which the words the app puts on a suggestion depend on. The strongest settings name
+a few more photos and forecast clearly worse. Each photo is scored as the app scores it: three looks as one
 for a plant, one look for an animal, among the species of its group.
 
 The encoder, the flower vectors and their thresholds are the base pack's, unchanged. The pack also holds
@@ -51,6 +52,9 @@ MIN_PHOTOS = 3
 NEAR = [(alpha, beta) for beta in (2.0, 5.5, 10.0, 15.0, 20.0) for alpha in (0.02, 0.05, 0.1, 0.2, 0.4, 0.8, 1.6)]
 BLEND = [0.1, 0.2, 0.3, 0.5, 0.7]
 TEXT = "The text vectors alone"
+
+# Settings within this of the most photos named, first and in five added together, are judged by their forecast.
+NEARLY = 0.02
 
 # The least share counted for a species outside the closest, so one miss does not decide the forecast's score.
 FLOOR = 1e-4
@@ -121,10 +125,16 @@ def measure(scorer, photos, groups, logit_scale):
 
 
 def choose(tuned):
-    """The setting that names the most tuning photos among those whose shares forecast no worse than the text's."""
-    text = tuned[TEXT]["all"]
-    honest = [name for name, result in tuned.items() if result["all"]["log_share"] >= text["log_share"]]
-    return max(honest, key=lambda name: (tuned[name]["all"]["top1"] + tuned[name]["all"]["top5"], tuned[name]["all"]["log_share"], name == TEXT))
+    """The best forecast among the settings whose first and in-five shares together are within NEARLY of the most,
+    and no worse a forecast than the text's alone. Forecasts closer than a hundredth count as equal, and the setting
+    that names more photos is taken."""
+    def named(name):
+        return tuned[name]["all"]["top1"] + tuned[name]["all"]["top5"]
+
+    honest = [name for name in tuned if tuned[name]["all"]["log_share"] >= tuned[TEXT]["all"]["log_share"]]
+    most = max(named(name) for name in honest)
+    near = [name for name in honest if named(name) >= most - NEARLY]
+    return max(near, key=lambda name: (round(tuned[name]["all"]["log_share"], 2), named(name), name == TEXT))
 
 
 def table(f, results, rows, key="all"):
