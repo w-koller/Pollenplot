@@ -37,6 +37,7 @@ STRINGS = {
     "water_cleaned_on": "Cleaned on %1$s",
     "water_not_cleaned": "No cleaning recorded yet.",
     "water_mark_cleaned": "Cleaned today",
+    "water_cleaned_notice": "Recorded the water as cleaned today.",
     "water_feature_add_title": "Add water for wildlife",
     "water_feature_title": "Water for wildlife",
     "water_feature_kind": "Kind of water",

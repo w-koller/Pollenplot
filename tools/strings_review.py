@@ -60,6 +60,7 @@ STRINGS = {
 }
 
 PLURALS = {
+    "review_dismissed": {"one": "Dismissed %d find.", "other": "Dismissed %d finds."},
     "review_waiting": {"one": "%d plant is waiting for review.", "other": "%d plants are waiting for review."},
     "review_add_selected_body": {
         "one": "Pollenplot will add the find you selected with the suggestion shown on its card. Please choose the zone "

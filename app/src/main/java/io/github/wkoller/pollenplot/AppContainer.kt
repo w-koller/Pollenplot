@@ -438,11 +438,6 @@ class AppContainer(
         scope.launch { wishes.discardFieldPhoto(photoId) }
     }
 
-    /** Records that a water feature was cleaned and filled today. */
-    fun waterCleaned(id: String) {
-        scope.launch { habitat.cleaned(id, LocalDate.now(clock)) }
-    }
-
     /** Marks a wish planted once its plant is in the garden. */
     fun wishPlanted(id: String) {
         scope.launch { wishes.setStatus(id, WishStatus.PLANTED) }

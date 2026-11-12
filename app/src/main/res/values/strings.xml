@@ -147,6 +147,7 @@
     <string name="water_cleaned_on">Cleaned on %1$s</string>
     <string name="water_not_cleaned">No cleaning recorded yet.</string>
     <string name="water_mark_cleaned">Cleaned today</string>
+    <string name="water_cleaned_notice">Recorded the water as cleaned today.</string>
     <string name="water_feature_add_title">Add water for wildlife</string>
     <string name="water_feature_title">Water for wildlife</string>
     <string name="water_feature_kind">Kind of water</string>
@@ -1050,6 +1051,7 @@
     <string name="event_flushed">Flushed the pot</string>
     <string name="event_on">%1$s on %2$s</string>
     <string name="event_remove">Remove this record</string>
+    <string name="event_removed">Removed the record.</string>
     <string name="today_pot_flush">Please flush the pot of %1$s.</string>
     <string name="today_pot_repot">Please look at whether %1$s needs repotting.</string>
     <string name="notify_pots_channel">Garden care</string>
@@ -1079,6 +1081,7 @@
     <string name="problem_no_treatments">No treatments recorded yet.</string>
     <string name="problem_record_treatment">Record a treatment</string>
     <string name="problem_mark_resolved">Mark as resolved</string>
+    <string name="problem_resolved_notice">Marked as resolved.</string>
     <string name="problem_mark_open">Mark as open again</string>
     <string name="problem_delete">Delete</string>
     <string name="problem_delete_title">Delete this problem?</string>
@@ -1421,6 +1424,11 @@
     <string name="water_empty_title">No watering lines have been set up yet.</string>
     <string name="water_empty_body">Once your zones and plants are in place, this page recommends when to water and how much, based on the weather and on what each plant needs.</string>
     <string name="today_title">Today</string>
+    <string name="today_watered">Watered</string>
+    <string name="today_watered_for">Record %1$s as watered today</string>
+    <string name="today_flushed">Flushed</string>
+    <string name="today_flushed_for">Record the pot of %1$s as flushed today</string>
+    <string name="today_flushed_notice">Recorded a flush for %1$s today.</string>
     <string name="today_water_litres">Please water %1$s, about %2$s L in all.</string>
     <string name="today_overdue">Overdue</string>
     <string name="today_hive_due">%1$s is due for %2$s</string>
@@ -1451,6 +1459,7 @@
     <string name="water_last">Last watered on %1$s</string>
     <string name="water_never">No watering recorded yet</string>
     <string name="water_watered">I watered today</string>
+    <string name="water_watered_notice">Recorded watering for %1$s today.</string>
     <string name="water_how">How the plan is worked out</string>
     <string name="water_coming_up">Coming up</string>
     <string name="water_ahead_litres">%1$s at %2$s, about %3$s L</string>
@@ -2000,6 +2009,10 @@
     <plurals name="backup_problems">
         <item quantity="one">%d problem</item>
         <item quantity="other">%d problems</item>
+    </plurals>
+    <plurals name="review_dismissed">
+        <item quantity="one">Dismissed %d find.</item>
+        <item quantity="other">Dismissed %d finds.</item>
     </plurals>
     <plurals name="review_waiting">
         <item quantity="one">%d plant is waiting for review.</item>

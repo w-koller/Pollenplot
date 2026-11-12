@@ -1,6 +1,11 @@
 # Copy for the Today card at the top of the Plot: what the garden needs today, from every part of it.
 STRINGS = {
     "today_title": "Today",
+    "today_watered": "Watered",
+    "today_watered_for": "Record %1$s as watered today",
+    "today_flushed": "Flushed",
+    "today_flushed_for": "Record the pot of %1$s as flushed today",
+    "today_flushed_notice": "Recorded a flush for %1$s today.",
     "today_water_litres": "Please water %1$s, about %2$s L in all.",
     "today_overdue": "Overdue",
     "today_hive_due": "%1$s is due for %2$s",

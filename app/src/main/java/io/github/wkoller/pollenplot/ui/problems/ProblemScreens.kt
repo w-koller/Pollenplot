@@ -232,6 +232,8 @@ fun ProblemScreen(
 ) {
     val view by remember(id) { views.problem(id) }.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
+    val notices = io.github.wkoller.pollenplot.ui.components.LocalNotices.current
+    val resolvedText = stringResource(R.string.problem_resolved_notice)
     val uri = LocalUriHandler.current
     var deleting by rememberSaveable { mutableStateOf(false) }
     val shown = view
@@ -277,7 +279,16 @@ fun ProblemScreen(
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (shown.problem.open) Button(onClick = onRecordTreatment) { Text(stringResource(R.string.problem_record_treatment)) }
-                OutlinedButton(onClick = { scope.launch { problems.setResolved(id, if (shown.problem.open) views.today() else null) } }) {
+                OutlinedButton(onClick = {
+                    scope.launch {
+                        if (shown.problem.open) {
+                            problems.setResolved(id, views.today())
+                            notices?.show(resolvedText) { problems.setResolved(id, null) }
+                        } else {
+                            problems.setResolved(id, null)
+                        }
+                    }
+                }) {
                     Text(stringResource(if (shown.problem.open) R.string.problem_mark_resolved else R.string.problem_mark_open))
                 }
             }

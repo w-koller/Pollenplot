@@ -95,6 +95,7 @@ import io.github.wkoller.pollenplot.ui.plants.PotEditScreen
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.PlotScreen
+import io.github.wkoller.pollenplot.ui.plot.TodayActions
 import io.github.wkoller.pollenplot.ui.plot.WaterFeatureScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneDetailScreen
 import io.github.wkoller.pollenplot.ui.plot.ZoneEditorScreen
@@ -127,6 +128,9 @@ import io.github.wkoller.pollenplot.ui.wildlife.SightingScreen
 import io.github.wkoller.pollenplot.ui.wildlife.WildlifeScreen
 import io.github.wkoller.pollenplot.ui.wishlist.WishScreen
 import io.github.wkoller.pollenplot.ui.wishlist.WishlistScreen
+import androidx.compose.ui.platform.LocalResources
+import io.github.wkoller.pollenplot.data.Watering
+import io.github.wkoller.pollenplot.R
 import java.time.LocalDate
 import kotlinx.coroutines.launch
 
@@ -255,6 +259,9 @@ fun AppRoot(
                     val openSettings = { navController.navigate(SettingsRoute) }
                     val back: () -> Unit = { navController.popBackStack() }
                     composable<PlotRoute> {
+                        val notices = LocalNotices.current
+                        val resources = LocalResources.current
+                        val scope = rememberCoroutineScope()
                         PlotScreen(
                             garden = container.garden,
                             views = container.views,
@@ -286,6 +293,25 @@ fun AppRoot(
                             feeding = container.feedViews,
                             onOpenProblem = { navController.navigate(ProblemRoute(it)) },
                             habitat = container.habitatViews,
+                            todayActions = TodayActions(
+                                onHive = { navController.navigate(HiveRoute(it)) },
+                                onHotel = { navController.navigate(HotelRoute(it)) },
+                                onFeedZone = { navController.navigate(FeedRoute(it)) },
+                                onPrune = { navController.navigate(PlantEventRoute(it, pruning = true)) },
+                                onWatered = { item ->
+                                    scope.launch {
+                                        val watering = Watering(container.water.newId(), item.lineId, item.zoneId, LocalDate.now(container.clock))
+                                        container.water.recordWatering(watering)
+                                        notices?.show(resources.getString(R.string.water_watered_notice, item.name)) { container.water.deleteWatering(watering.id) }
+                                    }
+                                },
+                                onFlushed = { item ->
+                                    scope.launch {
+                                        val event = container.pots.addEvent(item.plantId, PlantEventKind.FLUSHED, LocalDate.now(container.clock))
+                                        notices?.show(resources.getString(R.string.today_flushed_notice, item.plant)) { container.pots.deleteEvent(event.id) }
+                                    }
+                                },
+                            ),
                         )
                     }
                     composable<FeedRoute> { entry ->
@@ -301,6 +327,9 @@ fun AppRoot(
                     composable<OwnProductRoute> { OwnProductScreen(container.feeds, onBack = back) }
                     composable<ZoneRoute> { entry ->
                         val id = entry.toRoute<ZoneRoute>().id
+                        val cleanScope = rememberCoroutineScope()
+                        val cleanNotices = LocalNotices.current
+                        val cleanedText = stringResource(R.string.water_cleaned_notice)
                         ZoneDetailScreen(
                             views = container.views,
                             zoneId = id,
@@ -317,7 +346,13 @@ fun AppRoot(
                             habitat = container.habitatViews,
                             onAddWater = { navController.navigate(WaterFeatureRoute(zoneId = id)) },
                             onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
-                            onWaterCleaned = { container.waterCleaned(it) },
+                            onWaterCleaned = { featureId ->
+                                cleanScope.launch {
+                                    val before = container.habitat.waterFeature(featureId)?.cleanedOn
+                                    container.habitat.cleaned(featureId, LocalDate.now(container.clock))
+                                    cleanNotices?.show(cleanedText) { container.habitat.cleaned(featureId, before) }
+                                }
+                            },
                             onOpenHive = { navController.navigate(HiveRoute(it)) },
                             onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
                             onOpenHotel = { navController.navigate(HotelRoute(it)) },
@@ -338,6 +373,8 @@ fun AppRoot(
                     composable<PlantRoute> { entry ->
                         val id = entry.toRoute<PlantRoute>().id
                         val scope = rememberCoroutineScope()
+                        val notices = LocalNotices.current
+                        val resources = LocalResources.current
                         PlantDetailScreen(
                             views = container.views,
                             garden = container.garden,
@@ -358,7 +395,12 @@ fun AppRoot(
                             pots = container.potViews,
                             onEditPot = { navController.navigate(PotEditRoute(id)) },
                             onRecordCare = { navController.navigate(PlantEventRoute(id)) },
-                            onRemoveEvent = { eventId -> scope.launch { container.pots.deleteEvent(eventId) } },
+                            onRemoveEvent = { event ->
+                                scope.launch {
+                                    container.pots.deleteEvent(event.id)
+                                    notices?.show(resources.getString(R.string.event_removed)) { container.pots.addEvent(event.plantId, event.kind, event.date, event.notes) }
+                                }
+                            },
                             problems = container.problemViews,
                             onOpenProblem = { navController.navigate(ProblemRoute(it)) },
                             onLogProblem = { navController.navigate(LogProblemRoute(id)) },

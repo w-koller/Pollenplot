@@ -51,6 +51,7 @@ STRINGS = {
     "event_flushed": "Flushed the pot",
     "event_on": "%1$s on %2$s",
     "event_remove": "Remove this record",
+    "event_removed": "Removed the record.",
 
     # Today, the morning notification and Settings
     "today_pot_flush": "Please flush the pot of %1$s.",

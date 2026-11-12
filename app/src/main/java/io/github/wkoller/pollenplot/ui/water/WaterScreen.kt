@@ -45,7 +45,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalResources
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
 import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.Watering
@@ -97,6 +99,13 @@ fun WaterScreen(
     val current by settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val access = rememberNotificationAccess(notifications)
     val scope = rememberCoroutineScope()
+    val notices = LocalNotices.current
+    val resources = LocalResources.current
+    // A watering is recorded with one press, so the message that answers it can take it back.
+    fun watered(watering: Watering, name: String) = scope.launch {
+        water.recordWatering(watering)
+        notices?.show(resources.getString(R.string.water_watered_notice, name)) { water.deleteWatering(watering.id) }
+    }
     fun refresh() = scope.launch { settings.current().gardenPlace?.let { water.refreshWeather(it) } }
     // The weather is brought up to date when the tab opens, unless it was fetched in the last three hours.
     LaunchedEffect(Unit) {
@@ -162,7 +171,7 @@ fun WaterScreen(
                             view.runoff?.let { addAll(runoffText(it)) }
                         },
                         onEdit = { onEditLine(view.line.id) },
-                        onWatered = { scope.launch { water.recordWatering(Watering(water.newId(), view.line.id, null, loaded.today)) } },
+                        onWatered = { watered(Watering(water.newId(), view.line.id, null, loaded.today), view.line.name) },
                     )
                 }
             }
@@ -186,7 +195,7 @@ fun WaterScreen(
                         today = loaded.today,
                         notes = emptyList(),
                         onEdit = null,
-                        onWatered = { scope.launch { water.recordWatering(Watering(water.newId(), null, view.zone.id, loaded.today)) } },
+                        onWatered = { watered(Watering(water.newId(), null, view.zone.id, loaded.today), view.zone.name) },
                     )
                 }
             }

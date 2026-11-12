@@ -7,6 +7,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -72,6 +73,24 @@ class TodayFlowTest {
         shot("plot_today")
         compose.onNodeWithText("Please water Veg Patch", substring = true).performClick()
         waitFor(hasText("Watered by hand"))
+    }
+
+    @Test
+    fun aWateringIsRecordedFromTheCardAndTakenBack() {
+        val state = runBlocking { app.container.today.state.first { it.items.isNotEmpty() } }
+        assertTrue("A zone watered by hand carries its id", state.items.any { it is TodayItem.Watering && it.name == "Veg Patch" && it.zoneId != null })
+        assertTrue("A hive check opens its own hive", state.items.filterIsInstance<TodayItem.HiveCheck>().all { it.hiveId != null })
+
+        compose.setContent { PollenplotTheme(Settings()) { Surface { AppRoot(app.container) } } }
+        waitFor(hasText("Today"))
+        compose.onNodeWithContentDescription("Record Veg Patch as watered today").performClick()
+        waitFor(hasText("Recorded watering for Veg Patch today."))
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasText("Please water Veg Patch", substring = true)).fetchSemanticsNodes().isEmpty() }
+        shot("plot_today_watered")
+
+        // The message's Undo takes the watering back, and the job is due again.
+        compose.onNodeWithText("Undo").performClick()
+        waitFor(hasText("Please water Veg Patch", substring = true))
     }
 
     private fun waitFor(matcher: SemanticsMatcher) {

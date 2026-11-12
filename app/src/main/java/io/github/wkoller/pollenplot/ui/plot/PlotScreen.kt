@@ -90,6 +90,7 @@ fun PlotScreen(
     feeding: FeedViews? = null,
     onOpenProblem: (String) -> Unit = {},
     habitat: HabitatViews? = null,
+    todayActions: TodayActions = TodayActions(),
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
     val fed by remember(feeding) { feeding?.lastFed ?: flowOf(emptyMap()) }.collectAsStateWithLifecycle(initialValue = emptyMap())
@@ -194,7 +195,7 @@ fun PlotScreen(
                 Column(Modifier.fillMaxSize()) {
                     if (!editing) {
                         todayState?.let {
-                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), cardLimit)
+                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), todayActions, cardLimit)
                         }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -222,7 +223,7 @@ fun PlotScreen(
             }
             else -> PlotList(
                 loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState, fed = fed,
-                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } },
+                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), todayActions) } },
             )
         }
     }
@@ -354,9 +355,19 @@ private fun TodayOnPlot(
     onFeed: () -> Unit,
     onProblem: (String) -> Unit,
     modifier: Modifier,
+    actions: TodayActions,
     maxHeight: Dp = Dp.Unspecified,
 ) {
-    TodayCard(state, modifier, maxHeight, onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds, onPlant = onPlant, onZone = onZone, onFeed = onFeed, onProblem = onProblem)
+    TodayCard(
+        state, modifier, maxHeight,
+        onWater = onWater, onBees = onBees, onHeat = { onGuide(HEAT_GUIDE) }, onReview = onReview, onWeeds = onWeeds, onPlant = onPlant, onZone = onZone, onFeed = onFeed, onProblem = onProblem,
+        onHive = actions.onHive ?: { onBees() },
+        onHotel = actions.onHotel ?: { onBees() },
+        onFeedZone = actions.onFeedZone ?: onZone,
+        onPrune = actions.onPrune ?: onPlant,
+        onWatered = actions.onWatered,
+        onFlushed = actions.onFlushed,
+    )
 }
 
 /** The most of the Plot's height the Today card takes above the canvas. */

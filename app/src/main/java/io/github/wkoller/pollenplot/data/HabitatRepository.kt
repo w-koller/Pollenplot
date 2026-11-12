@@ -37,8 +37,8 @@ class HabitatRepository(private val db: PollenplotDatabase, private val clock: C
         write(feature.copy(notes = feature.notes.trim()))
     }
 
-    /** Records that the water was cleaned and filled on [day]. */
-    suspend fun cleaned(id: String, day: LocalDate) = db.withTransaction {
+    /** Records that the water was cleaned and filled on [day], or with null that it has no such day, as before a press that is undone. */
+    suspend fun cleaned(id: String, day: LocalDate?) = db.withTransaction {
         val feature = dao.water(id)?.toDomain() ?: return@withTransaction
         write(feature.copy(cleanedOn = day))
     }
