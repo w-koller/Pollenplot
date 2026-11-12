@@ -143,20 +143,46 @@ class PlotScreenFlowTest {
         compose.onNodeWithContentDescription("Move down").performClick()
         waitFor(hasText("Width: 4.5 m"))
         shot("plot_adjust_sheet")
-        compose.onAllNodesWithText("Done").onFirst().performClick()
+        // While the sheet is open its Done is the only one, and it closes the sheet and leaves the layout being edited.
+        assertEquals(1, compose.onAllNodesWithText("Done").fetchSemanticsNodes().size)
+        compose.onNodeWithText("Done").performClick()
         val rect = runBlocking { app.container.garden.zone(ids.hive)!!.rect }
         assertEquals(450, rect.widthCm)
         assertEquals(500, rect.yCm)
+        // What the sheet changed is said once, and Undo puts the zone back as it was.
+        waitFor(hasText("Changed the size of Hive Corner."))
+        compose.onNodeWithText("Undo").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.zone(ids.hive)!!.rect }.let { it.widthCm == 400 && it.yCm == 450 } }
 
         // The canvas has no edge: a zone at the origin moves past it, with the screen reader's action as with a drag.
-        // Done closed the sheet and the editing both, so the layout is edited again.
-        compose.pressWhenShown(hasContentDescription("Edit layout"))
         compose.onNodeWithContentDescription("Front Native Strip", substring = true).performClick()
         val front = compose.onNodeWithContentDescription("Front Native Strip", substring = true).fetchSemanticsNode()
         compose.runOnIdle { front.config[SemanticsActions.CustomActions].single { it.label == "Move left" }.action() }
         compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.zone(ids.front)!!.rect.xCm } == -50 }
         compose.onNodeWithContentDescription("Show the whole plot").performClick()
         shot("plot_edit_past_origin")
+    }
+
+    @Test
+    fun addAZoneFromTheMenu() {
+        seed()
+        show()
+        // Adding a zone no longer needs the layout to be edited first. Its dialog holds a text field, which does not
+        // settle under Robolectric, so the test stops at the menu.
+        compose.pressWhenShown(hasContentDescription("Open the add menu"))
+        waitFor(hasText("Add a zone"))
+        shot("plot_add_menu_zone")
+    }
+
+    @Test
+    fun aPlantOpensFromAZonesPreview() {
+        seed()
+        show()
+        waitFor(hasContentDescription("Hive Corner", substring = true))
+        compose.onNodeWithContentDescription("Hive Corner", substring = true).performSemanticsAction(SemanticsActions.OnLongClick)
+        waitFor(hasText("Open zone"))
+        compose.onNodeWithText("Rosemary").performClick()
+        waitFor(hasText("Salvia rosmarinus"))
     }
 
     @Test
@@ -171,8 +197,14 @@ class PlotScreenFlowTest {
         compose.onNodeWithText("Lemon-scented tea tree", substring = true).assertIsDisplayed()
         shot("plot_zone_preview")
         hive.performTouchInput { up() }
-        compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasContentDescription("Close the preview")).fetchSemanticsNodes().isEmpty() }
         assertEquals("Holding a zone does not open it", 0, compose.onAllNodesWithText("Pollinator hotspot").fetchSemanticsNodes().size)
+        // The preview stays once the finger lifts, and the zone opens from it.
+        compose.onNodeWithContentDescription("Close the preview").assertExists()
+        compose.onNodeWithText("Open zone").performClick()
+        waitFor(hasText("Pollinator hotspot"))
+        compose.onNodeWithContentDescription("Back").performClick()
+        waitFor(hasContentDescription("Hive Corner", substring = true))
+        assertEquals(0, compose.onAllNodes(hasContentDescription("Close the preview")).fetchSemanticsNodes().size)
 
         // A screen reader opens the preview with the zone's action, and it stays until it is closed.
         hive.performSemanticsAction(SemanticsActions.OnLongClick)

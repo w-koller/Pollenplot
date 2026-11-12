@@ -911,6 +911,13 @@
     <string name="plot_done">Done</string>
     <string name="plot_adjust">Move and resize</string>
     <string name="plot_details">Zone details</string>
+    <string name="plot_moved">Moved %1$s.</string>
+    <string name="plot_resized">Changed the size of %1$s.</string>
+    <string name="plot_drag_overlaps">over %1$s</string>
+    <string name="plot_scale">%1$s m</string>
+    <string name="plot_scale_description">The bar shows %1$s m of yard at this zoom.</string>
+    <string name="zone_tile_more">+%1$d</string>
+    <string name="zone_preview_open">Open zone</string>
     <string name="plot_edit_hint">Please drag a zone to move it, or tap it and use Move and resize. Zones snap to a 50 cm grid.</string>
     <string name="plot_show_all">Show the whole plot</string>
     <string name="plot_zoom_in">Zoom in</string>
@@ -1399,7 +1406,7 @@
     <string name="plot_title">Plot</string>
     <string name="plot_subtitle">Your backyard</string>
     <string name="plot_empty_title">Your plot has no zones yet.</string>
-    <string name="plot_empty_body">Zones are the areas of your yard, such as a front native strip, a citrus patch or a hive corner. You will be able to add zones and place your plants, hives and bee hotels in them here.</string>
+    <string name="plot_empty_body">Zones are the areas of your yard, such as a front native strip, a citrus patch or a hive corner. Please add a zone to start. Your plants, hives and bee hotels go in zones, and you can move and resize each zone on the plot.</string>
     <string name="rhythms_title">Pollen Rhythms</string>
     <string name="rhythms_subtitle">Nectar and pollen through the year</string>
     <string name="rhythms_empty_title">Pollen Rhythms needs plants in your plot.</string>
@@ -1993,6 +2000,10 @@
     <plurals name="role_more">
         <item quantity="one">%d more</item>
         <item quantity="other">%d more</item>
+    </plurals>
+    <plurals name="zone_tile_due">
+        <item quantity="one">%1$d job due today</item>
+        <item quantity="other">%1$d jobs due today</item>
     </plurals>
     <plurals name="zone_preview_more">
         <item quantity="one">and %1$d more plant</item>

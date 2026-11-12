@@ -82,6 +82,10 @@ import io.github.wkoller.pollenplot.ui.water.byHand
 import io.github.wkoller.pollenplot.ui.water.icon
 import io.github.wkoller.pollenplot.ui.water.nextWateringSentence
 import io.github.wkoller.pollenplot.ui.water.nextWateringShort
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import io.github.wkoller.pollenplot.ui.listWords
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -125,6 +129,14 @@ fun PlotCanvas(
     water: WaterState? = null,
     /** Each zone's habitat, for the hives and hotels kept in it. */
     habitat: Map<String, ZoneHabitatView> = emptyMap(),
+    /** How many of today's jobs are in each zone, by its id. */
+    due: Map<String, Int> = emptyMap(),
+    /** Opens a zone or one of its plants from the preview, or starts moving and resizing the zone. */
+    onOpenZone: (String) -> Unit = {},
+    onOpenPlant: (String) -> Unit = {},
+    onArrange: (String) -> Unit = {},
+    /** A press on the canvas where there is no zone. */
+    onTapEmpty: () -> Unit = {},
 ) {
     BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
         val density = LocalDensity.current.density
@@ -148,10 +160,34 @@ fun PlotCanvas(
 
         fun fit() {
             val bounds = PlotLayout.bounds(zones.map { it.zone.rect }) ?: return
-            val margin = 24 * density
-            scale = min((viewWidth - 2 * margin) / bounds.widthCm, (viewHeight - 2 * margin) / bounds.heightCm).coerceIn(minScale, maxScale)
-            offsetX = (viewWidth - bounds.widthCm * scale) / 2 - bounds.xCm * scale
-            offsetY = (viewHeight - bounds.heightCm * scale) / 2 - bounds.yCm * scale
+            // Room is left for what floats over the canvas: the zoom buttons, at the top while editing, and the add
+            // button or the editing toolbar along the bottom.
+            val side = FIT_MARGIN_DP * density
+            val top = (if (editing) FIT_CONTROLS_DP else FIT_MARGIN_DP) * density
+            val bottom = FIT_CONTROLS_DP * density
+            val width = (viewWidth - 2 * side).coerceAtLeast(side)
+            val height = (viewHeight - top - bottom).coerceAtLeast(side)
+            scale = min(width / bounds.widthCm, height / bounds.heightCm).coerceIn(minScale, maxScale)
+            offsetX = side + (width - bounds.widthCm * scale) / 2 - bounds.xCm * scale
+            offsetY = top + (height - bounds.heightCm * scale) / 2 - bounds.yCm * scale
+        }
+
+        fun onScreen(rect: ZoneRect): Boolean =
+            offsetX + rect.rightCm * scale > 0 && offsetX + rect.xCm * scale < viewWidth && offsetY + rect.bottomCm * scale > 0 && offsetY + rect.yCm * scale < viewHeight
+
+        /** Pans just far enough to bring a zone wholly into view, or shows the whole plot when it is too big to fit. */
+        fun reveal(rect: ZoneRect) {
+            val pad = FIT_MARGIN_DP * density
+            val left = offsetX + rect.xCm * scale
+            val top = offsetY + rect.yCm * scale
+            val right = offsetX + rect.rightCm * scale
+            val bottom = offsetY + rect.bottomCm * scale
+            if (right - left > viewWidth - 2 * pad || bottom - top > viewHeight - 2 * pad) {
+                fit()
+                return
+            }
+            if (left < pad) offsetX += pad - left else if (right > viewWidth - pad) offsetX -= right - (viewWidth - pad)
+            if (top < pad) offsetY += pad - top else if (bottom > viewHeight - pad) offsetY -= bottom - (viewHeight - pad)
         }
 
         fun zoomBy(factor: Float) {
@@ -164,7 +200,13 @@ fun PlotCanvas(
 
         // Fit the whole plot on screen the first time it has zones.
         LaunchedEffect(hasZones, viewWidth, viewHeight) {
-            if (hasZones && scale == 0f) fit()
+            // After the phone is turned, or the Today card comes or goes, the zones may all have left the view.
+            if (hasZones && (scale == 0f || zones.none { onScreen(it.zone.rect) })) fit()
+        }
+        // The view follows the zone being edited: a new zone placed out of sight, or one moved there with the buttons.
+        val selectedRect = zones.firstOrNull { it.zone.id == selectedId }?.zone?.rect
+        LaunchedEffect(editing, selectedId, selectedRect) {
+            if (editing && scale != 0f && drag == null) selectedRect?.let { reveal(it) }
         }
         // A zone dragged near an edge pans the view towards it, and the drag keeps up so the zone stays under the finger.
         val dragging = drag != null
@@ -194,6 +236,7 @@ fun PlotCanvas(
         val extentColour = MaterialTheme.colorScheme.primary
         val bounds = PlotLayout.bounds(zones.map { it.zone.rect })
         val currentZones by rememberUpdatedState(zones)
+        val tapEmpty by rememberUpdatedState(onTapEmpty)
         Box(
             Modifier
                 .fillMaxSize()
@@ -204,13 +247,11 @@ fun PlotCanvas(
                         while (true) {
                             val event = awaitPointerEvent(PointerEventPass.Initial)
                             fingerDown = event.changes.any { it.pressed }
+                            // The preview stays when the finger lifts, so its buttons can be pressed.
+                            if (!fingerDown) previewHeld = false
                             if (previewId == null || !previewHeld) continue
-                            if (!fingerDown) {
-                                previewId = null
-                            } else {
-                                val at = event.changes.first().position
-                                zoneAt(currentZones, (at.x - offsetX) / scale, (at.y - offsetY) / scale)?.let { previewId = it }
-                            }
+                            val at = event.changes.first().position
+                            zoneAt(currentZones, (at.x - offsetX) / scale, (at.y - offsetY) / scale)?.let { previewId = it }
                         }
                     }
                 }
@@ -221,6 +262,13 @@ fun PlotCanvas(
                         offsetX = (offsetX - centroid.x) * factor + centroid.x + pan.x
                         offsetY = (offsetY - centroid.y) * factor + centroid.y + pan.y
                         scale = newScale
+                    }
+                }
+                // A press where there is no zone closes a preview and, while editing, lets go of the chosen zone.
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        previewId = null
+                        tapEmpty()
                     }
                 }
                 .drawBehind {
@@ -262,26 +310,43 @@ fun PlotCanvas(
                         },
                         onNudge = { right, down -> onChangeZone(id, PlotLayout.nudged(view.zone.rect, right, down)) },
                         water = water,
+                        due = due[id] ?: 0,
                     )
                 }
             }
             drag?.let { current ->
                 zones.firstOrNull { it.zone.id == current.id }?.let { view ->
                     val landing = PlotLayout.snapped(dragged(view.zone.rect, current))
-                    DragReadout(view.zone.rect, landing, current.part, Modifier.align(Alignment.TopCenter).padding(12.dp))
+                    val under = zones.filter { it.zone.id != current.id && it.zone.rect.overlaps(landing) }.map { it.zone.name }
+                    DragReadout(view.zone.rect, landing, current.part, under, Modifier.align(Alignment.TopCenter).padding(12.dp))
                 }
             }
-            CanvasControls(
-                onFit = ::fit,
-                onZoomIn = { zoomBy(ZOOM_STEP) },
-                onZoomOut = { zoomBy(1 / ZOOM_STEP) },
-                modifier = Modifier.align(if (editing) Alignment.TopStart else Alignment.BottomStart).padding(12.dp),
-            )
+            // The scale bar sits on the canvas side of the zoom buttons: under them while editing, above them otherwise.
+            Column(Modifier.align(if (editing) Alignment.TopStart else Alignment.BottomStart).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!editing) ScaleBar(scale, Modifier.padding(start = 12.dp))
+                CanvasControls(onFit = ::fit, onZoomIn = { zoomBy(ZOOM_STEP) }, onZoomOut = { zoomBy(1 / ZOOM_STEP) }, modifier = Modifier)
+                if (editing) ScaleBar(scale, Modifier.padding(start = 12.dp))
+            }
             previewId?.let { id ->
                 zones.firstOrNull { it.zone.id == id }?.let { view ->
                     val rect = view.zone.rect
                     val tile = Rect(offsetX + rect.xCm * scale, offsetY + rect.yCm * scale, offsetX + rect.rightCm * scale, offsetY + rect.bottomCm * scale)
-                    ZonePreview(view, tile, viewWidth, viewHeight, water, onDismiss = { previewId = null })
+                    ZonePreview(
+                        view, tile, viewWidth, viewHeight, water,
+                        onDismiss = { previewId = null },
+                        onOpen = {
+                            previewId = null
+                            onOpenZone(id)
+                        },
+                        onArrange = {
+                            previewId = null
+                            onArrange(id)
+                        },
+                        onOpenPlant = { plantId ->
+                            previewId = null
+                            onOpenPlant(plantId)
+                        },
+                    )
                 }
             }
         }
@@ -308,22 +373,29 @@ private fun dragged(rect: ZoneRect, drag: ZoneDrag): ZoneRect = when (drag.part)
     )
 }
 
-/** Grid lines every metre, with a stronger line every five, so distances can be read at any zoom. */
+/**
+ * Grid lines every metre, with a stronger line every five, so distances can be read at any zoom. Zoomed in far enough
+ * to tell them apart, the half metres that zones snap to are drawn too, fainter.
+ */
 private fun DrawScope.drawGrid(scale: Float, offsetX: Float, offsetY: Float, minor: Color, major: Color) {
-    for (step in listOf(100, 500)) {
+    for (step in listOf(PlotLayout.GRID_CM, 100, 500)) {
         val spacing = step * scale
-        if (spacing < 8f) continue
-        val colour = if (step == 100) minor else major
+        if (spacing < if (step == PlotLayout.GRID_CM) HALF_METRE_MIN_PX else 8f) continue
+        val colour = when (step) {
+            PlotLayout.GRID_CM -> minor.copy(alpha = 0.45f)
+            100 -> minor
+            else -> major
+        }
         val firstX = kotlin.math.floor(-offsetX / spacing).toInt()
         val firstY = kotlin.math.floor(-offsetY / spacing).toInt()
         var x = offsetX + firstX * spacing
         while (x < size.width) {
-            drawLine(colour, Offset(x, 0f), Offset(x, size.height), strokeWidth = if (step == 100) 1f else 2f)
+            drawLine(colour, Offset(x, 0f), Offset(x, size.height), strokeWidth = if (step == 500) 2f else 1f)
             x += spacing
         }
         var y = offsetY + firstY * spacing
         while (y < size.height) {
-            drawLine(colour, Offset(0f, y), Offset(size.width, y), strokeWidth = if (step == 100) 1f else 2f)
+            drawLine(colour, Offset(0f, y), Offset(size.width, y), strokeWidth = if (step == 500) 2f else 1f)
             y += spacing
         }
     }
@@ -352,10 +424,30 @@ private fun CanvasControls(onFit: () -> Unit, onZoomIn: () -> Unit, onZoomOut: (
     }
 }
 
-/** Where a dragged zone will land: how far it moves, or its new size. */
+/** A length of yard drawn to the canvas's scale, with how long it is, so sizes can be judged at any zoom. */
 @Composable
-private fun DragReadout(from: ZoneRect, to: ZoneRect, part: DragPart, modifier: Modifier) {
-    val text = when (part) {
+private fun ScaleBar(scale: Float, modifier: Modifier) {
+    val density = LocalDensity.current
+    val longest = with(density) { SCALE_BAR_MAX_DP.dp.toPx() }
+    val cm = SCALE_STEPS_CM.lastOrNull { it * scale <= longest } ?: SCALE_STEPS_CM.first()
+    val length = UiFormat.metresFromCm(cm)
+    val description = stringResource(R.string.plot_scale_description, length)
+    val colour = MaterialTheme.colorScheme.onSurface
+    Column(modifier.clearAndSetSemantics { contentDescription = description }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(stringResource(R.string.plot_scale, length), style = MaterialTheme.typography.labelMedium, color = colour)
+        Canvas(Modifier.size(with(density) { (cm * scale).toDp() }, 6.dp)) {
+            val y = size.height - 1f
+            drawLine(colour, Offset(0f, y), Offset(size.width, y), strokeWidth = 2f)
+            drawLine(colour, Offset(1f, 0f), Offset(1f, size.height), strokeWidth = 2f)
+            drawLine(colour, Offset(size.width - 1f, 0f), Offset(size.width - 1f, size.height), strokeWidth = 2f)
+        }
+    }
+}
+
+/** Where a dragged zone will land: how far it moves, or its new size, and the zones it would lie over. */
+@Composable
+private fun DragReadout(from: ZoneRect, to: ZoneRect, part: DragPart, under: List<String>, modifier: Modifier) {
+    val place = when (part) {
         DragPart.RESIZE -> stringResource(R.string.plot_drag_size, UiFormat.metresFromCm(to.widthCm), UiFormat.metresFromCm(to.heightCm))
         DragPart.MOVE -> {
             val across = to.xCm - from.xCm
@@ -366,6 +458,8 @@ private fun DragReadout(from: ZoneRect, to: ZoneRect, part: DragPart, modifier: 
             ).joinToString(", ").ifEmpty { stringResource(R.string.plot_drag_none) }
         }
     }
+    // Zones may lie over each other, as a pot zone on a deck does, so an overlap is said rather than refused.
+    val text = if (under.isEmpty()) place else place + " · " + stringResource(R.string.plot_drag_overlaps, UiFormat.joinAnd(under, listWords()))
     Surface(
         color = MaterialTheme.colorScheme.inverseSurface,
         contentColor = MaterialTheme.colorScheme.inverseOnSurface,
@@ -393,6 +487,7 @@ private fun ZoneTile(
     onDragEnd: () -> Unit,
     onNudge: (right: Int, down: Int) -> Unit,
     water: WaterState?,
+    due: Int,
 ) {
     val rect = view.zone.rect
     val density = LocalDensity.current
@@ -416,6 +511,7 @@ private fun ZoneTile(
     ) + (if (kinds > 0) ", " + pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds) else "") +
         (if (hives > 0) ", " + pluralStringResource(R.plurals.zone_tile_hives, hives, hives) else "") +
         (if (hotels > 0) ", " + pluralStringResource(R.plurals.zone_tile_hotels, hotels, hotels) else "") +
+        (if (due > 0) ", " + pluralStringResource(R.plurals.zone_tile_due, due, due) else "") +
         (next?.let { ". " + nextWateringSentence(it, water.today, water.window, watering.byHand) } ?: "")
     val moves = listOf(
         stringResource(R.string.move_left) to (-1 to 0),
@@ -470,7 +566,14 @@ private fun ZoneTile(
                 .then(
                     if (editing) {
                         Modifier.pointerInput(Unit) {
-                            detectDragGestures(onDragEnd = { dropped() }, onDragCancel = { dropped() }) { change, amount ->
+                            detectDragGestures(
+                                onDragStart = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                onDragEnd = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                    dropped()
+                                },
+                                onDragCancel = { dropped() },
+                            ) { change, amount ->
                                 change.consume()
                                 dragTo(DragPart.MOVE, amount, change.position + corner)
                             }
@@ -480,26 +583,35 @@ private fun ZoneTile(
                     },
                 ),
         ) {
-            TileContent(view, kinds, hives, hotels, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value)
+            TileContent(view, kinds, hives, hotels, due, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value)
         }
         if (selected) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary,
+            // The handle is drawn 28 dp across and takes touches over 48 dp, centred on the same spot.
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .offset(10.dp, 10.dp)
-                    .size(28.dp)
+                    .offset(20.dp, 20.dp)
+                    .size(48.dp)
                     .pointerInput(Unit) {
-                        detectDragGestures(onDragEnd = { dropped() }, onDragCancel = { dropped() }) { change, amount ->
+                        detectDragGestures(
+                            onDragStart = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                            onDragEnd = {
+                                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                dropped()
+                            },
+                            onDragCancel = { dropped() },
+                        ) { change, amount ->
                             change.consume()
                             // The handle sits on the tile's bottom right corner, which is about where the finger is.
                             dragTo(DragPart.RESIZE, amount, farCorner + change.position - Offset(size.width / 2f, size.height / 2f))
                         }
                     },
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(painterResource(R.drawable.ic_open_in_full), contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp)) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(painterResource(R.drawable.ic_open_in_full), contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
         }
@@ -511,7 +623,7 @@ private fun ZoneTile(
  * plants, then badges, then how many [kinds] of animals have been seen there.
  */
 @Composable
-private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float) {
+private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float) {
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (widthDp >= 72) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
@@ -519,6 +631,8 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, nex
             // Hives and hotels stay in sight on a small tile, beside the name; the tile's description counts them.
             if (widthDp >= 96 && hives > 0) BeeHomeCount(R.drawable.ic_hive, hives)
             if (widthDp >= 96 && hotels > 0) BeeHomeCount(R.drawable.ic_cottage, hotels)
+            // Jobs due today in the zone, which the Today card lists.
+            if (widthDp >= 96 && due > 0) BeeHomeCount(R.drawable.ic_notifications, due)
         }
         // The next watering takes a line, so what comes after it needs that much more room.
         val watering = next?.takeIf { heightDp >= 56 }
@@ -531,11 +645,15 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, nex
         }
         if (room >= 76 && view.plants.isNotEmpty()) {
             val fit = ((widthDp - 16) / 34).toInt().coerceAtLeast(1)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // When they do not all fit, the last place says how many more there are.
+            val shown = if (view.plants.size > fit && fit >= 2) fit - 1 else fit
+            val more = view.plants.size - shown
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 // A light disc keeps each plant visible on any tile colour.
-                view.plants.take(fit).forEach {
+                view.plants.take(shown).forEach {
                     PlantAvatar(it.species?.form, 30.dp, thumbnail = it.plant.thumbnail, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, contentColor = MaterialTheme.colorScheme.onSurface)
                 }
+                if (more > 0 && fit >= 2) Text(stringResource(R.string.zone_tile_more, more), style = MaterialTheme.typography.labelLarge, maxLines = 1)
             }
         }
         if (room >= 116 && view.badges.isNotEmpty()) {
@@ -557,6 +675,17 @@ private fun BeeHomeCount(icon: Int, count: Int) {
         if (count > 1) Text(count.toString(), style = MaterialTheme.typography.labelMedium)
     }
 }
+
+/** The space kept around the zones when the whole plot is shown, and the room left for the buttons over the canvas. */
+private const val FIT_MARGIN_DP = 24f
+private const val FIT_CONTROLS_DP = 88f
+
+/** Half-metre grid lines are drawn once they are this many pixels apart. */
+private const val HALF_METRE_MIN_PX = 48f
+
+/** The lengths the scale bar may show, in centimetres, and the longest it may be drawn. */
+private val SCALE_STEPS_CM = listOf(50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000)
+private const val SCALE_BAR_MAX_DP = 96
 
 /** The height of the next watering's line on a tile, with the space after it. */
 private const val WATERING_ROW_DP = 22f

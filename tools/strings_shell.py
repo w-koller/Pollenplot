@@ -5,7 +5,8 @@ STRINGS = {
     "plot_subtitle": "Your backyard",
     "plot_empty_title": "Your plot has no zones yet.",
     "plot_empty_body": "Zones are the areas of your yard, such as a front native strip, a citrus patch or a hive corner. "
-    "You will be able to add zones and place your plants, hives and bee hotels in them here.",
+    "Please add a zone to start. Your plants, hives and bee hotels go in zones, and you can move and resize each "
+    "zone on the plot.",
 
     # Pollen Rhythms
     "rhythms_title": "Pollen Rhythms",

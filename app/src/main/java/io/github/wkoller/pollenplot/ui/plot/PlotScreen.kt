@@ -43,6 +43,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalResources
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import io.github.wkoller.pollenplot.domain.garden.Zone
+import io.github.wkoller.pollenplot.domain.garden.ZoneRect
+import io.github.wkoller.pollenplot.domain.garden.PlotLayout
+import io.github.wkoller.pollenplot.data.TodayItem
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.FeedViews
@@ -105,6 +111,17 @@ fun PlotScreen(
     var addingZone by rememberSaveable { mutableStateOf(false) }
     var adjusting by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val notices = LocalNotices.current
+    val resources = LocalResources.current
+    // Where the chosen zone was when Move and resize opened, to say what changed and to put it back.
+    var adjustFrom by remember { mutableStateOf<ZoneRect?>(null) }
+
+    /** Says that a zone moved or changed size, with Undo back to [before]. */
+    fun changed(zone: Zone, before: ZoneRect, after: ZoneRect) {
+        if (before == after) return
+        val words = if (before.widthCm != after.widthCm || before.heightCm != after.heightCm) R.string.plot_resized else R.string.plot_moved
+        notices?.show(resources.getString(words, zone.name)) { garden.moveZone(zone.id, before) }
+    }
 
     val loadedZones = zones
     val loadedPlants = plants
@@ -171,16 +188,22 @@ fun PlotScreen(
             }
         },
         floatingActionButton = {
-            if (editing) {
+            // While Move and resize is open its own Done is the only one on the screen.
+            if (editing && adjusting) {
+                Unit
+            } else if (editing) {
                 EditToolbar(
                     hasSelection = selectedZone != null,
                     onAddZone = { addingZone = true },
-                    onAdjust = { adjusting = true },
+                    onAdjust = {
+                        adjustFrom = selectedZone?.rect
+                        adjusting = true
+                    },
                     onDetails = { selectedZone?.let { onEditZone(it.id) } },
                     onDone = ::finishEditing,
                 )
             } else if (loadedZones != null) {
-                AddMenu(AddAction.PLOT, onAdd)
+                AddMenu(AddAction.PLOT) { action -> if (action == AddAction.ZONE) addingZone = true else onAdd(action) }
             }
         },
         floatingActionButtonPosition = if (editing) FabPosition.Center else FabPosition.End,
@@ -204,9 +227,23 @@ fun PlotScreen(
                             editing = editing,
                             selectedId = selectedId,
                             onTapZone = { id -> if (editing) selectedId = id else onOpenZone(id) },
-                            onChangeZone = { id, rect -> scope.launch { garden.moveZone(id, rect) } },
+                            onChangeZone = { id, rect ->
+                                scope.launch {
+                                    val zone = loadedZones.firstOrNull { it.zone.id == id }?.zone
+                                    val before = garden.moveZone(id, rect)
+                                    if (zone != null && before != null) changed(zone, before, PlotLayout.snapped(rect))
+                                }
+                            },
                             water = waterState,
                             habitat = habitats,
+                            due = dueByZone(todayState, loadedZones),
+                            onOpenZone = onOpenZone,
+                            onOpenPlant = onOpenPlant,
+                            onArrange = { id ->
+                                editing = true
+                                selectedId = id
+                            },
+                            onTapEmpty = { if (editing) selectedId = null },
                         )
                         if (editing && selectedZone == null) {
                             Surface(
@@ -245,7 +282,11 @@ fun PlotScreen(
     if (adjusting && selectedZone != null) {
         AdjustZoneSheet(
             zone = selectedZone,
-            onDismiss = { adjusting = false },
+            onDismiss = {
+                adjusting = false
+                adjustFrom?.let { changed(selectedZone, it, selectedZone.rect) }
+                adjustFrom = null
+            },
             onAdjust = { change -> scope.launch { garden.adjustZone(selectedZone.id, change) } },
         )
     }
@@ -319,6 +360,21 @@ private fun PlotList(
     }
 }
 
+/** How many of today's jobs are in each zone: its own watering and feed, and its plants' pruning and pot care. */
+private fun dueByZone(today: TodayState?, zones: List<ZoneView>): Map<String, Int> {
+    if (today == null) return emptyMap()
+    val zoneOf = zones.flatMap { view -> view.plants.map { it.plant.id to view.zone.id } }.toMap()
+    return today.items.mapNotNull { item ->
+        when (item) {
+            is TodayItem.Watering -> item.zoneId
+            is TodayItem.Feed -> item.zoneId
+            is TodayItem.PotCare -> zoneOf[item.plantId]
+            is TodayItem.Prune -> zoneOf[item.plantId]
+            else -> null
+        }
+    }.groupingBy { it }.eachCount()
+}
+
 /** The floating toolbar shown while the layout is being edited. */
 @Composable
 private fun EditToolbar(hasSelection: Boolean, onAddZone: () -> Unit, onAdjust: () -> Unit, onDetails: () -> Unit, onDone: () -> Unit) {
@@ -329,8 +385,9 @@ private fun EditToolbar(hasSelection: Boolean, onAddZone: () -> Unit, onAdjust: 
         IconButton(onClick = onAdjust, enabled = hasSelection) {
             Icon(painterResource(R.drawable.ic_open_with), contentDescription = stringResource(R.string.plot_adjust))
         }
+        // Not the pencil, which on the top bar means editing the layout.
         IconButton(onClick = onDetails, enabled = hasSelection) {
-            Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.plot_details))
+            Icon(painterResource(R.drawable.ic_tune), contentDescription = stringResource(R.string.plot_details))
         }
         TextButton(onClick = onDone) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {

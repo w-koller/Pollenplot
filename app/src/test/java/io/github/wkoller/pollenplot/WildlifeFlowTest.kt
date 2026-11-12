@@ -184,7 +184,8 @@ class WildlifeFlowTest {
         seed()
         show()
         // The native strip had a lorikeet and a frog this year, and a noisy miner the year before.
-        waitFor(hasContentDescription("Front Native Strip, Garden bed, 5 plants, 3 species seen"))
+        // The description goes on to say the jobs due in the zone today.
+        waitFor(hasContentDescription("Front Native Strip, Garden bed, 5 plants, 3 species seen", substring = true))
         waitFor(hasContentDescription("Hive Corner", substring = true))
         compose.onNode(hasContentDescription("Hive Corner", substring = true)).assertContentDescriptionContains("2 species seen", substring = true)
         shot("plot_wildlife")

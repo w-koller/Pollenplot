@@ -1,13 +1,20 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,12 +27,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,11 +59,22 @@ private const val PREVIEW_PLANTS = 6
 
 /**
  * A preview of a zone held on the Plot, placed above its [tile] when there is room and below it otherwise, kept on
- * the canvas of [viewWidth] × [viewHeight] pixels. A screen reader opens it with the zone's "Preview zone" action, so
- * it has a button to close it as well.
+ * the canvas of [viewWidth] × [viewHeight] pixels. It stays open once the finger lifts, so the zone or one of its plants
+ * can be opened from it, and a screen reader opens it with the zone's "Preview zone" action. It has a button to close
+ * it, and a press on the canvas beside it closes it too.
  */
 @Composable
-fun ZonePreview(view: ZoneView, tile: Rect, viewWidth: Float, viewHeight: Float, water: WaterState?, onDismiss: () -> Unit) {
+fun ZonePreview(
+    view: ZoneView,
+    tile: Rect,
+    viewWidth: Float,
+    viewHeight: Float,
+    water: WaterState?,
+    onDismiss: () -> Unit,
+    onOpen: (() -> Unit)? = null,
+    onArrange: (() -> Unit)? = null,
+    onOpenPlant: ((String) -> Unit)? = null,
+) {
     val density = LocalDensity.current
     val gap = with(density) { 8.dp.toPx() }
     val margin = with(density) { 16.dp.toPx() }
@@ -75,15 +95,24 @@ fun ZonePreview(view: ZoneView, tile: Rect, viewWidth: Float, viewHeight: Float,
             .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
             .width(with(density) { width.toDp() })
             .onSizeChanged { height = it.height }
+            // A press on the card itself is not a press on the canvas, which would close it.
+            .pointerInput(Unit) { detectTapGestures { } }
             .semantics { liveRegion = LiveRegionMode.Polite },
     ) {
-        ZonePreviewCard(view, water, onDismiss)
+        ZonePreviewCard(view, water, onDismiss, onOpen, onArrange, onOpenPlant)
     }
 }
 
 /** What a zone holds: its name and kind, its plants, its next watering, its badges and the animals seen there. */
 @Composable
-fun ZonePreviewCard(view: ZoneView, water: WaterState?, onDismiss: () -> Unit) {
+fun ZonePreviewCard(
+    view: ZoneView,
+    water: WaterState?,
+    onDismiss: () -> Unit,
+    onOpen: (() -> Unit)? = null,
+    onArrange: (() -> Unit)? = null,
+    onOpenPlant: ((String) -> Unit)? = null,
+) {
     val large = largeText()
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -101,7 +130,9 @@ fun ZonePreviewCard(view: ZoneView, water: WaterState?, onDismiss: () -> Unit) {
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 view.plants.take(PREVIEW_PLANTS).forEach { plant ->
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // With somewhere to open it, each plant is a button at least 48 dp tall.
+                    val row = onOpenPlant?.let { open -> Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { open(plant.plant.id) } } ?: Modifier
+                    Row(row, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         PlantAvatar(plant.species?.form, 28.dp, thumbnail = plant.plant.thumbnail)
                         Text(plant.title, style = MaterialTheme.typography.bodyMedium, maxLines = if (large) 3 else 1, overflow = TextOverflow.Ellipsis)
                     }
@@ -125,6 +156,12 @@ fun ZonePreviewCard(view: ZoneView, water: WaterState?, onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(painterResource(R.drawable.ic_raven), contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        if (onOpen != null || onArrange != null) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                onOpen?.let { Button(onClick = it) { Text(stringResource(R.string.zone_preview_open)) } }
+                onArrange?.let { TextButton(onClick = it) { Text(stringResource(R.string.plot_adjust)) } }
             }
         }
     }

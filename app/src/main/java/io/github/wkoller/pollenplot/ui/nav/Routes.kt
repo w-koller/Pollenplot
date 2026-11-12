@@ -190,12 +190,13 @@ enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
     FIELD(R.string.add_field, R.drawable.ic_travel_explore),
     FEED(R.string.add_feed, R.drawable.ic_compost),
     PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant),
+    ZONE(R.string.plot_add_zone, R.drawable.ic_yard),
     SIGHTING(R.string.add_sighting_by_name, R.drawable.ic_edit),
     ;
 
     companion object {
         /** The Plot's add menu. */
-        val PLOT = listOf(IDENTIFY, PHOTOS, WEED, FIELD, PLANT, FEED)
+        val PLOT = listOf(IDENTIFY, PHOTOS, WEED, FIELD, PLANT, ZONE, FEED)
 
         /** The Wildlife tab's add menu. Photos from the gallery are looked at for the kind of animal the user chooses. */
         val WILDLIFE = listOf(IDENTIFY, ANIMAL_PHOTOS, SIGHTING)
