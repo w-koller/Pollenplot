@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Every tab has a More menu. It holds “Ask your garden” and “Guides”, and on the Plot also “Edit layout”, the
+  Wishlist, Review and Weeds, so the review queue and the weeds are reachable with nothing waiting. The Plot's top
+  bar has fewer buttons, and they no longer move.
+- “Guides” lists every guide page in one place, under the part of the garden it is about.
+- A plant or zone that was deleted says so when a link to it is followed. Before, its page was blank.
+- A plant the knowledge base does not have can be given a pot.
+- “Log a problem” is now “Record a problem”, as the other records are worded.
 - The Plot is easier to lay out. “Add a zone” is in the + menu. The view follows a new zone, and a zone moved out of
   sight with the buttons, and shows the plot again after the phone is turned. Moving or resizing a zone shows a
   message with Undo. The resize handle takes touches over 48 dp, a press on empty canvas lets go of the chosen zone,

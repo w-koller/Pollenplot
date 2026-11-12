@@ -85,6 +85,8 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.assistant.CareDraftCard
 import io.github.wkoller.pollenplot.ui.assistant.DraftState
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
+import io.github.wkoller.pollenplot.ui.components.Found
+import io.github.wkoller.pollenplot.ui.components.MissingRecord
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
 import io.github.wkoller.pollenplot.ui.components.PastDateDialog
 import io.github.wkoller.pollenplot.ui.components.largeText
@@ -97,6 +99,7 @@ import io.github.wkoller.pollenplot.ui.weeds.WeedCard
 import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.ui.wildlife.PlantAnimalsCard
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
@@ -141,7 +144,8 @@ fun PlantDetailScreen(
     onOpenHarvest: (String) -> Unit = {},
     onRecordPruning: () -> Unit = {},
 ) {
-    val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
+    val found by remember(plantId) { views.plant(plantId).map { Found(it) } }.collectAsStateWithLifecycle(initialValue = null)
+    val view = found?.value
     val finds by remember(plantId) { garden.findsOf(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val flowered by remember(plantId) { garden.floweringRecords(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val notices = LocalNotices.current
@@ -186,7 +190,10 @@ fun PlantDetailScreen(
             IconButton(onClick = { confirmRemove = true }) { Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.plant_remove)) }
         },
     ) { padding ->
-        if (loaded == null) return@DetailScaffold
+        if (loaded == null) {
+            if (found != null) MissingRecord(padding)
+            return@DetailScaffold
+        }
         val resolved = loaded.care
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -264,6 +271,15 @@ fun PlantDetailScreen(
             } else {
                 facts(resolved, loaded, all, kb, locality.hemisphere, onEditFacts, onEditPot.takeIf { pots != null && pot?.potted == false }) {
                     if (finds.isNotEmpty()) item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
+                }
+            }
+            if (resolved == null && pots != null && pot?.potted == false) {
+                // A plant the knowledge base does not have can be in a pot too.
+                item {
+                    OutlinedButton(onClick = onEditPot) {
+                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(R.string.pot_add), modifier = Modifier.padding(start = 8.dp))
+                    }
                 }
             }
             if (resolved == null && finds.isNotEmpty()) {

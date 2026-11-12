@@ -47,6 +47,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import kotlinx.coroutines.flow.map
+import io.github.wkoller.pollenplot.ui.components.MissingRecord
+import io.github.wkoller.pollenplot.ui.components.Found
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenViews
@@ -99,7 +102,8 @@ fun ZoneDetailScreen(
     onOpenNativeHive: (String) -> Unit = {},
     onOpenHotel: (String) -> Unit = {},
 ) {
-    val view by views.zone(zoneId).collectAsStateWithLifecycle(initialValue = null)
+    val found by remember(zoneId) { views.zone(zoneId).map { Found(it) } }.collectAsStateWithLifecycle(initialValue = null)
+    val view = found?.value
     val fed by remember(feeding, zoneId) { feeding?.zoneLastFed(zoneId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val schedules by remember(feeding, zoneId) { feeding?.zoneSchedules(zoneId) ?: flowOf(emptyList()) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val habitatView by remember(habitat, zoneId) { habitat?.zone(zoneId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
@@ -112,7 +116,10 @@ fun ZoneDetailScreen(
             IconButton(onClick = onEdit) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.zone_edit)) }
         },
     ) { padding ->
-        if (loaded == null) return@DetailScaffold
+        if (loaded == null) {
+            if (found != null) MissingRecord(padding)
+            return@DetailScaffold
+        }
         val zone = loaded.zone
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
             item {

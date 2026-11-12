@@ -150,7 +150,7 @@ class WildFindFlowTest {
         val ids = runBlocking { DemoGarden.seed(garden) }
         runBlocking { wishes.add("Hibbertia scandens", targetZoneId = ids.front) }
         showApp()
-        compose.pressWhenShown(hasContentDescription("Wishlist"))
+        compose.fromMore("Wishlist")
         waitFor(hasText("Snake vine"))
         shot("wishlist")
         compose.onNodeWithText("Snake vine").performClick()
@@ -174,7 +174,7 @@ class WildFindFlowTest {
             wishes.add("Westringia fruticosa")
         }
         showApp(Settings(theme = ThemeChoice.DARK))
-        compose.pressWhenShown(hasContentDescription("Wishlist"))
+        compose.fromMore("Wishlist")
         waitFor(hasText("Coastal rosemary"))
         shot("wishlist_dark")
     }
@@ -183,7 +183,7 @@ class WildFindFlowTest {
     fun anEmptyWishlistOffersToFindAPlant() {
         located()
         showApp()
-        compose.pressWhenShown(hasContentDescription("Wishlist"))
+        compose.fromMore("Wishlist")
         waitFor(hasText("Your wishlist is empty."))
         shot("wishlist_empty")
     }

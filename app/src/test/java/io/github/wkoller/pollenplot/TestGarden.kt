@@ -297,6 +297,12 @@ fun ComposeContentTestRule.pressWhenShown(matcher: SemanticsMatcher) {
     onAllNodes(matcher).onFirst().performClick()
 }
 
+/** Opens a tab's More menu and presses its [item], each once it is on the screen. */
+fun ComposeContentTestRule.fromMore(item: String) {
+    pressWhenShown(hasContentDescription("More"))
+    pressWhenShown(hasText(item))
+}
+
 /** Opens a tab's add menu and presses its [item], each once it is on the screen. */
 fun ComposeContentTestRule.addFromMenu(item: String) {
     pressWhenShown(hasContentDescription("Open the add menu"))

@@ -9,6 +9,9 @@ STRINGS = {
     "settings": "Settings",
     "cancel": "Cancel",
     "undo": "Undo",
+    "more": "More",
+    "missing_title": "This is no longer in your garden.",
+    "missing_body": "It may have been deleted since the link to it was made. Please go back and choose another.",
     "choose": "Choose",
 
     # Joining words for lists and month ranges, such as "March and April" and "September to November"

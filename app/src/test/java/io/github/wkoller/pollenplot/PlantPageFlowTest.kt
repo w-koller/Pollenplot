@@ -163,6 +163,13 @@ class PlantPageFlowTest {
     }
 
     @Test
+    fun aPlantThatWasDeletedSaysSo() {
+        seed()
+        show("no-such-plant")
+        waitFor(hasText("This is no longer in your garden."))
+    }
+
+    @Test
     fun aCorrectionAppliesToEveryPlantOfTheSpecies() {
         val ids = seed()
         show(ids.lemon)

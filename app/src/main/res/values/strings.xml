@@ -98,6 +98,9 @@
     <string name="settings">Settings</string>
     <string name="cancel">Cancel</string>
     <string name="undo">Undo</string>
+    <string name="more">More</string>
+    <string name="missing_title">This is no longer in your garden.</string>
+    <string name="missing_body">It may have been deleted since the link to it was made. Please go back and choose another.</string>
     <string name="choose">Choose</string>
     <string name="list_and">%1$s and %2$s</string>
     <string name="list_range">%1$s to %2$s</string>
@@ -227,6 +230,11 @@
     <string name="guide">Guide</string>
     <string name="guide_last_checked">These facts were last checked against their sources on %1$s.</string>
     <string name="guide_sources">Sources</string>
+    <string name="guides_title">Guides</string>
+    <string name="guides_honey">Honey bees</string>
+    <string name="guides_native">Stingless bees</string>
+    <string name="guides_hotels">Bee hotels</string>
+    <string name="guides_water">Watering</string>
     <string name="harvest_title">Harvests</string>
     <string name="harvest_none">No harvests recorded yet.</string>
     <string name="harvest_grams">%1$s g</string>
@@ -1067,11 +1075,11 @@
     <string name="settings_pot_reminders_body">Pollenplot sends a notification in the morning when a pot is due a flush or a look at repotting.</string>
     <string name="problems_title">Problems</string>
     <string name="problems_none">No problems logged for this plant.</string>
-    <string name="problem_log">Log a problem</string>
+    <string name="problem_log">Record a problem</string>
     <string name="problem_open">Open</string>
     <string name="problem_resolved">Resolved</string>
     <string name="problem_seen_on">Seen on %1$s</string>
-    <string name="problem_log_title">Log a problem</string>
+    <string name="problem_log_title">Record a problem</string>
     <string name="problem_what">What you saw</string>
     <string name="problem_other">Something else</string>
     <string name="problem_other_name">What it is</string>
