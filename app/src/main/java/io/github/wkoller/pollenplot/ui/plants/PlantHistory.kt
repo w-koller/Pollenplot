@@ -19,18 +19,25 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -43,17 +50,24 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.domain.id.Candidate
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
+import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.photos.StoredPhoto
 import io.github.wkoller.pollenplot.domain.id.BoxBp
 import io.github.wkoller.pollenplot.domain.plants.KnowledgeBase
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import io.github.wkoller.pollenplot.ui.review.PlantChooser
 import io.github.wkoller.pollenplot.ui.review.ConfidenceBadge
 import io.github.wkoller.pollenplot.ui.review.Cutout
 import io.github.wkoller.pollenplot.ui.review.confidenceLabel
 import io.github.wkoller.pollenplot.ui.review.readable
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** The suggestion that matched the plant the find was added to, or else the top one. */
 private fun DetectionRecord.matched(speciesName: String?): Candidate? =
@@ -89,12 +103,44 @@ fun PhotoHistoryCard(finds: List<DetectionRecord>, speciesName: String?, kb: Kno
     }
 }
 
-/** One photo a plant was found in, with the plant's region outlined, the day it was taken and every suggestion. */
+/**
+ * One photo a plant was found in, with the plant's region outlined, the day it was taken and every suggestion. With
+ * the garden's [views], the photo can be made the plant's picture, or moved to the plant it really shows.
+ */
 @Composable
-fun PlantPhotoScreen(garden: GardenRepository, knowledge: KnowledgeRepository, photoId: String, detectionId: String?, onBack: () -> Unit) {
+fun PlantPhotoScreen(
+    garden: GardenRepository,
+    knowledge: KnowledgeRepository,
+    photoId: String,
+    detectionId: String?,
+    views: GardenViews? = null,
+    onBack: () -> Unit,
+) {
     var photo by remember { mutableStateOf<StoredPhoto?>(null) }
     var find by remember { mutableStateOf<DetectionRecord?>(null) }
     var loaded by remember { mutableStateOf(false) }
+    val plants by remember(views) { views?.plants ?: flowOf(emptyList()) }.collectAsStateWithLifecycle(initialValue = emptyList())
+    var moving by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val notices = LocalNotices.current
+    val resources = LocalResources.current
+    val owner = find?.plantId?.let { id -> plants.firstOrNull { it.plant.id == id } }
+
+    val moved = find
+    if (moving && moved != null && owner != null) {
+        BackHandler { moving = false }
+        PlantChooser(plants.filter { it.plant.id != owner.plant.id }, speciesName = null, onBack = { moving = false }, title = stringResource(R.string.photo_move_title)) { plantId ->
+            moving = false
+            val to = plants.firstOrNull { it.plant.id == plantId }?.title.orEmpty()
+            scope.launch {
+                garden.moveDetection(moved.id, plantId)
+                notices?.show(resources.getString(R.string.photo_moved, to)) { garden.moveDetection(moved.id, owner.plant.id) }
+                // The photo has left the plant whose page is underneath, so the screen closes.
+                withContext(Dispatchers.Main) { onBack() }
+            }
+        }
+        return
+    }
     // A photo in the history does not change while it is open, so it is read once rather than watched.
     LaunchedEffect(photoId, detectionId) {
         photo = garden.photo(photoId)
@@ -116,6 +162,23 @@ fun PlantPhotoScreen(garden: GardenRepository, knowledge: KnowledgeRepository, p
             item { OutlinedPhoto(shown, find?.box, Modifier.readable()) }
             find?.let { record ->
                 item { Text(stringResource(R.string.photo_taken, UiFormat.longDate(record.takenAt)), style = MaterialTheme.typography.bodyLarge) }
+                if (owner != null) {
+                    item {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (owner.plant.thumbnail == record.thumbnail) {
+                                Text(stringResource(R.string.photo_is_picture), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 12.dp))
+                            } else {
+                                OutlinedButton(onClick = {
+                                    scope.launch {
+                                        garden.setPicture(owner.plant.id, record.id)
+                                        notices?.show(resources.getString(R.string.photo_picture_set))
+                                    }
+                                }) { Text(stringResource(R.string.photo_use_picture)) }
+                            }
+                            TextButton(onClick = { moving = true }) { Text(stringResource(R.string.photo_move)) }
+                        }
+                    }
+                }
                 if (record.candidates.isNotEmpty()) {
                     item { Text(stringResource(R.string.photo_suggestions), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() }) }
                     items(record.candidates) { candidate ->

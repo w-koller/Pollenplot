@@ -2,6 +2,7 @@ package io.github.wkoller.pollenplot
 
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,8 @@ import io.github.wkoller.pollenplot.domain.plants.CareField
 import io.github.wkoller.pollenplot.domain.plants.CareResolver
 import io.github.wkoller.pollenplot.domain.plants.FactLevel
 import io.github.wkoller.pollenplot.domain.plants.WaterNeed
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import io.github.wkoller.pollenplot.ui.components.rememberNotices
 import io.github.wkoller.pollenplot.ui.nav.AppRoot
 import io.github.wkoller.pollenplot.ui.plants.EditFactsScreen
 import io.github.wkoller.pollenplot.ui.plants.PlantDetailScreen
@@ -138,6 +141,28 @@ class PlantPageFlowTest {
     }
 
     @Test
+    fun aPlantInFlowerTodayIsRecordedFromItsPage() {
+        val ids = seed()
+        show(ids.lemon)
+        waitFor(hasText("Light"))
+        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Seen in flower today"))
+        compose.onNodeWithText("Not seen in flower in the last year.").assertExists()
+        shot("plant_flower_record")
+
+        compose.onNodeWithText("Seen in flower today").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.floweringOf(ids.lemon) }.size == 1 }
+        waitFor(hasText("You recorded this plant in flower today."))
+        waitFor(hasText("Recorded in flower on ", substring = true))
+        compose.onNodeWithText("Seen in flower in ", substring = true).assertExists()
+        shot("plant_flower_recorded")
+
+        // The message's Undo takes the day back, and the button returns.
+        compose.onNodeWithText("Undo").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.floweringOf(ids.lemon) }.isEmpty() }
+        waitFor(hasText("Seen in flower today"))
+    }
+
+    @Test
     fun aCorrectionAppliesToEveryPlantOfTheSpecies() {
         val ids = seed()
         show(ids.lemon)
@@ -196,7 +221,9 @@ class PlantPageFlowTest {
     private fun show(plantId: String, settings: Settings = Settings(gardenState = AuState.QLD)) {
         compose.setContent {
             PollenplotTheme(settings) {
+                // The app's frame gives screens their messages; a page shown on its own is given them here.
                 Surface {
+                  CompositionLocalProvider(LocalNotices provides rememberNotices()) {
                     var editing by remember { mutableStateOf(false) }
                     var photo by remember { mutableStateOf<Pair<String, String>?>(null) }
                     val open = photo
@@ -213,6 +240,7 @@ class PlantPageFlowTest {
                             onOpenPhoto = { p, d -> photo = p to d },
                         )
                     }
+                  }
                 }
             }
         }

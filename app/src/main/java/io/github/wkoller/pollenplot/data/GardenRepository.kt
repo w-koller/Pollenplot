@@ -556,12 +556,63 @@ class GardenRepository(
 
     suspend fun floweringOf(plantId: String): List<LocalDate> = flowering.forPlant(plantId).map { LocalDate.ofEpochDay(it.observedOnEpochDay) }
 
-    /** Every time a plant was seen flowering in a photo, as the plant and the day, the oldest first. */
+    /** Every time a plant was seen flowering, in a photo or by the user, as the plant and the day, the oldest first. */
     val floweringList: Flow<List<Pair<String, LocalDate>>> = flowering.observeAll().map { list -> list.map { it.plantId to LocalDate.ofEpochDay(it.observedOnEpochDay) } }
+
+    /** The days one plant was seen in flower, the newest first, for its page. */
+    fun floweringRecords(plantId: String): Flow<List<FloweringRecord>> = flowering.observePlant(plantId).map { list -> list.map { it.toRecord() } }
+
+    /**
+     * Records that the user saw a plant in flower on [day]. A day already recorded for the plant, from a photo or
+     * by the user, is not recorded twice, and null is returned.
+     */
+    suspend fun recordFlowering(plantId: String, day: LocalDate): FloweringRecord? = db.withTransaction {
+        if (plants.get(plantId) == null || flowering.onDay(plantId, day.toEpochDay()) != null) return@withTransaction null
+        val entity = FloweringEntity(UUID.randomUUID().toString(), plantId, day.toEpochDay(), null, FloweringRecord.USER)
+        flowering.insert(entity)
+        entity.toRecord()
+    }
+
+    suspend fun removeFlowering(id: String) = flowering.delete(id)
+
+    /** Puts back a day that was removed, as it was, when the user undoes the removal. */
+    suspend fun restoreFlowering(record: FloweringRecord) = db.withTransaction {
+        if (plants.get(record.plantId) == null) return@withTransaction
+        flowering.insert(FloweringEntity(record.id, record.plantId, record.day.toEpochDay(), record.photoId, record.source))
+    }
 
     private suspend fun recordFlowering(plantId: String, detection: DetectionRecord) {
         val day = detection.takenAt.atZone(clock.zone).toLocalDate()
-        flowering.insert(FloweringEntity(UUID.randomUUID().toString(), plantId, day.toEpochDay(), detection.photoId, "PHOTO"))
+        flowering.insert(FloweringEntity(UUID.randomUUID().toString(), plantId, day.toEpochDay(), detection.photoId, FloweringRecord.PHOTO))
+    }
+
+    private fun FloweringEntity.toRecord() = FloweringRecord(id, plantId, LocalDate.ofEpochDay(observedOnEpochDay), photoId, source)
+
+    /** Makes a find's cut-out the plant's picture. The find must be one of the plant's own. */
+    suspend fun setPicture(plantId: String, detectionId: String) = db.withTransaction {
+        val plant = plants.get(plantId) ?: return@withTransaction
+        val find = detections.get(detectionId)?.takeIf { it.plantId == plantId } ?: return@withTransaction
+        plants.upsert(plant.copy(thumbnail = find.thumbnail, updatedAt = now()))
+    }
+
+    /**
+     * Moves a find that was added to the wrong plant to [plantId]. The day it showed the plant in flower moves with
+     * it, the plant it leaves takes the picture of another of its finds if this one was its picture, and the plant it
+     * joins takes this picture if it had none.
+     */
+    suspend fun moveDetection(detectionId: String, plantId: String) = db.withTransaction {
+        val entity = detections.get(detectionId) ?: return@withTransaction
+        val from = entity.plantId ?: return@withTransaction
+        val to = plants.get(plantId) ?: return@withTransaction
+        if (from == plantId) return@withTransaction
+        detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plantId, null)
+        recordChoice(record(entity), to.speciesName, to.customName)
+        flowering.movePhoto(entity.photoId, from, plantId)
+        val time = now()
+        plants.get(from)?.takeIf { it.thumbnail == entity.thumbnail }?.let { left ->
+            plants.upsert(left.copy(thumbnail = detections.forPlant(from).firstOrNull()?.thumbnail, updatedAt = time))
+        }
+        if (to.thumbnail == null) plants.upsert(to.copy(thumbnail = entity.thumbnail, updatedAt = time))
     }
 
     /**
@@ -620,7 +671,7 @@ class GardenRepository(
     /** Every garden record as JSON-LD, using Darwin Core, schema.org and Pollenplot's own terms. */
     suspend fun exportJsonLd(): String = JsonLd.document(triples()).toString()
 
-    /** Every garden record as linked data: zones, plants and sightings. */
+    /** Every garden record as linked data: zones, plants, the days they were seen in flower, and sightings. */
     suspend fun triples(): List<Triple> {
         val kb = knowledge()
         val triples = mutableListOf<Triple>()
@@ -629,6 +680,7 @@ class GardenRepository(
             val plant = entity.toDomain()
             triples += GardenGraph.plant(plant, plant.speciesName?.let(kb::species), rolesOf(plant))
         }
+        flowering.all().forEach { triples += GardenGraph.flowering(it.id, it.plantId, LocalDate.ofEpochDay(it.observedOnEpochDay), it.photoId != null) }
         val animals = fauna()
         sightings.all().forEach { entity ->
             val sighting = entity.toDomain()
@@ -720,3 +772,13 @@ data class DetectionRecord(
     val group: LifeGroup = LifeGroup.PLANT,
     val sightingId: String? = null,
 )
+
+/** A day a plant was seen in flower, in a photo ([photoId]) or by the user. */
+data class FloweringRecord(val id: String, val plantId: String, val day: LocalDate, val photoId: String?, val source: String) {
+    val fromPhoto: Boolean get() = photoId != null
+
+    companion object {
+        const val PHOTO = "PHOTO"
+        const val USER = "USER"
+    }
+}

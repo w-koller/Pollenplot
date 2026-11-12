@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ai.Assistant
+import io.github.wkoller.pollenplot.data.FloweringRecord
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.HarvestViews
@@ -83,6 +84,9 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.assistant.CareDraftCard
 import io.github.wkoller.pollenplot.ui.assistant.DraftState
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import io.github.wkoller.pollenplot.ui.components.PastDateDialog
+import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.RoleBadges
 import io.github.wkoller.pollenplot.ui.listWords
@@ -138,7 +142,9 @@ fun PlantDetailScreen(
 ) {
     val view by views.plant(plantId).collectAsStateWithLifecycle(initialValue = null)
     val finds by remember(plantId) { garden.findsOf(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
-    val flowered by garden.floweringList.collectAsStateWithLifecycle(initialValue = emptyList())
+    val flowered by remember(plantId) { garden.floweringRecords(plantId) }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val notices = LocalNotices.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     val pot by remember(plantId, pots) { pots?.plant(plantId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val plantProblems by remember(plantId, problems) { problems?.forPlant(plantId) ?: flowOf(emptyList()) }.collectAsStateWithLifecycle(initialValue = emptyList())
     val harvest by remember(plantId, crops) { crops?.harvest(plantId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
@@ -204,6 +210,33 @@ fun PlantDetailScreen(
                     item { NativeAlternatives(helper, loaded.species?.let { listOf(it.name) + it.synonyms } ?: listOf(name), kb, locality) }
                 }
             }
+            // Below a weed's card, which says what the law asks and comes first.
+            if (loaded.plant.status == PlantStatus.GROWING || flowered.isNotEmpty()) {
+                item {
+                    SeenInFlowerCard(
+                        records = flowered,
+                        today = today,
+                        canRecord = loaded.plant.status == PlantStatus.GROWING,
+                        onRecord = { day ->
+                            scope.launch {
+                                val made = garden.recordFlowering(plantId, day)
+                                val date = UiFormat.longDate(day)
+                                if (made == null) {
+                                    notices?.show(resources.getString(R.string.flowering_already, date))
+                                } else {
+                                    notices?.show(resources.getString(R.string.flowering_recorded, date)) { garden.removeFlowering(made.id) }
+                                }
+                            }
+                        },
+                        onRemove = { record ->
+                            scope.launch {
+                                garden.removeFlowering(record.id)
+                                notices?.show(resources.getString(R.string.flowering_removed, UiFormat.longDate(record.day))) { garden.restoreFlowering(record) }
+                            }
+                        },
+                    )
+                }
+            }
             val unknownName = loaded.plant.speciesName
             if (resolved == null && unknownName != null && assistant != null) {
                 // Gemma 4 can draft the care of a plant the knowledge base does not have, kept apart from it.
@@ -228,8 +261,7 @@ fun PlantDetailScreen(
             } else if (resolved == null) {
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {
-                val seen = FloweringSeen.lastYear(flowered.filter { it.first == plantId }.map { it.second }, today)
-                facts(resolved, loaded, all, kb, locality.hemisphere, seen, onEditFacts, onEditPot.takeIf { pots != null && pot?.potted == false }) {
+                facts(resolved, loaded, all, kb, locality.hemisphere, onEditFacts, onEditPot.takeIf { pots != null && pot?.potted == false }) {
                     if (finds.isNotEmpty()) item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
                 }
             }
@@ -324,8 +356,6 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(
     all: List<PlantView>,
     kb: KnowledgeBase?,
     hemisphere: Hemisphere,
-    /** The months the plant was seen in flower in the last year, in the garden's own months. */
-    seen: MonthSet,
     onEditFacts: (() -> Unit)?,
     onAddPot: (() -> Unit)?,
     /** The plant's photo history, which goes after its facts and before where they came from. */
@@ -385,7 +415,6 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(
             when {
                 flowering == null || flowering.isEmpty -> Line(stringResource(R.string.flowering_unknown))
                 else -> {
-                    if (!seen.isEmpty) StripLabel(stringResource(R.string.flowering_expected))
                     MonthStrip(flowering, peak ?: MonthSet.NONE)
                     Line(
                         if (flowering == MonthSet.ALL) stringResource(R.string.flowering_all_year) else stringResource(R.string.flowering_months, UiFormat.months(flowering, words, locale)),
@@ -393,14 +422,6 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(
                     )
                     peak?.takeIf { !it.isEmpty && it != flowering }?.let { Line(stringResource(R.string.flowering_peak, UiFormat.months(it, words, locale))) }
                 }
-            }
-            // What the photos showed, under what the knowledge base expects.
-            if (seen.isEmpty) {
-                if (flowering != null && !flowering.isEmpty) Line(stringResource(R.string.flowering_not_seen))
-            } else {
-                StripLabel(stringResource(R.string.flowering_seen))
-                MonthStrip(seen, MonthSet.NONE)
-                Line(stringResource(R.string.flowering_seen_months, UiFormat.months(seen, words, locale)))
             }
         }
     }
@@ -598,10 +619,78 @@ private fun LevelTag(level: FactLevel) {
     }
 }
 
-/** A small label above a strip of months, which TalkBack leaves out because the sentence below says the same. */
+/**
+ * The days this plant was seen in flower, in a photo or by the user, with the months of the last year they fall in.
+ * A plant that is flowering now is recorded with one press, another day is chosen from the calendar, and a day
+ * recorded by mistake is removed. Pollen Rhythms and the check before a spray read the same days.
+ */
 @Composable
-private fun StripLabel(text: String) {
-    Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.clearAndSetSemantics { })
+private fun SeenInFlowerCard(
+    records: List<FloweringRecord>,
+    today: LocalDate,
+    /** False for a plant that has died or been removed, whose days stay but take no more. */
+    canRecord: Boolean,
+    onRecord: (LocalDate) -> Unit,
+    onRemove: (FloweringRecord) -> Unit,
+) {
+    var choosing by rememberSaveable { mutableStateOf(false) }
+    val since = today.minusYears(1)
+    val recent = records.filter { it.day.isAfter(since) && !it.day.isAfter(today) }
+    val seen = FloweringSeen.lastYear(records.map { it.day }, today)
+    FactCard(R.drawable.ic_local_florist, stringResource(R.string.flowering_seen)) {
+        if (seen.isEmpty) {
+            Line(stringResource(R.string.flowering_not_seen))
+        } else {
+            MonthStrip(seen, MonthSet.NONE)
+            Line(stringResource(R.string.flowering_seen_months, UiFormat.months(seen, listWords(), LocalConfiguration.current.locales[0])))
+        }
+        if (canRecord) {
+            val recordedToday = records.any { it.day == today }
+            val todayButton: @Composable () -> Unit = {
+                if (recordedToday) {
+                    Line(stringResource(R.string.flowering_today_done))
+                } else {
+                    Button(onClick = { onRecord(today) }) { Text(stringResource(R.string.flowering_today)) }
+                }
+            }
+            val otherDay: @Composable () -> Unit = { TextButton(onClick = { choosing = true }) { Text(stringResource(R.string.flowering_other_day)) } }
+            // With large text the second button goes under the first, rather than both being squeezed.
+            if (largeText()) {
+                todayButton()
+                otherDay()
+            } else {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                    todayButton()
+                    otherDay()
+                }
+            }
+            Text(stringResource(R.string.flowering_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        recent.forEach { record ->
+            val date = UiFormat.longDate(record.day)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(if (record.fromPhoto) R.string.flowering_day_photo else R.string.flowering_day, date),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = { onRemove(record) }) {
+                    Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.flowering_day_remove, date))
+                }
+            }
+        }
+    }
+    if (choosing) {
+        PastDateDialog(
+            day = today,
+            today = today,
+            onDismiss = { choosing = false },
+            onChoose = {
+                choosing = false
+                onRecord(it)
+            },
+        )
+    }
 }
 
 /** The twelve months with flowering months filled in. TalkBack reads the sentence below it instead. */
@@ -650,6 +739,9 @@ private fun EditPlantSheet(
     var name by rememberSaveable { mutableStateOf(plant.customName.orEmpty()) }
     var notes by rememberSaveable { mutableStateOf(plant.notes) }
     var status by rememberSaveable { mutableStateOf(plant.status) }
+    var plantedOn by rememberSaveable { mutableStateOf(plant.plantedOn) }
+    var choosingDay by rememberSaveable { mutableStateOf(false) }
+    val today = LocalDate.now()
     ModalBottomSheet(onDismissRequest = onDismiss) {
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item { Text(stringResource(R.string.edit_plant_title, view.title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() }) }
@@ -662,6 +754,16 @@ private fun EditPlantSheet(
             }
             item { ZoneChooser(zones, zoneId) { zoneId = it } }
             item { QuantityStepper(quantity) { quantity = it } }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.planted_on), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+                    Text(plantedOn?.let { UiFormat.longDate(it) } ?: stringResource(R.string.planted_unknown), style = MaterialTheme.typography.bodyLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { choosingDay = true }) { Text(stringResource(R.string.planted_choose)) }
+                        if (plantedOn != null) TextButton(onClick = { plantedOn = null }) { Text(stringResource(R.string.planted_clear)) }
+                    }
+                }
+            }
             item {
                 OutlinedTextField(
                     value = name,
@@ -684,11 +786,22 @@ private fun EditPlantSheet(
             item {
                 val needsName = plant.speciesName == null && name.isBlank()
                 Button(
-                    onClick = { onSave(plant.copy(zoneId = zoneId, quantity = quantity, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status)) },
+                    onClick = { onSave(plant.copy(zoneId = zoneId, quantity = quantity, plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status)) },
                     enabled = !needsName,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.edit_save)) }
             }
         }
+    }
+    if (choosingDay) {
+        PastDateDialog(
+            day = plantedOn ?: today,
+            today = today,
+            onDismiss = { choosingDay = false },
+            onChoose = {
+                choosingDay = false
+                plantedOn = it
+            },
+        )
     }
 }

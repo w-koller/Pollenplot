@@ -72,6 +72,7 @@ fun TabScaffold(
                 )
             }
         },
+        snackbarHost = { NoticeHost() },
         floatingActionButton = floatingActionButton,
         floatingActionButtonPosition = floatingActionButtonPosition,
         content = content,
@@ -103,6 +104,7 @@ fun DetailScaffold(
                 scrollBehavior = scrollBehavior,
             )
         },
+        snackbarHost = { NoticeHost() },
         floatingActionButton = floatingActionButton,
         content = content,
     )

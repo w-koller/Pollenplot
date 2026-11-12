@@ -50,6 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -158,6 +159,9 @@ class ReviewFlowTest {
         val ids = seedWithScannedPhoto()
         show(open = MainActivity.OPEN_REVIEW)
         waitFor(hasText("Taken on", substring = true))
+        // The models saw one of the two plants in flower. Changing the switch on either card changes how many are.
+        compose.scrollTo(hasText("In flower"))
+        compose.onAllNodesWithText("In flower").onFirst().performClick()
         compose.onNodeWithText("Select").performClick()
         waitFor(hasText("Select this plant"))
         compose.onAllNodesWithText("Select this plant").onFirst().performClick()
@@ -173,6 +177,8 @@ class ReviewFlowTest {
         val plants = runBlocking { garden.plantList.first() }
         assertEquals("The rosemary already in Hive Corner gets the photo", 1, plants.count { it.speciesName == "Salvia rosmarinus" })
         assertEquals(ids.hive, plants.last { it.speciesName == "Melaleuca citrina" }.zoneId)
+        val seen = runBlocking { plants.sumOf { garden.floweringOf(it.id).size } }
+        assertTrue("Finds added several at once take what the In flower switch says, not the models' guess", seen != 1)
     }
 
     @Test

@@ -75,7 +75,9 @@ import io.github.wkoller.pollenplot.ui.bees.HoneyRecordScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeHiveEditorScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeHiveScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeLogScreen
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
 import io.github.wkoller.pollenplot.ui.components.LocalOpenSearch
+import io.github.wkoller.pollenplot.ui.components.rememberNotices
 import io.github.wkoller.pollenplot.ui.guides.GuideScreen
 import io.github.wkoller.pollenplot.ui.identify.IdentifyModel
 import io.github.wkoller.pollenplot.ui.identify.IdentifyScreen
@@ -244,7 +246,7 @@ fun AppRoot(
             },
         ) { padding ->
             val railInsets = if (wide && showTabs) Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)) else Modifier
-            CompositionLocalProvider(LocalOpenSearch provides { navController.navigate(SearchRoute) }) {
+            CompositionLocalProvider(LocalOpenSearch provides { navController.navigate(SearchRoute) }, LocalNotices provides rememberNotices()) {
                 NavHost(
                     navController = navController,
                     startDestination = if (setup) SetupRoute() else PlotRoute,
@@ -420,7 +422,7 @@ fun AppRoot(
                     }
                     composable<PlantPhotoRoute> { entry ->
                         val route = entry.toRoute<PlantPhotoRoute>()
-                        PlantPhotoScreen(container.garden, container.knowledge, route.photoId, route.detectionId, onBack = back)
+                        PlantPhotoScreen(container.garden, container.knowledge, route.photoId, route.detectionId, onBack = back, views = container.views)
                     }
                     composable<AddPlantRoute> { entry ->
                         val route = entry.toRoute<AddPlantRoute>()
