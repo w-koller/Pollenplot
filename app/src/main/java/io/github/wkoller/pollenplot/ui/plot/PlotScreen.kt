@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -68,7 +69,6 @@ import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.nav.AddAction
 import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.plants.ZoneCard
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flowOf
 

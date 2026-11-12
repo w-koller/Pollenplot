@@ -166,7 +166,7 @@ class PlantPageFlowTest {
     fun aPlantThatWasDeletedSaysSo() {
         seed()
         show("no-such-plant")
-        waitFor(hasText("This is no longer in your garden."))
+        waitFor(hasText("This is no longer in Pollenplot."))
     }
 
     @Test

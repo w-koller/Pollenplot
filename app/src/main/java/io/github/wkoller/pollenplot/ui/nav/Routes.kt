@@ -183,7 +183,7 @@ enum class TopLevelTab(
     WATER(WaterRoute, R.string.tab_water, R.drawable.ic_water_drop, R.drawable.ic_water_drop_filled),
 }
 
-/** The choices in the add menus on the Plot and Wildlife tabs. */
+/** The choices in the add menus on the Plot, Wildlife and Bees tabs. */
 enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
     IDENTIFY(R.string.add_identify_camera, R.drawable.ic_photo_camera),
     PHOTOS(R.string.add_photos, R.drawable.ic_add_photo_alternate),
@@ -194,6 +194,9 @@ enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
     PLANT(R.string.add_plant_by_name, R.drawable.ic_potted_plant),
     ZONE(R.string.plot_add_zone, R.drawable.ic_yard),
     SIGHTING(R.string.add_sighting_by_name, R.drawable.ic_edit),
+    HONEY_HIVE(R.string.add_honey_hive, R.drawable.ic_hive),
+    NATIVE_HIVE(R.string.add_native_hive, R.drawable.ic_native_bee),
+    HOTEL(R.string.add_hotel, R.drawable.ic_cottage),
     ;
 
     companion object {
@@ -201,6 +204,9 @@ enum class AddAction(@StringRes val label: Int, @DrawableRes val icon: Int) {
         val PLOT = listOf(IDENTIFY, PHOTOS, WEED, FIELD, PLANT, ZONE, FEED)
 
         /** The Wildlife tab's add menu. Photos from the gallery are looked at for the kind of animal the user chooses. */
-        val WILDLIFE = listOf(IDENTIFY, ANIMAL_PHOTOS, SIGHTING)
+        val WILDLIFE = listOf(IDENTIFY, ANIMAL_PHOTOS, SIGHTING, PLANT)
+
+        /** The Bees tab's add menu, the same whichever of its sections is showing. */
+        val BEES = listOf(HONEY_HIVE, NATIVE_HIVE, HOTEL)
     }
 }

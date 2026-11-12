@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.assistant
 
+import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -55,7 +56,6 @@ import io.github.wkoller.pollenplot.domain.assistant.WildlifeRescue
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
-import io.github.wkoller.pollenplot.ui.review.readable
 import io.github.wkoller.pollenplot.ui.weeds.weedHeadline
 import kotlinx.coroutines.flow.flowOf
 

@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.LevelTag
+import io.github.wkoller.pollenplot.ui.components.FactCard
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.produceState
 import io.github.wkoller.pollenplot.data.NamedPlant
@@ -93,7 +97,6 @@ import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.RoleBadges
 import io.github.wkoller.pollenplot.ui.listWords
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import io.github.wkoller.pollenplot.ui.weeds.NativeAlternatives
 import io.github.wkoller.pollenplot.ui.weeds.WeedCard
 import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
@@ -197,7 +200,7 @@ fun PlantDetailScreen(
         val resolved = loaded.care
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
+            contentPadding = PaddingValues(start = 16.dp + readableSides(), end = 16.dp + readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item { Header(loaded) }
@@ -563,32 +566,6 @@ private fun ForageCard(care: CareProfile, level: FactLevel?) {
     }
 }
 
-/** A card of facts with an icon, a heading, and a tag when the facts are for the genus or family or the user's. */
-@Composable
-fun FactCard(@DrawableRes icon: Int, title: String, level: FactLevel? = null, content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                // The tag goes under the heading when there is no room beside it, rather than squeezing a word apart.
-                FlowRow(
-                    Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    itemVerticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-                    if (level != null && level != FactLevel.SPECIES) LevelTag(level)
-                }
-            }
-            content()
-        }
-    }
-}
 
 /**
  * One fact, with a tag when it is for the genus or family or the user corrected it. A missing fact says so rather than
@@ -619,22 +596,6 @@ private fun Line(text: String?, strong: Boolean = false, level: FactLevel? = nul
     }
 }
 
-@Composable
-private fun LevelTag(level: FactLevel) {
-    Surface(shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-        Text(
-            stringResource(
-                when (level) {
-                    FactLevel.USER -> R.string.level_user
-                    FactLevel.GENUS -> R.string.level_genus
-                    else -> R.string.level_family
-                },
-            ),
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-        )
-    }
-}
 
 /**
  * The days this plant was seen in flower, in a photo or by the user, with the months of the last year they fall in.

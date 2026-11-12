@@ -115,7 +115,8 @@ class WaterFlowTest {
         waitFor(hasText("Today's reference evapotranspiration (ET₀) is 5.1 mm."))
         compose.onNodeWithText("Watered by hand").assertExists()
         compose.onNodeWithText("Weather data by Open-Meteo.com.").assertExists()
-        compose.onAllNodesWithText("Add a watering line").onFirst().performScrollTo().performClick()
+        // The tab's add button, as on the Plot.
+        compose.pressWhenShown(hasContentDescription("Add a watering line"))
 
         compose.onNodeWithText("Name").performTextInput("Citrus line")
         compose.onNodeWithText("Back Citrus Patch").performClick()

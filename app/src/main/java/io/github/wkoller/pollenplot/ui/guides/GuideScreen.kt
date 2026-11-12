@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.guides
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -43,16 +44,22 @@ import io.github.wkoller.pollenplot.domain.guide.GuideBlock
 import io.github.wkoller.pollenplot.domain.guide.Span
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
+import io.github.wkoller.pollenplot.ui.components.Found
+import io.github.wkoller.pollenplot.ui.components.MissingRecord
 import java.net.URI
 
 /** One page of a bee guide, then the day its facts were last checked and the pages they come from. */
 @Composable
 fun GuideScreen(library: GuideLibrary, id: String, onBack: () -> Unit) {
-    val guide by produceState<Guide?>(initialValue = null, id) { value = library.guide(id) }
+    val found by produceState<Found<Guide>?>(initialValue = null, id) { value = Found(library.guide(id)) }
+    val guide = found?.value
     val uri = LocalUriHandler.current
     DetailScaffold(title = guide?.title.orEmpty(), onBack = onBack) { padding ->
-        val page = guide ?: return@DetailScaffold
+        if (guide == null) {
+            if (found != null) MissingRecord(padding)
+            return@DetailScaffold
+        }
+        val page = guide
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp),

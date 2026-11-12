@@ -2,6 +2,9 @@
 # that follow the Australian Honey Bee Industry Biosecurity Code of Practice.
 STRINGS = {
     "honey_add_hive": "Add a hive",
+    "add_honey_hive": "Add a honey bee hive",
+    "add_native_hive": "Add a stingless bee hive",
+    "add_hotel": "Add a bee hotel",
     "honey_hives": "Hives",
     "honey_due": "Due",
     "honey_due_none": "Nothing is due for your hives.",

@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -34,12 +36,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import kotlinx.coroutines.flow.map
+import io.github.wkoller.pollenplot.ui.components.MissingRecord
+import io.github.wkoller.pollenplot.ui.components.Found
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.HotelRepository
 import io.github.wkoller.pollenplot.domain.hotels.HotelSection
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
@@ -49,7 +53,8 @@ import java.math.BigDecimal
  */
 @Composable
 fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBack: () -> Unit, onEdit: () -> Unit, onLook: () -> Unit, onUpkeep: () -> Unit) {
-    val view by remember(hotelId) { views.hotel(hotelId) }.collectAsStateWithLifecycle(initialValue = null)
+    val found by remember(hotelId) { views.hotel(hotelId).map { Found(it) } }.collectAsStateWithLifecycle(initialValue = null)
+    val view = found?.value
     val looks by hotels.observations.collectAsStateWithLifecycle(initialValue = emptyList())
     val upkeep by hotels.upkeep.collectAsStateWithLifecycle(initialValue = emptyList())
     val scope = rememberCoroutineScope()
@@ -61,10 +66,13 @@ fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBac
         onBack = onBack,
         actions = { IconButton(onClick = onEdit) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.hotel_edit)) } },
     ) { padding ->
-        if (loaded == null) return@DetailScaffold
+        if (loaded == null) {
+            if (found != null) MissingRecord(padding)
+            return@DetailScaffold
+        }
         val hotel = loaded.hotel
         val latest = loaded.state.latest
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
             item(key = "summary") {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(listOfNotNull(pluralStringResource(R.plurals.hotel_hole_count, hotel.holes, hotel.holes), loaded.zoneName).joinToString(" · "), style = MaterialTheme.typography.titleMedium)

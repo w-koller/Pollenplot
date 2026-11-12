@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.DocumentsContract

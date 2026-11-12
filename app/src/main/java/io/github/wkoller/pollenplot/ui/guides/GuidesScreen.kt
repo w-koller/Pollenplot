@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.guides
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +21,6 @@ import io.github.wkoller.pollenplot.domain.guide.Guide
 import io.github.wkoller.pollenplot.domain.guide.GuideSection
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 
 /**
  * Every guide page in one list, under the part of the garden it is about. The pages are also listed where they are

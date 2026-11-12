@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +30,6 @@ import io.github.wkoller.pollenplot.domain.hotels.SealGuide
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.EmptyState
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 
 /** The bee hotel section of the Bees tab: the hotels, the guide to who sealed a nest, and the guide's pages. */
 internal fun LazyListScope.hotelSection(
@@ -50,9 +50,6 @@ internal fun LazyListScope.hotelSection(
     } else {
         item(key = "hotels") { SectionHeading(stringResource(R.string.hotels)) }
         items(hotels, key = { "hotel-" + it.hotel.id }) { view -> HotelRow(view, onClick = { onOpenHotel(view.hotel.id) }) }
-        item(key = "hotel-add") {
-            OutlinedButton(onClick = onAddHotel, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.hotel_add)) }
-        }
     }
 
     item(key = "seal-guide") {

@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.components.FactCard
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,8 +55,6 @@ import io.github.wkoller.pollenplot.ui.bees.DateRow
 import io.github.wkoller.pollenplot.ui.components.Badge
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PastDateDialog
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
-import io.github.wkoller.pollenplot.ui.review.readable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

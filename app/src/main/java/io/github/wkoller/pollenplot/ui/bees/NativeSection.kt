@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
@@ -29,8 +31,6 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.NotificationAccess
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.math.BigDecimal
 
 /**
@@ -59,9 +59,6 @@ internal fun LazyListScope.nativeSection(
     } else {
         item(key = "native-hives") { SectionHeading(stringResource(R.string.native_hives)) }
         items(hives, key = { "native-" + it.hive.id }) { view -> NativeHiveRow(view, onClick = { onOpenHive(view.hive.id) }) }
-        item(key = "native-add") {
-            OutlinedButton(onClick = onAddHive, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.honey_add_hive)) }
-        }
     }
 
     item(key = "native-seen") { SectionHeading(stringResource(R.string.native_seen)) }

@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,8 +36,6 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.NotificationAccess
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.time.LocalDate
 
 /**
@@ -76,9 +76,6 @@ internal fun LazyListScope.honeySection(
         }
         item(key = "honey-hives") { SectionHeading(stringResource(R.string.honey_hives)) }
         items(hives, key = { "hive-" + it.hive.id }) { view -> HiveRow(view, onClick = { onOpenHive(view.hive.id) }) }
-        item(key = "honey-add") {
-            OutlinedButton(onClick = onAddHive, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.honey_add_hive)) }
-        }
     }
     val pages = guide.filter { it.appliesTo(state) }
     if (pages.isNotEmpty()) {

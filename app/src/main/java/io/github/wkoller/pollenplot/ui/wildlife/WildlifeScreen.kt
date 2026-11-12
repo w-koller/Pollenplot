@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -60,9 +62,7 @@ import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.nav.AddAction
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
-import io.github.wkoller.pollenplot.ui.review.readable
 import io.github.wkoller.pollenplot.ui.plot.CorridorCard
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import kotlinx.coroutines.flow.flowOf
 import java.time.Clock
 import java.time.LocalDate

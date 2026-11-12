@@ -10,7 +10,7 @@ STRINGS = {
     "cancel": "Cancel",
     "undo": "Undo",
     "more": "More",
-    "missing_title": "This is no longer in your garden.",
+    "missing_title": "This is no longer in Pollenplot.",
     "missing_body": "It may have been deleted since the link to it was made. Please go back and choose another.",
     "choose": "Choose",
 

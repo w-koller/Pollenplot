@@ -23,9 +23,9 @@ STRINGS = {
     "flower adds its day too.",
     "flowering_day": "%1$s",
     "flowering_day_photo": "%1$s, from a photo",
-    "flowering_day_remove": "Remove %1$s",
+    "flowering_day_remove": "Delete %1$s",
     "flowering_recorded": "Recorded in flower on %1$s.",
-    "flowering_removed": "Removed %1$s.",
+    "flowering_removed": "Deleted %1$s.",
     "flowering_already": "%1$s is already recorded.",
 
     # The day a plant went in, and its picture

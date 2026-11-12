@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background

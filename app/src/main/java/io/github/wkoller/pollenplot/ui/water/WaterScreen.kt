@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.water
 
+import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.text.format.DateFormat
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalResources
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.AddButton
+import androidx.compose.foundation.layout.PaddingValues
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
 import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.data.WaterViews
@@ -68,7 +72,6 @@ import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.components.rememberNotificationAccess
 import io.github.wkoller.pollenplot.ui.listWords
 import io.github.wkoller.pollenplot.ui.plants.label
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
@@ -120,9 +123,11 @@ fun WaterScreen(
         actions = {
             onReport?.let { report -> IconButton(onClick = report) { Icon(painterResource(R.drawable.ic_description), contentDescription = stringResource(R.string.report_open)) } }
         },
+        floatingActionButton = { if (state != null) AddButton(stringResource(R.string.water_add_line), onAddLine) },
     ) { padding ->
         val loaded = state ?: return@TabScaffold
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        // The list ends clear of the add button.
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 88.dp)) {
             if (!loaded.hasPlants) {
                 item(key = "empty") {
                     Column {
@@ -173,11 +178,6 @@ fun WaterScreen(
                         onEdit = { onEditLine(view.line.id) },
                         onWatered = { watered(Watering(water.newId(), view.line.id, null, loaded.today), view.line.name) },
                     )
-                }
-            }
-            if (loaded.lines.isNotEmpty() || loaded.hasPlants) {
-                item(key = "add") {
-                    OutlinedButton(onClick = onAddLine, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.water_add_line)) }
                 }
             }
             if (loaded.byHand.isNotEmpty()) {

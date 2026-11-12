@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.components.FactCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -62,7 +64,6 @@ import io.github.wkoller.pollenplot.ui.review.PlantChooser
 import io.github.wkoller.pollenplot.ui.review.ConfidenceBadge
 import io.github.wkoller.pollenplot.ui.review.Cutout
 import io.github.wkoller.pollenplot.ui.review.confidenceLabel
-import io.github.wkoller.pollenplot.ui.review.readable
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf

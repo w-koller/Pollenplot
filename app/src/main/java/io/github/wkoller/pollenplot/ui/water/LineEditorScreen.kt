@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.water
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -40,7 +41,6 @@ import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
 import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

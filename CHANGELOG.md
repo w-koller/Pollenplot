@@ -6,7 +6,15 @@
   Wishlist, Review and Weeds, so the review queue and the weeds are reachable with nothing waiting. The Plot's top
   bar has fewer buttons, and they no longer move.
 - “Guides” lists every guide page in one place, under the part of the garden it is about.
-- A plant or zone that was deleted says so when a link to it is followed. Before, its page was blank.
+- The Bees and Water tabs have the same + button as the Plot. On Bees it adds a honey bee hive, a stingless bee hive
+  or a bee hotel from any section, and on Water it adds a watering line. The Wildlife tab's + menu can add a plant.
+- On a wide screen, the pages of a plant, a zone, a hive and a hotel, and the Rhythms, Bees and Water tabs, keep to a
+  readable width.
+- Erasing a plant, a zone, a care record or a day in flower is worded “Delete”, as everywhere else, and the plant's
+  question says that its status can be changed if its records are to be kept. The screen that “Make a report” opens
+  is named “Reports and export” in Settings too.
+- A plant, zone, hive, hotel or problem that was deleted says so when a link to it is followed, as does a guide page
+  that is not there. Before, the page was blank.
 - A plant the knowledge base does not have can be given a pot.
 - “Log a problem” is now “Record a problem”, as the other records are worded.
 - The Plot is easier to lay out. “Add a zone” is in the + menu. The view follows a new zone, and a zone moved out of

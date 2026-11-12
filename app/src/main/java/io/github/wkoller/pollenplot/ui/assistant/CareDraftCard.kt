@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.assistant
 
+import io.github.wkoller.pollenplot.ui.components.FactCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -22,7 +23,6 @@ import io.github.wkoller.pollenplot.domain.assistant.DraftedCare
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.listWords
-import io.github.wkoller.pollenplot.ui.plants.FactCard
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.toleranceLabel
 

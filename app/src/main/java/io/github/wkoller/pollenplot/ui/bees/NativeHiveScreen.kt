@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -30,13 +32,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import kotlinx.coroutines.flow.map
+import io.github.wkoller.pollenplot.ui.components.MissingRecord
+import io.github.wkoller.pollenplot.ui.components.Found
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.NativeBeeRepository
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeLog
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeLogKind
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import kotlinx.coroutines.launch
 
 /**
@@ -45,7 +49,8 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun NativeHiveScreen(views: BeeViews, natives: NativeBeeRepository, hiveId: String, onBack: () -> Unit, onEdit: () -> Unit, onRecord: (NativeLogKind) -> Unit) {
-    val view by remember(hiveId) { views.nativeHive(hiveId) }.collectAsStateWithLifecycle(initialValue = null)
+    val found by remember(hiveId) { views.nativeHive(hiveId).map { Found(it) } }.collectAsStateWithLifecycle(initialValue = null)
+    val view = found?.value
     val logs by natives.logs.collectAsStateWithLifecycle(initialValue = emptyList())
     val scope = rememberCoroutineScope()
     var pendingDelete by remember { mutableStateOf<String?>(null) }
@@ -56,11 +61,14 @@ fun NativeHiveScreen(views: BeeViews, natives: NativeBeeRepository, hiveId: Stri
         onBack = onBack,
         actions = { IconButton(onClick = onEdit) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.native_edit_hive)) } },
     ) { padding ->
-        if (loaded == null) return@DetailScaffold
+        if (loaded == null) {
+            if (found != null) MissingRecord(padding)
+            return@DetailScaffold
+        }
         val hive = loaded.hive
         val strength = loaded.strength
         val own = logs.filter { it.hiveId == hiveId }
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
             item(key = "summary") {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(listOfNotNull(stringResource(hive.species.label), stringResource(hive.box.label), loaded.zoneName).joinToString(" · "), style = MaterialTheme.typography.titleMedium)

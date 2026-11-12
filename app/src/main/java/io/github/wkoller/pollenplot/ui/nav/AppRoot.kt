@@ -285,6 +285,8 @@ fun AppRoot(
                                     AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                     // The Plot adds a zone itself, in a dialog over the canvas.
                                     AddAction.ZONE -> Unit
+                                    // The Bees tab's own choices.
+                                    AddAction.HONEY_HIVE, AddAction.NATIVE_HIVE, AddAction.HOTEL -> Unit
                                     AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
                                 }
                             },
@@ -585,6 +587,8 @@ fun AppRoot(
                                     AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                     // The Plot adds a zone itself, in a dialog over the canvas.
                                     AddAction.ZONE -> Unit
+                                    // The Bees tab's own choices.
+                                    AddAction.HONEY_HIVE, AddAction.NATIVE_HIVE, AddAction.HOTEL -> Unit
                                 }
                             },
                             onOpenAnimal = { navController.navigate(AnimalRoute(it)) },

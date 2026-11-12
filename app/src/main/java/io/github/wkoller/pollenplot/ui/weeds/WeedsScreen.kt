@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,7 +46,6 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.plants.PlantRow
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import io.github.wkoller.pollenplot.weeds.UpdateState
 import io.github.wkoller.pollenplot.weeds.WeedSyncWorker
 

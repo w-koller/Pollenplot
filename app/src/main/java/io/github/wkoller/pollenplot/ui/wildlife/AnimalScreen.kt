@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -40,7 +41,6 @@ import io.github.wkoller.pollenplot.ui.components.PictureAvatar
 import io.github.wkoller.pollenplot.ui.listWords
 import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.plants.label
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 
 /**
  * One kind of animal seen in the yard: what Pollenplot knows about it, what to know before going near it, the plants

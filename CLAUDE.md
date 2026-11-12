@@ -187,7 +187,9 @@ is always ready to tag.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces (among them `Notices`, the app's one snackbar
   host, given through `LocalNotices` by `AppRoot` and shown by both scaffolds: `notices.show(message) { undo }`; a
   screen test that wants its messages provides `rememberNotices()` itself; and `TabScaffold`'s More menu, which holds
-  a tab's own `more` choices and then `LocalAppMenu`'s, pressed in tests with `fromMore` in `TestGarden.kt`), `ui/nav` the routes and the app frame,
+  a tab's own `more` choices and then `LocalAppMenu`'s, pressed in tests with `fromMore` in `TestGarden.kt`; `Layout.kt`
+  has `SectionHeading`, `ChipGroup`, `readable()` and `readableSides()` for a list's sides on a wide screen; a page
+  reads its record as a `Found` and shows `MissingRecord` when it is gone), `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
   finder, `ui/wildlife` the Wildlife tab, an animal's page, a sighting's page and the safety notice, and `ui/review`

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.material3.OutlinedButton
 import android.util.Log
 import androidx.compose.runtime.produceState
@@ -440,8 +441,6 @@ fun PhotoReviewScreen(
     }
 }
 
-/** Keeps content to a readable width on wide screens. */
-fun Modifier.readable() = fillMaxWidth().wrapContentWidth().widthIn(max = 640.dp)
 
 /** The photo, with a numbered marker in the middle of each plant found, matching the numbers on the cards. */
 @Composable
