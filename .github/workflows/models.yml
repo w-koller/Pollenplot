@@ -1,11 +1,26 @@
 name: Model pack
 
-# Builds the accurate identification pack from BioCAP and, when asked, publishes it as a release the app downloads.
-# The export needs PyTorch and a few gigabytes of disk, so it runs here rather than on a development machine. A pack is
-# best built and evaluated first, then published from that run, so the release holds exactly the files evaluated.
+# Builds the accurate identification pack and, when asked, publishes it as a release the app downloads. The models
+# and photos are not kept on a development machine, so this runs here. A pack is best built and evaluated first, then
+# published from that run, so the release holds exactly the files evaluated.
+#
+# - "prototypes" (the usual build) takes the base pack and adds the species' prototypes: it chooses photos from
+#   iNaturalist's open data, turns them into BioCAP vectors in several jobs side by side, then tunes, evaluates and
+#   writes the pack, and records the fusion evaluation's answers with it (eval_outputs.json.gz).
+# - "base" exports BioCAP's encoder and text vectors afresh (export_biocap.py), which needs PyTorch.
+# - "candidate" measures a larger model against BioCAP on the evaluation photos, and builds nothing.
 on:
   workflow_dispatch:
     inputs:
+      build:
+        description: "What to build"
+        type: choice
+        options: [prototypes, base, candidate, none]
+        default: prototypes
+      vectors_from_run:
+        description: "Reuse the prototype vectors an earlier run made, by its run ID, and only tune and write the pack"
+        type: string
+        default: ""
       publish:
         description: "Publish the pack as a release (biocap-pack-N)"
         type: boolean
@@ -18,41 +33,120 @@ on:
 permissions:
   contents: read
 
+env:
+  # ONNX Runtime matches the app's version, so a model runs here as it does on the phone.
+  RUNTIME: onnxruntime==1.31.0 numpy pillow
+
 jobs:
-  biocap:
+  photos:
+    if: inputs.build == 'prototypes' && inputs.vectors_from_run == '' && inputs.from_run == ''
     runs-on: ubuntu-latest
-    timeout-minutes: 150
-    permissions:
-      contents: write
-      actions: read
-    env:
-      GH_TOKEN: ${{ github.token }}
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v7
-
       - uses: actions/setup-python@v5
-        if: inputs.from_run == ''
         with:
           python-version: "3.12"
+      - run: pip install pillow
+      - name: Choose the photos the prototypes are made from
+        run: python tools/models/prototype_photos.py --out build/prototypes
+      - uses: actions/upload-artifact@v7
+        with:
+          name: prototype-photos
+          path: build/prototypes/prototype_photos.tsv
 
+  vectors:
+    needs: photos
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        share: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install $RUNTIME
+      - uses: actions/download-artifact@v7
+        with:
+          name: prototype-photos
+          path: build/prototypes
+      - name: Turn the photos into vectors
+        run: >
+          python tools/models/prototype_vectors.py --photos build/prototypes/prototype_photos.tsv
+          --out build/vectors --share ${{ matrix.share }} --shares 12
+      - uses: actions/upload-artifact@v7
+        with:
+          name: prototype-vectors-${{ matrix.share }}
+          path: build/vectors
+
+  pack:
+    needs: vectors
+    # Runs after the vectors are made, or with those an earlier run made.
+    if: ${{ !cancelled() && inputs.build == 'prototypes' && inputs.from_run == '' && (needs.vectors.result == 'success' || inputs.vectors_from_run != '') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          # LiteRT runs the AIY classifiers as the app does, for the fusion evaluation.
+          pip install $RUNTIME ai-edge-litert
+          pip freeze > pip-freeze.txt
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: prototype-vectors-*
+          merge-multiple: true
+          path: build/vectors
+          run-id: ${{ inputs.vectors_from_run || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Tune, evaluate and write the pack
+        run: python tools/models/add_prototypes.py --vectors build/vectors --out build/biocap
+      - name: Record each model's answers with the new pack
+        run: python tools/models/eval_fusion.py --pack build/biocap/biocap-pack-*.zip --out build/eval
+      - uses: actions/upload-artifact@v7
+        with:
+          name: biocap-pack
+          path: |
+            build/biocap/biocap-pack-*.zip
+            build/biocap/biocap-pack-*.zip.sha256
+            build/biocap/manifest.json
+            build/biocap/evaluation.md
+            pip-freeze.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: eval-outputs
+          path: |
+            build/eval/eval_outputs.json.gz
+            build/eval/eval_outputs.md
+
+  base:
+    if: inputs.build == 'base' && inputs.from_run == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Install PyTorch for the CPU and the export tools
-        if: inputs.from_run == ''
         run: |
           # torchvision comes from the same index as torch: a torchvision from PyPI is built for another torch and
           # fails to load its operators.
           pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
-          # ONNX Runtime matches the app's version, so the quantised model uses operators the app's runtime has.
           # onnx_ir is what ONNX Runtime's weight-only quantiser is built on.
           pip install "open_clip_torch>=2.26" "onnx>=1.16" onnx_ir "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
           pip freeze > pip-freeze.txt
-
-      - name: Export BioCAP and build the pack
-        if: inputs.from_run == ''
+      - name: Export BioCAP and build the base pack
         run: python tools/models/export_biocap.py --out build/biocap
-
-      - name: Upload the pack, its evaluation and the test references
-        if: inputs.from_run == ''
-        uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7
         with:
           name: biocap-pack
           path: |
@@ -63,17 +157,48 @@ jobs:
             build/biocap/reference.json
             pip-freeze.txt
 
-      - name: Fetch the pack an earlier run built
-        if: inputs.from_run != ''
-        uses: actions/download-artifact@v7
+  candidate:
+    if: inputs.build == 'candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyTorch for the CPU
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
+          pip install "open_clip_torch>=2.26" "onnx>=1.16" onnx_ir "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
+          pip freeze > pip-freeze.txt
+      - name: Measure the larger model against BioCAP
+        run: python tools/models/eval_candidate.py --out build/candidate
+      - uses: actions/upload-artifact@v7
+        with:
+          name: candidate
+          path: |
+            build/candidate/candidate.md
+            build/candidate/candidate.json
+            pip-freeze.txt
+
+  publish:
+    needs: [pack, base]
+    if: ${{ !cancelled() && inputs.publish && (needs.pack.result == 'success' || needs.base.result == 'success' || inputs.from_run != '') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
         with:
           name: biocap-pack
-          run-id: ${{ inputs.from_run }}
+          run-id: ${{ inputs.from_run || github.run_id }}
           github-token: ${{ github.token }}
           path: .
-
       - name: Publish the pack as a release
-        if: inputs.publish
         run: |
           pack=$(ls build/biocap/biocap-pack-*.zip)
           version=$(basename "$pack" .zip | sed 's/^biocap-pack-//')

@@ -54,23 +54,46 @@ class BioCapEncoder(modelPath: String, threads: Int = 4) : AutoCloseable {
     }
 }
 
-/** One species the pack can name, with the knowledge base's or iNaturalist's common name and other names it goes by. */
 /**
  * One species the pack can name, with the knowledge base's or iNaturalist's common name, other names it goes by, and
  * its group, such as "plant" or "bird". Packs made before animals joined the index have no groups.
  */
 data class IndexedSpecies(val name: String, val common: String?, val aliases: List<String>, val group: String? = null)
 
-/** A species and how close a photo's vector is to it, as cosine similarity. */
+/**
+ * A species and how close a photo's vector is to it: its cosine similarity to the species' text vector, and from pack
+ * 3 what the species' prototype adds (see [Prototypes]).
+ */
 data class SpeciesMatch(val index: Int, val species: IndexedSpecies, val similarity: Float)
 
 /**
- * The species the accurate pack can name, each with BioCAP's text vector. The vectors stay as 16-bit floats, half the
- * memory of 32-bit ones, and are read through a table of all 65,536 values.
+ * The species' prototypes, which packs carry from pack 3: for each species, in the index's order, the mean of
+ * BioCAP's vectors of its own photos, or a row of zeros for a species with too few photos. The text vector says what
+ * a species is called and the prototype what it looks like, so a species whose prototype is close to a photo gains
+ * [alpha] * exp(-[beta] * (1 - closeness)), which is next to nothing until the photo looks much like the species'
+ * photos. The pack's evaluation chose [alpha] and [beta]; `pack.Scorer` in tools/models works it out the same way.
  */
-class SpeciesIndex(val species: List<IndexedSpecies>, private val vectors: ShortArray, val dimensions: Int) {
+class Prototypes(internal val vectors: ShortArray, val alpha: Float, val beta: Float)
+
+/**
+ * The species the accurate pack can name, each with BioCAP's text vector, and its prototype when the pack has them.
+ * The vectors stay as 16-bit floats, half the memory of 32-bit ones, and are read through a table of all 65,536
+ * values.
+ */
+class SpeciesIndex(
+    val species: List<IndexedSpecies>,
+    private val vectors: ShortArray,
+    val dimensions: Int,
+    private val prototypes: Prototypes? = null,
+) {
     init {
         require(vectors.size == species.size * dimensions) { "Expected ${species.size} vectors of $dimensions numbers" }
+        require(prototypes == null || prototypes.vectors.size == vectors.size) { "Expected a prototype row for each species" }
+    }
+
+    /** The species that have a prototype: those whose row is not all zeros. */
+    private val hasPrototype: BooleanArray? = prototypes?.let { all ->
+        BooleanArray(species.size) { s -> (0 until dimensions).any { d -> all.vectors[s * dimensions + d].toInt() and 0x7FFF != 0 } }
     }
 
     /** Whether the index knows each species' group, so it can tell a plant from an animal. */
@@ -85,6 +108,11 @@ class SpeciesIndex(val species: List<IndexedSpecies>, private val vectors: Short
             val base = s * dimensions
             var dot = 0f
             for (d in 0 until dimensions) dot += vector[d] * HALF[vectors[base + d].toInt() and 0xFFFF]
+            if (prototypes != null && hasPrototype!![s]) {
+                var near = 0f
+                for (d in 0 until dimensions) near += vector[d] * HALF[prototypes.vectors[base + d].toInt() and 0xFFFF]
+                dot += prototypes.alpha * exp(-prototypes.beta * (1f - near))
+            }
             if (best.size < count) {
                 best.add(s to dot)
             } else if (dot > best.peek().second) {
@@ -112,8 +140,11 @@ class SpeciesIndex(val species: List<IndexedSpecies>, private val vectors: Short
             return if (sign == 1) -value else value
         }
 
-        /** The index from the pack's species.tsv rows and species.f16 bytes. */
-        fun read(tsv: List<String>, f16: ByteArray, dimensions: Int): SpeciesIndex {
+        /**
+         * The index from the pack's species.tsv rows and species.f16 bytes, with the species' prototypes when the
+         * pack has them: prototypes.f16's bytes and the manifest's alpha and beta.
+         */
+        fun read(tsv: List<String>, f16: ByteArray, dimensions: Int, prototypesF16: ByteArray? = null, alpha: Float = 0f, beta: Float = 0f): SpeciesIndex {
             val rows = tsv.drop(1).filter { it.isNotBlank() }.map { line ->
                 val cells = line.split('\t')
                 IndexedSpecies(
@@ -123,9 +154,11 @@ class SpeciesIndex(val species: List<IndexedSpecies>, private val vectors: Short
                     cells.getOrNull(3)?.ifBlank { null },
                 )
             }
-            val buffer = java.nio.ByteBuffer.wrap(f16).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
-            val vectors = ShortArray(buffer.remaining()).also { buffer.get(it) }
-            return SpeciesIndex(rows, vectors, dimensions)
+            fun shorts(bytes: ByteArray): ShortArray {
+                val buffer = java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                return ShortArray(buffer.remaining()).also { buffer.get(it) }
+            }
+            return SpeciesIndex(rows, shorts(f16), dimensions, prototypesF16?.let { Prototypes(shorts(it), alpha, beta) })
         }
     }
 }

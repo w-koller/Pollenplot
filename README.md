@@ -64,7 +64,7 @@ The garden's location is rounded to about 1 km before it is sent to any of these
 The quick identification models come with the app. These are downloaded only when you ask for them, and each file is
 checked against its published SHA-256 checksum:
 
-- **Accurate identification pack** (BioCAP), about 127 MB, for better plant identification.
+- **Accurate identification pack** (BioCAP), about 142 MB, for better identification of plants, animals and fungi.
 - **Text model** (bge-small-en-v1.5), about 34 MB, for search by meaning.
 - **Gemma 4 E2B**, about 2.6 GB, for second opinions on unsure finds and for answering questions about your garden.
 

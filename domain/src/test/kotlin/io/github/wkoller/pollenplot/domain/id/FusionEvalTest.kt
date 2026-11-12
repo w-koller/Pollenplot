@@ -102,14 +102,15 @@ class FusionEvalTest {
     private companion object {
         /**
          * Top 1 and top 5 in basis points, for all the photos and for the groups with the most at stake, when the
-         * steps were last changed: BioCAP's suggestions standing in place of the quick models', from three looks as
+         * steps were last changed: accurate pack 3, whose species have prototypes, on photos by observers whose
+         * photos made no prototype. BioCAP's suggestions stand in place of the quick models', from three looks as
          * one for a plant.
          */
         val WITH_THE_PACK = mapOf(
-            FusionEval.ALL to (4_850 to 7_400),
-            FusionEval.PLANT to (4_100 to 6_950),
-            "bird" to (6_900 to 9_050),
-            "insect" to (4_800 to 7_450),
+            FusionEval.ALL to (5_050 to 7_750),
+            FusionEval.PLANT to (4_700 to 7_500),
+            "bird" to (6_250 to 8_900),
+            "insect" to (6_500 to 8_900),
         )
     }
 }

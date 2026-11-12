@@ -160,7 +160,9 @@ STRINGS = {
     "Open-Meteo.com, under CC BY 4.0.",
     "source_inaturalist": "iNaturalist",
     "source_inaturalist_body": "The plants most often recorded in Australia, and their common names, for the accurate "
-    "pack's list of plants.",
+    "pack's list of plants. From pack 3, the pack also learns what each species looks like from photos that "
+    "iNaturalist's observers shared under CC0 and CC BY 4.0. The pack holds a list of every photo with its "
+    "photographer and licence.",
     "source_gbif": "GBIF Backbone Taxonomy",
     "source_gbif_body": "The classification of each plant in the accurate pack's list, under CC BY 4.0.",
     "source_states": "State and territory weed agencies",

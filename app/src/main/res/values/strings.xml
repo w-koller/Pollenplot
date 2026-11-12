@@ -1617,7 +1617,7 @@
     <string name="source_open_meteo">Open-Meteo</string>
     <string name="source_open_meteo_body">Place search, using GeoNames data, and weather forecasts. Weather data by Open-Meteo.com, under CC BY 4.0.</string>
     <string name="source_inaturalist">iNaturalist</string>
-    <string name="source_inaturalist_body">The plants most often recorded in Australia, and their common names, for the accurate pack\'s list of plants.</string>
+    <string name="source_inaturalist_body">The plants most often recorded in Australia, and their common names, for the accurate pack\'s list of plants. From pack 3, the pack also learns what each species looks like from photos that iNaturalist\'s observers shared under CC0 and CC BY 4.0. The pack holds a list of every photo with its photographer and licence.</string>
     <string name="source_gbif">GBIF Backbone Taxonomy</string>
     <string name="source_gbif_body">The classification of each plant in the accurate pack\'s list, under CC BY 4.0.</string>
     <string name="source_states">State and territory weed agencies</string>
