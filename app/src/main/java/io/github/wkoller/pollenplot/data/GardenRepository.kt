@@ -111,15 +111,18 @@ class GardenRepository(
         }
     }
 
-    suspend fun moveZone(id: String, rect: ZoneRect) = adjustZone(id) { rect }
+    /** Puts a zone at [rect], snapped to the grid, and returns where it was, for a move that is undone. */
+    suspend fun moveZone(id: String, rect: ZoneRect): ZoneRect? = adjustZone(id) { rect }
 
     /**
      * Changes a zone's place or size starting from where it is now, so quick taps on the move and resize buttons build
-     * on each other instead of each starting from an older position. The result snaps to the grid.
+     * on each other instead of each starting from an older position. The result snaps to the grid. Returns where the
+     * zone was before.
      */
-    suspend fun adjustZone(id: String, change: (ZoneRect) -> ZoneRect) = layoutLock.withLock {
-        val zone = zone(id) ?: return@withLock
+    suspend fun adjustZone(id: String, change: (ZoneRect) -> ZoneRect): ZoneRect? = layoutLock.withLock {
+        val zone = zone(id) ?: return@withLock null
         updateZone(zone.copy(rect = PlotLayout.snapped(change(zone.rect))))
+        zone.rect
     }
 
     /** Removes a zone. Its plants stay in the garden without a zone. */

@@ -275,6 +275,8 @@ fun AppRoot(
                                     AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
                                     AddAction.FEED -> navController.navigate(FeedRoute())
                                     AddAction.PLANT -> navController.navigate(AddPlantRoute())
+                                    // The Plot adds a zone itself, in a dialog over the canvas.
+                                    AddAction.ZONE -> Unit
                                     AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
                                 }
                             },
@@ -573,6 +575,8 @@ fun AppRoot(
                                     AddAction.FIELD -> navController.navigate(IdentifyRoute(field = true))
                                     AddAction.FEED -> navController.navigate(FeedRoute())
                                     AddAction.PLANT -> navController.navigate(AddPlantRoute())
+                                    // The Plot adds a zone itself, in a dialog over the canvas.
+                                    AddAction.ZONE -> Unit
                                 }
                             },
                             onOpenAnimal = { navController.navigate(AnimalRoute(it)) },

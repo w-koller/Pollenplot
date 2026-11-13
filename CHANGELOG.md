@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- The Plot is easier to lay out. “Add a zone” is in the + menu. The view follows a new zone, and a zone moved out of
+  sight with the buttons, and shows the plot again after the phone is turned. Moving or resizing a zone shows a
+  message with Undo. The resize handle takes touches over 48 dp, a press on empty canvas lets go of the chosen zone,
+  and the readout says when a zone would lie over another.
+- A zone's preview stays open when the finger lifts. It has “Open zone” and “Move and resize”, and each plant in it
+  opens that plant.
+- A zone on the Plot shows a bell when jobs are due in it today, and “+3” when it has more plants than fit.
+- The Plot has a scale bar, half-metre grid lines when zoomed in, and leaves room for its buttons when it shows the
+  whole plot, so the + button no longer covers a zone.
+- While “Move and resize” is open, its Done is the only one on the screen, and it leaves the layout being edited.
 - The Today card does more than point. A watering that is due has a “Watered” button and a pot's flush a “Flushed”
   button, which record the job on the spot. A hive check opens that hive, a hotel to clean opens that hotel, a feed
   opens the feed form for its zone, and a prune opens the pruning form.

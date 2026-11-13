@@ -7,6 +7,13 @@ STRINGS = {
     "plot_done": "Done",
     "plot_adjust": "Move and resize",
     "plot_details": "Zone details",
+    "plot_moved": "Moved %1$s.",
+    "plot_resized": "Changed the size of %1$s.",
+    "plot_drag_overlaps": "over %1$s",
+    "plot_scale": "%1$s m",
+    "plot_scale_description": "The bar shows %1$s m of yard at this zoom.",
+    "zone_tile_more": "+%1$d",
+    "zone_preview_open": "Open zone",
     "plot_edit_hint": "Please drag a zone to move it, or tap it and use Move and resize. Zones snap to a 50 cm grid.",
     "plot_show_all": "Show the whole plot",
     "plot_zoom_in": "Zoom in",
@@ -120,5 +127,6 @@ STRINGS = {
 }
 
 PLURALS = {
+    "zone_tile_due": {"one": "%1$d job due today", "other": "%1$d jobs due today"},
     "zone_preview_more": {"one": "and %1$d more plant", "other": "and %1$d more plants"},
 }
