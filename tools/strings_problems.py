@@ -24,6 +24,7 @@ STRINGS = {
     "problem_no_treatments": "No treatments recorded yet.",
     "problem_record_treatment": "Record a treatment",
     "problem_mark_resolved": "Mark as resolved",
+    "problem_resolved_notice": "Marked as resolved.",
     "problem_mark_open": "Mark as open again",
     "problem_delete": "Delete",
     "problem_delete_title": "Delete this problem?",

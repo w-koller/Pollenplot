@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The Today card does more than point. A watering that is due has a “Watered” button and a pot's flush a “Flushed”
+  button, which record the job on the spot. A hive check opens that hive, a hotel to clean opens that hotel, a feed
+  opens the feed form for its zone, and a prune opens the pruning form.
+- Presses that save at once can be taken back. “I watered today”, “Cleaned today”, removing a care record, dismissing
+  several finds and marking a problem resolved each show a short message with Undo.
 - A plant that is flowering now can be recorded from its own page. The new “Seen in flower” card has “Seen in flower
   today” and “Another day”, lists the days of the last year, and removes one recorded by mistake. Before, only the
   switch on a review card could say a plant was in flower. Plants the knowledge base does not have get the card too.

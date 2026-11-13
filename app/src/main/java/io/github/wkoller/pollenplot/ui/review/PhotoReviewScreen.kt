@@ -43,6 +43,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
+import androidx.compose.ui.platform.LocalResources
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -156,6 +158,9 @@ class DetectionActions(
         scope.launch { garden.keepOne(photoId) }
     }
 
+    /** Puts finds that were dismissed together back in the queue. */
+    suspend fun reopenAll(detections: List<DetectionRecord>) = detections.forEach { garden.reopenDetection(it.id) }
+
     fun rejectAll(detections: List<DetectionRecord>) {
         scope.launch { garden.rejectDetections(detections.map { it.id }) }
     }
@@ -231,6 +236,8 @@ fun PhotoReviewScreen(
     var attachingFlowering by rememberSaveable { mutableStateOf(false) }
     // Each In flower switch the user has changed, for finds added several at once.
     var flowers by rememberSaveable(stateSaver = FlowersSaver) { mutableStateOf(emptyMap<String, Boolean>()) }
+    val notices = LocalNotices.current
+    val resources = LocalResources.current
     val callbacks = remember(actions) {
         ReviewCallbacks(
             onAdd = actions::add,
@@ -355,7 +362,9 @@ fun PhotoReviewScreen(
                 SelectionToolbar(
                     count = selected.size,
                     onDismiss = {
-                        actions.rejectAll(selected)
+                        val dismissed = selected
+                        actions.rejectAll(dismissed)
+                        notices?.show(resources.getQuantityString(R.plurals.review_dismissed, dismissed.size, dismissed.size)) { actions.reopenAll(dismissed) }
                         leaveSelection()
                     },
                     onAdd = { choosingZone = true },

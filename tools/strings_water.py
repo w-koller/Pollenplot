@@ -23,6 +23,7 @@ STRINGS = {
     "water_last": "Last watered on %1$s",
     "water_never": "No watering recorded yet",
     "water_watered": "I watered today",
+    "water_watered_notice": "Recorded watering for %1$s today.",
     "water_how": "How the plan is worked out",
     "water_coming_up": "Coming up",
     "water_ahead_litres": "%1$s at %2$s, about %3$s L",

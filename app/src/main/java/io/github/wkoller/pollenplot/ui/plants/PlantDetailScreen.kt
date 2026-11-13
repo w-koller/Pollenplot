@@ -68,6 +68,7 @@ import io.github.wkoller.pollenplot.data.ProblemViews
 import io.github.wkoller.pollenplot.ui.problems.ProblemsCard
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
+import io.github.wkoller.pollenplot.domain.garden.PlantEvent
 import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.plants.CareField
 import io.github.wkoller.pollenplot.domain.plants.CareProfile
@@ -129,7 +130,7 @@ fun PlantDetailScreen(
     pots: PotViews? = null,
     onEditPot: () -> Unit = {},
     onRecordCare: () -> Unit = {},
-    onRemoveEvent: (String) -> Unit = {},
+    onRemoveEvent: (PlantEvent) -> Unit = {},
     /** The problems logged for the plant, with the screens that open and log them. */
     problems: ProblemViews? = null,
     onOpenProblem: (String) -> Unit = {},

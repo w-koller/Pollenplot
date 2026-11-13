@@ -143,7 +143,7 @@ fun PotCard(state: PotState, today: LocalDate, onEdit: () -> Unit, onRecord: () 
 
 /** The care recorded for a plant, the latest first, each with a button to remove it. */
 @Composable
-fun PlantEventsCard(events: List<PlantEvent>, onRemove: (String) -> Unit) {
+fun PlantEventsCard(events: List<PlantEvent>, onRemove: (PlantEvent) -> Unit) {
     FactCard(R.drawable.ic_history, stringResource(R.string.event_title)) {
         events.forEach { event ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -151,7 +151,7 @@ fun PlantEventsCard(events: List<PlantEvent>, onRemove: (String) -> Unit) {
                     Text(stringResource(R.string.event_on, stringResource(event.kind.label), UiFormat.longDate(event.date)), style = MaterialTheme.typography.bodyLarge)
                     if (event.notes.isNotBlank()) Text(event.notes, style = MaterialTheme.typography.bodyMedium)
                 }
-                IconButton(onClick = { onRemove(event.id) }) {
+                IconButton(onClick = { onRemove(event) }) {
                     Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.event_remove))
                 }
             }

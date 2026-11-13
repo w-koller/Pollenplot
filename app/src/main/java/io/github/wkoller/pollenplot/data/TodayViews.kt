@@ -13,17 +13,17 @@ import java.time.LocalDate
 
 /** Something the garden needs today, for the Today card on the Plot. */
 sealed interface TodayItem {
-    /** A line or zone due for watering, with its minutes or its litres in all. */
-    data class Watering(val name: String, val minutes: Int?, val litres: Long) : TodayItem
+    /** A line ([lineId]) or a zone watered by hand ([zoneId]) due for watering, with its minutes or its litres in all. */
+    data class Watering(val name: String, val minutes: Int?, val litres: Long, val lineId: String? = null, val zoneId: String? = null) : TodayItem
 
     /** A honey bee hive check due by today, overdue when it was due before. */
-    data class HiveCheck(val hive: String, val kind: HiveTaskKind, val overdue: Boolean) : TodayItem
+    data class HiveCheck(val hive: String, val kind: HiveTaskKind, val overdue: Boolean, val hiveId: String? = null) : TodayItem
 
     /** A day forecast to reach the keeper's warning temperature, while there are stingless bee hives. */
     data class HotDay(val today: Boolean, val maxTenthsC: Int) : TodayItem
 
     /** A bee hotel worth cleaning out this spring. */
-    data class CleanHotel(val hotel: String) : TodayItem
+    data class CleanHotel(val hotel: String, val hotelId: String? = null) : TodayItem
 
     /** Pot zones to water deeply today, because tomorrow is forecast to reach [maxTenthsC]. */
     data class PotsBeforeHeat(val zones: List<String>, val maxTenthsC: Int) : TodayItem
@@ -63,20 +63,20 @@ class TodayViews(
     private val jobs: Flow<List<TodayItem>> = combine(waterViews.state, beeViews.hives, beeViews.hotels, beeViews.nativeHives, water.weather) { water, hives, hotels, natives, weather ->
         val today = LocalDate.now(clock)
         buildList {
-            water.lines.filter { it.plan.reason == PlanReason.DUE }.forEach { add(TodayItem.Watering(it.line.name, it.plan.minutes.takeIf { _ -> !it.line.method.byHand }, it.plan.applyMl / 1000)) }
+            water.lines.filter { it.plan.reason == PlanReason.DUE }.forEach { add(TodayItem.Watering(it.line.name, it.plan.minutes.takeIf { _ -> !it.line.method.byHand }, it.plan.applyMl / 1000, lineId = it.line.id)) }
             // A pot zone due before a hot day gets the deep watering below instead of its usual one.
             val pots = water.potsBeforeHeat?.zones?.map { it.id }.orEmpty().toSet()
-            water.byHand.filter { it.plan.reason == PlanReason.DUE && it.zone.id !in pots }.forEach { add(TodayItem.Watering(it.zone.name, null, it.plan.applyMl / 1000)) }
+            water.byHand.filter { it.plan.reason == PlanReason.DUE && it.zone.id !in pots }.forEach { add(TodayItem.Watering(it.zone.name, null, it.plan.applyMl / 1000, zoneId = it.zone.id)) }
             water.potsBeforeHeat?.let { warning -> add(TodayItem.PotsBeforeHeat(warning.zones.map { it.name }, warning.maxTenthsC)) }
             hives.forEach { view ->
-                view.tasks.filter { !it.due.isAfter(today) }.forEach { add(TodayItem.HiveCheck(view.hive.name, it.kind, it.overdue(today))) }
+                view.tasks.filter { !it.due.isAfter(today) }.forEach { add(TodayItem.HiveCheck(view.hive.name, it.kind, it.overdue(today), view.hive.id)) }
             }
             if (natives.any { it.hive.status == NativeStatus.ACTIVE }) {
                 weather.filter { it.date == today || it.date == today.plusDays(1) }.forEach { day ->
                     day.maxTenthsC?.let { add(TodayItem.HotDay(day.date == today, it)) }
                 }
             }
-            hotels.filter { it.cleanThisSpring }.forEach { add(TodayItem.CleanHotel(it.hotel.name)) }
+            hotels.filter { it.cleanThisSpring }.forEach { add(TodayItem.CleanHotel(it.hotel.name, it.hotel.id)) }
         }
     }
 
