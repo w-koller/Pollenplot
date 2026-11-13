@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -171,6 +172,12 @@ class DetectionActions(
 /** Keeps the selected finds, so a selection survives the phone being turned. */
 private val SelectionSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() })
 
+/** Keeps each In flower switch the user changed, so they survive the phone being turned. */
+private val FlowersSaver = Saver<Map<String, Boolean>, ArrayList<String>>(
+    save = { map -> ArrayList(map.map { (id, on) -> "$id=$on" }) },
+    restore = { list -> list.associate { it.substringBeforeLast('=') to it.endsWith("=true") } },
+)
+
 /** Keeps each card's choice as text, so the choices survive the phone being turned. */
 private val ChoicesSaver = listSaver<Map<String, ReviewChoice>, String>(
     save = { map -> map.flatMap { (id, choice) -> listOf(id, choice.save()) } },
@@ -222,6 +229,8 @@ fun PhotoReviewScreen(
     var attaching by rememberSaveable { mutableStateOf<String?>(null) }
     var attachingSpecies by rememberSaveable { mutableStateOf<String?>(null) }
     var attachingFlowering by rememberSaveable { mutableStateOf(false) }
+    // Each In flower switch the user has changed, for finds added several at once.
+    var flowers by rememberSaveable(stateSaver = FlowersSaver) { mutableStateOf(emptyMap<String, Boolean>()) }
     val callbacks = remember(actions) {
         ReviewCallbacks(
             onAdd = actions::add,
@@ -243,6 +252,7 @@ fun PhotoReviewScreen(
             onAddSighting = actions::addSighting,
             onSave = actions::save,
             onOpenWishlist = onOpenWishlist,
+            onFlowering = { detection, on -> flowers = flowers + (detection.id to on) },
             onChoosePlant = if (field) {
                 null
             } else {
@@ -305,7 +315,7 @@ fun PhotoReviewScreen(
             if (detection.group.isWildlife) {
                 animalPick(detection, choice, fauna)?.let { BatchAdd.Sighting(detection.id, it.speciesName, it.label, detection.group) }
             } else {
-                plantPick(detection, choice, kb)?.let { BatchAdd.Plant(detection.id, it.speciesName, it.customName, detection.flowering) }
+                plantPick(detection, choice, kb)?.let { BatchAdd.Plant(detection.id, it.speciesName, it.customName, flowers[detection.id] ?: detection.flowering) }
             }
         }
         val zoneIds = zones.map { it.zone.id }.toSet()

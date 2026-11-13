@@ -49,6 +49,17 @@ class GardenGraphTest {
     }
 
     @Test
+    fun `a day in flower is an observation of the plant`() {
+        val id = "33333333-3333-3333-3333-333333333333"
+        val doc = JsonLd.document(GardenGraph.flowering(id, plant.id, LocalDate.of(2026, 10, 28), fromPhoto = false))
+        val seen = node(doc, "urn:uuid:$id")
+        assertEquals(listOf("sosa:Observation", "pp:FloweringObservation"), (seen["@type"] as JsonArray).map { it.jsonPrimitive.content })
+        assertEquals("urn:uuid:${plant.id}", seen["sosa:hasFeatureOfInterest"]!!.jsonObject["@id"]!!.jsonPrimitive.content)
+        assertEquals("2026-10-28", seen["schema:startDate"]!!.jsonObject["@value"]!!.jsonPrimitive.content)
+        assertEquals("HumanObservation", seen["dwc:basisOfRecord"]!!.jsonPrimitive.content)
+    }
+
+    @Test
     fun `a garden plant is a Darwin Core occurrence placed in its zone`() {
         val doc = JsonLd.document(GardenGraph.plant(plant, lemon, listOf(EcoRole.POLLINATOR_MAGNET, EcoRole.EDIBLE)))
         val p = node(doc, "urn:uuid:${plant.id}")

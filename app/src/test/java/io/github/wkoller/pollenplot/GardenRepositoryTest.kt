@@ -327,6 +327,45 @@ class GardenRepositoryTest {
     }
 
     @Test
+    fun `a day in flower is recorded once from the plant's page and can be taken back`() = runBlocking {
+        val lemon = garden.addPlant("Citrus × limon", "Mum's lemon", null)
+        val day = LocalDate.of(2026, 10, 28)
+        val made = garden.recordFlowering(lemon.id, day)!!
+        assertEquals(false, made.fromPhoto)
+        assertEquals("The same day is not recorded twice", null, garden.recordFlowering(lemon.id, day))
+        assertEquals(listOf(day), garden.floweringOf(lemon.id))
+        assertEquals(listOf(lemon.id to day), garden.floweringList.first())
+        assertEquals("A plant that is not in the garden records nothing", null, garden.recordFlowering("no-such-plant", day))
+
+        garden.removeFlowering(made.id)
+        assertEquals(emptyList<LocalDate>(), garden.floweringOf(lemon.id))
+        garden.restoreFlowering(made)
+        assertEquals(listOf(made), garden.floweringRecords(lemon.id).first())
+        assertTrue("The day is in the exported linked data", garden.exportJsonLd().contains("FloweringObservation"))
+    }
+
+    @Test
+    fun `a find moved to another plant takes its day in flower and its picture with it`() = runBlocking {
+        val found = recordBedPhoto()
+        val wrong = garden.confirmDetection(found[0].id, "Melaleuca citrina", null, null, flowering = true)
+        val right = garden.addPlant("Melaleuca viminalis", null, null)
+
+        garden.moveDetection(found[0].id, right.id)
+        assertEquals(right.id, garden.detection(found[0].id)!!.plantId)
+        assertEquals(emptyList<LocalDate>(), garden.floweringOf(wrong.id))
+        assertEquals(listOf(LocalDate.of(2026, 10, 3)), garden.floweringOf(right.id))
+        assertEquals("The plant it left has no other photo to show", null, garden.plant(wrong.id)!!.thumbnail)
+        assertEquals("thumbs/bottlebrush.webp", garden.plant(right.id)!!.thumbnail)
+
+        // Another of the plant's photos can be made its picture, but not a photo of another plant.
+        garden.attachDetection(found[1].id, right.id, flowering = false)
+        garden.setPicture(right.id, found[1].id)
+        assertEquals("thumbs/rosemary.webp", garden.plant(right.id)!!.thumbnail)
+        garden.setPicture(wrong.id, found[1].id)
+        assertEquals(null, garden.plant(wrong.id)!!.thumbnail)
+    }
+
+    @Test
     fun `an animal in a photo becomes a sighting on the plant it was on`() = runBlocking {
         val zone = garden.addZone("Hive Corner", ZoneKind.HIVE_CORNER)
         val rosemary = garden.addPlant("Salvia rosmarinus", null, zone.id)

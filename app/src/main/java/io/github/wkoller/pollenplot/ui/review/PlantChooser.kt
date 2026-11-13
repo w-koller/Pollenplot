@@ -27,10 +27,10 @@ import io.github.wkoller.pollenplot.ui.components.PlantAvatar
  * opens over the whole screen, like the species search.
  */
 @Composable
-fun PlantChooser(plants: List<PlantView>, speciesName: String?, onBack: () -> Unit, onChoose: (plantId: String) -> Unit) {
+fun PlantChooser(plants: List<PlantView>, speciesName: String?, onBack: () -> Unit, title: String = stringResource(R.string.plant_chooser_title), onChoose: (plantId: String) -> Unit) {
     val growing = plants.filter { it.isGrowing }.sortedBy { it.title.lowercase() }
     val (same, others) = growing.partition { speciesName != null && it.plant.speciesName == speciesName }
-    DetailScaffold(title = stringResource(R.string.plant_chooser_title), onBack = onBack) { padding ->
+    DetailScaffold(title = title, onBack = onBack) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),

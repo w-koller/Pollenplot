@@ -43,7 +43,7 @@ STRINGS = {
     "rhythms_visit": "%1$s on %2$s",
     "rhythms_now": "Flowering now",
     "rhythms_now_none": "Nothing in your garden is expected to flower this month.",
-    "rhythms_seen": "Seen flowering in your photos",
+    "rhythms_seen": "Seen flowering in your garden",
     "rhythms_expected": "Expected to flower",
     "rhythms_peak": "Peak flowering",
     "rhythms_next": "Coming up next month",

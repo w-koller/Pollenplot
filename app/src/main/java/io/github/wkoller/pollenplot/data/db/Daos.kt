@@ -208,6 +208,22 @@ interface FloweringDao {
 
     @Query("SELECT * FROM flowering ORDER BY observedOnEpochDay")
     fun observeAll(): Flow<List<FloweringEntity>>
+
+    @Query("SELECT * FROM flowering ORDER BY observedOnEpochDay")
+    suspend fun all(): List<FloweringEntity>
+
+    @Query("SELECT * FROM flowering WHERE plantId = :plantId ORDER BY observedOnEpochDay DESC")
+    fun observePlant(plantId: String): Flow<List<FloweringEntity>>
+
+    @Query("SELECT * FROM flowering WHERE plantId = :plantId AND observedOnEpochDay = :epochDay LIMIT 1")
+    suspend fun onDay(plantId: String, epochDay: Long): FloweringEntity?
+
+    @Query("DELETE FROM flowering WHERE id = :id")
+    suspend fun delete(id: String)
+
+    /** Gives the days a plant was seen in flower in one photo to another plant, when the photo's find moves to it. */
+    @Query("UPDATE flowering SET plantId = :to WHERE plantId = :from AND photoId = :photoId")
+    suspend fun movePhoto(photoId: String, from: String, to: String)
 }
 
 @Dao

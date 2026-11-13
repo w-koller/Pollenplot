@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- A plant that is flowering now can be recorded from its own page. The new “Seen in flower” card has “Seen in flower
+  today” and “Another day”, lists the days of the last year, and removes one recorded by mistake. Before, only the
+  switch on a review card could say a plant was in flower. Plants the knowledge base does not have get the card too.
+- Finds added several at once take what each “In flower” switch says. Before, they took the models' guess.
+- A plant's Edit sheet records the day it was planted, which pot care counts from.
+- A photo in a plant's history can be made the plant's picture, and “This is another plant” moves a photo added to
+  the wrong plant, with the day it showed that plant in flower.
+- Recording or removing a day in flower, and moving a photo, show a short message with Undo.
+- The days a plant was seen in flower are in the exported linked data, as observations of the plant.
 - Accurate identification pack 3 knows what each species looks like. For 7,931 of its 13,644 species it holds a
   prototype made from photos of that species taken in Australia, beside the description it had before. On 1,029
   Australian photos by other photographers, the right species came first for 51%, up from 45% with pack 2, and among

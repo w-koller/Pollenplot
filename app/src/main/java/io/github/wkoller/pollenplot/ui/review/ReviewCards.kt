@@ -108,6 +108,8 @@ class ReviewCallbacks(
     val onChoosePlant: ((detection: DetectionRecord, speciesName: String?, flowering: Boolean) -> Unit)? = null,
     /** Says the find shows something of another group, such as an animal where a plant was looked for. */
     val onRegroup: ((detection: DetectionRecord, group: LifeGroup) -> Unit)? = null,
+    /** Hears the In flower switch change, so finds added several at once take what the switch says. */
+    val onFlowering: ((detection: DetectionRecord, flowering: Boolean) -> Unit)? = null,
 )
 
 /**
@@ -374,7 +376,10 @@ private fun Undecided(
     }
     ListItem(
         checked = flowering,
-        onCheckedChange = { flowering = it },
+        onCheckedChange = {
+            flowering = it
+            callbacks.onFlowering?.invoke(detection, it)
+        },
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.review_flowering_body))

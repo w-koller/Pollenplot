@@ -58,7 +58,9 @@ is always ready to tag.
     corrections, then species, then genus, then family), `CareCorrections` (the facts a user may correct, stored as
     the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges) and `Companions`.
   - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
-    `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year) and `Pots` (a plant's pot,
+    `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year, from the `flowering`
+    table's days: a photo's through the review card's switch, the user's through `GardenRepository.recordFlowering`
+    on the plant's page, once a day for each plant) and `Pots` (a plant's pot,
     the care done to plants, and `PotCare`: a flush four months after the last flush or fresh mix, after the
     University of New Hampshire Extension, and a repot check two years after fresh mix, after Scotts' Australian guide)
     and `Corridor` (a zone's habitat layers from its plants' growth forms, its ground features and water, the gap to
@@ -182,7 +184,9 @@ is always ready to tag.
   morning while there is something to remind or warn about: `HiveReminderCheck` for honey bee checks due,
   `HeatAlertCheck` for hot days ahead of stingless bee hives, `WaterPlanCheck` for watering due, `PotCareCheck` for
   pots due a flush or a look at repotting, `FeedPlanCheck` for zones due a feed, `ProblemCheck` for follow-ups and `PruneCheck` for prunes due.
-- `app/ui`: Compose screens. `ui/components` holds the shared pieces, `ui/nav` the routes and the app frame,
+- `app/ui`: Compose screens. `ui/components` holds the shared pieces (among them `Notices`, the app's one snackbar
+  host, given through `LocalNotices` by `AppRoot` and shown by both scaffolds: `notices.show(message) { undo }`; a
+  screen test that wants its messages provides `rememberNotices()` itself), `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
   finder, `ui/wildlife` the Wildlife tab, an animal's page, a sighting's page and the safety notice, and `ui/review`

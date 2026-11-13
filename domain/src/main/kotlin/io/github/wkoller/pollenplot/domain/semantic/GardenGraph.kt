@@ -7,6 +7,7 @@ import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 import java.math.BigDecimal
+import java.time.LocalDate
 
 /**
  * Describes garden records in standard vocabularies. A zone is a schema.org Place; a plant in the garden is a Darwin
@@ -70,6 +71,21 @@ object GardenGraph {
             .iri(iri, Vocab.DWC + "locationID", sighting.zoneId?.let(Vocab::recordIri))
             .iri(iri, Vocab.PP + "seenOn", sighting.plantId?.let(Vocab::recordIri))
             .text(iri, Vocab.DWC + "occurrenceRemarks", sighting.notes)
+            .build()
+    }
+
+    /**
+     * A day a plant was seen in flower, as a SOSA observation of the plant: by the app in a photo, or by the gardener.
+     */
+    fun flowering(id: String, plantId: String, day: LocalDate, fromPhoto: Boolean): List<Triple> {
+        val iri = Vocab.recordIri(id)
+        return GraphBuilder()
+            .type(iri, Vocab.SOSA + "Observation")
+            .type(iri, Vocab.PP + "FloweringObservation")
+            .iri(iri, Vocab.SOSA + "hasFeatureOfInterest", Vocab.recordIri(plantId))
+            .iri(iri, Vocab.SOSA + "observedProperty", Vocab.PP + "Flowering")
+            .text(iri, Vocab.DWC + "basisOfRecord", if (fromPhoto) "MachineObservation" else "HumanObservation")
+            .date(iri, Vocab.SCHEMA + "startDate", day.toString())
             .build()
     }
 

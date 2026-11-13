@@ -8,6 +8,7 @@ STRINGS = {
     "back": "Back",
     "settings": "Settings",
     "cancel": "Cancel",
+    "undo": "Undo",
     "choose": "Choose",
 
     # Joining words for lists and month ranges, such as "March and April" and "September to November"
