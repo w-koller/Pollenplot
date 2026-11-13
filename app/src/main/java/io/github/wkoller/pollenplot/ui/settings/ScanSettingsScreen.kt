@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -45,7 +47,6 @@ import io.github.wkoller.pollenplot.scan.GalleryAccess
 import io.github.wkoller.pollenplot.scan.ScanScheduler
 import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

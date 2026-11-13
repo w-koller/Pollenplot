@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
@@ -60,7 +61,6 @@ import io.github.wkoller.pollenplot.domain.rhythms.RhythmsEngine
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.largeText
-import io.github.wkoller.pollenplot.ui.review.readable
 import io.github.wkoller.pollenplot.ui.rhythms.label
 import io.github.wkoller.pollenplot.ui.rhythms.offerMonths
 import io.github.wkoller.pollenplot.ui.weeds.LinkButton

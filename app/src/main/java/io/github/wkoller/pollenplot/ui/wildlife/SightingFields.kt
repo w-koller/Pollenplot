@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import io.github.wkoller.pollenplot.R
@@ -7,7 +8,6 @@ import io.github.wkoller.pollenplot.data.PlantView
 import io.github.wkoller.pollenplot.data.ZoneView
 import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 
 /**
  * Where an animal was seen, the plant it was on and what it was doing, as chips. The plants offered are those growing

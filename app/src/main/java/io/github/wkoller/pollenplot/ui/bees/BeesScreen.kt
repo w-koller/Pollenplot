@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.readableSides
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.nav.AddAction
+import io.github.wkoller.pollenplot.ui.components.AddMenu
+import androidx.compose.foundation.layout.PaddingValues
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
@@ -82,8 +86,22 @@ fun BeesScreen(
         actions = {
             onReport?.let { report -> IconButton(onClick = report) { Icon(painterResource(R.drawable.ic_description), contentDescription = stringResource(R.string.report_open)) } }
         },
+        // The same add button as the Plot's, with a hive of either kind and a hotel in it whichever section shows.
+        floatingActionButton = {
+            if (hives != null) {
+                AddMenu(AddAction.BEES) { action ->
+                    when (action) {
+                        AddAction.HONEY_HIVE -> onAddHive()
+                        AddAction.NATIVE_HIVE -> onAddNativeHive()
+                        AddAction.HOTEL -> onAddHotel()
+                        else -> Unit
+                    }
+                }
+            }
+        },
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        // The list ends clear of the add button.
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 88.dp)) {
             item {
                 ConnectedChoice(
                     options = BeeSection.entries,

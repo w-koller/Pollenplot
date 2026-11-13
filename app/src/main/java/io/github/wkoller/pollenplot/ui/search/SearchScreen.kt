@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.search
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -51,7 +52,6 @@ import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.plants.SpeciesRow
 import io.github.wkoller.pollenplot.ui.plants.ZoneCard
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map

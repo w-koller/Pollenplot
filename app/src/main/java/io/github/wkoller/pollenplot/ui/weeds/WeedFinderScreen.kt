@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -40,7 +41,6 @@ import io.github.wkoller.pollenplot.domain.weeds.WeedFinder
 import io.github.wkoller.pollenplot.domain.weeds.WeedResolver
 import io.github.wkoller.pollenplot.domain.weeds.WeedStatus
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 
 /**
  * Finds a weed on the council's list by what it looks like: its type, flower colour and leaves, as the council's own

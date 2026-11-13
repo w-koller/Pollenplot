@@ -88,9 +88,9 @@ STRINGS = {
     "zone_area_invalid": "Please enter the area as a number, such as 12.5.",
     "zone_notes": "Notes",
     "zone_save": "Save changes",
-    "zone_remove": "Remove zone",
-    "zone_remove_title": "Remove %1$s?",
-    "zone_remove_body": "The zone is removed from your plot. The plants in it stay in your garden without a zone.",
+    "zone_remove": "Delete zone",
+    "zone_remove_title": "Delete %1$s?",
+    "zone_remove_body": "The zone is deleted from your plot. The plants in it stay in your garden without a zone.",
 
     # Search
     "search_title": "Search your garden",

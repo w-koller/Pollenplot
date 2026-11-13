@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.identify
 
+import io.github.wkoller.pollenplot.ui.components.readable
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -105,7 +106,6 @@ import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.review.PhotoReviewScreen
 import io.github.wkoller.pollenplot.ui.review.confidenceLabel
-import io.github.wkoller.pollenplot.ui.review.readable
 import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import kotlinx.coroutines.flow.map
 import java.io.File

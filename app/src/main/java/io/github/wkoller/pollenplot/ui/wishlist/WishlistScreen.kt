@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wishlist
 
+import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -41,7 +42,6 @@ import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
 import io.github.wkoller.pollenplot.ui.review.Cutout
-import io.github.wkoller.pollenplot.ui.review.readable
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Currency

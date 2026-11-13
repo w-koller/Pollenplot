@@ -57,8 +57,8 @@ class ExportTest {
     fun `the export is reached from Settings`() {
         compose.setContent { PollenplotTheme(Settings()) { Surface { AppRoot(app.container) } } }
         compose.onNodeWithContentDescription("Settings").performClick()
-        compose.scrollTo(hasText("Export data"))
-        compose.onNodeWithText("Export data").performClick()
+        compose.scrollTo(hasText("Reports and export"))
+        compose.onNodeWithText("Reports and export").performClick()
         compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasText("Garden report")).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Save as a PDF").assertExists()
         compose.onNodeWithText("Save as a spreadsheet").assertExists()

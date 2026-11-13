@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -58,7 +59,6 @@ import io.github.wkoller.pollenplot.ui.components.PastDateDialog
 import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.plants.QuantityStepper
 import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

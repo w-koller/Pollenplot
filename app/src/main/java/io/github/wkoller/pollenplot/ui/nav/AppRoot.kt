@@ -75,7 +75,10 @@ import io.github.wkoller.pollenplot.ui.bees.HoneyRecordScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeHiveEditorScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeHiveScreen
 import io.github.wkoller.pollenplot.ui.bees.NativeLogScreen
+import io.github.wkoller.pollenplot.ui.components.LocalAppMenu
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import io.github.wkoller.pollenplot.ui.components.MoreItem
+import io.github.wkoller.pollenplot.ui.guides.GuidesScreen
 import io.github.wkoller.pollenplot.ui.components.LocalOpenSearch
 import io.github.wkoller.pollenplot.ui.components.rememberNotices
 import io.github.wkoller.pollenplot.ui.guides.GuideScreen
@@ -250,7 +253,12 @@ fun AppRoot(
             },
         ) { padding ->
             val railInsets = if (wide && showTabs) Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)) else Modifier
-            CompositionLocalProvider(LocalOpenSearch provides { navController.navigate(SearchRoute) }, LocalNotices provides rememberNotices()) {
+            // Every tab's More menu ends with these, so the assistant and the guides are one press from anywhere.
+            val appMenu = listOf(
+                MoreItem(stringResource(R.string.ask_garden_open), R.drawable.ic_forum) { navController.navigate(AskRoute()) },
+                MoreItem(stringResource(R.string.guides_title), R.drawable.ic_menu_book) { navController.navigate(GuidesRoute) },
+            )
+            CompositionLocalProvider(LocalOpenSearch provides { navController.navigate(SearchRoute) }, LocalNotices provides rememberNotices(), LocalAppMenu provides appMenu) {
                 NavHost(
                     navController = navController,
                     startDestination = if (setup) SetupRoute() else PlotRoute,
@@ -277,6 +285,8 @@ fun AppRoot(
                                     AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                     // The Plot adds a zone itself, in a dialog over the canvas.
                                     AddAction.ZONE -> Unit
+                                    // The Bees tab's own choices.
+                                    AddAction.HONEY_HIVE, AddAction.NATIVE_HIVE, AddAction.HOTEL -> Unit
                                     AddAction.SIGHTING -> navController.navigate(AddSightingRoute())
                                 }
                             },
@@ -577,6 +587,8 @@ fun AppRoot(
                                     AddAction.PLANT -> navController.navigate(AddPlantRoute())
                                     // The Plot adds a zone itself, in a dialog over the canvas.
                                     AddAction.ZONE -> Unit
+                                    // The Bees tab's own choices.
+                                    AddAction.HONEY_HIVE, AddAction.NATIVE_HIVE, AddAction.HOTEL -> Unit
                                 }
                             },
                             onOpenAnimal = { navController.navigate(AnimalRoute(it)) },
@@ -719,6 +731,10 @@ fun AppRoot(
                         NativeLogScreen(NativeLogKind.valueOf(route.kind), route.hiveId, container.nativeBees, container.beeViews.today(), onBack = back)
                     }
                     composable<GuideRoute> { entry -> GuideScreen(container.guides, entry.toRoute<GuideRoute>().id, onBack = back) }
+                    composable<GuidesRoute> {
+                        val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
+                        GuidesScreen(container.guides, current?.gardenState, onOpen = { navController.navigate(GuideRoute(it)) }, onBack = back)
+                    }
                     composable<HiveRoute> { entry ->
                         val id = entry.toRoute<HiveRoute>().id
                         HiveScreen(

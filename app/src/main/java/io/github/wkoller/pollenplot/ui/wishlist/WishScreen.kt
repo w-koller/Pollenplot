@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.wishlist
 
+import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,9 +54,7 @@ import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
 import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.tone
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import io.github.wkoller.pollenplot.ui.review.WildStatusLine
-import io.github.wkoller.pollenplot.ui.review.readable
 import io.github.wkoller.pollenplot.ui.weeds.NativeAlternatives
 import io.github.wkoller.pollenplot.ui.weeds.WeedHelp
 import io.github.wkoller.pollenplot.ui.weeds.WeedNotice

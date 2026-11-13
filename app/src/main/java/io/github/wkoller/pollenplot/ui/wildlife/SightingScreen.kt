@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,6 @@ import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PastDateDialog
 import io.github.wkoller.pollenplot.ui.components.PictureAvatar
 import io.github.wkoller.pollenplot.ui.plants.QuantityStepper
-import io.github.wkoller.pollenplot.ui.plot.ChipGroup
 import io.github.wkoller.pollenplot.ui.review.FaunaSearch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

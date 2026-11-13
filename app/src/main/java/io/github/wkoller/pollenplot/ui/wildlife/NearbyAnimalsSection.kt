@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,6 @@ import io.github.wkoller.pollenplot.domain.wildlife.FaunaBase
 import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
 import io.github.wkoller.pollenplot.domain.wildlife.NearbyAnimals
 import io.github.wkoller.pollenplot.domain.wildlife.RecordedAnimal
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.text.NumberFormat
 
 /**

@@ -21,8 +21,15 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.material3.FloatingActionButton
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ui.nav.AddAction
+
+/** The add button of a tab with one thing to add: the same button as the add menu's, which adds it at once. */
+@Composable
+fun AddButton(label: String, onClick: () -> Unit) {
+    FloatingActionButton(onClick = onClick) { Icon(painterResource(R.drawable.ic_add), contentDescription = label) }
+}
 
 /** The add menu: a floating action button that opens into [actions], the ways of adding from this tab. */
 @Composable

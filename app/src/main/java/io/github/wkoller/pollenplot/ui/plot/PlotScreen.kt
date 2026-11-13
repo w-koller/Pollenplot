@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalResources
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import io.github.wkoller.pollenplot.ui.components.MoreItem
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.garden.PlotLayout
@@ -67,7 +69,6 @@ import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.nav.AddAction
 import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.plants.ZoneCard
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flowOf
 
@@ -166,9 +167,6 @@ fun PlotScreen(
                         }
                     }
                 }
-                IconButton(onClick = onWishlist) {
-                    Icon(painterResource(R.drawable.ic_bookmark), contentDescription = stringResource(R.string.wishlist_title))
-                }
                 IconButton(onClick = onSearch) {
                     Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.search_title))
                 }
@@ -180,12 +178,19 @@ fun PlotScreen(
                         )
                     }
                 }
-                if (showCanvas) {
-                    IconButton(onClick = { editing = true }) {
-                        Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.plot_edit_layout))
-                    }
-                }
             }
+        },
+        // What is used less often is in the More menu, where it is always found: the review queue and the weeds are
+        // there even with nothing waiting, when their buttons with a count are not on the bar.
+        more = if (editing || loadedZones == null) {
+            emptyList()
+        } else {
+            listOfNotNull(
+                MoreItem(stringResource(R.string.plot_edit_layout), R.drawable.ic_edit) { editing = true }.takeIf { showCanvas },
+                MoreItem(stringResource(R.string.wishlist_title), R.drawable.ic_bookmark, onWishlist),
+                MoreItem(stringResource(R.string.review_title), R.drawable.ic_rate_review, onReview),
+                MoreItem(stringResource(R.string.weeds_title), R.drawable.ic_grass, onWeeds),
+            )
         },
         floatingActionButton = {
             // While Move and resize is open its own Done is the only one on the screen.

@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.rhythms
 
+import androidx.compose.foundation.layout.PaddingValues
+import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,7 +59,6 @@ import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.listWords
-import io.github.wkoller.pollenplot.ui.settings.SectionHeading
 import java.time.Month
 import java.time.format.TextStyle
 
@@ -74,7 +76,7 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
         onOpenSettings = onOpenSettings,
     ) { padding ->
         val loaded = state ?: return@TabScaffold
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding())) {
             if (loaded.plants.isEmpty()) {
                 item {
                     EmptyState(icon = R.drawable.ic_local_florist, title = stringResource(R.string.rhythms_empty_title), body = stringResource(R.string.rhythms_empty_body))

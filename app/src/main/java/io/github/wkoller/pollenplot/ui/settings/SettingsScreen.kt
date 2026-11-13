@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
@@ -256,15 +257,6 @@ private fun BatteryRow() {
     ) { Text(stringResource(R.string.settings_battery)) }
 }
 
-@Composable
-internal fun SectionHeading(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp).semantics { heading() },
-    )
-}
 
 private val ThemeChoice.label: Int
     get() = when (this) {

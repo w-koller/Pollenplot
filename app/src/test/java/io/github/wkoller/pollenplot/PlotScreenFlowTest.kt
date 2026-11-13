@@ -135,7 +135,7 @@ class PlotScreenFlowTest {
         val ids = seed()
         show()
         waitFor(hasContentDescription("Hive Corner", substring = true))
-        compose.pressWhenShown(hasContentDescription("Edit layout"))
+        compose.fromMore("Edit layout")
         compose.onNodeWithContentDescription("Hive Corner", substring = true).performClick()
         shot("plot_edit_selected")
         compose.onNodeWithContentDescription("Move and resize").performClick()
@@ -183,6 +183,21 @@ class PlotScreenFlowTest {
         waitFor(hasText("Open zone"))
         compose.onNodeWithText("Rosemary").performClick()
         waitFor(hasText("Salvia rosmarinus"))
+    }
+
+    @Test
+    fun theAssistantAndTheGuidesAreInTheMoreMenu() {
+        seed()
+        show()
+        compose.pressWhenShown(hasContentDescription("More"))
+        waitFor(hasText("Ask your garden"))
+        // The review queue and the weeds are there even with nothing waiting.
+        compose.onNodeWithText("Review").assertExists()
+        compose.onNodeWithText("Weeds").assertExists()
+        shot("plot_more_menu")
+        compose.pressWhenShown(hasText("Guides"))
+        waitFor(hasText("Honey bees"))
+        shot("guides_index")
     }
 
     @Test

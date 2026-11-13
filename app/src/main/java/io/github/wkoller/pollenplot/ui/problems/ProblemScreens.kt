@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.problems
 
+import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.components.FactCard
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -51,6 +53,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import kotlinx.coroutines.flow.map
+import io.github.wkoller.pollenplot.ui.components.MissingRecord
+import io.github.wkoller.pollenplot.ui.components.Found
 import io.github.wkoller.pollenplot.data.ProblemRepository
 import io.github.wkoller.pollenplot.data.ProblemView
 import io.github.wkoller.pollenplot.data.ProblemViews
@@ -63,9 +68,7 @@ import io.github.wkoller.pollenplot.ui.components.Badge
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PastDateDialog
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
-import io.github.wkoller.pollenplot.ui.plants.FactCard
 import io.github.wkoller.pollenplot.ui.review.Cutout
-import io.github.wkoller.pollenplot.ui.review.readable
 import io.github.wkoller.pollenplot.ui.weeds.LinkButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -230,7 +233,8 @@ fun ProblemScreen(
     onRecordTreatment: () -> Unit,
     onOpenAnimal: (String) -> Unit = {},
 ) {
-    val view by remember(id) { views.problem(id) }.collectAsStateWithLifecycle(initialValue = null)
+    val found by remember(id) { views.problem(id).map { Found(it) } }.collectAsStateWithLifecycle(initialValue = null)
+    val view = found?.value
     val scope = rememberCoroutineScope()
     val notices = io.github.wkoller.pollenplot.ui.components.LocalNotices.current
     val resolvedText = stringResource(R.string.problem_resolved_notice)
@@ -247,7 +251,10 @@ fun ProblemScreen(
             }
         },
     ) { padding ->
-        if (shown == null) return@DetailScaffold
+        if (shown == null) {
+            if (found != null) MissingRecord(padding)
+            return@DetailScaffold
+        }
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp).readable(),
             verticalArrangement = Arrangement.spacedBy(12.dp),

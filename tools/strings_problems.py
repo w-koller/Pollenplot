@@ -3,11 +3,11 @@
 STRINGS = {
     "problems_title": "Problems",
     "problems_none": "No problems logged for this plant.",
-    "problem_log": "Log a problem",
+    "problem_log": "Record a problem",
     "problem_open": "Open",
     "problem_resolved": "Resolved",
     "problem_seen_on": "Seen on %1$s",
-    "problem_log_title": "Log a problem",
+    "problem_log_title": "Record a problem",
     "problem_what": "What you saw",
     "problem_other": "Something else",
     "problem_other_name": "What it is",
