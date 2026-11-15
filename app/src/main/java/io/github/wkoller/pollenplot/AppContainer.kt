@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot
 
+import io.github.wkoller.pollenplot.data.LibraryRepository
+import io.github.wkoller.pollenplot.library.LibraryPhotos
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -194,6 +196,8 @@ class AppContainer(
     val location: LocationSource = location ?: PhoneLocation(appContext)
     val weedSync = WeedSync(this.web, weeds, places, settingsStore, { namesToMatch() }, clock) { notifications.showWeedsNearby(it) }
     val weedPhotos = WeedPhotos(this.web) { weeds.sources }
+    val libraryPhotos = LibraryPhotos(this.web, { weeds.sources }, File(appContext.cacheDir, "library"))
+    val library = LibraryRepository(this.database, garden, clock)
     val photos = PhotoStore(appContext)
     val problems = ProblemRepository(this.database, clock, { problemCatalogue }, { knowledge.await() }, photos::delete)
     val wishes = WishRepository(this.database, clock, { knowledge.await() }, photos::delete)

@@ -202,6 +202,12 @@ is always ready to tag.
   group), `PhotoReviewScreen` (shared by the Identify results and the Review
   queue) and `ReviewModel`, `ui/bees` the Bees tab and its three sections (`HoneySection`, `NativeSection`,
   `HotelSection`), each with its pages, editors and forms, and `ui/guides` a guide page (`GuideScreen`).
+- `app/library`: `LibraryPhotos` (one photo for each species in the plant library, from records on the Atlas of
+  Living Australia, fetched when the plant is first shown and the user has agreed, kept in `cacheDir/library` with its
+  credit; only licences that ask for a credit alone, `RecordPhoto.creditOnly`). `data/LibraryRepository` is the
+  user's own library (`library_plants`), which `GardenRepository.addPlants` enters every added plant into, and adds
+  several plants to zones at once. `ui/library` is the screen. A library plant is not in the search index or the
+  linked data.
 - `app/place`: `PlaceFinder` (suburb and postcode search through Open-Meteo, and the council area and state at a
   point through the Atlas of Living Australia) and `PhoneLocation` (approximate location from the phone's own location
   service). `app/web` holds `Web`, the small HTTP client the app's few web requests go through.

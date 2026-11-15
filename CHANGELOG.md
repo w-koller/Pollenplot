@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- The plant library, in the Plot's More menu, lists every plant Pollenplot knows, to browse or search. When you
+  choose to show photos, it fetches one for each plant from the Atlas of Living Australia the first time the plant
+  is shown, keeps it on the phone, and credits it; only photos whose licence asks for a credit alone are used, and
+  only the plant's name is sent. A press adds a plant to the garden.
+- “My library” in the plant library holds every plant you have added to your garden, and plants you save there. With
+  “Select”, several plants are added to one or more zones together, saved, or removed from your library.
+- “Add a plant to this zone” on a zone's page offers the plant library, a photo taken now, or photos from the
+  gallery. Each offers that zone first.
 - The Plot can show what is built in the yard. “Add a structure”, in the Plot's More menu and on the editing toolbar,
   adds a house, shed, garage, greenhouse, swimming pool, aviary, pen, deck, paving, driveway, water tank or compost
   bay, as a rectangle or an oval. A structure is moved and resized like a zone while the layout is edited, holds no

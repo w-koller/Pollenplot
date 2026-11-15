@@ -17,7 +17,18 @@ data class RecordPhoto(
     /** Where the record came from, such as iNaturalist Australia. */
     val source: String?,
     val licence: String,
-)
+) {
+    /**
+     * Whether the licence asks only for a credit: public domain, CC0 or CC BY. A photo kept on the phone and shown
+     * in the plant library needs that; licences with NC, ND or SA ask for more than the app can promise.
+     */
+    val creditOnly: Boolean
+        get() {
+            val upper = licence.uppercase().replace('_', '-').replace(' ', '-')
+            if ("PUBLIC-DOMAIN" in upper || upper.startsWith("CC0") || upper.startsWith("CC-0")) return true
+            return upper.startsWith("CC-BY") && listOf("NC", "ND", "SA").none { it in upper.removePrefix("CC-BY") }
+        }
+}
 
 /** Photos from records on the Atlas of Living Australia, for comparing with the user's own photo. */
 object AlaPhotos {

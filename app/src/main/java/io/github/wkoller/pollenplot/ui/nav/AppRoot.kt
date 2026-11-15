@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.nav
 
+import io.github.wkoller.pollenplot.ui.library.LibraryScreen
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -272,6 +273,7 @@ fun AppRoot(
                         val resources = LocalResources.current
                         val scope = rememberCoroutineScope()
                         PlotScreen(
+                            onLibrary = { navController.navigate(LibraryRoute()) },
                             settings = container.settingsStore,
                             garden = container.garden,
                             views = container.views,
@@ -350,7 +352,16 @@ fun AppRoot(
                             onBack = back,
                             onEdit = { navController.navigate(ZoneEditRoute(id)) },
                             onOpenPlant = { navController.navigate(PlantRoute(it)) },
-                            onAddPlant = { navController.navigate(AddPlantRoute(zoneId = id)) },
+                            onAddPlant = { navController.navigate(LibraryRoute(zoneId = id)) },
+                            // A photo taken or chosen from a zone's page is of that zone, so it is offered first in review.
+                            onAddByPhoto = {
+                                cleanScope.launch { container.settingsStore.update { it.copy(lastZoneId = id) } }
+                                navController.navigate(IdentifyRoute())
+                            },
+                            onAddFromGallery = {
+                                cleanScope.launch { container.settingsStore.update { it.copy(lastZoneId = id) } }
+                                askingPlants = true
+                            },
                             onOpenSighting = { navController.navigate(SightingRoute(it)) },
                             onAddSighting = { navController.navigate(AddSightingRoute(zoneId = id)) },
                             water = container.waterViews,
@@ -495,6 +506,18 @@ fun AppRoot(
                                 route.wishId?.let(container::wishPlanted)
                                 navController.navigate(PlantRoute(plantId)) { popUpTo<AddPlantRoute> { inclusive = true } }
                             },
+                        )
+                    }
+                    composable<LibraryRoute> { entry ->
+                        LibraryScreen(
+                            knowledge = container.knowledge,
+                            views = container.views,
+                            library = container.library,
+                            photos = container.libraryPhotos,
+                            settings = container.settingsStore,
+                            initialZoneId = entry.toRoute<LibraryRoute>().zoneId,
+                            onBack = back,
+                            onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         )
                     }
                     composable<SearchRoute> {
