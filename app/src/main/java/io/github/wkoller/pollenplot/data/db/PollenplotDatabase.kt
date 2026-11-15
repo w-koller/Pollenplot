@@ -14,7 +14,7 @@ import io.github.wkoller.pollenplot.BuildConfig
  */
 @Database(
     entities = [
-        ZoneEntity::class, PlantEntity::class, PhotoEntity::class, DetectionEntity::class, CandidateEntity::class,
+        ZoneEntity::class, PlantEntity::class, PlantZoneEntity::class, PhotoEntity::class, DetectionEntity::class, CandidateEntity::class,
         FloweringEntity::class, ScannedMediaEntity::class, SearchEntity::class, EmbeddingEntity::class,
         SightingEntity::class, SightingPlantEntity::class, CareDraftEntity::class, ApiaryEntity::class, HoneyHiveEntity::class, InspectionEntity::class,
         VarroaCheckEntity::class, TreatmentEntity::class, FeedingEntity::class, HarvestEntity::class, ColonyEventEntity::class,

@@ -44,11 +44,16 @@ object GardenGraph {
             .text(iri, Vocab.DWC + "genus", species?.genus)
             .text(iri, Vocab.DWC + "vernacularName", species?.common?.firstOrNull())
             .text(iri, Vocab.SCHEMA + "name", plant.customName)
-            .integer(iri, Vocab.DWC + "individualCount", plant.quantity.toLong())
+            .integer(iri, Vocab.DWC + "individualCount", plant.total.toLong())
             .text(iri, Vocab.DWC + "occurrenceStatus", if (plant.status.name == "GROWING") "present" else "absent")
             .date(iri, Vocab.PP + "plantedOn", plant.plantedOn?.toString())
-            .iri(iri, Vocab.SCHEMA + "containedInPlace", plant.zoneId?.let(Vocab::recordIri))
-            .iri(iri, Vocab.DWC + "locationID", plant.zoneId?.let(Vocab::recordIri))
+            .also { graph ->
+                // A plant growing in several zones is contained in each.
+                plant.zoneIds.forEach {
+                    graph.iri(iri, Vocab.SCHEMA + "containedInPlace", Vocab.recordIri(it))
+                    graph.iri(iri, Vocab.DWC + "locationID", Vocab.recordIri(it))
+                }
+            }
             .text(iri, Vocab.DWC + "occurrenceRemarks", plant.notes)
         roles.forEach { builder.iri(iri, Vocab.PP + "ecoRole", Vocab.PP + roleName(it)) }
         return builder.build()

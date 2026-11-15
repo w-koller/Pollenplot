@@ -51,7 +51,7 @@ class HarvestViews(
         plants.associate { view ->
             val own = byPlant[view.plant.id].orEmpty()
             view.plant.id to HarvestState(
-                offered = Harvests.offered(view.care?.care?.edible, view.plant.zoneId?.let(kinds::get)) || own.isNotEmpty(),
+                offered = view.plant.zoneIds.map(kinds::get).ifEmpty { listOf(null) }.any { Harvests.offered(view.care?.care?.edible, it) } || own.isNotEmpty(),
                 harvests = own,
                 seasons = Harvests.bySeason(own, locality.hemisphere),
                 months = Harvests.months(own),

@@ -915,6 +915,16 @@
     <string name="add_plant_custom_body">Pollenplot keeps it by this name until it is matched to a species.</string>
     <string name="add_sheet_title">Add %1$s</string>
     <string name="add_sheet_zone">Zone</string>
+    <string name="add_sheet_zones">Zones</string>
+    <string name="add_sheet_quantity_each">How many in each zone</string>
+    <string name="many_zones_title">In these zones there is</string>
+    <string name="many_zones_one">One plant in many zones</string>
+    <string name="many_zones_each">One plant in each zone</string>
+    <string name="many_zones_ask">Ask each time</string>
+    <string name="many_zones_one_body">Pollenplot keeps one record for the plant, growing in every zone you chose. Its care, notes and photos are kept once.</string>
+    <string name="many_zones_each_body">Pollenplot keeps a record for the plant in each zone you chose. Each has its own count, pot, pruning and photos.</string>
+    <string name="many_zones_ask_body">Pollenplot offers both when you choose more than one zone for a plant.</string>
+    <string name="settings_many_zones">A plant added to several zones</string>
     <string name="add_sheet_no_zone">No zone</string>
     <string name="add_sheet_quantity">How many</string>
     <string name="add_sheet_nickname">Your name for it (optional)</string>

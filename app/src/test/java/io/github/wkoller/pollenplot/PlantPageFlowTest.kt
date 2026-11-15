@@ -187,13 +187,13 @@ class PlantPageFlowTest {
 
         compose.waitUntil(WAIT_MS) { runBlocking { garden.plant(ids.lemon) }?.quantity == 2 }
         val saved = runBlocking { garden.plant(ids.lemon) }!!
-        assertEquals(ids.veg, saved.zoneId)
+        // Pressing another zone adds it: the lemon now grows in both, two in each.
+        assertEquals(listOf(ids.citrus, ids.veg), saved.zoneIds)
         assertEquals(PlantStatus.DIED, saved.status)
         assertEquals("By the back fence", saved.notes)
         // The page says the edit was saved, and shows what changed.
         waitFor(hasText("Your changes to Mum's lemon are saved."))
-        waitFor(hasText("2 plants", substring = true))
-        waitFor(hasText("Veg Patch", substring = true))
+        waitFor(hasText("4 plants · In Back Citrus Patch, Veg Patch"))
         waitFor(hasText("Died"))
         shot("plant_edit_saved")
     }

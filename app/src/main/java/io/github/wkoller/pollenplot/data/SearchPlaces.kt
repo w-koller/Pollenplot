@@ -12,7 +12,8 @@ class SearchPlaces(views: GardenViews, bees: BeeViews, wishes: WishRepository, p
     }
 
     private val garden: Flow<Map<String, String>> = combine(views.zones, views.plants, views.sightings) { zones, plants, sightings ->
-        val plantZones = plants.mapNotNull { view -> view.plant.zoneId?.let { view.plant.id to it } }.toMap()
+        // A plant in several zones is found under the first, as every record here has one zone.
+        val plantZones = plants.mapNotNull { view -> view.plant.zoneIds.firstOrNull()?.let { view.plant.id to it } }.toMap()
         zones.associate { it.zone.id to it.zone.id } + plantZones +
             sightings.mapNotNull { view -> (view.sighting.zoneId ?: view.sighting.plantIds.firstNotNullOfOrNull(plantZones::get))?.let { view.sighting.id to it } }
     }

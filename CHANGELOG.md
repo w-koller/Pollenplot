@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- A plant can be added to several zones at once, from a photo's card or by name, and a plant's zones can be changed
+  in its Edit sheet. With more than one zone chosen, Pollenplot asks whether that is “One plant in many zones”, a
+  single record with its care kept once, or “One plant in each zone”, a record of its own in each. A setting, also
+  asked in setup, answers for every plant so that the question is not asked again. A plant in several zones counts
+  its number in each, is in each zone's list, and is watered and fed with each. Adding several finds at once still
+  goes to one zone.
 - A sighting can say several things the animal was doing and several plants it was on. “Not sure” and “None” stand
   for choosing nothing: pressing one clears the others. Each behaviour and plant is a statement of its own in the
   linked data, and the Darwin Core file joins the behaviours with “ | ”. A garden from an earlier release candidate

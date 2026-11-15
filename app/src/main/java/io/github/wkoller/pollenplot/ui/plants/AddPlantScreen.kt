@@ -1,5 +1,12 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.material3.rememberModalBottomSheetState
+import io.github.wkoller.pollenplot.ui.components.ManyChipGroup
+import io.github.wkoller.pollenplot.ui.review.NamesSaver
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -64,6 +71,7 @@ fun AddPlantScreen(
     initialZoneId: String?,
     initialSpecies: String?,
     onBack: () -> Unit,
+    manyZones: ManyZones = ManyZones.ASK,
     onAdded: (String) -> Unit,
 ) {
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
@@ -122,13 +130,14 @@ fun AddPlantScreen(
                 chosenSpecies = null
                 customName = null
             },
-            onSave = { zoneId, quantity, nickname ->
+            manyZones = manyZones,
+            onSave = { zoneIds, each, quantity, nickname ->
                 val speciesName = species?.name
                 val name = if (species == null) customName else nickname
                 chosenSpecies = null
                 customName = null
                 scope.launch {
-                    val id = garden.addPlant(speciesName, name, zoneId, quantity).id
+                    val id = garden.addPlants(speciesName, name, zoneIds, each, quantity).first().id
                     // The database finishes on its own thread; going on to the plant has to happen on the main one.
                     withContext(Dispatchers.Main) { onAdded(id) }
                 }
@@ -151,16 +160,22 @@ fun AddToGardenSheet(
     initialZoneId: String?,
     askNickname: Boolean,
     onDismiss: () -> Unit,
-    onSave: (zoneId: String?, quantity: Int, nickname: String?) -> Unit,
+    manyZones: ManyZones = ManyZones.ASK,
+    onSave: (zoneIds: List<String>, each: Boolean, quantity: Int, nickname: String?) -> Unit,
 ) {
-    var zoneId by rememberSaveable { mutableStateOf(initialZoneId) }
+    var zoneIds by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(listOfNotNull(initialZoneId)) }
+    var each by rememberSaveable { mutableStateOf(false) }
     var quantity by rememberSaveable { mutableIntStateOf(1) }
     var nickname by rememberSaveable { mutableStateOf("") }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(
+            Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
             Text(stringResource(R.string.add_sheet_title, title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-            ZoneChooser(zones, zoneId) { zoneId = it }
-            QuantityStepper(quantity) { quantity = it }
+            ZonesChooser(zones, zoneIds) { zoneIds = it }
+            ManyZonesChoice(zoneIds.size, manyZones, each) { each = it }
+            QuantityStepper(quantity, title = if (zoneIds.size > 1) stringResource(R.string.add_sheet_quantity_each) else null) { quantity = it }
             if (askNickname) {
                 OutlinedTextField(
                     value = nickname,
@@ -170,7 +185,7 @@ fun AddToGardenSheet(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Button(onClick = { onSave(zoneId, quantity, nickname.trim().ifBlank { null }) }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { onSave(zoneIds, eachZone(manyZones, each), quantity, nickname.trim().ifBlank { null }) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.add_sheet_save))
             }
         }
@@ -187,6 +202,50 @@ fun ZoneChooser(zones: List<ZoneView>, zoneId: String?, title: String? = null, o
         label = { id -> id?.let(names::get) ?: stringResource(R.string.add_sheet_no_zone) },
         onChoose = onChoose,
     )
+}
+
+/** The zones a plant grows in, several at once. No zone stands for choosing none, and the first chosen stays first. */
+@Composable
+fun ZonesChooser(zones: List<ZoneView>, zoneIds: List<String>, title: String? = null, onChoose: (List<String>) -> Unit) {
+    val names = zones.associate { it.zone.id to it.zone.name }
+    ManyChipGroup(
+        title = title ?: stringResource(R.string.add_sheet_zones),
+        options = zones.map { it.zone.id },
+        selected = zoneIds.toSet(),
+        label = { names[it].orEmpty() },
+        none = stringResource(R.string.add_sheet_no_zone),
+        onChange = { chosen -> onChoose(zoneIds.filter { it in chosen } + chosen.filterNot { it in zoneIds }) },
+    )
+}
+
+/** Whether several zones get a plant each: what [setting] says, or what the user chose when it asks each time. */
+fun eachZone(setting: ManyZones, each: Boolean): Boolean = when (setting) {
+    ManyZones.ASK -> each
+    ManyZones.ONE_PLANT -> false
+    ManyZones.PLANT_EACH -> true
+}
+
+/**
+ * With [count] zones chosen, asks whether they hold one plant between them or a plant each. Nothing is asked for one
+ * zone, or when the [setting] already answers.
+ */
+@Composable
+fun ManyZonesChoice(count: Int, setting: ManyZones, each: Boolean, onEach: (Boolean) -> Unit) {
+    if (count < 2 || setting != ManyZones.ASK) return
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        ChipGroup(
+            title = stringResource(R.string.many_zones_title),
+            options = listOf(false, true),
+            selected = each,
+            label = { stringResource(if (it) R.string.many_zones_each else R.string.many_zones_one) },
+            onChoose = onEach,
+        )
+        Text(
+            stringResource(if (each) R.string.many_zones_each_body else R.string.many_zones_one_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable

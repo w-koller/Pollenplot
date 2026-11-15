@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.data
 
+import io.github.wkoller.pollenplot.data.db.PlantZoneEntity
+import io.github.wkoller.pollenplot.data.db.PlantEntity
 import io.github.wkoller.pollenplot.data.db.SightingPlantEntity
 import kotlinx.coroutines.flow.combine
 import androidx.room.withTransaction
@@ -83,13 +85,31 @@ class GardenRepository(
     private val layoutLock = Mutex()
 
     val zoneList: Flow<List<Zone>> = zones.observeAll().map { list -> list.map { it.toDomain() } }
-    val plantList: Flow<List<GardenPlant>> = plants.observeAll().map { list -> list.map { it.toDomain() } }
+    val plantList: Flow<List<GardenPlant>> = combine(plants.observeAll(), plants.observeZones()) { list, places ->
+        val zonesOf = places.groupBy({ it.plantId }, { it.zoneId })
+        list.map { it.toDomain(zonesOf[it.id].orEmpty()) }
+    }
+
+    /** A stored plant with the zones it grows in. */
+    private suspend fun PlantEntity.full(): GardenPlant = toDomain(plants.zonesOf(id))
+
+    private suspend fun allPlants(): List<GardenPlant> {
+        val zonesOf = plants.allZones().groupBy({ it.plantId }, { it.zoneId })
+        return plants.all().map { it.toDomain(zonesOf[it.id].orEmpty()) }
+    }
+
+    /** Stores a plant and the zones it grows in, leaving out a zone that is no longer in the garden. */
+    private suspend fun store(plant: GardenPlant, createdAt: Long, updatedAt: Long) {
+        plants.upsert(plant.toEntity(createdAt, updatedAt))
+        plants.deleteZones(plant.id)
+        plants.insertZones(plant.zoneIds.distinct().filter { zones.get(it) != null }.map { PlantZoneEntity(plant.id, it) })
+    }
 
     private fun now() = clock.millis()
 
     suspend fun zone(id: String): Zone? = zones.get(id)?.toDomain()
 
-    suspend fun plant(id: String): GardenPlant? = plants.get(id)?.toDomain()
+    suspend fun plant(id: String): GardenPlant? = plants.get(id)?.full()
 
     /** Adds a zone in the first free spot on the canvas and returns it. */
     suspend fun addZone(name: String, kind: ZoneKind): Zone {
@@ -109,7 +129,7 @@ class GardenRepository(
         db.withTransaction {
             zones.upsert(zone.toEntity(old.createdAt, now()))
             index(zone)
-            if (old.name != zone.name) plants.inZone(zone.id).forEach { index(it.toDomain()) }
+            if (old.name != zone.name) plants.inZone(zone.id).forEach { index(it.full()) }
         }
     }
 
@@ -127,14 +147,14 @@ class GardenRepository(
         zone.rect
     }
 
-    /** Removes a zone. Its plants stay in the garden without a zone. */
+    /** Removes a zone. Its plants stay in the garden, in their other zones or without one. */
     suspend fun deleteZone(id: String) = db.withTransaction {
-        val affected = plants.inZone(id).map { it.toDomain() }
+        val affected = plants.inZone(id).map { it.full() }
         // The zone's water features go with it, so their entries leave the search index too.
         db.habitatDao().waterIdsIn(id).forEach { search.delete(it) }
         zones.delete(id)
         search.delete(id)
-        affected.forEach { index(it.copy(zoneId = null)) }
+        affected.forEach { index(it.copy(zoneIds = it.zoneIds - id)) }
     }
 
     suspend fun addPlant(
@@ -143,24 +163,38 @@ class GardenRepository(
         zoneId: String?,
         quantity: Int = 1,
         plantedOn: LocalDate? = null,
-    ): GardenPlant {
-        val plant = GardenPlant(UUID.randomUUID().toString(), speciesName, customName?.trim()?.ifBlank { null }, zoneId, quantity, plantedOn)
+    ): GardenPlant = addPlants(speciesName, customName, listOfNotNull(zoneId), each = false, quantity, plantedOn).first()
+
+    /**
+     * Adds a plant to several zones at once: one record growing in all of [zoneIds], or with [each] a record of its own
+     * in every zone. [quantity] is how many there are in each zone.
+     */
+    suspend fun addPlants(
+        speciesName: String?,
+        customName: String?,
+        zoneIds: List<String>,
+        each: Boolean,
+        quantity: Int = 1,
+        plantedOn: LocalDate? = null,
+        thumbnail: String? = null,
+    ): List<GardenPlant> = db.withTransaction {
         val time = now()
-        db.withTransaction {
-            plants.upsert(plant.toEntity(time, time))
+        GardenPlant.placings(zoneIds, each).map { placed ->
+            val plant = GardenPlant(UUID.randomUUID().toString(), speciesName, customName?.trim()?.ifBlank { null }, placed, quantity, plantedOn, thumbnail = thumbnail)
+            store(plant, time, time)
             index(plant)
+            plant
         }
-        return plant
     }
 
     /** Puts a plant in the search index again, after the records kept under it, such as its harvests, change. */
-    suspend fun reindexPlant(id: String) = db.withTransaction { plants.get(id)?.toDomain()?.let { index(it) } }
+    suspend fun reindexPlant(id: String) = db.withTransaction { plants.get(id)?.full()?.let { index(it) } }
 
     /** Saves an edited plant, and says whether it did: a plant removed in the meantime is not brought back. */
     suspend fun updatePlant(plant: GardenPlant): Boolean {
         val old = plants.get(plant.id) ?: return false
         db.withTransaction {
-            plants.upsert(plant.toEntity(old.createdAt, now()))
+            store(plant, old.createdAt, now())
             index(plant)
         }
         return true
@@ -359,15 +393,26 @@ class GardenRepository(
         zoneId: String?,
         quantity: Int = 1,
         flowering: Boolean,
+    ): GardenPlant = confirmDetectionIn(detectionId, speciesName, customName, listOfNotNull(zoneId), each = false, quantity, flowering)
+
+    /**
+     * Makes a detection a new plant growing in all of [zoneIds], or with [each] a plant of its own in every zone. Each
+     * takes the cut-out as its picture; the photo joins the first, which is returned.
+     */
+    suspend fun confirmDetectionIn(
+        detectionId: String,
+        speciesName: String?,
+        customName: String?,
+        zoneIds: List<String>,
+        each: Boolean,
+        quantity: Int = 1,
+        flowering: Boolean,
     ): GardenPlant = db.withTransaction {
         val detection = detection(detectionId) ?: error("No detection $detectionId")
-        val plant = GardenPlant(UUID.randomUUID().toString(), speciesName, customName?.trim()?.ifBlank { null }, zoneId, quantity, thumbnail = detection.thumbnail)
-        val time = now()
-        plants.upsert(plant.toEntity(time, time))
+        val plant = addPlants(speciesName, customName, zoneIds, each, quantity, thumbnail = detection.thumbnail).first()
         detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plant.id, null)
         recordChoice(detection, speciesName, plant.customName)
         if (flowering) recordFlowering(plant.id, detection)
-        index(plant)
         plant
     }
 
@@ -424,7 +469,7 @@ class GardenRepository(
      * corrected next time.
      */
     suspend fun changeSpecies(plantId: String, speciesName: String?, typedName: String?) = db.withTransaction {
-        val old = plants.get(plantId)?.toDomain() ?: return@withTransaction
+        val old = plants.get(plantId)?.full() ?: return@withTransaction
         val typed = typedName?.trim()?.ifBlank { null }
         if (speciesName == null && typed == null) return@withTransaction
         val customName = if (speciesName == null) typed else old.customName.takeIf { old.speciesName != null }
@@ -680,7 +725,7 @@ class GardenRepository(
     suspend fun reindexAll() = db.withTransaction {
         search.clear()
         zones.all().forEach { index(it.toDomain()) }
-        plants.all().forEach { index(it.toDomain()) }
+        allPlants().forEach { index(it) }
         allSightings().forEach { index(it) }
     }
 
@@ -699,8 +744,7 @@ class GardenRepository(
         val kb = knowledge()
         val triples = mutableListOf<Triple>()
         zones.all().forEach { triples += GardenGraph.zone(it.toDomain()) }
-        plants.all().forEach { entity ->
-            val plant = entity.toDomain()
+        allPlants().forEach { plant ->
             triples += GardenGraph.plant(plant, plant.speciesName?.let(kb::species), rolesOf(plant))
         }
         flowering.all().forEach { triples += GardenGraph.flowering(it.id, it.plantId, LocalDate.ofEpochDay(it.observedOnEpochDay), it.photoId != null) }
@@ -729,7 +773,7 @@ class GardenRepository(
     private suspend fun index(plant: GardenPlant) {
         val kb = knowledge()
         val species = plant.speciesName?.let(kb::species)
-        val zoneName = plant.zoneId?.let { zones.get(it)?.name }
+        val zoneName = plant.zoneIds.mapNotNull { zones.get(it)?.name }.joinToString(", ").ifEmpty { null }
         val doc = SearchText.plant(plant, species, zoneName, rolesOf(plant), db.harvestDao().notes(plant.id))
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }

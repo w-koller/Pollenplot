@@ -57,7 +57,9 @@ is always ready to tag.
   - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (the user's
     corrections, then species, then genus, then family), `CareCorrections` (the facts a user may correct, stored as
     the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges) and `Companions`.
-  - `garden/`: zones, garden plants, `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
+  - `garden/`: zones, garden plants (a plant grows in any number of zones, `zoneIds`, with `quantity` in each;
+    `GardenPlant.placings` and the `ManyZones` setting decide whether several zones chosen make one record or one
+    in each), `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
     `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year, from the `flowering`
     table's days: a photo's through the review card's switch, the user's through `GardenRepository.recordFlowering`
     on the plant's page, once a day for each plant) and `Pots` (a plant's pot,

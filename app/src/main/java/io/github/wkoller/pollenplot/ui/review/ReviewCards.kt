@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.plants.eachZone
+import io.github.wkoller.pollenplot.ui.plants.ManyZonesChoice
+import io.github.wkoller.pollenplot.ui.plants.ZonesChooser
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -91,7 +95,8 @@ internal const val MAX_SHOWN = 3
 
 /** What a review card does when the user decides. The screen passes these on to the database. */
 class ReviewCallbacks(
-    val onAdd: (detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?, flowering: Boolean) -> Unit,
+    /** Adds a find as a plant in [zoneIds]: one plant in them all, or with [each] a plant in every zone. */
+    val onAdd: (detection: DetectionRecord, speciesName: String?, customName: String?, zoneIds: List<String>, each: Boolean, flowering: Boolean) -> Unit,
     val onAttach: (detection: DetectionRecord, plantId: String, flowering: Boolean) -> Unit,
     val onReject: (DetectionRecord) -> Unit,
     val onUndoReject: (DetectionRecord) -> Unit,
@@ -137,6 +142,8 @@ fun DetectionReviewCard(
     /** The photo was taken away from home: a plant is saved to the wishlist or let go, not added to the garden. */
     field: Boolean = false,
     help: WeedHelp? = null,
+    /** What choosing several zones for a plant makes, from the settings. */
+    manyZones: ManyZones = ManyZones.ASK,
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
@@ -151,7 +158,7 @@ fun DetectionReviewCard(
                 DetectionStatus.NEEDS_REVIEW -> if (detection.group.isWildlife) {
                     UndecidedAnimal(detection, fauna, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks)
                 } else {
-                    Undecided(detection, kb, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks, field, help)
+                    Undecided(detection, kb, locality, zones, plants, choice, onChoose, suggestedZoneId, callbacks, field, help, manyZones)
                 }
                 DetectionStatus.SAVED -> SavedFind(detection, kb, choice, callbacks)
                 DetectionStatus.CONFIRMED -> if (detection.sightingId != null) {
@@ -275,9 +282,11 @@ private fun Undecided(
     callbacks: ReviewCallbacks,
     field: Boolean,
     help: WeedHelp?,
+    manyZones: ManyZones,
 ) {
-    var ownZone by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
+    var ownZones by rememberSaveable(detection.id, stateSaver = NamesSaver) { mutableStateOf(emptyList<String>()) }
     var zoneChosen by rememberSaveable(detection.id) { mutableStateOf(false) }
+    var each by rememberSaveable(detection.id) { mutableStateOf(false) }
     var flowering by rememberSaveable(detection.id) { mutableStateOf(detection.flowering) }
 
     val choice = chosen(detection, savedChoice)
@@ -293,7 +302,8 @@ private fun Undecided(
     val chosenSpecies = chosenSpeciesName?.let { kb?.species(it) }
     // A name the user searched for or typed that the knowledge base does not have.
     val pickedName = (choice as? ReviewChoice.Picked)?.speciesName?.takeIf { chosenSpecies == null }
-    val zoneId = if (zoneChosen) ownZone else suggestedZoneId
+    val zoneIds = if (zoneChosen) ownZones else listOfNotNull(suggestedZoneId)
+    val zoneId = zoneIds.firstOrNull()
     // Away from home, the plant is not being added to the garden, so a plant of the same species there is not offered.
     val existing = if (field) null else chosenSpeciesName?.let { name -> plants.firstOrNull { it.isGrowing && it.plant.speciesName == name } }
 
@@ -364,9 +374,18 @@ private fun Undecided(
         }
     }
 
-    ZoneChooser(zones, zoneId, title = if (field) stringResource(R.string.field_zone) else null) {
-        ownZone = it
-        zoneChosen = true
+    if (field) {
+        // A plant seen away from home is wanted for one place.
+        ZoneChooser(zones, zoneId, title = stringResource(R.string.field_zone)) {
+            ownZones = listOfNotNull(it)
+            zoneChosen = true
+        }
+    } else {
+        ZonesChooser(zones, zoneIds) {
+            ownZones = it
+            zoneChosen = true
+        }
+        ManyZonesChoice(zoneIds.size, manyZones, each) { each = it }
     }
     if (field) {
         FieldActions(choice != null, isWeed, chosenSpecies?.displayName ?: chosenCandidate?.common ?: chosenCandidate?.label, onSave = {
@@ -392,7 +411,7 @@ private fun Undecided(
 
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val onAdd = {
-            plantPick(detection, choice, kb)?.let { callbacks.onAdd(detection, it.speciesName, it.customName, zoneId, flowering) }
+            plantPick(detection, choice, kb)?.let { callbacks.onAdd(detection, it.speciesName, it.customName, zoneIds, eachZone(manyZones, each), flowering) }
             Unit
         }
         // With the same species already growing, adding the photo to it is the main choice and a second plant the other.

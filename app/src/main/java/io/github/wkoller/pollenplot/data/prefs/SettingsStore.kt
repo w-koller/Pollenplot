@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.data.prefs
 
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
@@ -87,6 +88,8 @@ data class Settings(
     val setupDone: Boolean = false,
     /** Cats or dogs live at home, so plants toxic to pets are flagged first and left out of suggestions. */
     val petsAtHome: Boolean = false,
+    /** What adding a plant to several zones makes: one plant in them all, one in each, or a question each time. */
+    val manyZones: ManyZones = ManyZones.ASK,
 ) {
     /** The garden's hemisphere, from where it is, or the Southern Hemisphere until a place is chosen. */
     val hemisphere: Hemisphere get() = gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
@@ -144,6 +147,7 @@ class SettingsStore(context: Context) {
         val wateringToMinute = intPreferencesKey("watering_to_minute")
         val setupDone = booleanPreferencesKey("setup_done")
         val petsAtHome = booleanPreferencesKey("pets_at_home")
+        val manyZones = stringPreferencesKey("many_zones")
     }
 
     val settings: Flow<Settings> = store.data.map { it.toSettings() }
@@ -193,6 +197,7 @@ class SettingsStore(context: Context) {
             } ?: defaults.wateringWindow,
             setupDone = this[Keys.setupDone] ?: defaults.setupDone,
             petsAtHome = this[Keys.petsAtHome] ?: defaults.petsAtHome,
+            manyZones = this[Keys.manyZones]?.let { runCatching { ManyZones.valueOf(it) }.getOrNull() } ?: defaults.manyZones,
         )
     }
 
@@ -233,6 +238,7 @@ class SettingsStore(context: Context) {
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute
         this[Keys.setupDone] = settings.setupDone
         this[Keys.petsAtHome] = settings.petsAtHome
+        this[Keys.manyZones] = settings.manyZones.name
     }
 
     private fun <T> MutablePreferences.setOrRemove(key: Preferences.Key<T>, value: T?) {

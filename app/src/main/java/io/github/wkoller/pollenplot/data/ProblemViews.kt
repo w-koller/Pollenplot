@@ -48,10 +48,10 @@ class ProblemViews(
         ProblemTasks.due(list, treatments, today()).map { FollowUpDue(it.problem.id, byId[it.problem.id]?.name.orEmpty(), byId[it.problem.id]?.plantTitle, it.treatment.followUpOn!!) }
     }
 
-    /** The plants likely in flower now in the zone of [plantId]'s plant, or the plant alone when it has no zone. */
+    /** The plants likely in flower now in the zones of [plantId]'s plant, or the plant alone when it has no zone. */
     fun inFlowerNear(plantId: String): Flow<List<String>> = combine(views.plants, garden.floweringList, settings.settings) { plants, seen, current ->
         val plant = plants.firstOrNull { it.plant.id == plantId } ?: return@combine emptyList()
-        val near = plants.filter { it.isGrowing && (it.plant.id == plantId || (plant.plant.zoneId != null && it.plant.zoneId == plant.plant.zoneId)) }
+        val near = plants.filter { it.isGrowing && (it.plant.id == plantId || it.plant.zoneIds.any { zone -> zone in plant.plant.zoneIds }) }
         val seenDays = seen.groupBy({ it.first }, { it.second })
         SprayCheck.inFlower(near.map { FlowerPlant(it.title, it.care?.care?.flowering, seenDays[it.plant.id].orEmpty()) }, today(), current.hemisphere)
     }

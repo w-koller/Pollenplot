@@ -49,11 +49,11 @@ fun Zone.toEntity(createdAt: Long, updatedAt: Long) = ZoneEntity(
     updatedAt = updatedAt,
 )
 
-fun PlantEntity.toDomain() = GardenPlant(
+fun PlantEntity.toDomain(zoneIds: List<String>) = GardenPlant(
     id = id,
     speciesName = speciesName,
     customName = customName,
-    zoneId = zoneId,
+    zoneIds = zoneIds,
     quantity = quantity,
     plantedOn = plantedOnEpochDay?.let(LocalDate::ofEpochDay),
     status = enumOrNull<PlantStatus>(status) ?: PlantStatus.GROWING,
@@ -65,7 +65,6 @@ fun GardenPlant.toEntity(createdAt: Long, updatedAt: Long) = PlantEntity(
     id = id,
     speciesName = speciesName,
     customName = customName,
-    zoneId = zoneId,
     quantity = quantity,
     plantedOnEpochDay = plantedOn?.toEpochDay(),
     status = status.name,

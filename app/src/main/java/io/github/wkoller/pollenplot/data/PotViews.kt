@@ -29,7 +29,7 @@ class PotViews(pots: PotRepository, views: GardenViews, private val clock: Clock
         val byPlant = events.groupBy { it.plantId }
         plants.associate { view ->
             val pot = potsByPlant[view.plant.id]
-            val inPotZone = view.plant.zoneId in potZones
+            val inPotZone = view.plant.zoneIds.any { it in potZones }
             val own = byPlant[view.plant.id].orEmpty()
             val tasks = if (PotCare.isPotted(pot, inPotZone)) PotCare.tasks(own, view.plant.plantedOn) else emptyList()
             view.plant.id to PotState(pot, inPotZone, own, tasks)
@@ -48,6 +48,6 @@ class PotViews(pots: PotRepository, views: GardenViews, private val clock: Clock
 
     /** The zones that hold a potted plant, whatever the zone's kind, for watering before a hot day. */
     val pottedZones: Flow<Set<String>> = combine(views.plants, pots.pots) { plants, potsByPlant ->
-        plants.filter { it.isGrowing && it.plant.id in potsByPlant }.mapNotNull { it.plant.zoneId }.toSet()
+        plants.filter { it.isGrowing && it.plant.id in potsByPlant }.flatMap { it.plant.zoneIds }.toSet()
     }
 }

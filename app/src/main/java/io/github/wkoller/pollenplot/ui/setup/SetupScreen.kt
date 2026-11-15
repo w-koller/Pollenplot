@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.setup
 
+import io.github.wkoller.pollenplot.ui.settings.ManyZonesSetting
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.BackHandler
@@ -241,6 +243,7 @@ private fun Welcome(padding: PaddingValues) {
 private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsStore, onPrevious: () -> Unit, onNext: () -> Unit) {
     val existing by garden.zoneList.collectAsStateWithLifecycle(initialValue = emptyList())
     val pets by remember(settings) { settings.settings.map { it.petsAtHome } }.collectAsStateWithLifecycle(initialValue = false)
+    val manyZones by remember(settings) { settings.settings.map { it.manyZones } }.collectAsStateWithLifecycle(initialValue = ManyZones.ASK)
     var ticked by rememberSaveable(stateSaver = TickedSaver) { mutableStateOf(emptyMap<ZoneKind, String>()) }
     val scope = rememberCoroutineScope()
     val labels = SETUP_KINDS.associateWith { stringResource(it.label) }
@@ -306,6 +309,10 @@ private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsSt
                     supportingContent = { Text(stringResource(R.string.settings_pets_body)) },
                     trailingContent = { Switch(checked = pets, onCheckedChange = null) },
                 ) { Text(stringResource(R.string.settings_pets)) }
+            }
+            // The same plant often grows in several zones, so how that is kept is asked once here.
+            item(key = "many-zones") {
+                ManyZonesSetting(manyZones, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { choice -> scope.launch { settings.update { it.copy(manyZones = choice) } } }
             }
         }
     }
