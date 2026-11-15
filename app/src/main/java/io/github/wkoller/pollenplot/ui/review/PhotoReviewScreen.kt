@@ -43,6 +43,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.platform.LocalResources
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
@@ -128,10 +130,12 @@ class DetectionActions(
         scope.launch { wishes.saveFind(detection.id, speciesName, customName, zoneId) }
     }
 
-    fun add(detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?, flowering: Boolean) {
+    /** Adds a find to the garden as a new plant, and hands the plant to [onAdded]. */
+    fun add(detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?, flowering: Boolean, onAdded: (plantId: String) -> Unit = {}) {
         scope.launch {
-            garden.confirmDetection(detection.id, speciesName, customName, zoneId, flowering = flowering)
+            val plant = garden.confirmDetection(detection.id, speciesName, customName, zoneId, flowering = flowering)
             if (zoneId != null) settings.update { it.copy(lastZoneId = zoneId) }
+            onAdded(plant.id)
         }
     }
 
@@ -211,6 +215,8 @@ fun PhotoReviewScreen(
     bottom: LazyListScope.() -> Unit = {},
     empty: @Composable (PaddingValues) -> Unit = {},
     onCompare: ((detectionId: String, speciesName: String) -> Unit)? = null,
+    /** Runs once the user has decided every find here, so the screen can close itself. */
+    onAllDone: (() -> Unit)? = null,
     selectable: Boolean = false,
     /** Native alternatives for a find that is a weed, and the wishlist to add them to. */
     help: WeedHelp? = null,
@@ -239,11 +245,44 @@ fun PhotoReviewScreen(
     var flowers by rememberSaveable(stateSaver = FlowersSaver) { mutableStateOf(emptyMap<String, Boolean>()) }
     val notices = LocalNotices.current
     val resources = LocalResources.current
-    val callbacks = remember(actions) {
+    // At home a decided find leaves the screen and a message says what happened, so the next find is at hand. Away
+    // from home the cards stay, because a find let go there is deleted with its photo when the screen closes.
+    val leaving = !field
+    var decided by rememberSaveable { mutableStateOf(false) }
+    val zoneNames by rememberUpdatedState(zones.associate { it.zone.id to it.zone.name })
+    val plantTitles by rememberUpdatedState(plants.associate { it.plant.id to it.title })
+    val openPlant by rememberUpdatedState(onOpenPlant)
+    val attach: (DetectionRecord, String, Boolean) -> Unit = { detection, plantId, flowering ->
+        decided = true
+        actions.attach(detection, plantId, flowering)
+        if (leaving) {
+            val title = plantTitles[plantId]
+            notices?.show(
+                if (title != null) resources.getString(R.string.review_attached, title) else resources.getString(R.string.review_added),
+                action = resources.getString(R.string.review_open),
+            ) { openPlant(plantId) }
+        }
+    }
+    val callbacks = remember(actions, leaving) {
         ReviewCallbacks(
-            onAdd = actions::add,
-            onAttach = actions::attach,
-            onReject = actions::reject,
+            onAdd = { detection, species, custom, zoneId, flowering ->
+                decided = true
+                actions.add(detection, species, custom, zoneId, flowering) { plantId ->
+                    if (leaving) {
+                        val zone = zoneId?.let { zoneNames[it] }
+                        notices?.show(
+                            if (zone != null) resources.getString(R.string.review_added_to_zone, zone) else resources.getString(R.string.review_added),
+                            action = resources.getString(R.string.review_open),
+                        ) { openPlant(plantId) }
+                    }
+                }
+            },
+            onAttach = attach,
+            onReject = { detection ->
+                decided = true
+                actions.reject(detection)
+                if (leaving) notices?.show(resources.getQuantityString(R.plurals.review_dismissed, 1, 1)) { actions.reopenAll(listOf(detection)) }
+            },
             onUndoReject = actions::undoReject,
             onChooseAnother = { choosingFor = it.id },
             onRegroup = if (field || !actions.canRegroup) {
@@ -257,7 +296,14 @@ fun PhotoReviewScreen(
             },
             onOpenPlant = onOpenPlant,
             onCompare = onCompare?.let { compare -> { detection, species -> compare(detection.id, species) } },
-            onAddSighting = actions::addSighting,
+            onAddSighting = { detection, species, label, zoneId, plantId, behaviour ->
+                decided = true
+                actions.addSighting(detection, species, label, zoneId, plantId, behaviour)
+                if (leaving) {
+                    val zone = zoneId?.let { zoneNames[it] }
+                    notices?.show(if (zone != null) resources.getString(R.string.review_sighting_added_zone, zone) else resources.getString(R.string.review_sighting_added))
+                }
+            },
             onSave = actions::save,
             onOpenWishlist = onOpenWishlist,
             onFlowering = { detection, on -> flowers = flowers + (detection.id to on) },
@@ -277,7 +323,7 @@ fun PhotoReviewScreen(
     if (attachingDetection != null) {
         BackHandler { attaching = null }
         PlantChooser(plants, attachingSpecies, onBack = { attaching = null }) { plantId ->
-            actions.attach(attachingDetection, plantId, attachingFlowering)
+            attach(attachingDetection, plantId, attachingFlowering)
             attaching = null
         }
         return
@@ -315,6 +361,13 @@ fun PhotoReviewScreen(
     }
     val nothingLeft = selecting && reviews != null && pending.isEmpty()
     LaunchedEffect(nothingLeft) { if (nothingLeft) leaveSelection() }
+    // With every find decided there is nothing more to do here, so the screen closes without another press.
+    val allDone = leaving && decided && reviews != null && pending.isEmpty()
+    val closes = onAllDone != null
+    val close by rememberUpdatedState(onAllDone)
+    LaunchedEffect(allDone, closes) { if (allDone) close?.invoke() }
+    // A photo whose finds are all decided leaves with them; a photo nothing was found in stays, to say so.
+    val shown = if (leaving) reviews?.filter { review -> review.detections.isEmpty() || review.detections.any { it.status == DetectionStatus.NEEDS_REVIEW } } else reviews
 
     if (choosingZone && selected.isNotEmpty()) {
         BackHandler { choosingZone = false }
@@ -336,7 +389,14 @@ fun PhotoReviewScreen(
         ) { zoneId ->
             val growing = plants.filter { it.isGrowing && it.plant.zoneId == zoneId && it.plant.speciesName != null }
                 .associate { it.plant.speciesName!! to it.plant.id }
+            decided = true
             actions.addAll(adds, zoneId, growing)
+            if (leaving && adds.isNotEmpty()) {
+                val zone = zoneId?.let { zoneNames[it] }
+                notices?.show(
+                    if (zone != null) resources.getQuantityString(R.plurals.review_added_many_zone, adds.size, adds.size, zone) else resources.getQuantityString(R.plurals.review_added_many, adds.size, adds.size),
+                )
+            }
             leaveSelection()
         }
         return
@@ -364,6 +424,7 @@ fun PhotoReviewScreen(
                     count = selected.size,
                     onDismiss = {
                         val dismissed = selected
+                        decided = true
                         actions.rejectAll(dismissed)
                         notices?.show(resources.getQuantityString(R.plurals.review_dismissed, dismissed.size, dismissed.size)) { actions.reopenAll(dismissed) }
                         leaveSelection()
@@ -374,8 +435,8 @@ fun PhotoReviewScreen(
         },
     ) { padding ->
         when {
-            reviews == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { PollenLoadingIndicator() }
-            reviews.isEmpty() -> empty(padding)
+            shown == null || (allDone && closes) -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { PollenLoadingIndicator() }
+            shown.isEmpty() -> empty(padding)
             else -> LazyColumn(
                 Modifier.fillMaxSize(),
                 state = listState,
@@ -390,7 +451,7 @@ fun PhotoReviewScreen(
                     }
                 }
                 val zoneIds = zones.map { it.zone.id }.toSet()
-                reviews.forEach { review ->
+                shown.forEach { review ->
                     item(key = "photo-${review.photo.id}") {
                         Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             MarkedPhoto(review)
@@ -409,7 +470,9 @@ fun PhotoReviewScreen(
                     val photoZones = review.detections.filter { it.status == DetectionStatus.CONFIRMED }
                         .map { d -> plants.firstOrNull { it.plant.id == d.plantId }?.plant?.zoneId }
                     val suggestedZone = ZoneSuggestion.suggest(photoZones, current?.lastZoneId, zoneIds)
-                    itemsIndexed(review.detections, key = { _, d -> d.id }) { i, detection ->
+                    // Each card keeps the number its marker has on the photo, whichever cards have left.
+                    val cards = review.detections.withIndex().filter { !leaving || it.value.status == DetectionStatus.NEEDS_REVIEW }
+                    items(cards, key = { it.value.id }) { (i, detection) ->
                         if (selecting && detection.status == DetectionStatus.NEEDS_REVIEW) {
                             SelectRow(detection, checked = detection.id in selection, Modifier.readable()) { on ->
                                 selection = if (on) selection + detection.id else selection - detection.id

@@ -60,7 +60,8 @@ class ReviewModel(garden: GardenRepository, settings: SettingsStore, work: WorkM
 
     /**
      * The photos shown: those with plants waiting when the queue opened, then any found while it is open. A photo stays
-     * until the queue closes, so the user can see what they decided for each plant.
+     * in this list until the queue closes, so a find put back with Undo returns to its place; the screen shows only
+     * the photos with finds still waiting.
      */
     private val shown = MutableStateFlow<List<String>?>(null)
 
@@ -102,6 +103,8 @@ fun ReviewScreen(
     onAddPhotos: () -> Unit,
     onIdentify: () -> Unit,
     onCompare: (detectionId: String, speciesName: String) -> Unit = { _, _ -> },
+    /** Runs once every find is decided and no added photo is still being looked at. */
+    onAllDone: (() -> Unit)? = null,
 ) {
     val reviews by model.reviews.collectAsStateWithLifecycle()
     val adding by model.adding.collectAsStateWithLifecycle()
@@ -116,6 +119,8 @@ fun ReviewScreen(
         onBack = onBack,
         onOpenPlant = onOpenPlant,
         onCompare = onCompare,
+        // Photos still being looked at may bring more finds, so the queue stays open for them.
+        onAllDone = onAllDone.takeIf { adding == null },
         selectable = true,
         top = {
             adding?.let { item(key = "adding") { AddingCard(it, Modifier.readable()) } }

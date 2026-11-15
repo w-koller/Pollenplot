@@ -575,6 +575,8 @@
     <string name="review_rejected">This part of the photo will not be added to your garden.</string>
     <string name="review_undo">Undo</string>
     <string name="review_open_plant">Open the plant</string>
+    <string name="review_open">Open</string>
+    <string name="review_attached">Added to the photos of %1$s.</string>
     <string name="review_existing_title">You already have %1$s in %2$s.</string>
     <string name="review_existing_title_no_zone">You already have %1$s in your garden.</string>
     <string name="review_existing_body">You can add this photo to it instead of adding the plant again.</string>
@@ -1991,6 +1993,14 @@
     <plurals name="hotel_emerged_count">
         <item quantity="one">%d came out</item>
         <item quantity="other">%d came out</item>
+    </plurals>
+    <plurals name="review_added_many">
+        <item quantity="one">Added %d find to your garden.</item>
+        <item quantity="other">Added %d finds to your garden.</item>
+    </plurals>
+    <plurals name="review_added_many_zone">
+        <item quantity="one">Added %1$d find to %2$s.</item>
+        <item quantity="other">Added %1$d finds to %2$s.</item>
     </plurals>
     <plurals name="identify_found">
         <item quantity="one">Pollenplot found %d plant in this photo.</item>

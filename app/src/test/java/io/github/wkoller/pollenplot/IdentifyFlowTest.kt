@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot
 
+import io.github.wkoller.pollenplot.ui.components.rememberNotices
+import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import androidx.compose.runtime.CompositionLocalProvider
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -108,12 +111,16 @@ class IdentifyFlowTest {
         // Rosemary already grows in Hive Corner, so the photo is added to that plant instead of adding another.
         compose.onNodeWithText("You already have Rosemary in Hive Corner.").assertIsDisplayed()
         compose.onNodeWithText("Add the photo to it").performClick()
-        waitFor(hasText("Added to Hive Corner."))
+        waitFor(hasText("Added to the photos of Rosemary."))
+        // Each decided find leaves the screen, so one card is left.
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Add the photo to it").fetchSemanticsNodes().isEmpty() }
         assertEquals("No second rosemary", 1, plants().count { it.speciesName == "Salvia rosmarinus" })
 
         // The third is marked as not a plant, put back, and named from the knowledge base instead.
         compose.onNodeWithText("Not a plant").performClick()
-        waitFor(hasText("This part of the photo will not be added to your garden."))
+        // A decided find leaves the screen, and a message says what happened and offers to undo it.
+        waitFor(hasText("Dismissed 1 find."))
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Not a plant").fetchSemanticsNodes().isEmpty() }
         shot("identify_results_decided")
         compose.onNodeWithText("Undo").performClick()
         waitFor(hasText("It is another plant"))
@@ -124,7 +131,7 @@ class IdentifyFlowTest {
         compose.onNodeWithText("Hibbertia scandens").performClick()
         waitFor(hasText("Your choice"))
         compose.onNodeWithText("Add to garden").performClick()
-        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Added to Front Native Strip.").fetchSemanticsNodes().size == 2 }
+        compose.waitUntil(WAIT_MS) { plants().any { it.speciesName == "Hibbertia scandens" } }
         assertEquals("The zone chosen for the first plant is offered for the others", ids.front, plants().single { it.speciesName == "Hibbertia scandens" }.zoneId)
         shot("identify_results_done")
 
@@ -318,7 +325,6 @@ class IdentifyFlowTest {
         compose.onNodeWithText("Feeding").performClick()
         compose.onNodeWithText("Add sighting").performClick()
         waitFor(hasText("Added to your sightings in Hive Corner."))
-        compose.onNodeWithText("Noisy miner").assertExists()
         shot("identify_bird_added")
         val sighting = runBlocking { garden.sightingList.first { it.isNotEmpty() }.single() }
         assertEquals("Manorina melanocephala", sighting.speciesName)
@@ -411,15 +417,18 @@ class IdentifyFlowTest {
         compose.setContent {
             PollenplotTheme(settings) {
                 Surface {
-                    IdentifyScreen(
-                        model = model,
-                        views = app.container.views,
-                        knowledge = app.container.knowledge,
-                        settings = app.container.settingsStore,
-                        onBack = {},
-                        onOpenPlant = {},
-                        onAddByName = {},
-                    )
+                    // The app's frame gives screens their messages; the screen shown on its own is given them here.
+                    CompositionLocalProvider(LocalNotices provides rememberNotices()) {
+                        IdentifyScreen(
+                            model = model,
+                            views = app.container.views,
+                            knowledge = app.container.knowledge,
+                            settings = app.container.settingsStore,
+                            onBack = {},
+                            onOpenPlant = {},
+                            onAddByName = {},
+                        )
+                    }
                 }
             }
         }

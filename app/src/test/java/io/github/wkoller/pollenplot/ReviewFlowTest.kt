@@ -133,10 +133,20 @@ class ReviewFlowTest {
         // Rosemary already grows in Hive Corner, so the photo goes to that plant.
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Add the photo to it"))
         compose.onNodeWithText("Add the photo to it").performClick()
-        waitFor(hasText("Added to Hive Corner."))
+        waitFor(hasText("Added to the photos of Rosemary."))
         assertEquals(1, runBlocking { garden.pendingReviewCount.first() })
         assertEquals(ids.hive, runBlocking { garden.plantList.first() }.single { it.speciesName == "Salvia rosmarinus" }.zoneId)
+        // The decided find has left, and the one still waiting is at hand.
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Add the photo to it").fetchSemanticsNodes().isEmpty() }
         shot("review_queue_decided")
+
+        // Deciding the last find closes the queue and shows the Plot again, with the message still up.
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Not a plant"))
+        compose.onNodeWithText("Not a plant").performClick()
+        waitFor(hasContentDescription("More"))
+        waitFor(hasText("Dismissed 1 find."))
+        assertEquals(0, runBlocking { garden.pendingReviewCount.first() })
+        shot("review_queue_closed")
     }
 
     @Test

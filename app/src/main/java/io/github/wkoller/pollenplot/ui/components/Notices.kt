@@ -19,13 +19,16 @@ import kotlinx.coroutines.launch
  * after its record is deleted. Undo is never the only way back: what was done can also be changed where it is shown.
  */
 class Notices(val host: SnackbarHostState, private val scope: CoroutineScope, private val undoLabel: String) {
-    /** Shows [message] in place of any message still up, with an Undo button that runs [undo] when there is one. */
-    fun show(message: String, undo: (suspend () -> Unit)? = null) {
+    /**
+     * Shows [message] in place of any message still up, with a button that runs [undo] when there is one. The button
+     * says Undo unless [action] names what it does, such as Open.
+     */
+    fun show(message: String, action: String? = null, undo: (suspend () -> Unit)? = null) {
         scope.launch {
             host.currentSnackbarData?.dismiss()
             val result = host.showSnackbar(
                 message = message,
-                actionLabel = undoLabel.takeIf { undo != null },
+                actionLabel = (action ?: undoLabel).takeIf { undo != null },
                 duration = if (undo != null) SnackbarDuration.Long else SnackbarDuration.Short,
             )
             if (result == SnackbarResult.ActionPerformed) undo?.invoke()

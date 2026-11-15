@@ -52,6 +52,8 @@ STRINGS = {
     "review_rejected": "This part of the photo will not be added to your garden.",
     "review_undo": "Undo",
     "review_open_plant": "Open the plant",
+    "review_open": "Open",
+    "review_attached": "Added to the photos of %1$s.",
     "review_existing_title": "You already have %1$s in %2$s.",
     "review_existing_title_no_zone": "You already have %1$s in your garden.",
     "review_existing_body": "You can add this photo to it instead of adding the plant again.",
@@ -76,5 +78,7 @@ STRINGS = {
 }
 
 PLURALS = {
+    "review_added_many": {"one": "Added %d find to your garden.", "other": "Added %d finds to your garden."},
+    "review_added_many_zone": {"one": "Added %1$d find to %2$s.", "other": "Added %1$d finds to %2$s."},
     "identify_found": {"one": "Pollenplot found %d plant in this photo.", "other": "Pollenplot found %d plants in this photo."},
 }
