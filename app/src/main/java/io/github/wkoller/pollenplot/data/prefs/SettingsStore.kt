@@ -24,6 +24,9 @@ import kotlinx.coroutines.flow.map
 
 enum class ThemeChoice { SYSTEM, LIGHT, DARK }
 
+/** What the Plot is drawn on: the theme's own background, or a colour like the ground of the yard. */
+enum class PlotBackground { THEME, GRASS, SOIL, SAND, PAVING }
+
 data class Settings(
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     /** Use the colours of the phone's wallpaper instead of Pollenplot's leaf and pollen colours. */
@@ -88,6 +91,9 @@ data class Settings(
     val setupDone: Boolean = false,
     /** Cats or dogs live at home, so plants toxic to pets are flagged first and left out of suggestions. */
     val petsAtHome: Boolean = false,
+    val plotBackground: PlotBackground = PlotBackground.THEME,
+    /** Whether the Plot's grid lines show while the layout is only looked at. They always show while it is edited. */
+    val gridInView: Boolean = true,
     /** What adding a plant to several zones makes: one plant in them all, one in each, or a question each time. */
     val manyZones: ManyZones = ManyZones.ASK,
 ) {
@@ -147,6 +153,8 @@ class SettingsStore(context: Context) {
         val wateringToMinute = intPreferencesKey("watering_to_minute")
         val setupDone = booleanPreferencesKey("setup_done")
         val petsAtHome = booleanPreferencesKey("pets_at_home")
+        val plotBackground = stringPreferencesKey("plot_background")
+        val gridInView = booleanPreferencesKey("grid_in_view")
         val manyZones = stringPreferencesKey("many_zones")
     }
 
@@ -197,6 +205,8 @@ class SettingsStore(context: Context) {
             } ?: defaults.wateringWindow,
             setupDone = this[Keys.setupDone] ?: defaults.setupDone,
             petsAtHome = this[Keys.petsAtHome] ?: defaults.petsAtHome,
+            plotBackground = this[Keys.plotBackground]?.let { runCatching { PlotBackground.valueOf(it) }.getOrNull() } ?: defaults.plotBackground,
+            gridInView = this[Keys.gridInView] ?: defaults.gridInView,
             manyZones = this[Keys.manyZones]?.let { runCatching { ManyZones.valueOf(it) }.getOrNull() } ?: defaults.manyZones,
         )
     }
@@ -238,6 +248,8 @@ class SettingsStore(context: Context) {
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute
         this[Keys.setupDone] = settings.setupDone
         this[Keys.petsAtHome] = settings.petsAtHome
+        this[Keys.plotBackground] = settings.plotBackground.name
+        this[Keys.gridInView] = settings.gridInView
         this[Keys.manyZones] = settings.manyZones.name
     }
 

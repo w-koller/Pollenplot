@@ -272,6 +272,7 @@ fun AppRoot(
                         val resources = LocalResources.current
                         val scope = rememberCoroutineScope()
                         PlotScreen(
+                            settings = container.settingsStore,
                             garden = container.garden,
                             views = container.views,
                             onOpenSettings = openSettings,

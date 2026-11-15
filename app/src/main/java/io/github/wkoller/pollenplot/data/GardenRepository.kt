@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.data
 
+import io.github.wkoller.pollenplot.domain.garden.StructureKind
+import io.github.wkoller.pollenplot.domain.garden.Structure
 import io.github.wkoller.pollenplot.data.db.PlantZoneEntity
 import io.github.wkoller.pollenplot.data.db.PlantEntity
 import io.github.wkoller.pollenplot.data.db.SightingPlantEntity
@@ -145,6 +147,41 @@ class GardenRepository(
         val zone = zone(id) ?: return@withLock null
         updateZone(zone.copy(rect = PlotLayout.snapped(change(zone.rect))))
         zone.rect
+    }
+
+    /** The structures on the Plot, the first added first. */
+    val structureList: Flow<List<Structure>> = db.structureDao().observeAll().map { list -> list.map { it.toDomain() } }
+
+    /**
+     * Adds a structure of [kind] at its usual size, placed clear of the zones and the other structures. A blank
+     * [name] is not kept: the caller gives the kind's own name instead.
+     */
+    suspend fun addStructure(name: String, kind: StructureKind): Structure = layoutLock.withLock {
+        val taken = zones.all().map { it.toDomain().rect } + db.structureDao().all().map { it.toDomain().rect }
+        val structure = Structure(UUID.randomUUID().toString(), name.trim(), kind, rect = PlotLayout.placeNew(taken, kind.widthCm, kind.heightCm))
+        val time = now()
+        db.structureDao().upsert(structure.toEntity(time, time))
+        structure
+    }
+
+    suspend fun updateStructure(structure: Structure) {
+        val old = db.structureDao().get(structure.id) ?: return
+        db.structureDao().upsert(structure.copy(rect = PlotLayout.snapped(structure.rect)).toEntity(old.createdAt, now()))
+    }
+
+    /** Changes a structure's place or size from where it is now, snapped to the grid, and returns where it was. */
+    suspend fun adjustStructure(id: String, change: (ZoneRect) -> ZoneRect): ZoneRect? = layoutLock.withLock {
+        val structure = db.structureDao().get(id)?.toDomain() ?: return@withLock null
+        updateStructure(structure.copy(rect = change(structure.rect)))
+        structure.rect
+    }
+
+    suspend fun deleteStructure(id: String) = db.structureDao().delete(id)
+
+    /** Puts back a structure that was deleted, for Undo. */
+    suspend fun restoreStructure(structure: Structure) {
+        val time = now()
+        db.structureDao().upsert(structure.toEntity(time, time))
     }
 
     /** Removes a zone. Its plants stay in the garden, in their other zones or without one. */
@@ -744,6 +781,7 @@ class GardenRepository(
         val kb = knowledge()
         val triples = mutableListOf<Triple>()
         zones.all().forEach { triples += GardenGraph.zone(it.toDomain()) }
+        db.structureDao().all().forEach { triples += GardenGraph.structure(it.toDomain()) }
         allPlants().forEach { plant ->
             triples += GardenGraph.plant(plant, plant.speciesName?.let(kb::species), rolesOf(plant))
         }

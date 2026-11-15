@@ -100,6 +100,7 @@ class PdfReportWriter(private val footer: String) {
         private val subheading = paint(10.5f, bold = true)
         private val line = Paint().apply { color = Color.rgb(120, 120, 120); strokeWidth = 0.6f }
         private val zoneFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(232, 240, 224) }
+        private val structureFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(226, 226, 222) }
         private val zoneEdge = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.rgb(90, 110, 80)
             style = Paint.Style.STROKE
@@ -209,8 +210,20 @@ class PdfReportWriter(private val footer: String) {
                     margin + (zone.xCm - left + zone.widthCm) * scale,
                     originY + (zone.yCm - top + zone.heightCm) * scale,
                 )
-                canvas.drawRoundRect(box, 6f, 6f, zoneFill)
-                canvas.drawRoundRect(box, 6f, 6f, zoneEdge)
+                when {
+                    zone.structure && zone.oval -> {
+                        canvas.drawOval(box, structureFill)
+                        canvas.drawOval(box, zoneEdge)
+                    }
+                    zone.structure -> {
+                        canvas.drawRect(box, structureFill)
+                        canvas.drawRect(box, zoneEdge)
+                    }
+                    else -> {
+                        canvas.drawRoundRect(box, 6f, 6f, zoneFill)
+                        canvas.drawRoundRect(box, 6f, 6f, zoneEdge)
+                    }
+                }
                 val inner = (box.width() - 8f).toInt()
                 if (inner >= 12) {
                     val name = layout(zone.name, small, inner, maxLines = ((box.height() - 8f) / small.fontSpacing).toInt().coerceAtLeast(1))

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- The Plot can show what is built in the yard. “Add a structure”, in the Plot's More menu and on the editing toolbar,
+  adds a house, shed, garage, greenhouse, swimming pool, aviary, pen, deck, paving, driveway, water tank or compost
+  bay, as a rectangle or an oval. A structure is moved and resized like a zone while the layout is edited, holds no
+  plants, and is drawn in the report's plan of the Plot. The list view names each one.
+- “Plot appearance”, in the Plot's More menu, sets the colour of the ground (grass, soil, sand, paving or the app's
+  own) and whether the grid lines show while the layout is only looked at. They always show while it is edited.
 - A plant can be added to several zones at once, from a photo's card or by name, and a plant's zones can be changed
   in its Edit sheet. With more than one zone chosen, Pollenplot asks whether that is “One plant in many zones”, a
   single record with its care kept once, or “One plant in each zone”, a record of its own in each. A setting, also

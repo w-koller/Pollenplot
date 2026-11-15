@@ -19,7 +19,16 @@ data class ReportTable(val title: String, val columns: List<String>, val rows: L
 }
 
 /** A zone where it lies in the yard, in centimetres from the top left of the Plot, with its name. */
-data class PlotZone(val name: String, val xCm: Int, val yCm: Int, val widthCm: Int, val heightCm: Int)
+data class PlotZone(
+    val name: String,
+    val xCm: Int,
+    val yCm: Int,
+    val widthCm: Int,
+    val heightCm: Int,
+    /** A structure such as the house, drawn in grey under the zones, as an oval when [oval]. */
+    val structure: Boolean = false,
+    val oval: Boolean = false,
+)
 
 /** A picture kept by the app, as a file, with the words under it. */
 data class ReportPicture(val path: String, val caption: String)

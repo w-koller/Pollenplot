@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.data
 
+import io.github.wkoller.pollenplot.domain.garden.Structure
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
@@ -111,6 +112,9 @@ class GardenViews(
         val overwatered = Pairing.overwatered(lines, views.filter { it.plant.status == PlantStatus.GROWING }.map { it.waterPlant() })
         if (overwatered.isEmpty()) views else views.map { if (it.plant.id in overwatered) view(it.plant, kb, locality, zoneNames, overwatering = true) else it }
     }
+
+    /** What is built in the yard, for the Plot and the report. */
+    val structures: Flow<List<Structure>> = repository.structureList
 
     /** Every sighting, the most recent first. */
     val sightings: Flow<List<SightingView>> = combine(repository.sightingList, repository.zoneList, plants, knowledge.fauna) { sightings, zones, plants, fauna ->

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.domain.semantic
 
+import io.github.wkoller.pollenplot.domain.garden.Structure
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.garden.Zone
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
@@ -14,6 +15,19 @@ import java.time.LocalDate
  * Core Occurrence of its taxon, placed in its zone; eco-roles use Pollenplot's own terms.
  */
 object GardenGraph {
+    /** A structure is a place in the yard with its kind and footprint; it is not a zone, and nothing grows in it. */
+    fun structure(structure: Structure): List<Triple> {
+        val iri = Vocab.recordIri(structure.id)
+        return GraphBuilder()
+            .type(iri, Vocab.SCHEMA + "Place")
+            .type(iri, Vocab.PP + "Structure")
+            .text(iri, Vocab.SCHEMA + "name", structure.name)
+            .text(iri, Vocab.PP + "structureKind", structure.kind.name.lowercase())
+            .decimal(iri, Vocab.PP + "areaSquareMetres", BigDecimal(structure.rect.widthCm.toLong() * structure.rect.heightCm).movePointLeft(4).stripTrailingZeros().toPlainString())
+            .text(iri, Vocab.SCHEMA + "description", structure.notes)
+            .build()
+    }
+
     fun zone(zone: Zone): List<Triple> {
         val iri = Vocab.recordIri(zone.id)
         return GraphBuilder()

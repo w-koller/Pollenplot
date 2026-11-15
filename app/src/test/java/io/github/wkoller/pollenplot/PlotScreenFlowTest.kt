@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot
 
+import io.github.wkoller.pollenplot.data.prefs.PlotBackground
+import io.github.wkoller.pollenplot.domain.garden.ZoneRect
+import io.github.wkoller.pollenplot.domain.garden.StructureShape
+import io.github.wkoller.pollenplot.domain.garden.StructureKind
 import kotlinx.coroutines.flow.first
 import androidx.compose.ui.test.performScrollTo
 import android.graphics.Bitmap
@@ -185,6 +189,64 @@ class PlotScreenFlowTest {
         compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.zone(ids.front)!!.rect.xCm } == -50 }
         compose.onNodeWithContentDescription("Show the whole plot").performClick()
         shot("plot_edit_past_origin")
+    }
+
+    @Test
+    fun structuresAndTheLookOfThePlot() {
+        seed()
+        val (house, pool) = runBlocking {
+            val garden = app.container.garden
+            val house = garden.addStructure("House", StructureKind.HOUSE)
+            val pool = garden.addStructure("Pool", StructureKind.POOL)
+            garden.adjustStructure(house.id) { ZoneRect(1350, 0, 800, 600) }
+            garden.adjustStructure(pool.id) { ZoneRect(1350, 750, 600, 350) }
+            house to pool
+        }
+        assertEquals("A pool starts as an oval", StructureShape.OVAL, pool.shape)
+        show()
+        waitFor(hasContentDescription("House, House, 8 m by 6 m"))
+        shot("plot_structures")
+
+        // The ground takes a colour, and the grid is hidden while the layout is only looked at.
+        compose.fromMore("Plot appearance")
+        compose.pressWhenShown(hasText("Grass"))
+        compose.onNodeWithText("Show grid lines").performClick()
+        compose.onNodeWithText("Done").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.current() }.let { it.plotBackground == PlotBackground.GRASS && !it.gridInView } }
+        shot("plot_grass_no_grid")
+
+        // Editing shows the grid again; a structure is chosen and resized with the same buttons as a zone.
+        compose.fromMore("Edit layout")
+        compose.onNodeWithContentDescription("House, House, 8 m by 6 m").performClick()
+        shot("plot_structure_selected")
+        compose.onNodeWithContentDescription("Move and resize").performClick()
+        compose.onNodeWithText("Wider").performClick()
+        waitFor(hasText("Width: 8.5 m"))
+        compose.onNodeWithText("Done").performClick()
+        assertEquals(850, runBlocking { app.container.garden.structureList.first() }.first { it.id == house.id }.rect.widthCm)
+        waitFor(hasText("Changed the size of House."))
+        compose.onNodeWithText("Undo").performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.structureList.first() }.first { it.id == house.id }.rect.widthCm == 800 }
+    }
+
+    @Test
+    fun structuresInTheDarkOnSoil() {
+        seed()
+        runBlocking {
+            val garden = app.container.garden
+            val house = garden.addStructure("House", StructureKind.HOUSE)
+            val tank = garden.addStructure("Tank", StructureKind.WATER_TANK)
+            garden.adjustStructure(house.id) { ZoneRect(1350, 0, 800, 600) }
+            garden.adjustStructure(tank.id) { ZoneRect(1350, 750, 250, 250) }
+            app.container.settingsStore.update { it.copy(plotBackground = PlotBackground.SOIL) }
+        }
+        show(Settings(gardenState = AuState.QLD, theme = ThemeChoice.DARK))
+        waitFor(hasContentDescription("Tank, Water tank, 2.5 m by 2.5 m"))
+        shot("plot_structures_dark_soil")
+        // The list names each structure, for anyone who does not use the canvas.
+        compose.onNodeWithContentDescription("Show as a list").performClick()
+        compose.scrollTo(hasText("Structures"))
+        compose.scrollTo(hasText("Water tank · 2.5 m by 2.5 m"))
     }
 
     @Test

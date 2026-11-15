@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.domain.garden.StructureKind
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import io.github.wkoller.pollenplot.R
@@ -266,3 +267,39 @@ fun toleranceLabel(score: Int): Int = when (score.coerceIn(0, 3)) {
     2 -> R.string.tolerance_2
     else -> R.string.tolerance_3
 }
+
+@get:StringRes
+val StructureKind.label: Int
+    get() = when (this) {
+        StructureKind.HOUSE -> R.string.structure_house
+        StructureKind.SHED -> R.string.structure_shed
+        StructureKind.GARAGE -> R.string.structure_garage
+        StructureKind.GREENHOUSE -> R.string.structure_greenhouse
+        StructureKind.POOL -> R.string.structure_pool
+        StructureKind.AVIARY -> R.string.structure_aviary
+        StructureKind.PEN -> R.string.structure_pen
+        StructureKind.DECK -> R.string.structure_deck
+        StructureKind.PAVING -> R.string.structure_paving
+        StructureKind.DRIVEWAY -> R.string.structure_driveway
+        StructureKind.WATER_TANK -> R.string.structure_water_tank
+        StructureKind.COMPOST -> R.string.structure_compost
+        StructureKind.OTHER -> R.string.kind_other
+    }
+
+@get:DrawableRes
+val StructureKind.icon: Int
+    get() = when (this) {
+        StructureKind.HOUSE -> R.drawable.ic_house
+        StructureKind.SHED -> R.drawable.ic_warehouse
+        StructureKind.GARAGE -> R.drawable.ic_garage
+        StructureKind.GREENHOUSE -> R.drawable.ic_yard
+        StructureKind.POOL -> R.drawable.ic_pool
+        StructureKind.AVIARY -> R.drawable.ic_raven
+        StructureKind.PEN -> R.drawable.ic_fence
+        StructureKind.DECK -> R.drawable.ic_deck
+        StructureKind.PAVING -> R.drawable.ic_grid_on
+        StructureKind.DRIVEWAY -> R.drawable.ic_directions_car
+        StructureKind.WATER_TANK -> R.drawable.ic_water_drop
+        StructureKind.COMPOST -> R.drawable.ic_compost
+        StructureKind.OTHER -> R.drawable.ic_category
+    }
