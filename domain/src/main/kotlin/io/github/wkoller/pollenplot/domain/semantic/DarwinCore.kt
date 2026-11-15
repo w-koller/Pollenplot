@@ -29,7 +29,8 @@ object DarwinCore {
                 animal?.name ?: sighting.speciesName ?: sighting.label,
                 animal?.common?.firstOrNull() ?: sighting.label.takeIf { it != (animal?.name ?: sighting.speciesName) }.orEmpty(),
                 sighting.count.toString(),
-                sighting.behaviour?.name?.lowercase().orEmpty(),
+                // Darwin Core's behavior is one text, so several are joined as its guide suggests for lists.
+                sighting.behaviourWords.joinToString(" | "),
                 "present",
                 "Australia",
                 "AU",

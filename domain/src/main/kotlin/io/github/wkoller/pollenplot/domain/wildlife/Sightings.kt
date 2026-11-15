@@ -14,13 +14,17 @@ data class Sighting(
     val label: String,
     val group: LifeGroup,
     val zoneId: String?,
-    /** The plant it was on, such as a blue-banded bee on a salvia. */
-    val plantId: String?,
-    val behaviour: Behaviour?,
+    /** The plants it was on, such as a blue-banded bee on a salvia and then a lavender. None when it was on no plant. */
+    val plantIds: List<String>,
+    /** Everything it was seen doing, in the order of [Behaviour]. None when the user was not sure. */
+    val behaviours: Set<Behaviour>,
     val count: Int,
     val photoId: String?,
     /** Its cut-out from the photo, relative to the app's files folder. */
     val thumbnail: String?,
     val seenAt: Instant,
     val notes: String,
-)
+) {
+    /** What it was doing as lower-case words in a fixed order, for the exports. */
+    val behaviourWords: List<String> get() = Behaviour.entries.filter { it in behaviours }.map { it.name.lowercase() }
+}

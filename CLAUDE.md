@@ -184,7 +184,7 @@ is always ready to tag.
   morning while there is something to remind or warn about: `HiveReminderCheck` for honey bee checks due,
   `HeatAlertCheck` for hot days ahead of stingless bee hives, `WaterPlanCheck` for watering due, `PotCareCheck` for
   pots due a flush or a look at repotting, `FeedPlanCheck` for zones due a feed, `ProblemCheck` for follow-ups and `PruneCheck` for prunes due.
-- `app/ui`: Compose screens. `ui/components` holds the shared pieces (among them `Notices`, the app's one snackbar
+- `app/ui`: Compose screens. `ui/components` holds the shared pieces (among them `ManyChipGroup`, chips for choosing several options with an optional first chip that stands for none of them, as a sighting's plants and behaviours use; `Notices`, the app's one snackbar
   host, given through `LocalNotices` by `AppRoot` and shown by both scaffolds: `notices.show(message) { undo }`, or with `action = "Open"` for a button that does something else; a
   screen test that wants its messages provides `rememberNotices()` itself; and `TabScaffold`'s More menu, which holds
   a tab's own `more` choices and then `LocalAppMenu`'s, pressed in tests with `fromMore` in `TestGarden.kt`; `Layout.kt`

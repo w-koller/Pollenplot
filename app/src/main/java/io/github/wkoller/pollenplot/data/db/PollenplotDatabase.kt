@@ -16,7 +16,7 @@ import io.github.wkoller.pollenplot.BuildConfig
     entities = [
         ZoneEntity::class, PlantEntity::class, PhotoEntity::class, DetectionEntity::class, CandidateEntity::class,
         FloweringEntity::class, ScannedMediaEntity::class, SearchEntity::class, EmbeddingEntity::class,
-        SightingEntity::class, CareDraftEntity::class, ApiaryEntity::class, HoneyHiveEntity::class, InspectionEntity::class,
+        SightingEntity::class, SightingPlantEntity::class, CareDraftEntity::class, ApiaryEntity::class, HoneyHiveEntity::class, InspectionEntity::class,
         VarroaCheckEntity::class, TreatmentEntity::class, FeedingEntity::class, HarvestEntity::class, ColonyEventEntity::class,
         NativeHiveEntity::class, NativeLogEntity::class, HotelEntity::class, HotelSectionEntity::class, HotelObservationEntity::class,
         HotelUpkeepEntity::class, WateringLineEntity::class, WateringEventEntity::class, WeatherDayEntity::class, WishEntity::class,

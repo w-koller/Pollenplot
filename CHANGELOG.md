@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A sighting can say several things the animal was doing and several plants it was on. “Not sure” and “None” stand
+  for choosing nothing: pressing one clears the others. Each behaviour and plant is a statement of its own in the
+  linked data, and the Darwin Core file joins the behaviours with “ | ”. A garden from an earlier release candidate
+  does not open in this one.
 - A find that has been added or dismissed leaves the Identify results and the Review queue, and a message says what
   happened, with “Open” for the plant or “Undo” for a dismissal. The next find is then at hand, and when the last one
   is decided the screen closes and the Plot shows again. Before, each decided card stayed and the way back took

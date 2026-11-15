@@ -42,7 +42,7 @@ fun PlantAnimalsCard(seen: List<SightingView>, users: List<Animal>, onOpenSighti
         if (seen.isNotEmpty()) {
             Text(stringResource(R.string.plant_animals_seen), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp).semantics { heading() })
             seen.take(SEEN_SHOWN).forEach { view ->
-                val details = listOfNotNull(view.sighting.behaviour?.let { stringResource(it.label) }, UiFormat.longDate(view.sighting.seenAt))
+                val details = listOfNotNull(behaviourText(view.sighting.behaviours), UiFormat.longDate(view.sighting.seenAt))
                 AnimalLine((view.animal?.group ?: view.sighting.group).icon, view.title, details.joinToString(" · "), pest = false) { onOpenSighting(view.sighting.id) }
             }
         }

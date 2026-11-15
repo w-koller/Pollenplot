@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.components
 
+import io.github.wkoller.pollenplot.R
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -44,6 +48,40 @@ fun SectionHeading(text: String) {
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp).semantics { heading() },
+    )
+}
+
+/**
+ * A labelled group of filter chips for choosing any number of options, each marked with a tick when chosen. [none]
+ * names a first chip that stands for choosing nothing, such as Not sure: pressing it clears the others, and it is the
+ * one chosen while nothing else is.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun <T> ManyChipGroup(title: String?, options: List<T>, selected: Set<T>, label: @Composable (T) -> String, none: String? = null, onChange: (Set<T>) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (title != null) Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (none != null) TickChip(none, selected.isEmpty()) { onChange(emptySet()) }
+            options.forEach { option ->
+                val on = option in selected
+                TickChip(label(option), on) { onChange(if (on) selected - option else selected + option) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TickChip(text: String, on: Boolean, onClick: () -> Unit) {
+    FilterChip(
+        selected = on,
+        onClick = onClick,
+        label = { Text(text) },
+        leadingIcon = if (on) {
+            { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(18.dp)) }
+        } else {
+            null
+        },
     )
 }
 

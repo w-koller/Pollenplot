@@ -29,7 +29,7 @@ data class SeenSpecies(
 
     /** The plants it was seen on, the most used first. */
     val plantIds: List<String>
-        get() = sightings.mapNotNull { it.plantId }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
+        get() = sightings.flatMap { it.plantIds }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
 }
 
 /** How many kinds of animal were seen in one month of the year, and how many times. */

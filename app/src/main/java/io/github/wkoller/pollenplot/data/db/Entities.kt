@@ -71,16 +71,16 @@ data class PhotoEntity(
 )
 
 /**
- * An animal or fungus seen in the garden. [plantId] is the plant it was on, and [lifeGroup] its group, such as BIRD.
+ * An animal or fungus seen in the garden. [behaviours] holds the names of what it was doing, with spaces between,
+ * and [lifeGroup] its group, such as BIRD. The plants it was on are in [SightingPlantEntity].
  */
 @Entity(
     tableName = "sightings",
     foreignKeys = [
         ForeignKey(entity = ZoneEntity::class, parentColumns = ["id"], childColumns = ["zoneId"], onDelete = ForeignKey.SET_NULL),
-        ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.SET_NULL),
         ForeignKey(entity = PhotoEntity::class, parentColumns = ["id"], childColumns = ["photoId"], onDelete = ForeignKey.SET_NULL),
     ],
-    indices = [Index("zoneId"), Index("plantId"), Index("photoId"), Index("speciesName"), Index("seenAt")],
+    indices = [Index("zoneId"), Index("photoId"), Index("speciesName"), Index("seenAt")],
 )
 data class SightingEntity(
     @PrimaryKey val id: String,
@@ -88,8 +88,7 @@ data class SightingEntity(
     val label: String,
     val lifeGroup: String,
     val zoneId: String?,
-    val plantId: String?,
-    val behaviour: String?,
+    val behaviours: String,
     val count: Int,
     val photoId: String?,
     /** Relative to the app's files folder. */
@@ -99,6 +98,18 @@ data class SightingEntity(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+/** A plant an animal was seen on. A sighting may have several, and each goes when its sighting or its plant does. */
+@Entity(
+    tableName = "sighting_plants",
+    primaryKeys = ["sightingId", "plantId"],
+    foreignKeys = [
+        ForeignKey(entity = SightingEntity::class, parentColumns = ["id"], childColumns = ["sightingId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("plantId")],
+)
+data class SightingPlantEntity(val sightingId: String, val plantId: String)
 
 /**
  * One part of a photo that seems to show a plant or an animal, with its cut-out and what the models suggested. It

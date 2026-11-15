@@ -30,7 +30,7 @@ class GardenAdviceTest {
     private var next = 0
 
     private fun seen(name: String, group: LifeGroup, day: Int) = Sighting(
-        id = "s${next++}", speciesName = name, label = name, group = group, zoneId = null, plantId = null, behaviour = null,
+        id = "s${next++}", speciesName = name, label = name, group = group, zoneId = null, plantIds = emptyList(), behaviours = emptySet(),
         count = 1, photoId = null, thumbnail = null, seenAt = LocalDateTime.of(2026, 10, day, 9, 0).atZone(brisbane).toInstant(), notes = "",
     )
 

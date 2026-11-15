@@ -24,7 +24,7 @@ object DemoWildlife {
         suspend fun seen(name: String?, label: String, group: LifeGroup, date: LocalDate, zoneId: String?, plant: String? = null, behaviour: Behaviour? = null, count: Int = 1) {
             // Midday, so the day is the same in every time zone the tests might run in.
             val at = date.atTime(LocalTime.NOON).atZone(zone).toInstant()
-            garden.recordSighting(name, label, group, zoneId, plant?.let { plants.getValue(it).id }, behaviour, count, at, notes = "")
+            garden.recordSighting(name, label, group, zoneId, listOfNotNull(plant?.let { plants.getValue(it).id }), setOfNotNull(behaviour), count, at, notes = "")
         }
         seen("Manorina melanocephala", "Noisy miner", LifeGroup.BIRD, LocalDate.of(2026, 10, 12), ids.hive, "Salvia rosmarinus", Behaviour.FEEDING)
         seen("Manorina melanocephala", "Noisy miner", LifeGroup.BIRD, LocalDate.of(2026, 8, 3), ids.hive, behaviour = Behaviour.CALLING)

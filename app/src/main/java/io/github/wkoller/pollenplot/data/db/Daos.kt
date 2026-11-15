@@ -183,6 +183,22 @@ interface SightingDao {
 
     @Query("DELETE FROM sightings WHERE id = :id")
     suspend fun delete(id: String)
+
+    /** The plants a sighting was on, in the order they were chosen. */
+    @Query("SELECT plantId FROM sighting_plants WHERE sightingId = :sightingId ORDER BY rowid")
+    suspend fun plantsOf(sightingId: String): List<String>
+
+    @Query("SELECT * FROM sighting_plants ORDER BY rowid")
+    suspend fun allPlants(): List<SightingPlantEntity>
+
+    @Query("SELECT * FROM sighting_plants ORDER BY rowid")
+    fun observePlants(): Flow<List<SightingPlantEntity>>
+
+    @Query("DELETE FROM sighting_plants WHERE sightingId = :sightingId")
+    suspend fun deletePlants(sightingId: String)
+
+    @Insert
+    suspend fun insertPlants(plants: List<SightingPlantEntity>)
 }
 
 @Dao

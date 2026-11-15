@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.domain.wildlife.Behaviour
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,7 +77,7 @@ fun SeenSpeciesRow(seen: SeenSpecies, onClick: () -> Unit) {
 fun SightingRow(view: SightingView, onClick: () -> Unit, showName: Boolean = true, showZone: Boolean = true) {
     val sighting = view.sighting
     val details = listOfNotNull(
-        sighting.behaviour?.let { stringResource(it.label) },
+        behaviourText(sighting.behaviours),
         sightingPlace(view, showZone),
         if (sighting.count > 1) pluralStringResource(R.plurals.sighting_count, sighting.count, sighting.count) else null,
     )
@@ -138,3 +139,10 @@ fun MonthStrip(months: List<MonthSeen>, current: Month?, modifier: Modifier = Mo
 }
 
 private const val BAR_HEIGHT = 56
+
+/** Everything an animal was seen doing, in one line, or nothing when the user was not sure. */
+@Composable
+fun behaviourText(behaviours: Set<Behaviour>): String? {
+    val words = Behaviour.entries.filter { it in behaviours }.map { stringResource(it.label) }
+    return words.joinToString(", ").ifEmpty { null }
+}

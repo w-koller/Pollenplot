@@ -75,14 +75,14 @@ fun GardenPlant.toEntity(createdAt: Long, updatedAt: Long) = PlantEntity(
     updatedAt = updatedAt,
 )
 
-fun SightingEntity.toDomain() = Sighting(
+fun SightingEntity.toDomain(plantIds: List<String>) = Sighting(
     id = id,
     speciesName = speciesName,
     label = label,
     group = enumOrNull<LifeGroup>(lifeGroup) ?: LifeGroup.OTHER,
     zoneId = zoneId,
-    plantId = plantId,
-    behaviour = enumOrNull<Behaviour>(behaviour),
+    plantIds = plantIds,
+    behaviours = behaviours.split(' ').mapNotNull { enumOrNull<Behaviour>(it) }.toSet(),
     count = count,
     photoId = photoId,
     thumbnail = thumbnail,
@@ -96,8 +96,7 @@ fun Sighting.toEntity(createdAt: Long, updatedAt: Long) = SightingEntity(
     label = label,
     lifeGroup = group.name,
     zoneId = zoneId,
-    plantId = plantId,
-    behaviour = behaviour?.name,
+    behaviours = Behaviour.entries.filter { it in behaviours }.joinToString(" ") { it.name },
     count = count,
     photoId = photoId,
     thumbnail = thumbnail,

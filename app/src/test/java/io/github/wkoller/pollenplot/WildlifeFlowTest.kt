@@ -113,10 +113,14 @@ class WildlifeFlowTest {
         compose.onNodeWithText("12 October 2026").performScrollTo().performClick()
         waitFor(hasText("Seen on 12 October 2026", substring = true))
         shot("wildlife_sighting")
+        // It was feeding; Not sure clears that, and then it may be doing several things.
+        compose.onNodeWithText("Not sure").performClick()
         compose.onNodeWithText("Resting").performClick()
+        compose.onNodeWithText("Calling").performClick()
+        shot("wildlife_sighting_several")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         waitFor(hasText("Seen 3 times, most recently on 12 October 2026."))
-        assertEquals(Behaviour.RESTING, sightings().first { it.seenAt.atZone(DemoWildlife.zone).dayOfMonth == 12 }.behaviour)
+        assertEquals(setOf(Behaviour.RESTING, Behaviour.CALLING), sightings().first { it.seenAt.atZone(DemoWildlife.zone).dayOfMonth == 12 }.behaviours)
 
         compose.onNodeWithText("3 August 2026").performScrollTo().performClick()
         waitFor(hasText("Seen on 3 August 2026", substring = true))
@@ -146,7 +150,7 @@ class WildlifeFlowTest {
         waitFor(hasText("10 species seen in your yard this year"))
         val added = sightings().single { it.speciesName == "Tiliqua scincoides" }
         assertEquals(ids.veg, added.zoneId)
-        assertEquals(Behaviour.BASKING, added.behaviour)
+        assertEquals(setOf(Behaviour.BASKING), added.behaviours)
         assertEquals("Added without a photo, on the day it was added", DemoWildlife.clock.instant(), added.seenAt)
     }
 
@@ -210,7 +214,7 @@ class WildlifeFlowTest {
             DemoGarden.seed(garden)
         }
         runBlocking {
-            garden.recordSighting("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, ids.front, null, Behaviour.CALLING, 1, DemoWildlife.clock.instant(), "")
+            garden.recordSighting("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, ids.front, emptyList(), setOf(Behaviour.CALLING), 1, DemoWildlife.clock.instant(), "")
         }
         show()
         compose.onNodeWithText("Wildlife").performClick()

@@ -66,7 +66,7 @@ fun AnimalScreen(
     val mine = remember(sightings, fauna, key) { sightings.filter { Biodiversity.keyOf(it.sighting, fauna) == key } }
     val title = animal?.displayName ?: mine.firstOrNull()?.sighting?.label ?: key
     val seenOn = remember(mine, plants) {
-        val ids = mine.mapNotNull { it.sighting.plantId }.groupingBy { it }.eachCount()
+        val ids = mine.flatMap { it.sighting.plantIds }.groupingBy { it }.eachCount()
         plants.filter { it.plant.id in ids }.sortedByDescending { ids[it.plant.id] }
     }
 

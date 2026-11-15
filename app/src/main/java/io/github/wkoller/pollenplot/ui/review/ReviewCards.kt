@@ -100,7 +100,7 @@ class ReviewCallbacks(
     /** Compares the photo with photos of a species, for a suggestion that is a weed. */
     val onCompare: ((detection: DetectionRecord, speciesName: String) -> Unit)? = null,
     /** Adds an animal or fungus as a sighting: its scientific name if known, the name to show for it, and where. */
-    val onAddSighting: ((detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantId: String?, behaviour: Behaviour?) -> Unit)? = null,
+    val onAddSighting: ((detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantIds: List<String>, behaviours: Set<Behaviour>) -> Unit)? = null,
     /** Saves a plant found away from home to the wishlist, with the zone it might go in. */
     val onSave: ((detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?) -> Unit)? = null,
     val onOpenWishlist: (() -> Unit)? = null,

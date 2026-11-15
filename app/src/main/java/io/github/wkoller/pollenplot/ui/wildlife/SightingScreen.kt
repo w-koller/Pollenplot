@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.review.behavioursNamed
+import io.github.wkoller.pollenplot.ui.review.NamesSaver
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -89,8 +91,8 @@ fun SightingScreen(
     var name by rememberSaveable { mutableStateOf<String?>(null) }
     var groupName by rememberSaveable { mutableStateOf<String?>(null) }
     var zoneId by rememberSaveable { mutableStateOf(startZoneId) }
-    var plantId by rememberSaveable { mutableStateOf<String?>(null) }
-    var behaviourName by rememberSaveable { mutableStateOf<String?>(null) }
+    var plantIds by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(emptyList<String>()) }
+    var behaviourNames by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(emptyList<String>()) }
     var count by rememberSaveable { mutableIntStateOf(1) }
     var notes by rememberSaveable { mutableStateOf("") }
     var day by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
@@ -104,8 +106,8 @@ fun SightingScreen(
         name = sighting.speciesName ?: sighting.label
         groupName = sighting.group.name
         zoneId = sighting.zoneId
-        plantId = sighting.plantId
-        behaviourName = sighting.behaviour?.name
+        plantIds = sighting.plantIds
+        behaviourNames = sighting.behaviours.map { it.name }
         count = sighting.count
         notes = sighting.notes
         started = true
@@ -191,14 +193,14 @@ fun SightingScreen(
                 zones = zones,
                 plants = plants,
                 zoneId = zoneId,
-                plantId = plantId,
-                behaviour = behaviourName?.let { n -> Behaviour.entries.firstOrNull { it.name == n } },
+                plantIds = plantIds.toSet(),
+                behaviours = behavioursNamed(behaviourNames),
                 onZone = {
                     zoneId = it
-                    plantId = null
+                    plantIds = emptyList()
                 },
-                onPlant = { plantId = it },
-                onBehaviour = { behaviourName = it?.name },
+                onPlants = { chosen -> plantIds = plantIds.filter { it in chosen } + chosen.filterNot { it in plantIds } },
+                onBehaviours = { chosen -> behaviourNames = chosen.map { it.name } },
             )
             QuantityStepper(count, countText = { it.toString() }) { count = it }
             OutlinedTextField(
@@ -211,13 +213,13 @@ fun SightingScreen(
             Button(
                 onClick = {
                     val chosen = name ?: return@Button
-                    val behaviour = behaviourName?.let { n -> Behaviour.entries.firstOrNull { it.name == n } }
+                    val behaviours = behavioursNamed(behaviourNames)
                     scope.launch {
                         val stored = existing?.sighting
                         if (stored == null) {
                             val date = LocalDate.ofEpochDay(day)
                             val seenAt = if (date == today) clock.instant() else date.atTime(LocalTime.NOON).atZone(clock.zone).toInstant()
-                            garden.recordSighting(animal?.name, animal?.displayName ?: chosen, group, zoneId, plantId, behaviour, count, seenAt, notes)
+                            garden.recordSighting(animal?.name, animal?.displayName ?: chosen, group, zoneId, plantIds, behaviours, count, seenAt, notes)
                         } else {
                             // The name it was recorded under stays unless the user chose another animal.
                             val label = if (chosen == (stored.speciesName ?: stored.label)) stored.label else animal?.displayName ?: chosen
@@ -227,8 +229,8 @@ fun SightingScreen(
                                     label = label,
                                     group = group,
                                     zoneId = zoneId,
-                                    plantId = plantId,
-                                    behaviour = behaviour,
+                                    plantIds = plantIds,
+                                    behaviours = behaviours,
                                     count = count,
                                     notes = notes.trim(),
                                 ),

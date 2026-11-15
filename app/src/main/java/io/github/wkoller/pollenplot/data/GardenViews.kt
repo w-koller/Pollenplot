@@ -69,7 +69,10 @@ data class PlantView(
 }
 
 /** A sighting with its animal in the knowledge base, when it is there, and the names of its zone and plant. */
-data class SightingView(val sighting: Sighting, val animal: Animal?, val zoneName: String?, val plantTitle: String?) {
+data class SightingView(val sighting: Sighting, val animal: Animal?, val zoneName: String?, val plantTitles: List<String>) {
+    /** The plants it was on as one piece of text, or nothing when it was on none. */
+    val plantTitle: String? get() = plantTitles.joinToString(", ").ifEmpty { null }
+
     /** The animal's common name, or the name it was recorded under. */
     val title: String get() = animal?.displayName ?: sighting.label
 
@@ -118,7 +121,7 @@ class GardenViews(
                 sighting,
                 fauna?.animal(sighting.speciesName ?: sighting.label),
                 sighting.zoneId?.let(zoneNames::get),
-                sighting.plantId?.let(plantTitles::get),
+                sighting.plantIds.mapNotNull(plantTitles::get),
             )
         }
     }

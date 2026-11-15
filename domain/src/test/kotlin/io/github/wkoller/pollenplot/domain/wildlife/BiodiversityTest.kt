@@ -33,7 +33,7 @@ class BiodiversityTest {
     private var next = 0
 
     private fun seen(name: String, year: Int, month: Int, day: Int = 10, group: LifeGroup = LifeGroup.BIRD, speciesName: String? = name, plantId: String? = null, thumbnail: String? = null) = Sighting(
-        id = "s${next++}", speciesName = speciesName, label = name, group = group, zoneId = null, plantId = plantId, behaviour = null, count = 1,
+        id = "s${next++}", speciesName = speciesName, label = name, group = group, zoneId = null, plantIds = listOfNotNull(plantId), behaviours = emptySet(), count = 1,
         photoId = null, thumbnail = thumbnail, seenAt = LocalDateTime.of(year, month, day, 7, 30).atZone(brisbane).toInstant(), notes = "",
     )
 

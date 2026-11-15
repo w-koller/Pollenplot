@@ -47,7 +47,7 @@ class ExportTest {
 
     @Test
     fun `sightings become a Darwin Core table with the garden's rounded place`() = runBlocking {
-        app.container.garden.recordSighting("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, null, null, Behaviour.CALLING, 2, DemoWildlife.clock.instant(), "")
+        app.container.garden.recordSighting("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, null, emptyList(), setOf(Behaviour.CALLING), 2, DemoWildlife.clock.instant(), "")
         val lines = app.container.exportDarwinCore("Queensland").trimEnd().split("\r\n")
         assertEquals(2, lines.size)
         assertTrue(lines[1], lines[1].contains(",2026-10-28T08:00:00+10:00,Dacelo novaeguineae,Laughing kookaburra,2,calling,present,Australia,AU,Queensland,-27.50,152.99,1000,"))

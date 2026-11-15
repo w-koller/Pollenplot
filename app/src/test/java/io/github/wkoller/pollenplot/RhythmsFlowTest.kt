@@ -69,7 +69,7 @@ class RhythmsFlowTest {
             app.container.bees.addHive("Hive 1", HiveType.LANGSTROTH_8, null, null, 2025, LocalDate.of(2026, 9, 1))
             app.container.nativeBees.addHive("Sugarbag 1", StinglessSpecies.TETRAGONULA_CARBONARIA, NativeBox.OATH, NativeOrigin.BOUGHT, null, null, LocalDate.of(2026, 9, 1))
             app.container.knowledge.awaitFauna()
-            app.container.garden.recordSighting("Amegilla cingulata", "Blue-banded bee", LifeGroup.INSECT, null, ids.lemon, null, 1, DemoWildlife.clock.instant(), "")
+            app.container.garden.recordSighting("Amegilla cingulata", "Blue-banded bee", LifeGroup.INSECT, null, listOf(ids.lemon), emptySet(), 1, DemoWildlife.clock.instant(), "")
         }
         val state = runBlocking { app.container.rhythms.state.first { it.plants.isNotEmpty() } }
         val honey = state.lanes.first { it.group == BeeGroup.HONEY }
