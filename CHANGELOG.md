@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Editing a plant says “Your changes are saved”, and the plant's page shows its planted day and a status other than
+  Growing, which it did not show before, so an edit to them looked as if it had not been saved. The Edit sheet opens
+  at its full height and stays above the keyboard, so “Save changes” can always be reached, and it says why when a
+  plant with no known species needs a name. Edit facts stays above the keyboard too.
 - Every tab has a More menu. It holds “Ask your garden” and “Guides”, and on the Plot also “Edit layout”, the
   Wishlist, Review and Weeds, so the review queue and the weeds are reachable with nothing waiting. The Plot's top
   bar has fewer buttons, and they no longer move.
