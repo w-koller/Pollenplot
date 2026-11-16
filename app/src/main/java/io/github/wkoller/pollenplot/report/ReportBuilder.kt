@@ -183,7 +183,7 @@ class ReportBuilder(
         val plantTable = table(
             R.string.report_plants,
             listOf(R.string.col_plant, R.string.col_scientific, R.string.col_zone, R.string.col_quantity, R.string.col_water, R.string.col_flowering, R.string.col_roles, R.string.col_weed),
-            plants.sortedBy { it.title.lowercase() }.map { view ->
+            plants.filter { it.isGrowing }.sortedBy { it.title.lowercase() }.map { view ->
                 val care = view.care?.care
                 listOf(
                     text(view.title), text(view.species?.name ?: view.plant.speciesName), text(view.zoneName), number(view.plant.quantity),
@@ -193,7 +193,16 @@ class ReportBuilder(
                 )
             },
         )
-        return ReportSection(s(R.string.report_part_garden), emptyList(), listOf(zoneTable, plantTable), figures)
+        // Plants that died or were removed are listed apart, with the days they were planted and ended.
+        val ended = plants.filter { !it.isGrowing }.sortedByDescending { it.plant.endedOn }
+        val graveyard = table(
+            R.string.report_graveyard,
+            listOf(R.string.col_plant, R.string.col_scientific, R.string.col_status, R.string.col_planted, R.string.col_ended, R.string.col_zone),
+            ended.map { view ->
+                listOf(text(view.title), text(view.species?.name ?: view.plant.speciesName), text(s(view.plant.status.label)), day(view.plant.plantedOn), day(view.plant.endedOn), text(view.zoneName))
+            },
+        )
+        return ReportSection(s(R.string.report_part_garden), emptyList(), listOfNotNull(zoneTable, plantTable, graveyard.takeIf { ended.isNotEmpty() }), figures)
     }
 
     private suspend fun wildlife(inPeriod: (LocalDate) -> Boolean): ReportSection {

@@ -3,6 +3,7 @@ package io.github.wkoller.pollenplot.domain.garden
 import io.github.wkoller.pollenplot.domain.plants.Soil
 import io.github.wkoller.pollenplot.domain.plants.Sun
 import java.time.LocalDate
+import java.time.Period
 
 enum class ZoneKind { GARDEN_BED, VEG_PATCH, ORCHARD, LAWN, POTS, POND, HIVE_CORNER, OTHER }
 
@@ -69,6 +70,8 @@ data class GardenPlant(
     /** The plant's cut-out picture, as the app stores it, or null before it has one. */
     val thumbnail: String? = null,
     val counts: Map<String, Int> = emptyMap(),
+    /** The day the plant died or was removed; null while it grows, or when the day was not kept. */
+    val endedOn: LocalDate? = null,
 ) {
     init {
         require(speciesName != null || !customName.isNullOrBlank()) { "A plant needs a species or a name" }
@@ -85,6 +88,14 @@ data class GardenPlant(
         val zones = zoneIds.size.coerceAtLeast(1)
         return ((quantity + zones / 2) / zones).coerceAtLeast(1)
     }
+
+    /** How long the plant lived in the garden, from its planted day to the day it ended, when both are known. */
+    val lived: Period?
+        get() {
+            val from = plantedOn ?: return null
+            val to = endedOn ?: return null
+            return if (to.isBefore(from)) null else Period.between(from, to)
+        }
 
     /** The zones of one record to make, how many are in each zone when counted zone by zone, and how many in all. */
     data class Planting(val zoneIds: List<String>, val counts: Map<String, Int>, val quantity: Int)

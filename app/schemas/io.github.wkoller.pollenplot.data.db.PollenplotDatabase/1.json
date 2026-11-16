@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "068102dd92328da6ae4e9b4a66df9db1",
+    "identityHash": "9934366b1939ca6b3998b059caa25ef3",
     "entities": [
       {
         "tableName": "zones",
@@ -111,7 +111,7 @@
       },
       {
         "tableName": "plants",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `speciesName` TEXT, `customName` TEXT, `quantity` INTEGER NOT NULL, `plantedOnEpochDay` INTEGER, `status` TEXT NOT NULL, `notes` TEXT NOT NULL, `thumbnail` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `speciesName` TEXT, `customName` TEXT, `quantity` INTEGER NOT NULL, `plantedOnEpochDay` INTEGER, `endedOnEpochDay` INTEGER, `status` TEXT NOT NULL, `notes` TEXT NOT NULL, `thumbnail` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -138,6 +138,11 @@
           {
             "fieldPath": "plantedOnEpochDay",
             "columnName": "plantedOnEpochDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "endedOnEpochDay",
+            "columnName": "endedOnEpochDay",
             "affinity": "INTEGER"
           },
           {
@@ -3376,7 +3381,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '068102dd92328da6ae4e9b4a66df9db1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9934366b1939ca6b3998b059caa25ef3')"
     ]
   }
 }

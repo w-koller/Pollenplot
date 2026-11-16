@@ -207,6 +207,17 @@ fun PlantDetailScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item { Header(loaded) }
+            if (!loaded.isGrowing) {
+                item {
+                    GraveyardBanner(loaded) {
+                        val before = loaded.plant
+                        scope.launch {
+                            garden.updatePlant(before.copy(status = PlantStatus.GROWING))
+                            notices?.show(resources.getString(R.string.graveyard_brought_back, loaded.title)) { garden.updatePlant(before) }
+                        }
+                    }
+                }
+            }
             if (loaded.roles.isNotEmpty()) item { RoleBadges(loaded.roles) }
             pot?.let { state ->
                 if (state.potted) {
@@ -214,9 +225,11 @@ fun PlantDetailScreen(
                 }
                 if (state.events.isNotEmpty()) item { PlantEventsCard(state.events, onRemoveEvent) }
             }
-            if (problems != null) item { ProblemsCard(plantProblems, onOpenProblem, onLogProblem) }
-            harvest?.takeIf { it.offered }?.let { state -> item { HarvestCard(state, onRecordHarvest, onOpenHarvest) } }
-            prune?.takeIf { it.schedule != null || it.months != null || it.lastPruned != null }?.let { state -> item { PruningCard(state, onRecordPruning) } }
+            // A plant that died or was removed keeps what was recorded of it, but is not asked for more or given advice.
+            val growing = loaded.isGrowing
+            if (problems != null && (growing || plantProblems.isNotEmpty())) item { ProblemsCard(plantProblems, onOpenProblem, onLogProblem) }
+            harvest?.takeIf { it.offered && (growing || it.harvests.isNotEmpty()) }?.let { state -> item { HarvestCard(state, onRecordHarvest, onOpenHarvest) } }
+            prune?.takeIf { (growing && (it.schedule != null || it.months != null)) || it.lastPruned != null }?.let { state -> item { PruningCard(state, onRecordPruning) } }
             if (loaded.weed.isWeed) {
                 val name = loaded.species?.name ?: loaded.plant.speciesName.orEmpty()
                 item { WeedCard(loaded.weed, locality, scientificName = name, onCompare = { onCompare(name) }) }
@@ -730,6 +743,8 @@ private fun EditPlantSheet(
     var notes by rememberSaveable { mutableStateOf(plant.notes) }
     var status by rememberSaveable { mutableStateOf(plant.status) }
     var plantedOn by rememberSaveable { mutableStateOf(plant.plantedOn) }
+    var endedOn by rememberSaveable { mutableStateOf(plant.endedOn) }
+    var choosingEnd by rememberSaveable { mutableStateOf(false) }
     var choosingDay by rememberSaveable { mutableStateOf(false) }
     val today = LocalDate.now()
     // Opened at its full height, and kept above the keyboard, so Save changes at the bottom can always be reached.
@@ -774,16 +789,37 @@ private fun EditPlantSheet(
                 )
             }
             item { ChipGroup(stringResource(R.string.status_label), PlantStatus.entries, status, { stringResource(it.label) }) { status = it } }
+            if (status != PlantStatus.GROWING) {
+                // The day it died or was removed, today unless the user chooses another.
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(if (status == PlantStatus.DIED) R.string.ended_died else R.string.ended_removed), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+                        Text(UiFormat.longDate(endedOn ?: today), style = MaterialTheme.typography.bodyLarge)
+                        TextButton(onClick = { choosingEnd = true }) { Text(stringResource(R.string.planted_choose)) }
+                    }
+                }
+            }
             item {
                 val needsName = plant.speciesName == null && name.isBlank()
                 if (needsName) Text(stringResource(R.string.edit_needs_name), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
                 Button(
-                    onClick = { onSave(plant.copy(zoneIds = zoneIds, quantity = count.totalFor(zoneIds, false), counts = count.countsFor(zoneIds, false).orEmpty(), plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status)) },
+                    onClick = { onSave(plant.copy(zoneIds = zoneIds, quantity = count.totalFor(zoneIds, false), counts = count.countsFor(zoneIds, false).orEmpty(), plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status, endedOn = if (status == PlantStatus.GROWING) null else endedOn ?: today)) },
                     enabled = !needsName,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.edit_save)) }
             }
         }
+    }
+    if (choosingEnd) {
+        PastDateDialog(
+            day = endedOn ?: today,
+            today = today,
+            onDismiss = { choosingEnd = false },
+            onChoose = {
+                choosingEnd = false
+                endedOn = it
+            },
+        )
     }
     if (choosingDay) {
         PastDateDialog(
@@ -795,5 +831,27 @@ private fun EditPlantSheet(
                 plantedOn = it
             },
         )
+    }
+}
+
+/** A plant that died or was removed: how it ended, how long it lived, and a way back to the garden. */
+@Composable
+private fun GraveyardBanner(view: io.github.wkoller.pollenplot.data.PlantView, onBringBack: () -> Unit) {
+    androidx.compose.material3.Card(
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Icon(painterResource(R.drawable.ic_deceased), contentDescription = null)
+                Text(
+                    view.plant.endedOn?.let { stringResource(R.string.graveyard_since, UiFormat.longDate(it)) } ?: stringResource(R.string.graveyard_banner),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.semantics { heading() },
+                )
+            }
+            listOfNotNull(endedText(view.plant.status, view.plant.endedOn), view.plant.lived?.let { livedText(it) }).forEach { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            OutlinedButton(onClick = onBringBack) { Text(stringResource(R.string.graveyard_bring_back)) }
+        }
     }
 }

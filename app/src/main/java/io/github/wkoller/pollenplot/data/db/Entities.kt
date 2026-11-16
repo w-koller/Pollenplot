@@ -41,6 +41,8 @@ data class PlantEntity(
     /** How many there are in all; the plant's zones, and how many are in each, are in [PlantZoneEntity]. */
     val quantity: Int,
     val plantedOnEpochDay: Long?,
+    /** The day the plant died or was removed. */
+    val endedOnEpochDay: Long? = null,
     val status: String,
     val notes: String,
     /** The plant's cut-out picture, relative to the app's files folder. */

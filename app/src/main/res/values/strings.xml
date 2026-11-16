@@ -227,6 +227,27 @@
     <string name="settings_feed_reminders_body">Pollenplot sends a notification in the morning when a zone with citrus is due a feed.</string>
     <string name="settings_conditioner">Remind me about conditioner before hot days</string>
     <string name="settings_conditioner_body">Your own reminder: Pollenplot tells you when a day of 35 °C or more is forecast within three days and you have not given a conditioner such as seaweed in the last two weeks.</string>
+    <string name="graveyard_title">Graveyard</string>
+    <string name="graveyard_body">These plants died or were removed. Their photos, flowering, harvests, problems and care stay with them. Please press one to see its history or to bring it back to the garden.</string>
+    <string name="graveyard_empty">No plant has died or been removed yet.</string>
+    <string name="graveyard_all">All</string>
+    <string name="graveyard_show">Show</string>
+    <string name="graveyard_died_on">Died on %1$s</string>
+    <string name="graveyard_removed_on">Removed on %1$s</string>
+    <string name="graveyard_since">In the graveyard since %1$s</string>
+    <string name="graveyard_banner">In the graveyard</string>
+    <string name="graveyard_bring_back">Bring it back to the garden</string>
+    <string name="graveyard_brought_back">%1$s is back in your garden.</string>
+    <string name="graveyard_grew_in">Grew in %1$s</string>
+    <string name="graveyard_lived_short">Lived less than a month</string>
+    <string name="graveyard_lived">Lived %1$s</string>
+    <string name="graveyard_open">Graveyard</string>
+    <string name="graveyard_list_body">Plants that died or were removed, with their history.</string>
+    <string name="ended_died">Died on</string>
+    <string name="ended_removed">Removed on</string>
+    <string name="ended_unknown">Not recorded</string>
+    <string name="report_graveyard">Graveyard</string>
+    <string name="col_planted">Planted</string>
     <string name="guide">Guide</string>
     <string name="guide_last_checked">These facts were last checked against their sources on %1$s.</string>
     <string name="guide_sources">Sources</string>
@@ -2031,6 +2052,34 @@
     <plurals name="backup_feeds">
         <item quantity="one">%d feed</item>
         <item quantity="other">%d feeds</item>
+    </plurals>
+    <plurals name="lived_years">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
+    <plurals name="lived_months">
+        <item quantity="one">%d month</item>
+        <item quantity="other">%d months</item>
+    </plurals>
+    <plurals name="history_photos">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+    <plurals name="history_flowering">
+        <item quantity="one">%d day in flower</item>
+        <item quantity="other">%d days in flower</item>
+    </plurals>
+    <plurals name="history_harvests">
+        <item quantity="one">%d harvest</item>
+        <item quantity="other">%d harvests</item>
+    </plurals>
+    <plurals name="history_problems">
+        <item quantity="one">%d problem</item>
+        <item quantity="other">%d problems</item>
+    </plurals>
+    <plurals name="history_care">
+        <item quantity="one">%d care record</item>
+        <item quantity="other">%d care records</item>
     </plurals>
     <plurals name="harvest_season_line">
         <item quantity="one">In %1$s you recorded %2$d harvest%3$s.</item>

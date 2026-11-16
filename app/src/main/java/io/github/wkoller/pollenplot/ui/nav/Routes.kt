@@ -68,6 +68,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SearchRoute
 
+/** Plants that died or were removed. */
+@Serializable data object GraveyardRoute
+
 /** The plant library, optionally opened from a zone, which is then offered first for what is added. */
 @Serializable data class LibraryRoute(val zoneId: String? = null)
 

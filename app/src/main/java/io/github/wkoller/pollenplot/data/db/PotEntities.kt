@@ -46,6 +46,9 @@ data class PlantEventEntity(
 
 @Dao
 interface PotDao {
+    @Query("SELECT COUNT(*) FROM plant_events WHERE plantId = :plantId")
+    suspend fun eventCountFor(plantId: String): Int
+
     @Query("SELECT * FROM plant_pots")
     fun observePots(): Flow<List<PlantPotEntity>>
 
