@@ -1,5 +1,10 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.lerp
+import io.github.wkoller.pollenplot.domain.plants.Sun
+import io.github.wkoller.pollenplot.data.prefs.NorthSide
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.layout.BoxScope
@@ -160,6 +165,10 @@ fun PlotCanvas(
     background: Color? = null,
     /** Whether the grid shows while the layout is only looked at. It always shows while editing. */
     gridInView: Boolean = true,
+    /** Whether each zone is washed with a colour for its sun or shade, with a key in the corner. */
+    sunOverlay: Boolean = false,
+    /** Which side of the plot faces north, for the north arrow. */
+    north: NorthSide = NorthSide.TOP,
 ) {
     BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
         val density = LocalDensity.current.density
@@ -368,6 +377,7 @@ fun PlotCanvas(
                         onNudge = { right, down -> onChangeZone(id, PlotLayout.nudged(view.zone.rect, right, down)) },
                         water = water,
                         due = due[id] ?: 0,
+                        sunOverlay = sunOverlay,
                     )
                 }
             }
@@ -382,10 +392,12 @@ fun PlotCanvas(
             }
             // The scale bar sits on the canvas side of the zoom buttons: under them while editing, above them otherwise.
             Column(Modifier.align(if (editing) Alignment.TopStart else Alignment.BottomStart).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!editing && sunOverlay) SunKey(Modifier.padding(start = 12.dp))
                 if (!editing) ScaleBar(scale, Modifier.padding(start = 12.dp))
                 CanvasControls(onFit = ::fit, onZoomIn = { zoomBy(ZOOM_STEP) }, onZoomOut = { zoomBy(1 / ZOOM_STEP) }, modifier = Modifier)
                 if (editing) ScaleBar(scale, Modifier.padding(start = 12.dp))
             }
+            NorthArrow(north, Modifier.align(if (editing) Alignment.BottomStart else Alignment.TopEnd).padding(12.dp))
             previewId?.let { id ->
                 zones.firstOrNull { it.zone.id == id }?.let { view ->
                     val rect = view.zone.rect
@@ -550,6 +562,7 @@ private fun ZoneTile(
     onNudge: (right: Int, down: Int) -> Unit,
     water: WaterState?,
     due: Int,
+    sunOverlay: Boolean = false,
 ) {
     val rect = view.zone.rect
     val density = LocalDensity.current
@@ -559,7 +572,10 @@ private fun ZoneTile(
     val top = offsetY + shown.yCm * scale
     val widthDp = with(density) { (shown.widthCm * scale).toDp() }
     val heightDp = with(density) { (shown.heightCm * scale).toDp() }
-    val (container, content) = kindColours(view.zone.kind)
+    val (kindContainer, content) = kindColours(view.zone.kind)
+    val sun = view.zone.sun.takeIf { sunOverlay }
+    // The sun wash tints the tile's own colour, so the kind still shows; the icon on the tile says which it is.
+    val container = sun?.let { lerp(kindContainer, sunWash(it), 0.45f) } ?: kindContainer
     val kinds = view.sightings.map { it.key }.distinct().size
     val hives = habitat?.let { it.hives.size + it.nativeHives.size } ?: 0
     val hotels = habitat?.hotels?.size ?: 0
@@ -574,6 +590,8 @@ private fun ZoneTile(
         (if (hives > 0) ", " + pluralStringResource(R.plurals.zone_tile_hives, hives, hives) else "") +
         (if (hotels > 0) ", " + pluralStringResource(R.plurals.zone_tile_hotels, hotels, hotels) else "") +
         (if (due > 0) ", " + pluralStringResource(R.plurals.zone_tile_due, due, due) else "") +
+        (if (view.inFlower > 0) ", " + pluralStringResource(R.plurals.zone_tile_in_flower, view.inFlower, view.inFlower) else "") +
+        (sun?.let { ", " + stringResource(it.label) } ?: "") +
         (next?.let { ". " + nextWateringSentence(it, water.today, water.window, watering.byHand) } ?: "")
     val moves = listOf(
         stringResource(R.string.move_left) to (-1 to 0),
@@ -594,9 +612,15 @@ private fun ZoneTile(
             shape = shape,
             color = container,
             contentColor = content,
-            border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+            // A zone with plants in flower has a coloured edge, and its tile says how many in words too.
+            border = when {
+                selected -> BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+                view.inFlower > 0 -> BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary)
+                else -> null
+            },
             modifier = Modifier
                 .fillMaxSize()
+                .shadow(if (selected || drag != null) 8.dp else 2.dp, shape)
                 .clip(shape)
                 .combinedClickable(
                     onClick = onTap,
@@ -635,7 +659,9 @@ private fun ZoneTile(
                     },
                 ),
         ) {
-            TileContent(view, kinds, hives, hotels, due, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value)
+            Box(Modifier.fillMaxSize().drawBehind { drawKindPattern(view.zone.kind, content.copy(alpha = 0.09f)) }) {
+                TileContent(view, kinds, hives, hotels, due, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value, sun)
+            }
         }
         if (selected) CornerHandles(Offset(left, top), shown.widthCm * scale, shown.heightCm * scale, onDrag, onDragEnd)
     }
@@ -646,7 +672,7 @@ private fun ZoneTile(
  * plants, then badges, then how many [kinds] of animals have been seen there.
  */
 @Composable
-private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float) {
+private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float, sun: Sun? = null) {
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (widthDp >= 72) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
@@ -656,6 +682,13 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due
             if (widthDp >= 96 && hotels > 0) BeeHomeCount(R.drawable.ic_cottage, hotels)
             // Jobs due today in the zone, which the Today card lists.
             if (widthDp >= 96 && due > 0) BeeHomeCount(R.drawable.ic_notifications, due)
+            if (widthDp >= 96 && sun != null) Icon(painterResource(sun.icon), contentDescription = null, modifier = Modifier.size(16.dp))
+        }
+        if (heightDp >= 64 && view.inFlower > 0) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(painterResource(R.drawable.ic_local_florist), contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(14.dp))
+                Text(pluralStringResource(R.plurals.zone_tile_in_flower, view.inFlower, view.inFlower), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
         // The next watering takes a line, so what comes after it needs that much more room.
         val watering = next?.takeIf { heightDp >= 56 }
@@ -667,16 +700,21 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due
             }
         }
         if (room >= 76 && view.plants.isNotEmpty()) {
-            val fit = ((widthDp - 16) / 34).toInt().coerceAtLeast(1)
+            // The plants overlap a little, as a bed's plants do, and grow with a roomy tile. Plants with their own
+            // cut-out come first, so the tile looks like what grows in it.
+            val size = if (room >= 150 && widthDp >= 180) 40f else 30f
+            val step = size - 8f
+            val fit = (((widthDp - 16 - size) / step).toInt() + 1).coerceAtLeast(1)
             // When they do not all fit, the last place says how many more there are.
             val shown = if (view.plants.size > fit && fit >= 2) fit - 1 else fit
             val more = view.plants.size - shown
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            val ordered = view.plants.sortedBy { it.plant.thumbnail == null }
+            Row(horizontalArrangement = Arrangement.spacedBy((-8).dp), verticalAlignment = Alignment.CenterVertically) {
                 // A light disc keeps each plant visible on any tile colour.
-                view.plants.take(shown).forEach {
-                    PlantAvatar(it.species?.form, 30.dp, thumbnail = it.plant.thumbnail, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, contentColor = MaterialTheme.colorScheme.onSurface)
+                ordered.take(shown).forEach {
+                    PlantAvatar(it.species?.form, size.dp, thumbnail = it.plant.thumbnail, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, contentColor = MaterialTheme.colorScheme.onSurface)
                 }
-                if (more > 0 && fit >= 2) Text(stringResource(R.string.zone_tile_more, more), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                if (more > 0 && fit >= 2) Text(stringResource(R.string.zone_tile_more, more), style = MaterialTheme.typography.labelLarge, maxLines = 1, modifier = Modifier.padding(start = 12.dp))
             }
         }
         if (room >= 116 && view.badges.isNotEmpty()) {
@@ -890,5 +928,112 @@ private fun BoxScope.CornerHandles(topLeft: Offset, width: Float, height: Float,
                 }
             }
         }
+    }
+}
+
+/** The colour each sun setting washes a zone with: warm for full sun, green for part shade, cool for full shade. */
+@Composable
+private fun sunWash(sun: Sun): Color {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return when (sun) {
+        Sun.FULL_SUN -> if (dark) Color(0xFF6B5310) else Color(0xFFFFD36B)
+        Sun.PART_SHADE -> if (dark) Color(0xFF34502F) else Color(0xFFBFD9A8)
+        Sun.FULL_SHADE -> if (dark) Color(0xFF2E3F57) else Color(0xFFAFC2DD)
+    }
+}
+
+/** The key to the sun wash: each setting's colour, icon and name. */
+@Composable
+private fun SunKey(modifier: Modifier) {
+    Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f), modifier = modifier) {
+        Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(R.string.plot_sun_key), style = MaterialTheme.typography.labelMedium, modifier = Modifier.semantics { heading() })
+            Sun.entries.forEach { sun ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(Modifier.size(14.dp).background(sunWash(sun), RoundedCornerShape(4.dp)))
+                    Icon(painterResource(sun.icon), contentDescription = null, modifier = Modifier.size(14.dp))
+                    Text(stringResource(sun.label), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+}
+
+/** An arrow pointing to the side of the plot that faces north, with an N. */
+@Composable
+private fun NorthArrow(north: NorthSide, modifier: Modifier) {
+    val side = stringResource(
+        when (north) {
+            NorthSide.TOP -> R.string.plot_north_top
+            NorthSide.RIGHT -> R.string.plot_north_right
+            NorthSide.BOTTOM -> R.string.plot_north_bottom
+            NorthSide.LEFT -> R.string.plot_north_left
+        },
+    ).lowercase()
+    val description = stringResource(R.string.plot_north_description, side)
+    val turn = when (north) {
+        NorthSide.TOP -> 0f
+        NorthSide.RIGHT -> 90f
+        NorthSide.BOTTOM -> 180f
+        NorthSide.LEFT -> 270f
+    }
+    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f), shadowElevation = 1.dp, modifier = modifier.size(44.dp).clearAndSetSemantics { contentDescription = description }) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(painterResource(R.drawable.ic_navigation), contentDescription = null, modifier = Modifier.size(22.dp).rotate(turn))
+            Text("N", style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(
+                when (north) {
+                    NorthSide.TOP -> Alignment.TopCenter
+                    NorthSide.RIGHT -> Alignment.CenterEnd
+                    NorthSide.BOTTOM -> Alignment.BottomCenter
+                    NorthSide.LEFT -> Alignment.CenterStart
+                },
+            ).padding(2.dp))
+        }
+    }
+}
+
+/**
+ * A faint pattern for a zone's kind, drawn behind its words: rows for a veg patch, dots for pots, ripples for a pond
+ * and mown stripes for a lawn. Other kinds keep a plain tile.
+ */
+private fun DrawScope.drawKindPattern(kind: ZoneKind, colour: Color) {
+    val step = 14.dp.toPx()
+    when (kind) {
+        ZoneKind.VEG_PATCH -> {
+            var y = step
+            while (y < size.height) {
+                drawLine(colour, Offset(0f, y), Offset(size.width, y), strokeWidth = 2.dp.toPx())
+                y += step
+            }
+        }
+        ZoneKind.POTS -> {
+            var y = step / 2
+            while (y < size.height) {
+                var x = step / 2
+                while (x < size.width) {
+                    drawCircle(colour, radius = 2.5.dp.toPx(), center = Offset(x, y))
+                    x += step
+                }
+                y += step
+            }
+        }
+        ZoneKind.POND -> {
+            val centre = Offset(size.width / 2, size.height / 2)
+            var radius = step
+            while (radius < maxOf(size.width, size.height)) {
+                drawCircle(colour, radius = radius, center = centre, style = Stroke(width = 1.5.dp.toPx()))
+                radius += step
+            }
+        }
+        ZoneKind.LAWN -> {
+            var x = 0f
+            var stripe = false
+            while (x < size.width) {
+                if (stripe) drawRect(colour, topLeft = Offset(x, 0f), size = Size(step, size.height))
+                stripe = !stripe
+                x += step
+            }
+        }
+        else -> Unit
     }
 }

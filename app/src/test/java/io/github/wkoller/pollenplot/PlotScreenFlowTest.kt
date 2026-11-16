@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import io.github.wkoller.pollenplot.data.prefs.NorthSide
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import org.junit.Assert.assertTrue
 import androidx.compose.ui.geometry.Offset
@@ -280,6 +282,36 @@ class PlotScreenFlowTest {
         compose.waitUntil(WAIT_MS) { houseRect().yCm > once.yCm }
         assertEquals("The second drag kept the first one's move", once.xCm, houseRect().xCm)
         shot("plot_structure_dragged")
+    }
+
+    @Test
+    fun zonesShowFloweringSunAndNorth() {
+        val ids = seed()
+        runBlocking {
+            // The lemon was seen in flower today, so its zone counts it as in flower now.
+            app.container.garden.recordFlowering(ids.lemon, java.time.LocalDate.now())
+            app.container.settingsStore.update { it.copy(sunOverlay = true, plotNorth = NorthSide.RIGHT) }
+        }
+        show()
+        waitFor(hasContentDescription("Back Citrus Patch", substring = true))
+        val citrus = compose.onNode(hasContentDescription("Back Citrus Patch", substring = true)).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
+        assertTrue("The zone says how many are in flower: $citrus", "in flower" in citrus)
+        assertTrue("And its sun, in words: $citrus", "Full sun" in citrus)
+        waitFor(hasText("Sun and shade"))
+        waitFor(hasContentDescription("North arrow. North is towards the right of the plot."))
+        shot("plot_flowering_sun")
+    }
+
+    @Test
+    fun zonesShowFloweringSunAndNorthInTheDark() {
+        val ids = seed()
+        runBlocking {
+            app.container.garden.recordFlowering(ids.lemon, java.time.LocalDate.now())
+            app.container.settingsStore.update { it.copy(sunOverlay = true, plotNorth = NorthSide.RIGHT) }
+        }
+        show(Settings(gardenState = AuState.QLD, theme = ThemeChoice.DARK))
+        waitFor(hasText("Sun and shade"))
+        shot("plot_flowering_sun_dark")
     }
 
     @Test

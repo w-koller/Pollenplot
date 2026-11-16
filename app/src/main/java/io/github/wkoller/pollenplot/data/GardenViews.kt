@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.data
 
+import java.time.LocalDate
+import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
 import io.github.wkoller.pollenplot.domain.garden.Structure
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
@@ -84,7 +86,14 @@ data class SightingView(val sighting: Sighting, val animal: Animal?, val zoneNam
 }
 
 /** A zone with the plants growing in it, the zone's badges and the animals seen in it, the latest first. */
-data class ZoneView(val zone: Zone, val plants: List<PlantView>, val badges: List<ZoneBadge>, val sightings: List<SightingView> = emptyList())
+data class ZoneView(
+    val zone: Zone,
+    val plants: List<PlantView>,
+    val badges: List<ZoneBadge>,
+    val sightings: List<SightingView> = emptyList(),
+    /** How many of the zone's plants are likely in flower now. */
+    val inFlower: Int = 0,
+)
 
 /** The garden for the screens: records joined with the knowledge base, the garden's state and its weed lists. */
 class GardenViews(
@@ -94,6 +103,8 @@ class GardenViews(
     weeds: Flow<WeedData>,
     /** The watering lines, which decide which plants risk overwatering. */
     lines: Flow<List<WateringLine>> = flowOf(emptyList()),
+    /** Today in the garden, for which plants are in flower now. */
+    private val today: () -> LocalDate = { LocalDate.now() },
 ) {
     val locality: Flow<Locality> = combine(settings.settings.map { it.gardenState to it.hemisphere }.distinctUntilChanged(), weeds) { (state, hemisphere), data ->
         Locality(state, data, hemisphere)
@@ -130,15 +141,21 @@ class GardenViews(
         }
     }
 
-    val zones: Flow<List<ZoneView>> = combine(repository.zoneList, plants, sightings) { zones, plants, sightings ->
+    val zones: Flow<List<ZoneView>> = combine(repository.zoneList, plants, sightings, repository.floweringList, locality) { zones, plants, sightings, flowering, locality ->
         // A plant growing in several zones is in each zone's list.
         val byZone = plants.filter { it.isGrowing }.flatMap { view -> view.plant.zoneIds.map { it to view } }.groupBy({ it.first }, { it.second })
         val seenIn = sightings.groupBy { it.sighting.zoneId }
+        // In flower now: this month among its flowering months, turned for the garden's hemisphere, or seen lately.
+        val day = today()
+        val seenFlowering = flowering.groupBy({ it.first }, { it.second })
+        val flowering = plants.filter { view ->
+            view.isGrowing && FloweringSeen.inFlowerNow(view.care?.care?.flowering?.fromSouthern(locality.hemisphere), seenFlowering[view.plant.id].orEmpty(), day)
+        }.map { it.plant.id }.toSet()
         zones.map { zone ->
             val inZone = byZone[zone.id].orEmpty()
             val seen = seenIn[zone.id].orEmpty()
             val groups = seen.map { it.animal?.group ?: it.sighting.group }.toSet()
-            ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles, it.species?.form) }, groups), seen)
+            ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles, it.species?.form) }, groups), seen, inZone.count { it.plant.id in flowering })
         }
     }
 
