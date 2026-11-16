@@ -18,7 +18,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -59,6 +59,9 @@ fun TabScaffold(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val openSearch = LocalOpenSearch.current.takeIf { search }
+    // Kept here rather than beside the button: a tab that becomes compact, as the Plot does once its zones load, draws
+    // another top bar, and a menu opened just before would otherwise close and forget it was open.
+    var open by rememberSaveable { mutableStateOf(false) }
     val allActions: @Composable RowScope.() -> Unit = {
         actions()
         openSearch?.let { open ->
@@ -68,7 +71,6 @@ fun TabScaffold(
         }
         val menu = more + LocalAppMenu.current
         if (menu.isNotEmpty()) {
-            var open by remember { mutableStateOf(false) }
             Box {
                 IconButton(onClick = { open = true }) {
                     Icon(painterResource(R.drawable.ic_more_vert), contentDescription = stringResource(R.string.more))
