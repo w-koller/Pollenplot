@@ -181,8 +181,9 @@ fun PlotScreen(
             }
         },
         // What is used less often is in the More menu, where it is always found: the review queue and the weeds are
-        // there even with nothing waiting, when their buttons with a count are not on the bar.
-        more = if (editing || loadedZones == null) {
+        // there even with nothing waiting, when their buttons with a count are not on the bar. They do not need the
+        // zones, so they are there from the start; the layout's own choices join them once the zones have loaded.
+        more = if (editing) {
             emptyList()
         } else {
             listOfNotNull(
