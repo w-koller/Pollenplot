@@ -1,5 +1,11 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.luminance
+import io.github.wkoller.pollenplot.domain.garden.StructureShape
+import io.github.wkoller.pollenplot.domain.garden.StructureKind
+import io.github.wkoller.pollenplot.domain.garden.Structure
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
@@ -137,6 +143,15 @@ fun PlotCanvas(
     onArrange: (String) -> Unit = {},
     /** A press on the canvas where there is no zone. */
     onTapEmpty: () -> Unit = {},
+    /** What is built in the yard, drawn under the zones. While editing, one can be chosen and dragged. */
+    structures: List<Structure> = emptyList(),
+    selectedStructureId: String? = null,
+    onTapStructure: (String) -> Unit = {},
+    onMoveStructure: (String, ZoneRect) -> Unit = { _, _ -> },
+    /** The colour the user chose for the ground, or null for the theme's background. */
+    background: Color? = null,
+    /** Whether the grid shows while the layout is only looked at. It always shows while editing. */
+    gridInView: Boolean = true,
 ) {
     BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
         val density = LocalDensity.current.density
@@ -159,7 +174,7 @@ fun PlotCanvas(
         val hasZones = zones.isNotEmpty()
 
         fun fit() {
-            val bounds = PlotLayout.bounds(zones.map { it.zone.rect }) ?: return
+            val bounds = PlotLayout.bounds(zones.map { it.zone.rect } + structures.map { it.rect }) ?: return
             // Room is left for what floats over the canvas: the zoom buttons, at the top while editing, and the add
             // button or the editing toolbar along the bottom.
             val side = FIT_MARGIN_DP * density
@@ -231,15 +246,18 @@ fun PlotCanvas(
         }
         if (scale == 0f) return@BoxWithConstraints
 
-        val gridColour = MaterialTheme.colorScheme.outlineVariant
-        val majorColour = MaterialTheme.colorScheme.outline
+        // On a ground colour the grid is drawn in black or white, whichever shows on it, faintly.
+        val onGround = background?.let { if (it.luminance() > 0.5f) Color.Black else Color.White }
+        val gridColour = onGround?.copy(alpha = 0.16f) ?: MaterialTheme.colorScheme.outlineVariant
+        val majorColour = onGround?.copy(alpha = 0.38f) ?: MaterialTheme.colorScheme.outline
         val extentColour = MaterialTheme.colorScheme.primary
-        val bounds = PlotLayout.bounds(zones.map { it.zone.rect })
+        val bounds = PlotLayout.bounds(zones.map { it.zone.rect } + structures.map { it.rect })
         val currentZones by rememberUpdatedState(zones)
         val tapEmpty by rememberUpdatedState(onTapEmpty)
         Box(
             Modifier
                 .fillMaxSize()
+                .then(if (background != null) Modifier.background(background) else Modifier)
                 // Watches every touch before the zones do, so a preview closes when the finger lifts and follows it
                 // from zone to zone.
                 .pointerInput(Unit) {
@@ -272,10 +290,24 @@ fun PlotCanvas(
                     }
                 }
                 .drawBehind {
-                    drawGrid(scale, offsetX, offsetY, gridColour, majorColour)
+                    if (editing || gridInView) drawGrid(scale, offsetX, offsetY, gridColour, majorColour)
                     if (editing && bounds != null) drawExtent(bounds, scale, offsetX, offsetY, extentColour)
                 },
         ) {
+            structures.forEach { structure ->
+                key(structure.id) {
+                    StructureTile(
+                        structure = structure,
+                        scale = scale,
+                        offsetX = offsetX,
+                        offsetY = offsetY,
+                        editing = editing,
+                        selected = editing && structure.id == selectedStructureId,
+                        onTap = { onTapStructure(structure.id) },
+                        onMove = { onMoveStructure(structure.id, it) },
+                    )
+                }
+            }
             zones.forEach { view ->
                 key(view.zone.id) {
                     val id = view.zone.id
@@ -698,5 +730,83 @@ private fun kindColours(kind: ZoneKind): Pair<Color, Color> {
         ZoneKind.VEG_PATCH, ZoneKind.ORCHARD, ZoneKind.HIVE_CORNER -> s.secondaryContainer to s.onSecondaryContainer
         ZoneKind.POND -> s.tertiaryContainer to s.onTertiaryContainer
         ZoneKind.LAWN, ZoneKind.POTS, ZoneKind.OTHER -> s.surfaceContainerHighest to s.onSurface
+    }
+}
+
+/**
+ * A structure on the canvas: its footprint in a quiet colour with its icon and name, an oval for a round one. It is
+ * only looked at until the layout is edited; then a press chooses it and a drag moves it, snapping to the grid, and
+ * the toolbar's Move and resize does the same with buttons.
+ */
+@Composable
+private fun StructureTile(
+    structure: Structure,
+    scale: Float,
+    offsetX: Float,
+    offsetY: Float,
+    editing: Boolean,
+    selected: Boolean,
+    onTap: () -> Unit,
+    onMove: (ZoneRect) -> Unit,
+) {
+    val density = LocalDensity.current
+    val rect = structure.rect
+    // How far a drag has carried it, in pixels, until it is dropped and the saved place comes back.
+    var moved by remember(rect) { mutableStateOf(Offset.Zero) }
+    val left = offsetX + rect.xCm * scale + moved.x
+    val top = offsetY + rect.yCm * scale + moved.y
+    val widthDp = with(density) { (rect.widthCm * scale).toDp() }
+    val heightDp = with(density) { (rect.heightCm * scale).toDp() }
+    val shape = if (structure.shape == StructureShape.OVAL) CircleShape else RoundedCornerShape(4.dp)
+    val wet = structure.kind == StructureKind.POOL || structure.kind == StructureKind.WATER_TANK
+    val colours = MaterialTheme.colorScheme
+    val description = stringResource(
+        R.string.structure_tile_description,
+        structure.name,
+        stringResource(structure.kind.label),
+        UiFormat.metresFromCm(rect.widthCm),
+        UiFormat.metresFromCm(rect.heightCm),
+    )
+    val currentScale by rememberUpdatedState(scale)
+    val currentRect by rememberUpdatedState(rect)
+    val move by rememberUpdatedState(onMove)
+    val press by rememberUpdatedState(onTap)
+    val base = Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }.size(widthDp, heightDp)
+    val touch = if (editing) {
+        Modifier
+            .clip(shape)
+            .clickable(onClickLabel = stringResource(R.string.structure_choose)) { press() }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { press() },
+                    onDrag = { change, amount ->
+                        change.consume()
+                        moved += amount
+                    },
+                    onDragEnd = {
+                        val to = currentRect.copy(
+                            xCm = currentRect.xCm + (moved.x / currentScale).roundToInt(),
+                            yCm = currentRect.yCm + (moved.y / currentScale).roundToInt(),
+                        )
+                        moved = Offset.Zero
+                        move(to)
+                    },
+                    onDragCancel = { moved = Offset.Zero },
+                )
+            }
+    } else {
+        Modifier
+    }
+    Surface(
+        shape = shape,
+        color = if (wet) colours.tertiaryContainer else colours.surfaceDim,
+        contentColor = if (wet) colours.onTertiaryContainer else colours.onSurfaceVariant,
+        border = BorderStroke(if (selected) 3.dp else 1.dp, if (selected) colours.primary else colours.outline),
+        modifier = base.then(touch).clearAndSetSemantics { contentDescription = description },
+    ) {
+        Column(Modifier.fillMaxSize().padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            if (heightDp >= 28.dp && widthDp >= 28.dp) Icon(painterResource(structure.kind.icon), contentDescription = null, modifier = Modifier.size(20.dp))
+            if (widthDp >= 64.dp && heightDp >= 52.dp) Text(structure.name, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }

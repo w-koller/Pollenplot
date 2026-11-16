@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.report
 
+import io.github.wkoller.pollenplot.domain.garden.StructureShape
 import android.content.Context
 import androidx.annotation.StringRes
 import io.github.wkoller.pollenplot.R
@@ -152,7 +153,9 @@ class ReportBuilder(
         val hemisphere = settings.current().hemisphere
         val plot = ReportFigure.Plot(
             s(R.string.report_plot),
-            zones.map { view -> view.zone.rect.let { PlotZone(view.zone.name, it.xCm, it.yCm, it.widthCm, it.heightCm) } },
+            // Structures first, so the zones are drawn over them.
+            views.structures.first().map { PlotZone(it.name, it.rect.xCm, it.rect.yCm, it.rect.widthCm, it.rect.heightCm, structure = true, oval = it.shape == StructureShape.OVAL) } +
+                zones.map { view -> view.zone.rect.let { PlotZone(view.zone.name, it.xCm, it.yCm, it.widthCm, it.heightCm) } },
         )
         val cutOuts = if (!pictures) {
             emptyList()

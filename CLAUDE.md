@@ -60,6 +60,8 @@ is always ready to tag.
   - `garden/`: zones, garden plants (a plant grows in any number of zones, `zoneIds`, with `quantity` in each;
     `GardenPlant.placings` and the `ManyZones` setting decide whether several zones chosen make one record or one
     in each), `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
+    `Structures` (what is built in the yard: a kind, a rectangle or an oval, and a place on the Plot's grid; a
+    structure is not a zone, holds no plants, and is not in the search index),
     `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year, from the `flowering`
     table's days: a photo's through the review card's switch, the user's through `GardenRepository.recordFlowering`
     on the plant's page, once a day for each plant) and `Pots` (a plant's pot,

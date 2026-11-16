@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.theme
 
+import io.github.wkoller.pollenplot.data.prefs.PlotBackground
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
@@ -84,3 +85,15 @@ internal val PollenplotDark = darkColorScheme(
     surfaceContainerHigh = Color(0xFF292B24),
     surfaceContainerHighest = Color(0xFF34352E),
 )
+
+/**
+ * The colour the Plot is drawn on for a background the user chose, in the light and in the dark, or null for the
+ * theme's own background. Each is pale in the light and deep in the dark, so the zones and their words stay clear.
+ */
+fun plotBackgroundColour(choice: PlotBackground, dark: Boolean): Color? = when (choice) {
+    PlotBackground.THEME -> null
+    PlotBackground.GRASS -> if (dark) Color(0xFF1F3319) else Color(0xFFD3E6B8)
+    PlotBackground.SOIL -> if (dark) Color(0xFF36281D) else Color(0xFFE4D0B9)
+    PlotBackground.SAND -> if (dark) Color(0xFF383220) else Color(0xFFF2E5C4)
+    PlotBackground.PAVING -> if (dark) Color(0xFF2B2D2C) else Color(0xFFDDDEDB)
+}

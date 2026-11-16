@@ -1,5 +1,16 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
+import io.github.wkoller.pollenplot.data.prefs.PlotBackground
+import io.github.wkoller.pollenplot.domain.garden.StructureShape
+import io.github.wkoller.pollenplot.domain.garden.StructureKind
+import io.github.wkoller.pollenplot.domain.garden.Structure
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -93,14 +104,13 @@ fun AddZoneDialog(onDismiss: () -> Unit, onAdd: (String, ZoneKind) -> Unit) {
     )
 }
 
-/** Moves and resizes the chosen zone with buttons, one 50 cm step at a time, for anyone who cannot drag. */
+/** Moves and resizes the chosen zone or structure with buttons, one 50 cm step at a time, for anyone who cannot drag. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdjustZoneSheet(zone: Zone, onDismiss: () -> Unit, onAdjust: ((ZoneRect) -> ZoneRect) -> Unit) {
-    val rect = zone.rect
+fun AdjustZoneSheet(name: String, rect: ZoneRect, onDismiss: () -> Unit, onAdjust: ((ZoneRect) -> ZoneRect) -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.adjust_title, zone.name), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+            Text(stringResource(R.string.adjust_title, name), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
             Text(stringResource(R.string.adjust_move), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ArrowButton(R.drawable.ic_arrow_back, R.string.move_left) { onAdjust { PlotLayout.nudged(it, -1, 0) } }
@@ -140,5 +150,129 @@ private fun Stepper(label: String, less: String, more: String, onLess: () -> Uni
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         FilledTonalButton(onClick = onLess) { Text(less) }
         FilledTonalButton(onClick = onMore) { Text(more) }
+    }
+}
+
+/** Asks what kind of structure to add. Its name may be left empty, and is then the kind's own, such as House. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AddStructureDialog(onDismiss: () -> Unit, onAdd: (String, StructureKind) -> Unit) {
+    var name by rememberSaveable { mutableStateOf("") }
+    var kind by rememberSaveable { mutableStateOf(StructureKind.HOUSE) }
+    val kindName = stringResource(kind.label)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.structure_add_title)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.structure_add_body), style = MaterialTheme.typography.bodyMedium)
+                StructureKindChips(kind) { kind = it }
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.structure_name_label)) },
+                    placeholder = { Text(kindName) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = { onAdd(name.ifBlank { kindName }, kind) }) { Text(stringResource(R.string.structure_add_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+/** A structure's name, kind and shape, with a button to delete it. */
+@Composable
+fun StructureDialog(structure: Structure, onDismiss: () -> Unit, onSave: (Structure) -> Unit, onDelete: () -> Unit) {
+    var name by rememberSaveable { mutableStateOf(structure.name) }
+    var kind by rememberSaveable { mutableStateOf(structure.kind) }
+    var shape by rememberSaveable { mutableStateOf(structure.shape) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.structure_details_title, structure.name)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.structure_name_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                StructureKindChips(kind) { kind = it }
+                ChipGroup(
+                    title = stringResource(R.string.structure_shape_label),
+                    options = StructureShape.entries,
+                    selected = shape,
+                    label = { stringResource(if (it == StructureShape.OVAL) R.string.structure_shape_oval else R.string.structure_shape_rectangle) },
+                    onChoose = { shape = it },
+                )
+                OutlinedButton(onClick = onDelete) {
+                    Icon(painterResource(R.drawable.ic_delete), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                    Text(stringResource(R.string.structure_delete))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(structure.copy(name = name.ifBlank { structure.name }, kind = kind, shape = shape)) }) { Text(stringResource(R.string.structure_save)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StructureKindChips(kind: StructureKind, onChoose: (StructureKind) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.structure_kind_label), style = MaterialTheme.typography.labelLarge)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StructureKind.entries.forEach { k ->
+                FilterChip(
+                    selected = kind == k,
+                    onClick = { onChoose(k) },
+                    label = { Text(stringResource(k.label)) },
+                    leadingIcon = { Icon(painterResource(k.icon), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                )
+            }
+        }
+    }
+}
+
+/** The Plot's look: the colour of the ground, and whether the grid shows while the layout is only looked at. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlotAppearanceSheet(background: PlotBackground, gridInView: Boolean, onDismiss: () -> Unit, onBackground: (PlotBackground) -> Unit, onGrid: (Boolean) -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(stringResource(R.string.plot_appearance), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp).semantics { heading() })
+            Column(Modifier.padding(horizontal = 24.dp)) {
+                ChipGroup(
+                    title = stringResource(R.string.plot_background),
+                    options = PlotBackground.entries,
+                    selected = background,
+                    label = {
+                        stringResource(
+                            when (it) {
+                                PlotBackground.THEME -> R.string.plot_background_theme
+                                PlotBackground.GRASS -> R.string.plot_background_grass
+                                PlotBackground.SOIL -> R.string.plot_background_soil
+                                PlotBackground.SAND -> R.string.plot_background_sand
+                                PlotBackground.PAVING -> R.string.plot_background_paving
+                            },
+                        )
+                    },
+                    onChoose = onBackground,
+                )
+            }
+            ListItem(
+                checked = gridInView,
+                onCheckedChange = onGrid,
+                leadingContent = { Icon(painterResource(R.drawable.ic_grid_on), contentDescription = null) },
+                supportingContent = { Text(stringResource(R.string.plot_grid_body)) },
+                trailingContent = { Switch(checked = gridInView, onCheckedChange = null) },
+            ) { Text(stringResource(R.string.plot_grid)) }
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text(stringResource(R.string.plot_done)) }
+        }
     }
 }

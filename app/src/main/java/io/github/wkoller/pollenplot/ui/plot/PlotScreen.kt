@@ -1,5 +1,13 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.UiFormat
+import io.github.wkoller.pollenplot.ui.plants.icon
+import io.github.wkoller.pollenplot.ui.plants.label
+import androidx.compose.ui.graphics.luminance
+import io.github.wkoller.pollenplot.ui.theme.plotBackgroundColour
+import io.github.wkoller.pollenplot.data.prefs.SettingsStore
+import io.github.wkoller.pollenplot.data.prefs.Settings
+import io.github.wkoller.pollenplot.domain.garden.Structure
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -98,8 +106,16 @@ fun PlotScreen(
     onOpenProblem: (String) -> Unit = {},
     habitat: HabitatViews? = null,
     todayActions: TodayActions = TodayActions(),
+    /** Where the Plot's look is kept: the ground colour and whether the grid shows. Without it the look is the usual one. */
+    settings: SettingsStore? = null,
 ) {
     val zones by views.zones.collectAsStateWithLifecycle(initialValue = null)
+    val structures by garden.structureList.collectAsStateWithLifecycle(initialValue = emptyList())
+    val look by remember(settings) { settings?.settings ?: flowOf(Settings()) }.collectAsStateWithLifecycle(initialValue = Settings())
+    var selectedStructureId by rememberSaveable { mutableStateOf<String?>(null) }
+    var addingStructure by rememberSaveable { mutableStateOf(false) }
+    var structureDetails by rememberSaveable { mutableStateOf<String?>(null) }
+    var choosingLook by rememberSaveable { mutableStateOf(false) }
     val fed by remember(feeding) { feeding?.lastFed ?: flowOf(emptyMap()) }.collectAsStateWithLifecycle(initialValue = emptyMap())
     val todayState by remember(today) { today?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
@@ -124,16 +140,25 @@ fun PlotScreen(
         notices?.show(resources.getString(words, zone.name)) { garden.moveZone(zone.id, before) }
     }
 
+    /** The same for a structure. */
+    fun changed(structure: Structure, before: ZoneRect, after: ZoneRect) {
+        if (before == after) return
+        val words = if (before.widthCm != after.widthCm || before.heightCm != after.heightCm) R.string.plot_resized else R.string.plot_moved
+        notices?.show(resources.getString(words, structure.name)) { garden.adjustStructure(structure.id) { before } }
+    }
+
     val loadedZones = zones
     val loadedPlants = plants
     val hasZones = !loadedZones.isNullOrEmpty()
     val showCanvas = hasZones && !listMode
     val selectedZone = loadedZones?.firstOrNull { it.zone.id == selectedId }?.zone
     val weeds = loadedPlants.orEmpty().count { it.isGrowing && it.weed.isWeed }
+    val selectedStructure = structures.firstOrNull { it.id == selectedStructureId }
 
     fun finishEditing() {
         editing = false
         selectedId = null
+        selectedStructureId = null
         adjusting = false
     }
     BackHandler(editing) { finishEditing() }
@@ -188,6 +213,8 @@ fun PlotScreen(
         } else {
             listOfNotNull(
                 MoreItem(stringResource(R.string.plot_edit_layout), R.drawable.ic_edit) { editing = true }.takeIf { showCanvas },
+                MoreItem(stringResource(R.string.plot_add_structure), R.drawable.ic_house) { addingStructure = true }.takeIf { hasZones },
+                MoreItem(stringResource(R.string.plot_appearance), R.drawable.ic_palette) { choosingLook = true }.takeIf { showCanvas && settings != null },
                 MoreItem(stringResource(R.string.wishlist_title), R.drawable.ic_bookmark, onWishlist),
                 MoreItem(stringResource(R.string.review_title), R.drawable.ic_rate_review, onReview),
                 MoreItem(stringResource(R.string.weeds_title), R.drawable.ic_grass, onWeeds),
@@ -199,13 +226,15 @@ fun PlotScreen(
                 Unit
             } else if (editing) {
                 EditToolbar(
-                    hasSelection = selectedZone != null,
+                    hasSelection = selectedZone != null || selectedStructure != null,
                     onAddZone = { addingZone = true },
+                    onAddStructure = { addingStructure = true },
                     onAdjust = {
-                        adjustFrom = selectedZone?.rect
+                        adjustFrom = selectedZone?.rect ?: selectedStructure?.rect
                         adjusting = true
                     },
-                    onDetails = { selectedZone?.let { onEditZone(it.id) } },
+                    onDetails = { selectedZone?.let { onEditZone(it.id) } ?: selectedStructure?.let { structureDetails = it.id } },
+                    structure = selectedStructure != null,
                     onDone = ::finishEditing,
                 )
             } else if (loadedZones != null) {
@@ -232,7 +261,29 @@ fun PlotScreen(
                             zones = loadedZones,
                             editing = editing,
                             selectedId = selectedId,
-                            onTapZone = { id -> if (editing) selectedId = id else onOpenZone(id) },
+                            onTapZone = { id ->
+                                if (editing) {
+                                    selectedId = id
+                                    selectedStructureId = null
+                                } else {
+                                    onOpenZone(id)
+                                }
+                            },
+                            structures = structures,
+                            selectedStructureId = selectedStructureId,
+                            onTapStructure = { id ->
+                                selectedStructureId = id
+                                selectedId = null
+                            },
+                            onMoveStructure = { id, rect ->
+                                scope.launch {
+                                    val structure = structures.firstOrNull { it.id == id }
+                                    val before = garden.adjustStructure(id) { rect }
+                                    if (structure != null && before != null) changed(structure, before, PlotLayout.snapped(rect))
+                                }
+                            },
+                            background = plotBackgroundColour(look.plotBackground, MaterialTheme.colorScheme.background.luminance() < 0.5f),
+                            gridInView = look.gridInView,
                             onChangeZone = { id, rect ->
                                 scope.launch {
                                     val zone = loadedZones.firstOrNull { it.zone.id == id }?.zone
@@ -249,9 +300,14 @@ fun PlotScreen(
                                 editing = true
                                 selectedId = id
                             },
-                            onTapEmpty = { if (editing) selectedId = null },
+                            onTapEmpty = {
+                                if (editing) {
+                                    selectedId = null
+                                    selectedStructureId = null
+                                }
+                            },
                         )
-                        if (editing && selectedZone == null) {
+                        if (editing && selectedZone == null && selectedStructure == null) {
                             Surface(
                                 color = MaterialTheme.colorScheme.inverseSurface,
                                 contentColor = MaterialTheme.colorScheme.inverseOnSurface,
@@ -266,6 +322,7 @@ fun PlotScreen(
             }
             else -> PlotList(
                 loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState, fed = fed,
+                structures = structures, onOpenStructure = { structureDetails = it },
                 header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), todayActions) } },
             )
         }
@@ -285,9 +342,64 @@ fun PlotScreen(
             },
         )
     }
+    if (addingStructure) {
+        AddStructureDialog(
+            onDismiss = { addingStructure = false },
+            onAdd = { name, kind ->
+                addingStructure = false
+                scope.launch {
+                    val structure = garden.addStructure(name, kind)
+                    listMode = false
+                    editing = true
+                    selectedId = null
+                    selectedStructureId = structure.id
+                }
+            },
+        )
+    }
+    structures.firstOrNull { it.id == structureDetails }?.let { structure ->
+        StructureDialog(
+            structure = structure,
+            onDismiss = { structureDetails = null },
+            onSave = { changed ->
+                structureDetails = null
+                scope.launch { garden.updateStructure(changed) }
+            },
+            onDelete = {
+                structureDetails = null
+                selectedStructureId = null
+                scope.launch {
+                    garden.deleteStructure(structure.id)
+                    notices?.show(resources.getString(R.string.structure_deleted, structure.name)) { garden.restoreStructure(structure) }
+                }
+            },
+        )
+    }
+    if (choosingLook && settings != null) {
+        PlotAppearanceSheet(
+            background = look.plotBackground,
+            gridInView = look.gridInView,
+            onDismiss = { choosingLook = false },
+            onBackground = { choice -> scope.launch { settings.update { it.copy(plotBackground = choice) } } },
+            onGrid = { on -> scope.launch { settings.update { it.copy(gridInView = on) } } },
+        )
+    }
+    if (adjusting && selectedZone == null && selectedStructure != null) {
+        AdjustZoneSheet(
+            name = selectedStructure.name,
+            rect = selectedStructure.rect,
+            onDismiss = {
+                adjusting = false
+                adjustFrom?.let { changed(selectedStructure, it, selectedStructure.rect) }
+                adjustFrom = null
+            },
+            onAdjust = { change -> scope.launch { garden.adjustStructure(selectedStructure.id, change) } },
+        )
+    }
     if (adjusting && selectedZone != null) {
         AdjustZoneSheet(
-            zone = selectedZone,
+            name = selectedZone.name,
+            rect = selectedZone.rect,
             onDismiss = {
                 adjusting = false
                 adjustFrom?.let { changed(selectedZone, it, selectedZone.rect) }
@@ -330,6 +442,8 @@ private fun PlotList(
     header: @Composable () -> Unit = {},
     water: WaterState? = null,
     fed: Map<String, LastFed> = emptyMap(),
+    structures: List<Structure> = emptyList(),
+    onOpenStructure: (String) -> Unit = {},
 ) {
     val unzoned = plants.filter { it.plant.zoneIds.isEmpty() && it.isGrowing }
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
@@ -353,6 +467,18 @@ private fun PlotList(
         if (unzoned.isNotEmpty()) {
             item { SectionHeading(stringResource(R.string.plot_unzoned)) }
             items(unzoned, key = { it.plant.id }) { view -> PlantRow(view, onClick = { onOpenPlant(view.plant.id) }) }
+        }
+        if (structures.isNotEmpty()) {
+            item { SectionHeading(stringResource(R.string.plot_structures)) }
+            items(structures, key = { it.id }) { structure ->
+                ListItem(
+                    onClick = { onOpenStructure(structure.id) },
+                    leadingContent = { Icon(painterResource(structure.kind.icon), contentDescription = null) },
+                    supportingContent = {
+                        Text(stringResource(R.string.structure_list_size, stringResource(structure.kind.label), UiFormat.metresFromCm(structure.rect.widthCm), UiFormat.metresFromCm(structure.rect.heightCm)))
+                    },
+                ) { Text(structure.name) }
+            }
         }
         item {
             ListItem(
@@ -383,17 +509,29 @@ private fun dueByZone(today: TodayState?, zones: List<ZoneView>): Map<String, In
 
 /** The floating toolbar shown while the layout is being edited. */
 @Composable
-private fun EditToolbar(hasSelection: Boolean, onAddZone: () -> Unit, onAdjust: () -> Unit, onDetails: () -> Unit, onDone: () -> Unit) {
+private fun EditToolbar(
+    hasSelection: Boolean,
+    onAddZone: () -> Unit,
+    onAddStructure: () -> Unit,
+    onAdjust: () -> Unit,
+    onDetails: () -> Unit,
+    onDone: () -> Unit,
+    /** Whether what is chosen is a structure, which names the details button. */
+    structure: Boolean = false,
+) {
     HorizontalFloatingToolbar(expanded = true) {
         IconButton(onClick = onAddZone) {
             Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.plot_add_zone))
+        }
+        IconButton(onClick = onAddStructure) {
+            Icon(painterResource(R.drawable.ic_house), contentDescription = stringResource(R.string.plot_add_structure))
         }
         IconButton(onClick = onAdjust, enabled = hasSelection) {
             Icon(painterResource(R.drawable.ic_open_with), contentDescription = stringResource(R.string.plot_adjust))
         }
         // Not the pencil, which on the top bar means editing the layout.
         IconButton(onClick = onDetails, enabled = hasSelection) {
-            Icon(painterResource(R.drawable.ic_tune), contentDescription = stringResource(R.string.plot_details))
+            Icon(painterResource(R.drawable.ic_tune), contentDescription = stringResource(if (structure) R.string.structure_details else R.string.plot_details))
         }
         TextButton(onClick = onDone) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
