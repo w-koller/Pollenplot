@@ -185,7 +185,7 @@ is always ready to tag.
   `HeatAlertCheck` for hot days ahead of stingless bee hives, `WaterPlanCheck` for watering due, `PotCareCheck` for
   pots due a flush or a look at repotting, `FeedPlanCheck` for zones due a feed, `ProblemCheck` for follow-ups and `PruneCheck` for prunes due.
 - `app/ui`: Compose screens. `ui/components` holds the shared pieces (among them `Notices`, the app's one snackbar
-  host, given through `LocalNotices` by `AppRoot` and shown by both scaffolds: `notices.show(message) { undo }`; a
+  host, given through `LocalNotices` by `AppRoot` and shown by both scaffolds: `notices.show(message) { undo }`, or with `action = "Open"` for a button that does something else; a
   screen test that wants its messages provides `rememberNotices()` itself; and `TabScaffold`'s More menu, which holds
   a tab's own `more` choices and then `LocalAppMenu`'s, pressed in tests with `fromMore` in `TestGarden.kt`; `Layout.kt`
   has `SectionHeading`, `ChipGroup`, `readable()` and `readableSides()` for a list's sides on a wide screen; a page

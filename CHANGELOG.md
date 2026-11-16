@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A find that has been added or dismissed leaves the Identify results and the Review queue, and a message says what
+  happened, with “Open” for the plant or “Undo” for a dismissal. The next find is then at hand, and when the last one
+  is decided the screen closes and the Plot shows again. Before, each decided card stayed and the way back took
+  another press. Away from home the cards stay as they were.
 - Editing a plant says “Your changes are saved”, and the plant's page shows its planted day and a status other than
   Growing, which it did not show before, so an edit to them looked as if it had not been saved. The Edit sheet opens
   at its full height and stays above the keyboard, so “Save changes” can always be reached, and it says why when a

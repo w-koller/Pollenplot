@@ -542,6 +542,7 @@ fun AppRoot(
                             onOpenModels = { navController.navigate(ModelsRoute) },
                             onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
                             onOpenFinder = { navController.navigate(WeedFinderRoute(it)) },
+                            onAllDone = { navController.popBackStack(PlotRoute, inclusive = false) },
                         )
                     }
                     composable<ReviewRoute> {
@@ -556,6 +557,7 @@ fun AppRoot(
                             onAddPhotos = { askingPlants = true },
                             onIdentify = { navController.navigate(IdentifyRoute()) },
                             onCompare = { detection, species -> navController.navigate(CompareRoute(species, detectionId = detection)) },
+                            onAllDone = { navController.popBackStack(PlotRoute, inclusive = false) },
                         )
                     }
                     composable<RhythmsRoute> {

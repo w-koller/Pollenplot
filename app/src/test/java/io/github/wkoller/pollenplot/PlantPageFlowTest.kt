@@ -125,11 +125,11 @@ class PlantPageFlowTest {
         shot("plant_chooser")
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Mum's lemon"))
         compose.onNodeWithText("Mum's lemon").performClick()
-        waitFor(hasText("Open the plant"))
+        waitFor(hasText("Added to the photos of Mum's lemon."))
         val finds = runBlocking { garden.findsOf(ids.lemon).first() }
         assertEquals("The find joins the lemon", 1, finds.size)
 
-        compose.onNodeWithText("Open the plant").performClick()
+        compose.onNodeWithText("Open").performClick()
         waitFor(hasText("Lemon"))
         // The page and the row of photos both scroll; the page is the first.
         compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Seen in flower", substring = true))

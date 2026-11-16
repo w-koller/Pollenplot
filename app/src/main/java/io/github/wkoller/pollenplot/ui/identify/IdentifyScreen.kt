@@ -130,6 +130,8 @@ fun IdentifyScreen(
     accurateReady: Boolean = false,
     /** Opens the models page, offered with the results while the accurate pack is not on the phone. */
     onOpenModels: (() -> Unit)? = null,
+    /** Runs once every find in the photo is decided, so the results close themselves. */
+    onAllDone: (() -> Unit)? = null,
     /** Native alternatives for a find that is a weed, and the wishlist to add them to. */
     help: WeedHelp? = null,
     onOpenWishlist: () -> Unit = {},
@@ -159,7 +161,7 @@ fun IdentifyScreen(
     when (val current = stage) {
         IdentifyStage.Camera -> CameraGate(model, knowledge, screenTitle, hint, onBack, chooseGroup = !checkingWeed && !field)
         IdentifyStage.Analysing -> Analysing(model)
-        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed }, help, onOpenWishlist, accurateReady, onOpenModels)
+        is IdentifyStage.Results -> Results(model, views, knowledge, settings, screenTitle, onBack, onOpenPlant, onCompare, onOpenFinder.takeIf { checkingWeed }, help, onOpenWishlist, accurateReady, onOpenModels, onAllDone)
         IdentifyStage.NoneFound -> Problem(
             screenTitle = screenTitle,
             title = if (group == LifeGroup.PLANT) stringResource(R.string.identify_none_title) else stringResource(R.string.identify_none_animal, stringResource(group.noun)),
@@ -426,9 +428,11 @@ private fun Results(
     onOpenWishlist: () -> Unit,
     accurateReady: Boolean,
     onOpenModels: (() -> Unit)?,
+    onAllDone: (() -> Unit)?,
 ) {
     val result by model.results.collectAsStateWithLifecycle()
     PhotoReviewScreen(
+        onAllDone = onAllDone,
         help = help,
         field = model.field,
         onOpenWishlist = onOpenWishlist,
