@@ -1,28 +1,39 @@
 package io.github.wkoller.pollenplot.domain.garden
 
-import org.junit.Test
 import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class PlantPlacingsTest {
     @Test
-    fun onePlantGrowsInEveryZoneChosen() {
-        assertEquals(listOf(listOf("a", "b")), GardenPlant.placings(listOf("a", "b", "a"), each = false))
+    fun onePlantInManyZonesCountedZoneByZone() {
+        val made = GardenPlant.plantings(listOf("a", "b", "a"), each = false, total = 1, counts = mapOf("a" to 2, "b" to 3))
+        assertEquals(listOf(GardenPlant.Planting(listOf("a", "b"), mapOf("a" to 2, "b" to 3), 5)), made)
     }
 
     @Test
-    fun aPlantInEachZoneIsARecordForEach() {
-        assertEquals(listOf(listOf("a"), listOf("b")), GardenPlant.placings(listOf("a", "b"), each = true))
+    fun onePlantInManyZonesGivenATotal() {
+        assertEquals(listOf(GardenPlant.Planting(listOf("a", "b"), emptyMap(), 7)), GardenPlant.plantings(listOf("a", "b"), each = false, total = 7))
     }
 
     @Test
-    fun oneZoneOrNoneIsOneRecordEitherWay() {
-        assertEquals(listOf(listOf("a")), GardenPlant.placings(listOf("a"), each = true))
-        assertEquals(listOf(emptyList<String>()), GardenPlant.placings(emptyList(), each = true))
+    fun aPlantInEachZoneTakesThatZonesCount() {
+        val made = GardenPlant.plantings(listOf("a", "b"), each = true, total = 1, counts = mapOf("a" to 4))
+        assertEquals(listOf(GardenPlant.Planting(listOf("a"), emptyMap(), 4), GardenPlant.Planting(listOf("b"), emptyMap(), 1)), made)
     }
 
     @Test
-    fun thePlantCountsItsNumberInEachZone() {
-        assertEquals(6, GardenPlant("p", "Salvia rosmarinus", null, listOf("a", "b"), quantity = 3).total)
-        assertEquals(3, GardenPlant("p", "Salvia rosmarinus", null, quantity = 3).total)
+    fun oneZoneOrNoneIsOneRecordWithItsTotal() {
+        assertEquals(listOf(GardenPlant.Planting(listOf("a"), emptyMap(), 3)), GardenPlant.plantings(listOf("a"), each = true, total = 3))
+        assertEquals(listOf(GardenPlant.Planting(emptyList(), emptyMap(), 1)), GardenPlant.plantings(emptyList(), each = false, total = 1))
+    }
+
+    @Test
+    fun aZoneCountsItsOwnOrAnEvenShareOfTheTotal() {
+        val counted = GardenPlant("p", "Salvia rosmarinus", null, listOf("a", "b"), quantity = 5, counts = mapOf("a" to 2, "b" to 3))
+        assertEquals(2, counted.countIn("a"))
+        assertEquals(3, counted.countIn("b"))
+        val total = GardenPlant("p", "Salvia rosmarinus", null, listOf("a", "b"), quantity = 5)
+        assertEquals("Five shared between two zones rounds to three", 3, total.countIn("a"))
+        assertEquals("Each zone has at least one", 1, GardenPlant("p", "Salvia rosmarinus", null, listOf("a", "b", "c")).countIn("c"))
     }
 }

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- A plant added to more than one zone is counted either zone by zone or as a total. Counted zone by zone, each zone
+  has its own number, the plant's page says how many grow where, as “Front (2), Back (3)”, and the watering plan uses
+  each zone's own number. Given a total, Pollenplot shares it evenly between the zones. A plant added as a plant in
+  each zone is counted zone by zone. A plant's count is now how many there are in all. A garden from an earlier
+  release candidate does not open in this one.
 - A chosen zone or structure has a handle on each of its four corners, and a drag on any of them resizes it from that
   corner while the opposite corner stays. Move and resize also grows or shrinks a zone from its left and top sides.
 - A structure moves under the finger every time it is dragged, with the place it will land outlined and the distance

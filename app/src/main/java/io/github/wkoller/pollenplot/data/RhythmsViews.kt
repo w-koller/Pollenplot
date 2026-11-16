@@ -76,7 +76,7 @@ class RhythmsViews(
                 title = view.title,
                 speciesName = view.plant.speciesName,
                 form = view.species?.form,
-                quantity = view.plant.total,
+                quantity = view.plant.quantity,
                 flowering = care?.flowering?.fromSouthern(hemisphere) ?: MonthSet.NONE,
                 peak = care?.peakFlowering?.fromSouthern(hemisphere) ?: MonthSet.NONE,
                 seenFlowering = FloweringSeen.lastYear(seenDays[view.plant.id].orEmpty(), today),

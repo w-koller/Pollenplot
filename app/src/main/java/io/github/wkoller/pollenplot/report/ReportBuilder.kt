@@ -123,7 +123,7 @@ class ReportBuilder(
     /** A few sentences that open the report: the garden, the animals seen in the period, the bees kept and what is due. */
     private suspend fun summary(inPeriod: (LocalDate) -> Boolean, due: List<ReportTask>): ReportSection {
         val zones = views.zones.first().size
-        val plants = views.plants.first().filter { it.isGrowing }.sumOf { it.plant.total }
+        val plants = views.plants.first().filter { it.isGrowing }.sumOf { it.plant.quantity }
         val kinds = views.sightings.first().filter { inPeriod(it.sighting.seenAt.atZone(clock.zone).toLocalDate()) }.map { it.key }.distinct().size
         val hives = bees.hives.first().size + natives.hives.first().size
         val hotelCount = hotels.hotels.first().size
@@ -176,7 +176,7 @@ class ReportBuilder(
                 listOf(
                     text(zone.name), text(s(zone.kind.label)), text(zone.sun?.let { s(it.label) }), text(zone.soil?.let { s(it.label) }),
                     ReportCell.Number(BigDecimal(zone.areaCm2).movePointLeft(4).setScale(1, java.math.RoundingMode.HALF_UP)),
-                    number(view.plants.sumOf { it.plant.quantity }),
+                    number(view.plants.sumOf { it.plant.countIn(zone.id) }),
                 )
             },
         )
@@ -186,7 +186,7 @@ class ReportBuilder(
             plants.sortedBy { it.title.lowercase() }.map { view ->
                 val care = view.care?.care
                 listOf(
-                    text(view.title), text(view.species?.name ?: view.plant.speciesName), text(view.zoneName), number(view.plant.total),
+                    text(view.title), text(view.species?.name ?: view.plant.speciesName), text(view.zoneName), number(view.plant.quantity),
                     text(care?.water?.let { s(it.label) }), text(care?.flowering?.let { UiFormat.months(it.fromSouthern(hemisphere)) }),
                     // Without the official lists on the phone, the national Weeds of National Significance flag still counts.
                     text(view.roles.joinToString(", ") { s(it.label) }), yesNo(view.weed.isWeed || view.species?.wons == true),

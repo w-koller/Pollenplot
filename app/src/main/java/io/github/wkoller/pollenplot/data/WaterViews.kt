@@ -95,7 +95,7 @@ class WaterViews(
                 plantFactorBp = care?.water?.plantFactorBp,
                 widthMm = care?.width?.let { (it.minMm + it.maxMm) / 2 },
                 form = view.species?.form,
-                quantity = view.plant.quantity,
+                quantity = view.plant.countIn(zoneId),
                 soil = byZone[zoneId]?.soil,
             )
         }

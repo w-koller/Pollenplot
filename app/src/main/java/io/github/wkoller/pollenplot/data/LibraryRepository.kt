@@ -37,11 +37,12 @@ class LibraryRepository(private val db: PollenplotDatabase, private val garden: 
     }
 
     /**
-     * Adds each of [picks] to [zoneIds]: one plant in all of them, or with [each] one in every zone, [quantity] in
-     * each zone. Returns the plants made, so the whole addition can be undone.
+     * Adds each of [picks] to [zoneIds]: one plant in all of them, or with [each] one in every zone. [counts] are how
+     * many of each plant go in each zone when counted zone by zone; otherwise [quantity] is how many of each in all.
+     * Returns the plants made, so the whole addition can be undone.
      */
-    suspend fun addToZones(picks: List<LibraryPick>, zoneIds: List<String>, each: Boolean, quantity: Int): List<String> = db.withTransaction {
-        picks.flatMap { pick -> garden.addPlants(pick.speciesName, pick.customName, zoneIds, each, quantity, thumbnail = pick.thumbnail) }.map { it.id }
+    suspend fun addToZones(picks: List<LibraryPick>, zoneIds: List<String>, each: Boolean, quantity: Int, counts: Map<String, Int>? = null): List<String> = db.withTransaction {
+        picks.flatMap { pick -> garden.addPlants(pick.speciesName, pick.customName, zoneIds, each, quantity, thumbnail = pick.thumbnail, counts = counts) }.map { it.id }
     }
 
     suspend fun undoAdd(plantIds: List<String>) = db.withTransaction { plantIds.forEach { garden.deletePlant(it) } }

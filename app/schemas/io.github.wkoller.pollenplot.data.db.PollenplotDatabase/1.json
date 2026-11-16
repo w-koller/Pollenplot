@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "06a353e71a9bae068a9664f5c13458ec",
+    "identityHash": "068102dd92328da6ae4e9b4a66df9db1",
     "entities": [
       {
         "tableName": "zones",
@@ -190,7 +190,7 @@
       },
       {
         "tableName": "plant_zones",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`plantId` TEXT NOT NULL, `zoneId` TEXT NOT NULL, PRIMARY KEY(`plantId`, `zoneId`), FOREIGN KEY(`plantId`) REFERENCES `plants`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`zoneId`) REFERENCES `zones`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`plantId` TEXT NOT NULL, `zoneId` TEXT NOT NULL, `quantity` INTEGER, PRIMARY KEY(`plantId`, `zoneId`), FOREIGN KEY(`plantId`) REFERENCES `plants`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`zoneId`) REFERENCES `zones`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "plantId",
@@ -203,6 +203,11 @@
             "columnName": "zoneId",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "quantity",
+            "columnName": "quantity",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -3371,7 +3376,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '06a353e71a9bae068a9664f5c13458ec')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '068102dd92328da6ae4e9b4a66df9db1')"
     ]
   }
 }

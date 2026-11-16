@@ -131,13 +131,13 @@ fun AddPlantScreen(
                 customName = null
             },
             manyZones = manyZones,
-            onSave = { zoneIds, each, quantity, nickname ->
+            onSave = { zoneIds, each, quantity, counts, nickname ->
                 val speciesName = species?.name
                 val name = if (species == null) customName else nickname
                 chosenSpecies = null
                 customName = null
                 scope.launch {
-                    val id = garden.addPlants(speciesName, name, zoneIds, each, quantity).first().id
+                    val id = garden.addPlants(speciesName, name, zoneIds, each, quantity, counts = counts).first().id
                     // The database finishes on its own thread; going on to the plant has to happen on the main one.
                     withContext(Dispatchers.Main) { onAdded(id) }
                 }
@@ -161,11 +161,11 @@ fun AddToGardenSheet(
     askNickname: Boolean,
     onDismiss: () -> Unit,
     manyZones: ManyZones = ManyZones.ASK,
-    onSave: (zoneIds: List<String>, each: Boolean, quantity: Int, nickname: String?) -> Unit,
+    onSave: (zoneIds: List<String>, each: Boolean, quantity: Int, counts: Map<String, Int>?, nickname: String?) -> Unit,
 ) {
     var zoneIds by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(listOfNotNull(initialZoneId)) }
     var each by rememberSaveable { mutableStateOf(false) }
-    var quantity by rememberSaveable { mutableIntStateOf(1) }
+    var count by rememberSaveable(stateSaver = PlantCount.Saver) { mutableStateOf(PlantCount()) }
     var nickname by rememberSaveable { mutableStateOf("") }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
@@ -175,7 +175,7 @@ fun AddToGardenSheet(
             Text(stringResource(R.string.add_sheet_title, title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
             ZonesChooser(zones, zoneIds) { zoneIds = it }
             ManyZonesChoice(zoneIds.size, manyZones, each) { each = it }
-            QuantityStepper(quantity, title = if (zoneIds.size > 1) stringResource(R.string.add_sheet_quantity_each) else null) { quantity = it }
+            PlantCounts(zones, zoneIds, eachZone(manyZones, each), count) { count = it }
             if (askNickname) {
                 OutlinedTextField(
                     value = nickname,
@@ -185,7 +185,13 @@ fun AddToGardenSheet(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Button(onClick = { onSave(zoneIds, eachZone(manyZones, each), quantity, nickname.trim().ifBlank { null }) }, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = {
+                    val split = eachZone(manyZones, each)
+                    onSave(zoneIds, split, count.total, count.countsFor(zoneIds, split), nickname.trim().ifBlank { null })
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text(stringResource(R.string.add_sheet_save))
             }
         }

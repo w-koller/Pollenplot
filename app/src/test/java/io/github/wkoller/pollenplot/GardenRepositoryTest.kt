@@ -501,9 +501,18 @@ class GardenRepositoryTest {
         val front = garden.addZone("Front", ZoneKind.GARDEN_BED)
         val back = garden.addZone("Back", ZoneKind.GARDEN_BED)
 
-        val one = garden.addPlants("Salvia rosmarinus", null, listOf(front.id, back.id), each = false, quantity = 2).single()
+        // Counted zone by zone: two in the front and three in the back, five in all.
+        val one = garden.addPlants("Salvia rosmarinus", null, listOf(front.id, back.id), each = false, counts = mapOf(front.id to 2, back.id to 3)).single()
         assertEquals(listOf(front.id, back.id), garden.plant(one.id)!!.zoneIds)
-        assertEquals("Two in each of two zones", 4, garden.plant(one.id)!!.total)
+        assertEquals(5, garden.plant(one.id)!!.quantity)
+        assertEquals(mapOf(front.id to 2, back.id to 3), garden.plant(one.id)!!.counts)
+        assertEquals(3, garden.plant(one.id)!!.countIn(back.id))
+
+        // Given a total, the zones share it.
+        val total = garden.addPlants("Westringia fruticosa", null, listOf(front.id, back.id), each = false, quantity = 6).single()
+        assertEquals(6, garden.plant(total.id)!!.quantity)
+        assertEquals(emptyMap<String, Int>(), garden.plant(total.id)!!.counts)
+        assertEquals(3, garden.plant(total.id)!!.countIn(front.id))
         assertTrue("Found by either zone", garden.search("rosemary back").any { it.recordId == one.id })
 
         val each = garden.addPlants("Lavandula dentata", null, listOf(front.id, back.id), each = true)
@@ -513,6 +522,6 @@ class GardenRepositoryTest {
         garden.deleteZone(back.id)
         assertEquals(listOf(front.id), garden.plant(one.id)!!.zoneIds)
         assertEquals(emptyList<String>(), garden.plant(each[1].id)!!.zoneIds)
-        assertEquals(3, garden.plantList.first().size)
+        assertEquals(4, garden.plantList.first().size)
     }
 }

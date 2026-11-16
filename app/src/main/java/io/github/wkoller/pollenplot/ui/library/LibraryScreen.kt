@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.library
 
+import io.github.wkoller.pollenplot.ui.plants.PlantCounts
+import io.github.wkoller.pollenplot.ui.plants.PlantCount
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -150,9 +152,9 @@ fun LibraryScreen(
     }
 
     /** Adds plants to zones and says so, with Undo for several and Open for one. */
-    fun add(picks: List<LibraryRow>, zoneIds: List<String>, each: Boolean, quantity: Int, nickname: String? = null) {
+    fun add(picks: List<LibraryRow>, zoneIds: List<String>, each: Boolean, quantity: Int, counts: Map<String, Int>?, nickname: String? = null) {
         scope.launch {
-            val ids = library.addToZones(picks.map { LibraryPick(it.speciesName, nickname ?: it.customName, it.thumbnail) }, zoneIds, each, quantity)
+            val ids = library.addToZones(picks.map { LibraryPick(it.speciesName, nickname ?: it.customName, it.thumbnail) }, zoneIds, each, quantity, counts)
             val names = zones.associate { it.zone.id to it.zone.name }
             val place = zoneIds.mapNotNull(names::get).joinToString(", ").ifEmpty { null }
             val single = picks.singleOrNull()
@@ -167,8 +169,8 @@ fun LibraryScreen(
 
     if (choosingZones && chosen.isNotEmpty()) {
         BackHandler { choosingZones = false }
-        AddManyScreen(chosen.size, zones, initialZoneId, current, onBack = { choosingZones = false }) { zoneIds, each, quantity ->
-            add(chosen, zoneIds, each, quantity)
+        AddManyScreen(chosen.size, zones, initialZoneId, current, onBack = { choosingZones = false }) { zoneIds, each, quantity, counts ->
+            add(chosen, zoneIds, each, quantity, counts)
             leaveSelection()
         }
         return
@@ -293,9 +295,9 @@ fun LibraryScreen(
             askNickname = row.speciesName != null,
             onDismiss = { adding = null },
             manyZones = current.manyZones,
-            onSave = { zoneIds, each, quantity, nickname ->
+            onSave = { zoneIds, each, quantity, counts, nickname ->
                 adding = null
-                add(listOf(row), zoneIds, each, quantity, nickname)
+                add(listOf(row), zoneIds, each, quantity, counts, nickname)
             },
         )
     }
@@ -346,12 +348,12 @@ private fun AddManyScreen(
     initialZoneId: String?,
     settings: Settings,
     onBack: () -> Unit,
-    onAdd: (zoneIds: List<String>, each: Boolean, quantity: Int) -> Unit,
+    onAdd: (zoneIds: List<String>, each: Boolean, quantity: Int, counts: Map<String, Int>?) -> Unit,
 ) {
     val known = zones.map { it.zone.id }.toSet()
     var zoneIds by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(listOfNotNull((initialZoneId ?: settings.lastZoneId)?.takeIf { it in known })) }
     var each by rememberSaveable { mutableStateOf(false) }
-    var quantity by rememberSaveable { mutableIntStateOf(1) }
+    var howMany by rememberSaveable(stateSaver = PlantCount.Saver) { mutableStateOf(PlantCount()) }
     DetailScaffold(title = pluralStringResource(R.plurals.library_add_title, count, count), onBack = onBack) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp).readable(),
@@ -359,8 +361,16 @@ private fun AddManyScreen(
         ) {
             ZonesChooser(zones, zoneIds) { zoneIds = it }
             ManyZonesChoice(zoneIds.size, settings.manyZones, each) { each = it }
-            QuantityStepper(quantity, title = stringResource(if (zoneIds.size > 1) R.string.library_quantity_each_zone else R.string.library_quantity)) { quantity = it }
-            Button(onClick = { onAdd(zoneIds, eachZone(settings.manyZones, each), quantity) }, modifier = Modifier.fillMaxWidth()) {
+            // The count is for each plant chosen.
+            Text(stringResource(R.string.library_count_each_plant), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            PlantCounts(zones, zoneIds, eachZone(settings.manyZones, each), howMany) { howMany = it }
+            Button(
+                onClick = {
+                    val split = eachZone(settings.manyZones, each)
+                    onAdd(zoneIds, split, howMany.total, howMany.countsFor(zoneIds, split))
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text(stringResource(R.string.add_sheet_save))
             }
         }

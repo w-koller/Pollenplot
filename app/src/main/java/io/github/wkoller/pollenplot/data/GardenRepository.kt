@@ -89,23 +89,23 @@ class GardenRepository(
 
     val zoneList: Flow<List<Zone>> = zones.observeAll().map { list -> list.map { it.toDomain() } }
     val plantList: Flow<List<GardenPlant>> = combine(plants.observeAll(), plants.observeZones()) { list, places ->
-        val zonesOf = places.groupBy({ it.plantId }, { it.zoneId })
-        list.map { it.toDomain(zonesOf[it.id].orEmpty()) }
+        val placesOf = places.groupBy { it.plantId }
+        list.map { it.toDomain(placesOf[it.id].orEmpty()) }
     }
 
     /** A stored plant with the zones it grows in. */
-    private suspend fun PlantEntity.full(): GardenPlant = toDomain(plants.zonesOf(id))
+    private suspend fun PlantEntity.full(): GardenPlant = toDomain(plants.placesOf(id))
 
     private suspend fun allPlants(): List<GardenPlant> {
-        val zonesOf = plants.allZones().groupBy({ it.plantId }, { it.zoneId })
-        return plants.all().map { it.toDomain(zonesOf[it.id].orEmpty()) }
+        val placesOf = plants.allZones().groupBy { it.plantId }
+        return plants.all().map { it.toDomain(placesOf[it.id].orEmpty()) }
     }
 
     /** Stores a plant and the zones it grows in, leaving out a zone that is no longer in the garden. */
     private suspend fun store(plant: GardenPlant, createdAt: Long, updatedAt: Long) {
         plants.upsert(plant.toEntity(createdAt, updatedAt))
         plants.deleteZones(plant.id)
-        plants.insertZones(plant.zoneIds.distinct().filter { zones.get(it) != null }.map { PlantZoneEntity(plant.id, it) })
+        plants.insertZones(plant.zoneIds.distinct().filter { zones.get(it) != null }.map { PlantZoneEntity(plant.id, it, plant.counts[it]) })
     }
 
     private fun now() = clock.millis()
@@ -205,7 +205,8 @@ class GardenRepository(
 
     /**
      * Adds a plant to several zones at once: one record growing in all of [zoneIds], or with [each] a record of its own
-     * in every zone. [quantity] is how many there are in each zone.
+     * in every zone. [counts] are how many go in each zone when the user counted zone by zone; otherwise [quantity] is
+     * how many there are in all, or with [each] how many go in each zone.
      */
     suspend fun addPlants(
         speciesName: String?,
@@ -215,10 +216,14 @@ class GardenRepository(
         quantity: Int = 1,
         plantedOn: LocalDate? = null,
         thumbnail: String? = null,
+        counts: Map<String, Int>? = null,
     ): List<GardenPlant> = db.withTransaction {
         val time = now()
-        GardenPlant.placings(zoneIds, each).map { placed ->
-            val plant = GardenPlant(UUID.randomUUID().toString(), speciesName, customName?.trim()?.ifBlank { null }, placed, quantity, plantedOn, thumbnail = thumbnail)
+        GardenPlant.plantings(zoneIds, each, quantity, counts).map { placed ->
+            val plant = GardenPlant(
+                UUID.randomUUID().toString(), speciesName, customName?.trim()?.ifBlank { null }, placed.zoneIds, placed.quantity, plantedOn,
+                thumbnail = thumbnail, counts = placed.counts,
+            )
             store(plant, time, time)
             index(plant)
             plant
@@ -448,9 +453,12 @@ class GardenRepository(
         each: Boolean,
         quantity: Int = 1,
         flowering: Boolean,
+        counts: Map<String, Int>? = null,
     ): GardenPlant = db.withTransaction {
         val detection = detection(detectionId) ?: error("No detection $detectionId")
-        val plant = addPlants(speciesName, customName, zoneIds, each, quantity, thumbnail = detection.thumbnail).first()
+        // A find added to several zones as one plant counts one in each, unless the user counted them.
+        val counted = counts ?: zoneIds.takeIf { it.size > 1 && !each }?.associateWith { 1 }
+        val plant = addPlants(speciesName, customName, zoneIds, each, quantity, thumbnail = detection.thumbnail, counts = counted).first()
         detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plant.id, null)
         recordChoice(detection, speciesName, plant.customName)
         if (flowering) recordFlowering(plant.id, detection)

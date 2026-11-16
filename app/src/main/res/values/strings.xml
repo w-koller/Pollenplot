@@ -611,8 +611,7 @@
     <string name="library_add_selected">Add to zones (%1$d)</string>
     <string name="library_save_selected">Save (%1$d)</string>
     <string name="library_remove_selected">Remove (%1$d)</string>
-    <string name="library_quantity">How many of each plant</string>
-    <string name="library_quantity_each_zone">How many of each plant in each zone</string>
+    <string name="library_count_each_plant">The count below is for each plant you chose.</string>
     <string name="library_added_one">Added %1$s to your garden.</string>
     <string name="library_added_one_zone">Added %1$s to %2$s.</string>
     <string name="settings_library_photos">Photos in the plant library</string>
@@ -947,6 +946,12 @@
     <string name="add_sheet_zone">Zone</string>
     <string name="add_sheet_zones">Zones</string>
     <string name="add_sheet_quantity_each">How many in each zone</string>
+    <string name="count_how">How you count them</string>
+    <string name="count_by_zone">In each zone</string>
+    <string name="count_total">As a total</string>
+    <string name="count_each_zone_title">How many in each zone</string>
+    <string name="count_total_title">How many in all</string>
+    <string name="count_total_body">Pollenplot shares a total evenly between the zones when it works out watering for each zone.</string>
     <string name="many_zones_title">In these zones there is</string>
     <string name="many_zones_one">One plant in many zones</string>
     <string name="many_zones_each">One plant in each zone</string>

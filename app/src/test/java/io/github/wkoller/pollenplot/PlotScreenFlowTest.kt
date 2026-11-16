@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot
 
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import org.junit.Assert.assertTrue
 import androidx.compose.ui.geometry.Offset
 import io.github.wkoller.pollenplot.data.prefs.PlotBackground
@@ -136,12 +137,18 @@ class PlotScreenFlowTest {
         // With two zones chosen, Pollenplot asks what they hold.
         waitFor(hasText("In these zones there is"))
         shot("add_plant_two_zones")
-        compose.onNodeWithText("One plant in each zone").performClick()
+        // One plant in both zones, counted zone by zone: two in the front strip and three in the veg patch.
+        compose.onNodeWithText("In each zone").performScrollTo().performClick()
+        compose.onAllNodesWithContentDescription("One more")[0].performClick()
+        compose.onAllNodesWithContentDescription("One more")[1].performClick()
+        compose.onAllNodesWithContentDescription("One more")[1].performClick()
+        shot("add_plant_counts")
         compose.onNodeWithText("Add to garden").performScrollTo().performClick()
-        waitFor(hasText("In Front Native Strip"))
-        val added = runBlocking { app.container.garden.plantList.first() }.filter { it.speciesName == "Melaleuca viminalis" }
-        assertEquals("A plant of its own in each zone", 2, added.size)
-        assertEquals(2, added.flatMap { it.zoneIds }.distinct().size)
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.plantList.first() }.any { it.speciesName == "Melaleuca viminalis" } }
+        val added = runBlocking { app.container.garden.plantList.first() }.single { it.speciesName == "Melaleuca viminalis" }
+        assertEquals(5, added.quantity)
+        assertEquals(listOf(2, 3), added.zoneIds.map { added.counts[it] })
+        waitFor(hasText("In Front Native Strip (2), Veg Patch (3)", substring = true))
     }
 
     @Test
