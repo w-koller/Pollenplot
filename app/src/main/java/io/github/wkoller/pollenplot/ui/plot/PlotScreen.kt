@@ -288,6 +288,8 @@ fun PlotScreen(
                             },
                             background = plotBackgroundColour(look.plotBackground, MaterialTheme.colorScheme.background.luminance() < 0.5f),
                             gridInView = look.gridInView,
+                            sunOverlay = look.sunOverlay,
+                            north = look.plotNorth,
                             onChangeZone = { id, rect ->
                                 scope.launch {
                                     val zone = loadedZones.firstOrNull { it.zone.id == id }?.zone
@@ -386,6 +388,10 @@ fun PlotScreen(
             onDismiss = { choosingLook = false },
             onBackground = { choice -> scope.launch { settings.update { it.copy(plotBackground = choice) } } },
             onGrid = { on -> scope.launch { settings.update { it.copy(gridInView = on) } } },
+            sunOverlay = look.sunOverlay,
+            onSunOverlay = { on -> scope.launch { settings.update { it.copy(sunOverlay = on) } } },
+            north = look.plotNorth,
+            onNorth = { side -> scope.launch { settings.update { it.copy(plotNorth = side) } } },
         )
     }
     if (adjusting && selectedZone == null && selectedStructure != null) {

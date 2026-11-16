@@ -165,7 +165,7 @@ class AppContainer(
         fauna = { knowledge.awaitFauna() },
     )
     val water = WaterRepository(this.database, this.web, clock)
-    val views = GardenViews(garden, knowledge, settingsStore, weeds.data, water.lines)
+    val views = GardenViews(garden, knowledge, settingsStore, weeds.data, water.lines) { LocalDate.now(clock) }
     val beeViews = BeeViews(bees, nativeBees, hotels, garden, settingsStore, clock)
     val guides = GuideLibrary(appContext)
     val rhythms = RhythmsViews(garden, views, bees, nativeBees, knowledge, settingsStore, clock)

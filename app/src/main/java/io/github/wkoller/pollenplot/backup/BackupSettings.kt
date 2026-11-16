@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.backup
 
+import io.github.wkoller.pollenplot.data.prefs.NorthSide
 import io.github.wkoller.pollenplot.data.prefs.PlotBackground
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.data.prefs.Settings
@@ -39,6 +40,8 @@ data class BackupSettings(
     val petsAtHome: Boolean? = null,
     val plotBackground: String? = null,
     val gridInView: Boolean? = null,
+    val sunOverlay: Boolean? = null,
+    val plotNorth: String? = null,
     val manyZones: String? = null,
     val potReminders: Boolean? = null,
     val feedReminders: Boolean? = null,
@@ -83,6 +86,8 @@ data class BackupSettings(
             petsAtHome = petsAtHome ?: current.petsAtHome,
             plotBackground = PlotBackground.entries.firstOrNull { it.name == plotBackground } ?: current.plotBackground,
             gridInView = gridInView ?: current.gridInView,
+            sunOverlay = sunOverlay ?: current.sunOverlay,
+            plotNorth = NorthSide.entries.firstOrNull { it.name == plotNorth } ?: current.plotNorth,
             manyZones = ManyZones.entries.firstOrNull { it.name == manyZones } ?: current.manyZones,
         )
     }
@@ -121,6 +126,8 @@ data class BackupSettings(
             petsAtHome = settings.petsAtHome,
             plotBackground = settings.plotBackground.name,
             gridInView = settings.gridInView,
+            sunOverlay = settings.sunOverlay,
+            plotNorth = settings.plotNorth.name,
             manyZones = settings.manyZones.name,
         )
 

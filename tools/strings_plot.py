@@ -10,6 +10,16 @@ STRINGS = {
     "plot_background_sand": "Sand",
     "plot_background_paving": "Paving",
     "plot_grid": "Show grid lines",
+    "plot_sun_overlay": "Show sun and shade",
+    "plot_sun_overlay_body": "Each zone is washed with a colour for its sun or shade, with a key on the plot. A zone "
+    "without a sun setting stays as it is.",
+    "plot_north": "North is towards the",
+    "plot_north_top": "Top",
+    "plot_north_right": "Right",
+    "plot_north_bottom": "Bottom",
+    "plot_north_left": "Left",
+    "plot_north_description": "North arrow. North is towards the %1$s of the plot.",
+    "plot_sun_key": "Sun and shade",
     "plot_grid_body": "The grid always shows while you edit the layout. This switch is for the rest of the time.",
     "plot_structures": "Structures",
     "structure_add_title": "Add a structure",
@@ -172,6 +182,7 @@ STRINGS = {
 }
 
 PLURALS = {
+    "zone_tile_in_flower": {"one": "%d in flower", "other": "%d in flower"},
     "zone_tile_due": {"one": "%1$d job due today", "other": "%1$d jobs due today"},
     "zone_preview_more": {"one": "and %1$d more plant", "other": "and %1$d more plants"},
 }

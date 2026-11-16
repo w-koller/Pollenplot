@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.data.prefs.NorthSide
 import io.github.wkoller.pollenplot.domain.garden.Corner
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Switch
@@ -258,7 +259,17 @@ private fun StructureKindChips(kind: StructureKind, onChoose: (StructureKind) ->
 /** The Plot's look: the colour of the ground, and whether the grid shows while the layout is only looked at. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlotAppearanceSheet(background: PlotBackground, gridInView: Boolean, onDismiss: () -> Unit, onBackground: (PlotBackground) -> Unit, onGrid: (Boolean) -> Unit) {
+fun PlotAppearanceSheet(
+    background: PlotBackground,
+    gridInView: Boolean,
+    onDismiss: () -> Unit,
+    onBackground: (PlotBackground) -> Unit,
+    onGrid: (Boolean) -> Unit,
+    sunOverlay: Boolean = false,
+    onSunOverlay: (Boolean) -> Unit = {},
+    north: NorthSide = NorthSide.TOP,
+    onNorth: (NorthSide) -> Unit = {},
+) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(stringResource(R.string.plot_appearance), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp).semantics { heading() })
@@ -288,6 +299,31 @@ fun PlotAppearanceSheet(background: PlotBackground, gridInView: Boolean, onDismi
                 supportingContent = { Text(stringResource(R.string.plot_grid_body)) },
                 trailingContent = { Switch(checked = gridInView, onCheckedChange = null) },
             ) { Text(stringResource(R.string.plot_grid)) }
+            ListItem(
+                checked = sunOverlay,
+                onCheckedChange = onSunOverlay,
+                leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
+                supportingContent = { Text(stringResource(R.string.plot_sun_overlay_body)) },
+                trailingContent = { Switch(checked = sunOverlay, onCheckedChange = null) },
+            ) { Text(stringResource(R.string.plot_sun_overlay)) }
+            Column(Modifier.padding(horizontal = 24.dp)) {
+                ChipGroup(
+                    title = stringResource(R.string.plot_north),
+                    options = NorthSide.entries,
+                    selected = north,
+                    label = {
+                        stringResource(
+                            when (it) {
+                                NorthSide.TOP -> R.string.plot_north_top
+                                NorthSide.RIGHT -> R.string.plot_north_right
+                                NorthSide.BOTTOM -> R.string.plot_north_bottom
+                                NorthSide.LEFT -> R.string.plot_north_left
+                            },
+                        )
+                    },
+                    onChoose = onNorth,
+                )
+            }
             Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text(stringResource(R.string.plot_done)) }
         }
     }

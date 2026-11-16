@@ -13,4 +13,14 @@ object FloweringSeen {
         val since = today.minusYears(1)
         return MonthSet.of(days.filter { it.isAfter(since) && !it.isAfter(today) }.map { it.month })
     }
+
+    /**
+     * Whether a plant is likely in flower now: [expected], its flowering months in the garden's own months, holds this
+     * month, or it was seen in flower within the last [RECENT_DAYS] days. A plant with neither is not counted.
+     */
+    fun inFlowerNow(expected: MonthSet?, seen: Iterable<LocalDate>, today: LocalDate): Boolean =
+        expected?.contains(today.month) == true || seen.any { !it.isAfter(today) && it.isAfter(today.minusDays(RECENT_DAYS)) }
+
+    /** How long a day seen in flower counts as flowering now, Pollenplot's choice of about a month. */
+    const val RECENT_DAYS = 30L
 }

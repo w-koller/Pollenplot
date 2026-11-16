@@ -27,6 +27,9 @@ enum class ThemeChoice { SYSTEM, LIGHT, DARK }
 /** What the Plot is drawn on: the theme's own background, or a colour like the ground of the yard. */
 enum class PlotBackground { THEME, GRASS, SOIL, SAND, PAVING }
 
+/** Which side of the Plot, as it is drawn, faces north, for the north arrow. */
+enum class NorthSide { TOP, RIGHT, BOTTOM, LEFT }
+
 data class Settings(
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     /** Use the colours of the phone's wallpaper instead of Pollenplot's leaf and pollen colours. */
@@ -96,6 +99,9 @@ data class Settings(
     val plotBackground: PlotBackground = PlotBackground.THEME,
     /** Whether the Plot's grid lines show while the layout is only looked at. They always show while it is edited. */
     val gridInView: Boolean = true,
+    /** Whether each zone is washed with a colour for its sun or shade, with a legend. */
+    val sunOverlay: Boolean = false,
+    val plotNorth: NorthSide = NorthSide.TOP,
     /** What adding a plant to several zones makes: one plant in them all, one in each, or a question each time. */
     val manyZones: ManyZones = ManyZones.ASK,
 ) {
@@ -158,6 +164,8 @@ class SettingsStore(context: Context) {
         val libraryPhotos = booleanPreferencesKey("library_photos")
         val plotBackground = stringPreferencesKey("plot_background")
         val gridInView = booleanPreferencesKey("grid_in_view")
+        val sunOverlay = booleanPreferencesKey("sun_overlay")
+        val plotNorth = stringPreferencesKey("plot_north")
         val manyZones = stringPreferencesKey("many_zones")
     }
 
@@ -211,6 +219,8 @@ class SettingsStore(context: Context) {
             libraryPhotos = this[Keys.libraryPhotos],
             plotBackground = this[Keys.plotBackground]?.let { runCatching { PlotBackground.valueOf(it) }.getOrNull() } ?: defaults.plotBackground,
             gridInView = this[Keys.gridInView] ?: defaults.gridInView,
+            sunOverlay = this[Keys.sunOverlay] ?: defaults.sunOverlay,
+            plotNorth = this[Keys.plotNorth]?.let { runCatching { NorthSide.valueOf(it) }.getOrNull() } ?: defaults.plotNorth,
             manyZones = this[Keys.manyZones]?.let { runCatching { ManyZones.valueOf(it) }.getOrNull() } ?: defaults.manyZones,
         )
     }
@@ -255,6 +265,8 @@ class SettingsStore(context: Context) {
         settings.libraryPhotos?.let { this[Keys.libraryPhotos] = it } ?: remove(Keys.libraryPhotos)
         this[Keys.plotBackground] = settings.plotBackground.name
         this[Keys.gridInView] = settings.gridInView
+        this[Keys.sunOverlay] = settings.sunOverlay
+        this[Keys.plotNorth] = settings.plotNorth.name
         this[Keys.manyZones] = settings.manyZones.name
     }
 
