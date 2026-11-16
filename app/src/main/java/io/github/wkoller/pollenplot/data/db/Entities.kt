@@ -38,7 +38,7 @@ data class PlantEntity(
     @PrimaryKey val id: String,
     val speciesName: String?,
     val customName: String?,
-    /** How many there are in each of the plant's zones, which are in [PlantZoneEntity]. */
+    /** How many there are in all; the plant's zones, and how many are in each, are in [PlantZoneEntity]. */
     val quantity: Int,
     val plantedOnEpochDay: Long?,
     val status: String,
@@ -49,7 +49,10 @@ data class PlantEntity(
     val updatedAt: Long,
 )
 
-/** A zone a plant grows in. A plant may have several, and each goes when its plant or its zone does. */
+/**
+ * A zone a plant grows in, with how many grow there when the user counted zone by zone ([quantity] is null when they
+ * gave a total). A plant may have several, and each goes when its plant or its zone does.
+ */
 @Entity(
     tableName = "plant_zones",
     primaryKeys = ["plantId", "zoneId"],
@@ -59,7 +62,7 @@ data class PlantEntity(
     ],
     indices = [Index("zoneId")],
 )
-data class PlantZoneEntity(val plantId: String, val zoneId: String)
+data class PlantZoneEntity(val plantId: String, val zoneId: String, val quantity: Int? = null)
 
 /** A photo the app has kept, downscaled into its own storage so records survive if the original is deleted. */
 @Entity(tableName = "photos", indices = [Index("contentHash")])

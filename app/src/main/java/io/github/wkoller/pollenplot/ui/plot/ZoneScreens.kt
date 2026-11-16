@@ -185,7 +185,7 @@ fun ZoneDetailScreen(
             if (loaded.plants.isEmpty()) {
                 item { Text(stringResource(R.string.zone_no_plants), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
             }
-            items(loaded.plants, key = { it.plant.id }) { plant -> PlantRow(plant, onClick = { onOpenPlant(plant.plant.id) }, showZone = false) }
+            items(loaded.plants, key = { it.plant.id }) { plant -> PlantRow(plant, onClick = { onOpenPlant(plant.plant.id) }, showZone = false, zoneId = zoneId) }
             item {
                 Button(onClick = { if (onAddByPhoto == null && onAddFromGallery == null) onAddPlant() else addingPlant = true }, modifier = Modifier.padding(16.dp)) {
                     Icon(painterResource(R.drawable.ic_add), contentDescription = null)

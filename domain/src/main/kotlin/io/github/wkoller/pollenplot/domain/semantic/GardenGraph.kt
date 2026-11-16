@@ -58,7 +58,7 @@ object GardenGraph {
             .text(iri, Vocab.DWC + "genus", species?.genus)
             .text(iri, Vocab.DWC + "vernacularName", species?.common?.firstOrNull())
             .text(iri, Vocab.SCHEMA + "name", plant.customName)
-            .integer(iri, Vocab.DWC + "individualCount", plant.total.toLong())
+            .integer(iri, Vocab.DWC + "individualCount", plant.quantity.toLong())
             .text(iri, Vocab.DWC + "occurrenceStatus", if (plant.status.name == "GROWING") "present" else "absent")
             .date(iri, Vocab.PP + "plantedOn", plant.plantedOn?.toString())
             .also { graph ->

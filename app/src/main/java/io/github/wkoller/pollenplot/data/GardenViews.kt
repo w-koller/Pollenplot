@@ -156,7 +156,9 @@ class GardenViews(
                 weed.isWeed -> listOf(EcoRole.WEED_RISK)
                 else -> emptyList()
             }
-            return PlantView(plant, species, care, roles, plant.zoneIds.mapNotNull(zoneNames::get).joinToString(", ").ifEmpty { null }, weed)
+            // A plant counted zone by zone says how many grow in each, as "Front (2), Back (3)".
+            val places = plant.zoneIds.mapNotNull { id -> zoneNames[id]?.let { name -> plant.counts[id]?.takeIf { plant.zoneIds.size > 1 }?.let { "$name ($it)" } ?: name } }
+            return PlantView(plant, species, care, roles, places.joinToString(", ").ifEmpty { null }, weed)
         }
     }
 }

@@ -36,9 +36,9 @@ interface PlantDao {
     @Query("SELECT plants.* FROM plants JOIN plant_zones ON plant_zones.plantId = plants.id WHERE plant_zones.zoneId = :zoneId")
     suspend fun inZone(zoneId: String): List<PlantEntity>
 
-    /** The zones a plant grows in, in the order they were chosen. */
-    @Query("SELECT zoneId FROM plant_zones WHERE plantId = :plantId ORDER BY rowid")
-    suspend fun zonesOf(plantId: String): List<String>
+    /** The zones a plant grows in, in the order they were chosen, with how many grow in each when counted. */
+    @Query("SELECT * FROM plant_zones WHERE plantId = :plantId ORDER BY rowid")
+    suspend fun placesOf(plantId: String): List<PlantZoneEntity>
 
     @Query("SELECT * FROM plant_zones ORDER BY rowid")
     suspend fun allZones(): List<PlantZoneEntity>

@@ -42,8 +42,9 @@ import io.github.wkoller.pollenplot.ui.water.byHand
 
 /** A plant in a list: its picture, names, zone and first badges. */
 @Composable
-fun PlantRow(view: PlantView, onClick: () -> Unit, showZone: Boolean = true) {
-    val count = view.plant.quantity
+fun PlantRow(view: PlantView, onClick: () -> Unit, showZone: Boolean = true, zoneId: String? = null) {
+    // In a zone's own list, a plant growing in several zones counts the plants in that zone.
+    val count = zoneId?.let(view.plant::countIn) ?: view.plant.quantity
     val details = listOfNotNull(
         view.scientificName,
         if (count > 1) pluralStringResource(R.plurals.plant_count, count, count) else null,

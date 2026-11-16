@@ -54,7 +54,8 @@ enum class ManyZones { ASK, ONE_PLANT, PLANT_EACH }
 /**
  * A plant in the garden. [speciesName] is the knowledge base's scientific name, or null for a plant the user named
  * themselves. [customName] is the user's own name for it, such as "Mum's lemon tree". [zoneIds] are the zones it grows
- * in, the first chosen first, and none for a plant with no zone; [quantity] is how many there are in each of them.
+ * in, the first chosen first, and none for a plant with no zone. [quantity] is how many there are in all, and
+ * [counts] how many are in each zone when the user counted them zone by zone; it is empty when they gave a total.
  */
 data class GardenPlant(
     val id: String,
@@ -67,23 +68,44 @@ data class GardenPlant(
     val notes: String = "",
     /** The plant's cut-out picture, as the app stores it, or null before it has one. */
     val thumbnail: String? = null,
+    val counts: Map<String, Int> = emptyMap(),
 ) {
     init {
         require(speciesName != null || !customName.isNullOrBlank()) { "A plant needs a species or a name" }
         require(quantity >= 1) { "A plant entry counts at least one plant" }
     }
 
-    /** How many plants the record counts across its zones. */
-    val total: Int get() = quantity * zoneIds.size.coerceAtLeast(1)
+    /**
+     * How many grow in [zoneId]: the zone's own count when the user gave one, or else the total shared evenly across
+     * the plant's zones, at least one. Sharing the total evenly is Pollenplot's reading of a total given for several
+     * zones; it is what the watering plan and the zone's list use.
+     */
+    fun countIn(zoneId: String): Int {
+        counts[zoneId]?.let { return it }
+        val zones = zoneIds.size.coerceAtLeast(1)
+        return ((quantity + zones / 2) / zones).coerceAtLeast(1)
+    }
+
+    /** The zones of one record to make, how many are in each zone when counted zone by zone, and how many in all. */
+    data class Planting(val zoneIds: List<String>, val counts: Map<String, Int>, val quantity: Int)
 
     companion object {
         /**
-         * The zones of each record to make when a plant is added to [zoneIds]: one record in all of them, or with
-         * [each] one record for every zone. No zone gives one record with none.
+         * The records to make when a plant is added to [zoneIds]: one record in all of them, or with [each] a record
+         * for every zone. [counts] are how many go in each zone, when the user counted zone by zone; otherwise
+         * [total] is how many there are in all, or with [each] how many go in each zone. No zone gives one record.
          */
-        fun placings(zoneIds: List<String>, each: Boolean): List<List<String>> {
+        fun plantings(zoneIds: List<String>, each: Boolean, total: Int, counts: Map<String, Int>? = null): List<Planting> {
             val zones = zoneIds.distinct()
-            return if (each && zones.size > 1) zones.map { listOf(it) } else listOf(zones)
+            fun countFor(zone: String) = (counts?.get(zone) ?: total).coerceAtLeast(1)
+            return when {
+                each && zones.size > 1 -> zones.map { Planting(listOf(it), emptyMap(), countFor(it)) }
+                counts != null && zones.size > 1 -> {
+                    val own = zones.associateWith(::countFor)
+                    listOf(Planting(zones, own, own.values.sum()))
+                }
+                else -> listOf(Planting(zones, emptyMap(), total.coerceAtLeast(1)))
+            }
         }
     }
 }
