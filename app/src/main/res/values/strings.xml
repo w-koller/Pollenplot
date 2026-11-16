@@ -1014,7 +1014,7 @@
     <string name="plot_scale_description">The bar shows %1$s m of yard at this zoom.</string>
     <string name="zone_tile_more">+%1$d</string>
     <string name="zone_preview_open">Open zone</string>
-    <string name="plot_edit_hint">Please drag a zone or a structure to move it, or tap it and use Move and resize. Both snap to a 50 cm grid.</string>
+    <string name="plot_edit_hint">Please drag a zone or a structure to move it, or tap it and drag a corner to resize it. Both snap to a 50 cm grid.</string>
     <string name="plot_show_all">Show the whole plot</string>
     <string name="plot_zoom_in">Zoom in</string>
     <string name="plot_zoom_out">Zoom out</string>
@@ -1048,6 +1048,12 @@
     <string name="zone_kind_label">Kind of zone</string>
     <string name="zone_add_confirm">Add zone</string>
     <string name="adjust_title">Move and resize %1$s</string>
+    <string name="adjust_left_edge">From the left side</string>
+    <string name="adjust_top_edge">From the top side</string>
+    <string name="plot_handle_top_left">Resize from the top left corner</string>
+    <string name="plot_handle_top_right">Resize from the top right corner</string>
+    <string name="plot_handle_bottom_left">Resize from the bottom left corner</string>
+    <string name="plot_handle_bottom_right">Resize from the bottom right corner</string>
     <string name="adjust_move">Move</string>
     <string name="move_left">Move left</string>
     <string name="move_up">Move up</string>

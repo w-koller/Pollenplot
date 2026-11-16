@@ -68,4 +68,24 @@ class PlotLayoutTest {
         assertEquals(120_000L, zone.areaCm2)
         assertEquals(90_000L, zone.copy(measuredAreaCm2 = 90_000).areaCm2)
     }
+
+    @Test
+    fun `each corner resizes with the opposite corner held`() {
+        val rect = ZoneRect(100, 200, 400, 300)
+        assertEquals("Top left grows up and left", ZoneRect(50, 100, 450, 400), PlotLayout.resizedFrom(rect, Corner.TOP_LEFT, -50, -100))
+        assertEquals("Top right grows up and right", ZoneRect(100, 150, 450, 350), PlotLayout.resizedFrom(rect, Corner.TOP_RIGHT, 50, -50))
+        assertEquals("Bottom left grows down and left", ZoneRect(0, 200, 500, 350), PlotLayout.resizedFrom(rect, Corner.BOTTOM_LEFT, -100, 50))
+        assertEquals("Bottom right grows down and right", ZoneRect(100, 200, 450, 350), PlotLayout.resizedFrom(rect, Corner.BOTTOM_RIGHT, 50, 50))
+    }
+
+    @Test
+    fun `a resize stops at the smallest side and snaps the moving edges`() {
+        val rect = ZoneRect(100, 200, 400, 300)
+        assertEquals("Pushed past the far edge, it keeps 50 cm", ZoneRect(450, 450, 50, 50), PlotLayout.resizedFrom(rect, Corner.TOP_LEFT, 900, 900))
+        // A drop from the top left lands its left and top edges on the grid, and the right and bottom edges stay.
+        val dropped = PlotLayout.resizedFrom(rect, Corner.TOP_LEFT, -37, 12, snap = true)
+        assertEquals(ZoneRect(50, 200, 450, 300), dropped)
+        assertEquals(rect.rightCm, dropped.rightCm)
+        assertEquals(rect.bottomCm, dropped.bottomCm)
+    }
 }

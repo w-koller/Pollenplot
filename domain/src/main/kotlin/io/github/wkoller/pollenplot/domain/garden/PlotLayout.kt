@@ -6,6 +6,14 @@ import kotlin.math.roundToInt
  * Rules for laying out zones on the Plot canvas. Positions and sizes snap to a 50 cm grid. The canvas has no edges:
  * zones may go anywhere, on either side of where the first one was placed.
  */
+/** A corner of a zone or structure, for resizing it from that corner. */
+enum class Corner(val left: Boolean, val top: Boolean) {
+    TOP_LEFT(true, true),
+    TOP_RIGHT(false, true),
+    BOTTOM_LEFT(true, false),
+    BOTTOM_RIGHT(false, false),
+}
+
 object PlotLayout {
     const val GRID_CM = 50
     const val MIN_SIDE_CM = 50
@@ -38,6 +46,26 @@ object PlotLayout {
             widthCm = (rect.widthCm + widerSteps * GRID_CM).coerceAtLeast(MIN_SIDE_CM),
             heightCm = (rect.heightCm + tallerSteps * GRID_CM).coerceAtLeast(MIN_SIDE_CM),
         )
+
+    /**
+     * The rectangle resized by dragging its [corner] by [dxCm] across and [dyCm] down. The opposite corner stays where
+     * it is, and neither side gets shorter than [MIN_SIDE_CM]. With [snap], the edges that move land on the grid, so
+     * a drop from the top left keeps the right and bottom edges exactly where they were.
+     */
+    fun resizedFrom(rect: ZoneRect, corner: Corner, dxCm: Int, dyCm: Int, snap: Boolean = false): ZoneRect {
+        fun edge(value: Int) = if (snap) snap(value) else value
+        val (left, right) = if (corner.left) {
+            minOf(edge(rect.xCm + dxCm), rect.rightCm - MIN_SIDE_CM) to rect.rightCm
+        } else {
+            rect.xCm to maxOf(edge(rect.rightCm + dxCm), rect.xCm + MIN_SIDE_CM)
+        }
+        val (top, bottom) = if (corner.top) {
+            minOf(edge(rect.yCm + dyCm), rect.bottomCm - MIN_SIDE_CM) to rect.bottomCm
+        } else {
+            rect.yCm to maxOf(edge(rect.bottomCm + dyCm), rect.yCm + MIN_SIDE_CM)
+        }
+        return ZoneRect(left, top, right - left, bottom - top)
+    }
 
     /**
      * Where a new zone goes: the first spot in a tidy grid of rows that keeps [GAP_CM] clear of every other zone. The

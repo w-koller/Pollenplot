@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot
 
+import org.junit.Assert.assertTrue
+import androidx.compose.ui.geometry.Offset
 import io.github.wkoller.pollenplot.data.prefs.PlotBackground
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.garden.StructureShape
@@ -27,6 +29,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -167,7 +170,7 @@ class PlotScreenFlowTest {
         compose.onNodeWithContentDescription("Hive Corner", substring = true).performClick()
         shot("plot_edit_selected")
         compose.onNodeWithContentDescription("Move and resize").performClick()
-        compose.onNodeWithText("Wider").performClick()
+        compose.onAllNodesWithText("Wider")[0].performClick()
         compose.onNodeWithContentDescription("Move down").performClick()
         waitFor(hasText("Width: 4.5 m"))
         shot("plot_adjust_sheet")
@@ -181,6 +184,11 @@ class PlotScreenFlowTest {
         waitFor(hasText("Changed the size of Hive Corner."))
         compose.onNodeWithText("Undo").performClick()
         compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.zone(ids.hive)!!.rect }.let { it.widthCm == 400 && it.yCm == 450 } }
+        // The sheet's second Wider grows the zone from its left side, and the right edge stays.
+        compose.onNodeWithContentDescription("Move and resize").performClick()
+        compose.onAllNodesWithText("Wider")[1].performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.zone(ids.hive)!!.rect }.let { it.xCm == 750 && it.widthCm == 450 } }
+        compose.onNodeWithText("Done").performClick()
 
         // The canvas has no edge: a zone at the origin moves past it, with the screen reader's action as with a drag.
         compose.onNodeWithContentDescription("Front Native Strip", substring = true).performClick()
@@ -220,13 +228,51 @@ class PlotScreenFlowTest {
         compose.onNodeWithContentDescription("House, House, 8 m by 6 m").performClick()
         shot("plot_structure_selected")
         compose.onNodeWithContentDescription("Move and resize").performClick()
-        compose.onNodeWithText("Wider").performClick()
+        compose.onAllNodesWithText("Wider")[0].performClick()
         waitFor(hasText("Width: 8.5 m"))
         compose.onNodeWithText("Done").performClick()
         assertEquals(850, runBlocking { app.container.garden.structureList.first() }.first { it.id == house.id }.rect.widthCm)
         waitFor(hasText("Changed the size of House."))
         compose.onNodeWithText("Undo").performClick()
         compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.structureList.first() }.first { it.id == house.id }.rect.widthCm == 800 }
+    }
+
+    @Test
+    fun zonesAndStructuresResizeFromAnyCornerAndDragAgain() {
+        val ids = seed()
+        val house = runBlocking {
+            val garden = app.container.garden
+            val house = garden.addStructure("House", StructureKind.HOUSE)
+            garden.adjustStructure(house.id) { ZoneRect(1350, 0, 800, 600) }
+            house
+        }
+        show()
+        waitFor(hasContentDescription("Hive Corner", substring = true))
+        compose.fromMore("Edit layout")
+        compose.onNodeWithContentDescription("Hive Corner", substring = true).performClick()
+        waitFor(hasContentDescription("Resize from the top left corner"))
+        assertEquals("A chosen zone has a handle on each corner", 4, compose.onAllNodes(hasContentDescription("Resize from", substring = true)).fetchSemanticsNodes().size)
+        shot("plot_four_handles")
+
+        // Dragging the top left handle up and left grows the zone that way, and its right and bottom edges stay.
+        val before = runBlocking { app.container.garden.zone(ids.hive)!!.rect }
+        compose.onNodeWithContentDescription("Resize from the top left corner").performTouchInput { swipe(center, center - Offset(120f, 120f), 400) }
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.garden.zone(ids.hive)!!.rect } != before }
+        val after = runBlocking { app.container.garden.zone(ids.hive)!!.rect }
+        assertTrue("It grew to the left and up", after.xCm < before.xCm && after.yCm < before.yCm)
+        assertEquals(before.rightCm, after.rightCm)
+        assertEquals(before.bottomCm, after.bottomCm)
+
+        // A structure is dragged, and dragged again: the second drag moves it too.
+        fun houseRect() = runBlocking { app.container.garden.structureList.first() }.first { it.id == house.id }.rect
+        val description = hasContentDescription("House, House", substring = true)
+        compose.onNode(description).performTouchInput { swipe(center, center + Offset(200f, 0f), 400) }
+        compose.waitUntil(WAIT_MS) { houseRect().xCm > 1350 }
+        val once = houseRect()
+        compose.onNode(description).performTouchInput { swipe(center, center + Offset(0f, 200f), 400) }
+        compose.waitUntil(WAIT_MS) { houseRect().yCm > once.yCm }
+        assertEquals("The second drag kept the first one's move", once.xCm, houseRect().xCm)
+        shot("plot_structure_dragged")
     }
 
     @Test
@@ -275,8 +321,7 @@ class PlotScreenFlowTest {
     fun theAssistantAndTheGuidesAreInTheMoreMenu() {
         seed()
         show()
-        compose.pressWhenShown(hasContentDescription("More"))
-        waitFor(hasText("Ask your garden"))
+        compose.openMore(hasText("Ask your garden"))
         // The review queue and the weeds are there even with nothing waiting.
         compose.onNodeWithText("Review").assertExists()
         compose.onNodeWithText("Weeds").assertExists()
