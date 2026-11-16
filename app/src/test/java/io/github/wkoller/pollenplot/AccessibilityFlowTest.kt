@@ -71,6 +71,8 @@ class AccessibilityFlowTest {
         runBlocking {
             val container = app.container
             container.knowledge.await()
+            // Read here, so a guide page opens from what is kept and not from a read on another thread.
+            container.guides.readAll()
             container.knowledge.awaitFauna()
             val place = GardenPlace.at(-27.4987, 152.9934, "Taringa")
             container.settingsStore.update { it.copy(gardenState = AuState.QLD, gardenPlace = place) }
