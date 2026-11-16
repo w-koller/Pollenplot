@@ -112,6 +112,8 @@ class IdentifyFlowTest {
         // The first card leaves once its plant is stored, and the cards below move up into its place.
         compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Add to garden").fetchSemanticsNodes().size == 1 }
         waitFor(hasText("You already have Rosemary in Hive Corner."))
+        // While the list settles the moved card can briefly be there twice, so the press waits for one of it.
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Add the photo to it").fetchSemanticsNodes().size == 1 }
         compose.onNodeWithText("Add the photo to it").performClick()
         waitFor(hasText("Added to the photos of Rosemary."))
         // Each decided find leaves the screen, so one card is left.
