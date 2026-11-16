@@ -326,16 +326,20 @@ class IdentifyFlowTest {
         shot("identify_bird")
         compose.onNodeWithText("Hive Corner").performClick()
         compose.onNodeWithText("Rosemary").performClick()
+        // An animal may be on several plants and doing several things.
+        compose.onNodeWithText("French lavender").performClick()
         compose.onNodeWithText("Feeding").performClick()
+        compose.onNodeWithText("Calling").performClick()
+        shot("identify_bird_chosen")
         compose.onNodeWithText("Add sighting").performClick()
         waitFor(hasText("Added to your sightings in Hive Corner."))
         shot("identify_bird_added")
         val sighting = runBlocking { garden.sightingList.first { it.isNotEmpty() }.single() }
         assertEquals("Manorina melanocephala", sighting.speciesName)
         assertEquals(LifeGroup.BIRD, sighting.group)
-        assertEquals(Behaviour.FEEDING, sighting.behaviour)
+        assertEquals(setOf(Behaviour.FEEDING, Behaviour.CALLING), sighting.behaviours)
         assertEquals(ids.hive, sighting.zoneId)
-        assertEquals(plants().single { it.speciesName == "Salvia rosmarinus" }.id, sighting.plantId)
+        assertEquals(listOf("Salvia rosmarinus", "Lavandula dentata"), sighting.plantIds.map { id -> plants().single { it.id == id }.speciesName })
         assertEquals("No plant was added", plantsBefore, plants().size)
     }
 

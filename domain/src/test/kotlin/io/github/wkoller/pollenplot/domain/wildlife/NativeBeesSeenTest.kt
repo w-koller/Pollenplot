@@ -23,7 +23,7 @@ class NativeBeesSeenTest {
     private var next = 0
 
     private fun seen(animal: Animal, year: Int, month: Int) = Sighting(
-        id = "s${next++}", speciesName = animal.name, label = animal.displayName, group = animal.group, zoneId = null, plantId = null, behaviour = null,
+        id = "s${next++}", speciesName = animal.name, label = animal.displayName, group = animal.group, zoneId = null, plantIds = emptyList(), behaviours = emptySet(),
         count = 1, photoId = null, thumbnail = null, seenAt = LocalDateTime.of(year, month, 10, 9, 0).atZone(brisbane).toInstant(), notes = "",
     ) to animal
 

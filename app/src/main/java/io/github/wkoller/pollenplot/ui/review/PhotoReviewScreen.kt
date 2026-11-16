@@ -143,9 +143,9 @@ class DetectionActions(
         scope.launch { garden.attachDetection(detection.id, plantId, flowering) }
     }
 
-    fun addSighting(detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantId: String?, behaviour: Behaviour?) {
+    fun addSighting(detection: DetectionRecord, speciesName: String?, label: String, zoneId: String?, plantIds: List<String>, behaviours: Set<Behaviour>) {
         scope.launch {
-            garden.confirmSighting(detection.id, speciesName, label, detection.group, zoneId, plantId, behaviour)
+            garden.confirmSighting(detection.id, speciesName, label, detection.group, zoneId, plantIds, behaviours)
             if (zoneId != null) settings.update { it.copy(lastZoneId = zoneId) }
         }
     }
@@ -296,9 +296,9 @@ fun PhotoReviewScreen(
             },
             onOpenPlant = onOpenPlant,
             onCompare = onCompare?.let { compare -> { detection, species -> compare(detection.id, species) } },
-            onAddSighting = { detection, species, label, zoneId, plantId, behaviour ->
+            onAddSighting = { detection, species, label, zoneId, plantIds, behaviours ->
                 decided = true
-                actions.addSighting(detection, species, label, zoneId, plantId, behaviour)
+                actions.addSighting(detection, species, label, zoneId, plantIds, behaviours)
                 if (leaving) {
                     val zone = zoneId?.let { zoneNames[it] }
                     notices?.show(if (zone != null) resources.getString(R.string.review_sighting_added_zone, zone) else resources.getString(R.string.review_sighting_added))

@@ -57,7 +57,11 @@ object GardenGraph {
     /** A sighting as a Darwin Core Occurrence of the animal, in its zone, with the plant it was on as an association. */
     fun sighting(sighting: Sighting, animal: Animal?): List<Triple> {
         val iri = Vocab.recordIri(sighting.id)
-        return GraphBuilder()
+        val graph = GraphBuilder()
+        // Each thing it was doing and each plant it was on is a statement of its own.
+        sighting.behaviourWords.forEach { graph.text(iri, Vocab.DWC + "behavior", it) }
+        sighting.plantIds.forEach { graph.iri(iri, Vocab.PP + "seenOn", Vocab.recordIri(it)) }
+        return graph
             .type(iri, Vocab.DWC + "Occurrence")
             .type(iri, Vocab.PP + "Sighting")
             .text(iri, Vocab.DWC + "basisOfRecord", if (sighting.photoId != null) "MachineObservation" else "HumanObservation")
@@ -66,10 +70,8 @@ object GardenGraph {
             .text(iri, Vocab.DWC + "family", animal?.family)
             .text(iri, Vocab.DWC + "vernacularName", animal?.common?.firstOrNull())
             .integer(iri, Vocab.DWC + "individualCount", sighting.count.toLong())
-            .text(iri, Vocab.DWC + "behavior", sighting.behaviour?.name?.lowercase())
             .text(iri, Vocab.DWC + "eventDate", sighting.seenAt.toString())
             .iri(iri, Vocab.DWC + "locationID", sighting.zoneId?.let(Vocab::recordIri))
-            .iri(iri, Vocab.PP + "seenOn", sighting.plantId?.let(Vocab::recordIri))
             .text(iri, Vocab.DWC + "occurrenceRemarks", sighting.notes)
             .build()
     }

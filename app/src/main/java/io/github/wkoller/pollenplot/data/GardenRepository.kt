@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.data
 
+import io.github.wkoller.pollenplot.data.db.SightingPlantEntity
+import kotlinx.coroutines.flow.combine
 import androidx.room.withTransaction
 import io.github.wkoller.pollenplot.data.db.CandidateEntity
 import io.github.wkoller.pollenplot.data.db.CareDraftEntity
@@ -456,7 +458,7 @@ class GardenRepository(
                         add.speciesName?.let { inZone[it] = plant.id }
                     }
                 }
-                is BatchAdd.Sighting -> confirmSighting(add.detectionId, add.speciesName, add.label, add.group, zoneId, plantId = null, behaviour = null)
+                is BatchAdd.Sighting -> confirmSighting(add.detectionId, add.speciesName, add.label, add.group, zoneId, plantIds = emptyList(), behaviours = emptySet())
             }
         }
     }
@@ -471,23 +473,39 @@ class GardenRepository(
      * The animals and fungi already recorded in the garden, by scientific name. An animal seen here before is likelier
      * to be the one in the next photo, as a plant growing here is.
      */
+    /** Every sighting with the plants it was on. */
+    private suspend fun allSightings(): List<Sighting> {
+        val plantsOf = sightings.allPlants().groupBy({ it.sightingId }, { it.plantId })
+        return sightings.all().map { it.toDomain(plantsOf[it.id].orEmpty()) }
+    }
+
+    /** Stores a sighting and the plants it was on, leaving out a plant that is no longer in the garden. */
+    private suspend fun store(sighting: Sighting, createdAt: Long, updatedAt: Long) {
+        sightings.upsert(sighting.toEntity(createdAt, updatedAt))
+        sightings.deletePlants(sighting.id)
+        sightings.insertPlants(sighting.plantIds.distinct().filter { plants.get(it) != null }.map { SightingPlantEntity(sighting.id, it) })
+    }
+
     suspend fun sightedSpecies(): Set<String> = sightings.all().mapNotNull { it.speciesName }.toSet()
 
     /** Every sighting, the most recent first. */
-    val sightingList: Flow<List<Sighting>> = sightings.observeAll().map { list -> list.map { it.toDomain() } }
+    val sightingList: Flow<List<Sighting>> = combine(sightings.observeAll(), sightings.observePlants()) { list, on ->
+        val plantsOf = on.groupBy({ it.sightingId }, { it.plantId })
+        list.map { it.toDomain(plantsOf[it.id].orEmpty()) }
+    }
 
-    suspend fun sighting(id: String): Sighting? = sightings.get(id)?.toDomain()
+    suspend fun sighting(id: String): Sighting? = sightings.get(id)?.toDomain(sightings.plantsOf(id))
 
     /** Records an animal or fungus seen in the garden. */
     suspend fun addSighting(sighting: Sighting) = db.withTransaction {
         val time = now()
-        sightings.upsert(sighting.toEntity(time, time))
+        store(sighting, time, time)
         index(sighting)
     }
 
     suspend fun updateSighting(sighting: Sighting) = db.withTransaction {
         val existing = sightings.get(sighting.id) ?: return@withTransaction
-        sightings.upsert(sighting.toEntity(existing.createdAt, now()))
+        store(sighting, existing.createdAt, now())
         index(sighting)
     }
 
@@ -502,8 +520,8 @@ class GardenRepository(
         label: String,
         group: LifeGroup,
         zoneId: String?,
-        plantId: String?,
-        behaviour: Behaviour?,
+        plantIds: List<String>,
+        behaviours: Set<Behaviour>,
         count: Int,
         seenAt: Instant,
         notes: String,
@@ -514,8 +532,8 @@ class GardenRepository(
             label = label.trim(),
             group = speciesName?.let { fauna().animal(it)?.group } ?: group,
             zoneId = zoneId,
-            plantId = plantId,
-            behaviour = behaviour,
+            plantIds = plantIds,
+            behaviours = behaviours,
             count = count.coerceAtLeast(1),
             photoId = null,
             thumbnail = null,
@@ -533,8 +551,8 @@ class GardenRepository(
         label: String,
         group: LifeGroup,
         zoneId: String?,
-        plantId: String?,
-        behaviour: Behaviour?,
+        plantIds: List<String>,
+        behaviours: Set<Behaviour>,
         count: Int = 1,
     ): Sighting = db.withTransaction {
         val detection = detection(detectionId) ?: error("No detection $detectionId")
@@ -545,8 +563,8 @@ class GardenRepository(
             // The user may have chosen an animal of another group than the camera was set to.
             group = speciesName?.let { fauna().animal(it)?.group } ?: group,
             zoneId = zoneId,
-            plantId = plantId,
-            behaviour = behaviour,
+            plantIds = plantIds,
+            behaviours = behaviours,
             count = count,
             photoId = detection.photoId,
             thumbnail = detection.thumbnail,
@@ -663,7 +681,7 @@ class GardenRepository(
         search.clear()
         zones.all().forEach { index(it.toDomain()) }
         plants.all().forEach { index(it.toDomain()) }
-        sightings.all().forEach { index(it.toDomain()) }
+        allSightings().forEach { index(it) }
     }
 
     /** The eco-roles of a plant in this garden. */
@@ -687,8 +705,7 @@ class GardenRepository(
         }
         flowering.all().forEach { triples += GardenGraph.flowering(it.id, it.plantId, LocalDate.ofEpochDay(it.observedOnEpochDay), it.photoId != null) }
         val animals = fauna()
-        sightings.all().forEach { entity ->
-            val sighting = entity.toDomain()
+        allSightings().forEach { sighting ->
             triples += GardenGraph.sighting(sighting, (sighting.speciesName ?: sighting.label).let(animals::animal))
         }
         return triples
@@ -702,10 +719,10 @@ class GardenRepository(
     private suspend fun index(sighting: Sighting) {
         val animal = (sighting.speciesName ?: sighting.label).let(fauna()::animal)
         val zoneName = sighting.zoneId?.let { zones.get(it)?.name }
-        val plantTitle = sighting.plantId?.let { plants.get(it) }?.let { plant ->
+        val plantTitles = sighting.plantIds.mapNotNull { plants.get(it) }.mapNotNull { plant ->
             plant.customName ?: plant.speciesName?.let { knowledge().species(it)?.displayName ?: it }
         }
-        val doc = SearchText.sighting(sighting, animal, zoneName, plantTitle)
+        val doc = SearchText.sighting(sighting, animal, zoneName, plantTitles)
         search.replace(SearchEntity(recordId = doc.id, kind = doc.kind.name, title = doc.title, body = doc.body))
     }
 

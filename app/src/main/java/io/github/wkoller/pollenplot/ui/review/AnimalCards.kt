@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -54,8 +55,8 @@ internal fun UndecidedAnimal(
 ) {
     var ownZone by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
     var zoneChosen by rememberSaveable(detection.id) { mutableStateOf(false) }
-    var plantId by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
-    var behaviour by rememberSaveable(detection.id) { mutableStateOf<String?>(null) }
+    var plantIds by rememberSaveable(detection.id, stateSaver = NamesSaver) { mutableStateOf(emptyList<String>()) }
+    var behaviours by rememberSaveable(detection.id, stateSaver = NamesSaver) { mutableStateOf(emptyList<String>()) }
 
     val choice = chosen(detection, savedChoice)
     val shown = detection.candidates.withIndex().filter { (i, c) -> i == 0 || c.scoreBp >= MIN_SHOWN_SCORE_BP }.take(MAX_SHOWN)
@@ -118,22 +119,23 @@ internal fun UndecidedAnimal(
         zones = zones,
         plants = plants,
         zoneId = zoneId,
-        plantId = plantId,
-        behaviour = behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } },
+        plantIds = plantIds.toSet(),
+        behaviours = behavioursNamed(behaviours),
         onZone = {
             ownZone = it
             zoneChosen = true
-            plantId = null
+            plantIds = emptyList()
         },
-        onPlant = { plantId = it },
-        onBehaviour = { behaviour = it?.name },
+        // Kept in the order chosen, so the first plant pressed stays first.
+        onPlants = { chosen -> plantIds = plantIds.filter { it in chosen } + chosen.filterNot { it in plantIds } },
+        onBehaviours = { chosen -> behaviours = chosen.map { it.name } },
     )
 
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
             onClick = {
                 val pick = animalPick(detection, choice, fauna) ?: return@Button
-                callbacks.onAddSighting?.invoke(detection, pick.speciesName, pick.label, zoneId, plantId, behaviour?.let { name -> Behaviour.entries.firstOrNull { it.name == name } })
+                callbacks.onAddSighting?.invoke(detection, pick.speciesName, pick.label, zoneId, plantIds, behavioursNamed(behaviours))
             },
             enabled = chosenName != null && callbacks.onAddSighting != null,
         ) { Text(stringResource(R.string.review_add_sighting)) }
@@ -153,3 +155,9 @@ private fun AnimalSuggestionRow(candidate: Candidate, fauna: FaunaBase?, selecte
         onClick = onClick,
     )
 }
+
+/** Keeps a list of names, such as the plants chosen, so they survive the phone being turned. */
+val NamesSaver = listSaver<List<String>, String>(save = { it }, restore = { it })
+
+/** The behaviours with these enum names. */
+fun behavioursNamed(names: List<String>): Set<Behaviour> = Behaviour.entries.filter { it.name in names }.toSet()

@@ -75,7 +75,7 @@ class BackupTest {
             ),
         )
         container.garden.confirmDetection(found[0].id, "Grevillea banksii", "Photo grevillea", ids.front, flowering = true)
-        container.garden.recordSighting("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, ids.front, null, Behaviour.CALLING, 2, DemoWildlife.clock.instant(), "")
+        container.garden.recordSighting("Dacelo novaeguineae", "Laughing kookaburra", LifeGroup.BIRD, ids.front, emptyList(), setOf(Behaviour.CALLING), 2, DemoWildlife.clock.instant(), "")
         container.bees.addHive("Hive 1", HiveType.LANGSTROTH_8, ids.hive, null, 2025, null)
         container.nativeBees.addHive("Sugarbag", StinglessSpecies.entries.first(), NativeBox.OATH, NativeOrigin.BOUGHT, ids.hive, null, null)
         container.hotels.saveHotel(BeeHotel(container.hotels.newRecordId(), "Fence hotel", ids.hive, null, null, null, sections = listOf(HotelSection(HotelMaterial.BAMBOO, null, null, 12))))

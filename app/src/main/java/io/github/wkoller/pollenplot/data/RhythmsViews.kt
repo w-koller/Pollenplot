@@ -103,7 +103,7 @@ class RhythmsViews(
         state.copy(
             keepsHoneyBees = honey.any { it.status == HiveStatus.ACTIVE || it.status == HiveStatus.QUEENLESS },
             keepsStinglessBees = stingless.any { it.status == NativeStatus.ACTIVE },
-            visits = sightings.filter { it.sighting.plantId != null && it.sighting.seenAt.isAfter(since) && it.animal?.roles?.contains(FaunaRole.POLLINATOR) == true }
+            visits = sightings.filter { it.sighting.plantIds.isNotEmpty() && it.sighting.seenAt.isAfter(since) && it.animal?.roles?.contains(FaunaRole.POLLINATOR) == true }
                 .sortedByDescending { it.sighting.seenAt }
                 .take(VISITS_SHOWN),
         )

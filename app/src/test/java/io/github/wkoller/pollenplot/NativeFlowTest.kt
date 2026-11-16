@@ -105,8 +105,8 @@ class NativeFlowTest {
     @Test
     fun nativeBeesSeenThisYear() {
         runBlocking {
-            app.container.garden.recordSighting("Amegilla cingulata", "Blue-banded bee", LifeGroup.INSECT, null, null, null, 1, DemoWildlife.clock.instant(), "")
-            app.container.garden.recordSighting("Apis mellifera", "European honey bee", LifeGroup.INSECT, null, null, null, 1, DemoWildlife.clock.instant(), "")
+            app.container.garden.recordSighting("Amegilla cingulata", "Blue-banded bee", LifeGroup.INSECT, null, emptyList(), emptySet(), 1, DemoWildlife.clock.instant(), "")
+            app.container.garden.recordSighting("Apis mellifera", "European honey bee", LifeGroup.INSECT, null, emptyList(), emptySet(), 1, DemoWildlife.clock.instant(), "")
         }
         show()
         openNativeBees()

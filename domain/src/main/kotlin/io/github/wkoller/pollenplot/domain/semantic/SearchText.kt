@@ -141,7 +141,7 @@ object SearchText {
     )
 
     /** A sighting, found by the animal's names, its group, what it was doing and where. */
-    fun sighting(sighting: Sighting, animal: Animal?, zoneName: String?, plantTitle: String?): SearchDoc = SearchDoc(
+    fun sighting(sighting: Sighting, animal: Animal?, zoneName: String?, plantTitles: List<String>): SearchDoc = SearchDoc(
         id = sighting.id,
         kind = SearchKind.SIGHTING,
         title = animal?.displayName ?: sighting.label,
@@ -149,8 +149,8 @@ object SearchText {
             animal?.common?.joinToString(", ")?.ifBlank { null },
             animal?.let { "${it.name}, family ${it.family}" } ?: sighting.label.takeIf { it != sighting.speciesName },
             words(sighting.group.name),
-            sighting.behaviour?.let { words(it.name) },
-            plantTitle?.let { "on $it" },
+            sighting.behaviourWords.joinToString(", ").ifBlank { null },
+            plantTitles.joinToString(", ").ifBlank { null }?.let { "on $it" },
             zoneName?.let { "in $it" },
             sighting.notes.ifBlank { null },
         ).joinToString(". "),

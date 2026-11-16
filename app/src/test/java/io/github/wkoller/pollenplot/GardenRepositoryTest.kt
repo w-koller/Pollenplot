@@ -376,7 +376,7 @@ class GardenRepositoryTest {
         val found = garden.detectionsInPhoto(photo.id).first().single()
         assertEquals(LifeGroup.INSECT, found.group)
 
-        val sighting = garden.confirmSighting(found.id, "Amegilla cingulata", "Amegilla cingulata", LifeGroup.INSECT, zone.id, rosemary.id, Behaviour.POLLINATING)
+        val sighting = garden.confirmSighting(found.id, "Amegilla cingulata", "Amegilla cingulata", LifeGroup.INSECT, zone.id, listOf(rosemary.id), setOf(Behaviour.POLLINATING))
         val stored = garden.detection(found.id)!!
         assertEquals(DetectionStatus.CONFIRMED, stored.status)
         assertEquals(sighting.id, stored.sightingId)
@@ -392,8 +392,9 @@ class GardenRepositoryTest {
         assertEquals("Amegilla cingulata", node["dwc:scientificName"]!!.jsonPrimitive.content)
         assertEquals("pollinating", node["dwc:behavior"]!!.jsonPrimitive.content)
 
+        assertEquals(listOf(rosemary.id), garden.sighting(sighting.id)!!.plantIds)
         garden.deletePlant(rosemary.id)
-        assertNull("The sighting stays when the plant goes", garden.sighting(sighting.id)!!.plantId)
+        assertEquals("The sighting stays when the plant goes", emptyList<String>(), garden.sighting(sighting.id)!!.plantIds)
         garden.deleteSighting(sighting.id)
         assertTrue(garden.search("blue-banded").none { it.recordId == sighting.id })
     }

@@ -290,7 +290,7 @@ fun PlantDetailScreen(
             if (resolved == null && finds.isNotEmpty()) {
                 item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
             }
-            val seen = sightings.filter { it.sighting.plantId == plantId }
+            val seen = sightings.filter { plantId in it.sighting.plantIds }
             val users = (loaded.species?.name ?: loaded.plant.speciesName)?.let { fauna?.usersOf(it) }.orEmpty()
             if (seen.isNotEmpty() || users.isNotEmpty()) {
                 item { PlantAnimalsCard(seen, users, onOpenSighting, onOpenAnimal) }

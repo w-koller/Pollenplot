@@ -20,8 +20,8 @@ class DarwinCoreTest {
     )
 
     private fun sighting(id: String, at: LocalDateTime, notes: String, photo: String? = null) = Sighting(
-        id = id, speciesName = "Dacelo novaeguineae", label = "Laughing kookaburra", group = LifeGroup.BIRD, zoneId = null, plantId = null,
-        behaviour = Behaviour.CALLING, count = 2, photoId = photo, thumbnail = null, seenAt = at.atZone(brisbane).toInstant(), notes = notes,
+        id = id, speciesName = "Dacelo novaeguineae", label = "Laughing kookaburra", group = LifeGroup.BIRD, zoneId = null, plantIds = emptyList(),
+        behaviours = setOf(Behaviour.CALLING, Behaviour.FEEDING), count = 2, photoId = photo, thumbnail = null, seenAt = at.atZone(brisbane).toInstant(), notes = notes,
     )
 
     @Test
@@ -37,11 +37,11 @@ class DarwinCoreTest {
         assertEquals(DarwinCore.COLUMNS.joinToString(","), lines[0])
         assertEquals(
             "The earliest first",
-            "urn:uuid:a,HumanObservation,2026-10-01T06:15:00+10:00,Dacelo novaeguineae,Laughing kookaburra,2,calling,present,Australia,AU,Queensland,-27.50,152.99,1000,",
+            "urn:uuid:a,HumanObservation,2026-10-01T06:15:00+10:00,Dacelo novaeguineae,Laughing kookaburra,2,feeding | calling,present,Australia,AU,Queensland,-27.50,152.99,1000,",
             lines[1],
         )
         assertEquals(
-            "urn:uuid:b,MachineObservation,2026-10-28T07:30:00+10:00,Dacelo novaeguineae,Laughing kookaburra,2,calling,present,Australia,AU,Queensland,-27.50,152.99,1000,\"On the fence, \"\"laughing\"\", at dawn\"",
+            "urn:uuid:b,MachineObservation,2026-10-28T07:30:00+10:00,Dacelo novaeguineae,Laughing kookaburra,2,feeding | calling,present,Australia,AU,Queensland,-27.50,152.99,1000,\"On the fence, \"\"laughing\"\", at dawn\"",
             lines[2],
         )
     }
