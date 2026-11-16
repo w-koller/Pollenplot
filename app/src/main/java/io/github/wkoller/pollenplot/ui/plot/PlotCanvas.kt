@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.BoxScope
+import io.github.wkoller.pollenplot.domain.garden.Corner
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.luminance
@@ -109,11 +113,15 @@ private const val EDGE_DP = 48f
 /** How fast the view pans at the very edge, in density-independent pixels a second. */
 private const val EDGE_SPEED_DP = 600f
 
-/** What is being dragged: a zone's body, or its corner handle. */
-private enum class DragPart { MOVE, RESIZE }
+/** What is being dragged: the body of a zone or structure, which moves it, or one of its four corner handles. */
+private sealed interface DragPart {
+    data object Move : DragPart
+
+    data class Resize(val corner: Corner) : DragPart
+}
 
 /**
- * A drag in progress on one zone, in centimetres of yard so it stays under the finger while the view pans, with where
+ * A drag in progress on one zone or structure (their ids never clash), in centimetres of yard so it stays under the finger while the view pans, with where
  * the finger is on the canvas.
  */
 private data class ZoneDrag(val id: String, val part: DragPart, val cm: Offset, val finger: Offset)
@@ -121,8 +129,8 @@ private data class ZoneDrag(val id: String, val part: DragPart, val cm: Offset, 
 /**
  * The backyard canvas: zones laid out in centimetres of real yard on a grid with no edges. Pinch to zoom and drag to
  * pan, or use the buttons in the corner. Holding a zone shows a preview of it until the finger lifts. In edit mode any
- * zone can be dragged, and the chosen zone's corner handle resizes it, with the place it will snap to drawn as it
- * moves; the screen's toolbar does the same with buttons.
+ * zone or structure can be dragged, and the chosen one's four corner handles resize it, with the place it will snap
+ * to drawn as it moves; the screen's toolbar does the same with buttons.
  */
 @Composable
 fun PlotCanvas(
@@ -166,7 +174,7 @@ fun PlotCanvas(
         var drag by remember { mutableStateOf<ZoneDrag?>(null) }
         // Where a dropped zone landed, shown until the saved zone comes back, so it does not jump back for a frame.
         var landed by remember { mutableStateOf<Pair<String, ZoneRect>?>(null) }
-        LaunchedEffect(zones) { landed = null }
+        LaunchedEffect(zones, structures) { landed = null }
         // The zone being previewed, and whether a finger holds the preview open rather than a screen reader.
         var previewId by remember { mutableStateOf<String?>(null) }
         var previewHeld by remember { mutableStateOf(false) }
@@ -219,8 +227,8 @@ fun PlotCanvas(
             if (hasZones && (scale == 0f || zones.none { onScreen(it.zone.rect) })) fit()
         }
         // The view follows the zone being edited: a new zone placed out of sight, or one moved there with the buttons.
-        val selectedRect = zones.firstOrNull { it.zone.id == selectedId }?.zone?.rect
-        LaunchedEffect(editing, selectedId, selectedRect) {
+        val selectedRect = zones.firstOrNull { it.zone.id == selectedId }?.zone?.rect ?: structures.firstOrNull { it.id == selectedStructureId }?.rect
+        LaunchedEffect(editing, selectedId, selectedStructureId, selectedRect) {
             if (editing && scale != 0f && drag == null) selectedRect?.let { reveal(it) }
         }
         // A zone dragged near an edge pans the view towards it, and the drag keeps up so the zone stays under the finger.
@@ -296,15 +304,32 @@ fun PlotCanvas(
         ) {
             structures.forEach { structure ->
                 key(structure.id) {
+                    val id = structure.id
+                    val shown = landed?.takeIf { it.first == id }?.let { structure.copy(rect = it.second) } ?: structure
                     StructureTile(
-                        structure = structure,
+                        structure = shown,
                         scale = scale,
                         offsetX = offsetX,
                         offsetY = offsetY,
                         editing = editing,
-                        selected = editing && structure.id == selectedStructureId,
-                        onTap = { onTapStructure(structure.id) },
-                        onMove = { onMoveStructure(structure.id, it) },
+                        selected = editing && id == selectedStructureId,
+                        drag = drag?.takeIf { it.id == id },
+                        onTap = { onTapStructure(id) },
+                        onDrag = { part, amount, finger ->
+                            // Dragging a structure that is not chosen yet chooses it first.
+                            if (drag == null && id != selectedStructureId) onTapStructure(id)
+                            val cm = (drag?.takeIf { it.id == id && it.part == part }?.cm ?: Offset.Zero) + amount / scale
+                            drag = ZoneDrag(id, part, cm, finger)
+                        },
+                        onDragEnd = {
+                            drag?.takeIf { it.id == id }?.let { current ->
+                                val to = landing(structure.rect, current)
+                                landed = id to to
+                                onMoveStructure(id, to)
+                            }
+                            drag = null
+                        },
+                        onNudge = { right, down -> onMoveStructure(id, PlotLayout.nudged(structure.rect, right, down)) },
                     )
                 }
             }
@@ -334,9 +359,9 @@ fun PlotCanvas(
                         },
                         onDragEnd = {
                             drag?.takeIf { it.id == id }?.let { current ->
-                                val moved = dragged(view.zone.rect, current)
-                                landed = id to PlotLayout.snapped(moved)
-                                onChangeZone(id, moved)
+                                val to = landing(view.zone.rect, current)
+                                landed = id to to
+                                onChangeZone(id, to)
                             }
                             drag = null
                         },
@@ -347,10 +372,12 @@ fun PlotCanvas(
                 }
             }
             drag?.let { current ->
-                zones.firstOrNull { it.zone.id == current.id }?.let { view ->
-                    val landing = PlotLayout.snapped(dragged(view.zone.rect, current))
-                    val under = zones.filter { it.zone.id != current.id && it.zone.rect.overlaps(landing) }.map { it.zone.name }
-                    DragReadout(view.zone.rect, landing, current.part, under, Modifier.align(Alignment.TopCenter).padding(12.dp))
+                val from = zones.firstOrNull { it.zone.id == current.id }?.zone?.rect ?: structures.firstOrNull { it.id == current.id }?.rect
+                if (from != null) {
+                    val to = landing(from, current)
+                    val under = zones.filter { it.zone.id != current.id && it.zone.rect.overlaps(to) }.map { it.zone.name } +
+                        structures.filter { it.id != current.id && it.rect.overlaps(to) }.map { it.name }
+                    DragReadout(from, to, current.part, under, Modifier.align(Alignment.TopCenter).padding(12.dp))
                 }
             }
             // The scale bar sits on the canvas side of the zoom buttons: under them while editing, above them otherwise.
@@ -396,13 +423,16 @@ private fun edgePush(position: Float, length: Float, edge: Float): Float = when 
     else -> 0f
 }
 
-/** The zone's rectangle with a drag applied, before it is snapped to the grid. */
-private fun dragged(rect: ZoneRect, drag: ZoneDrag): ZoneRect = when (drag.part) {
-    DragPart.MOVE -> rect.copy(xCm = rect.xCm + drag.cm.x.roundToInt(), yCm = rect.yCm + drag.cm.y.roundToInt())
-    DragPart.RESIZE -> rect.copy(
-        widthCm = (rect.widthCm + drag.cm.x.roundToInt()).coerceAtLeast(PlotLayout.MIN_SIDE_CM),
-        heightCm = (rect.heightCm + drag.cm.y.roundToInt()).coerceAtLeast(PlotLayout.MIN_SIDE_CM),
-    )
+/** The rectangle with a drag applied, following the finger, before it lands on the grid. */
+private fun dragged(rect: ZoneRect, drag: ZoneDrag): ZoneRect = when (val part = drag.part) {
+    DragPart.Move -> rect.copy(xCm = rect.xCm + drag.cm.x.roundToInt(), yCm = rect.yCm + drag.cm.y.roundToInt())
+    is DragPart.Resize -> PlotLayout.resizedFrom(rect, part.corner, drag.cm.x.roundToInt(), drag.cm.y.roundToInt())
+}
+
+/** Where the rectangle lands when the drag ends: moved and snapped whole, or with only the dragged edges on the grid. */
+private fun landing(rect: ZoneRect, drag: ZoneDrag): ZoneRect = when (val part = drag.part) {
+    DragPart.Move -> PlotLayout.snapped(dragged(rect, drag))
+    is DragPart.Resize -> PlotLayout.resizedFrom(rect, part.corner, drag.cm.x.roundToInt(), drag.cm.y.roundToInt(), snap = true)
 }
 
 /**
@@ -480,8 +510,8 @@ private fun ScaleBar(scale: Float, modifier: Modifier) {
 @Composable
 private fun DragReadout(from: ZoneRect, to: ZoneRect, part: DragPart, under: List<String>, modifier: Modifier) {
     val place = when (part) {
-        DragPart.RESIZE -> stringResource(R.string.plot_drag_size, UiFormat.metresFromCm(to.widthCm), UiFormat.metresFromCm(to.heightCm))
-        DragPart.MOVE -> {
+        is DragPart.Resize -> stringResource(R.string.plot_drag_size, UiFormat.metresFromCm(to.widthCm), UiFormat.metresFromCm(to.heightCm))
+        DragPart.Move -> {
             val across = to.xCm - from.xCm
             val down = to.yCm - from.yCm
             listOfNotNull(
@@ -555,20 +585,10 @@ private fun ZoneTile(
     val shape = RoundedCornerShape(16.dp)
     // The view pans under a drag near the edge, so the gesture reads where the tile is now rather than restarting.
     val corner by rememberUpdatedState(Offset(left, top))
-    val farCorner by rememberUpdatedState(Offset(left + shown.widthCm * scale, top + shown.heightCm * scale))
     val dragTo by rememberUpdatedState(onDrag)
     val dropped by rememberUpdatedState(onDragEnd)
 
-    // Where the snapped zone will land, drawn under the moving one.
-    if (drag != null) {
-        val landing = PlotLayout.snapped(shown)
-        Box(
-            Modifier
-                .offset { IntOffset((offsetX + landing.xCm * scale).roundToInt(), (offsetY + landing.yCm * scale).roundToInt()) }
-                .size(with(density) { (landing.widthCm * scale).toDp() }, with(density) { (landing.heightCm * scale).toDp() })
-                .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), shape),
-        )
-    }
+    if (drag != null) LandingOutline(landing(rect, drag), scale, offsetX, offsetY, shape)
     Box(Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }.size(widthDp, heightDp)) {
         Surface(
             shape = shape,
@@ -607,7 +627,7 @@ private fun ZoneTile(
                                 onDragCancel = { dropped() },
                             ) { change, amount ->
                                 change.consume()
-                                dragTo(DragPart.MOVE, amount, change.position + corner)
+                                dragTo(DragPart.Move, amount, change.position + corner)
                             }
                         }
                     } else {
@@ -617,36 +637,7 @@ private fun ZoneTile(
         ) {
             TileContent(view, kinds, hives, hotels, due, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value)
         }
-        if (selected) {
-            // The handle is drawn 28 dp across and takes touches over 48 dp, centred on the same spot.
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(20.dp, 20.dp)
-                    .size(48.dp)
-                    .pointerInput(Unit) {
-                        detectDragGestures(
-                            onDragStart = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
-                            onDragEnd = {
-                                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                                dropped()
-                            },
-                            onDragCancel = { dropped() },
-                        ) { change, amount ->
-                            change.consume()
-                            // The handle sits on the tile's bottom right corner, which is about where the finger is.
-                            dragTo(DragPart.RESIZE, amount, farCorner + change.position - Offset(size.width / 2f, size.height / 2f))
-                        }
-                    },
-            ) {
-                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp)) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(painterResource(R.drawable.ic_open_in_full), contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
-                    }
-                }
-            }
-        }
+        if (selected) CornerHandles(Offset(left, top), shown.widthCm * scale, shown.heightCm * scale, onDrag, onDragEnd)
     }
 }
 
@@ -735,8 +726,8 @@ private fun kindColours(kind: ZoneKind): Pair<Color, Color> {
 
 /**
  * A structure on the canvas: its footprint in a quiet colour with its icon and name, an oval for a round one. It is
- * only looked at until the layout is edited; then a press chooses it and a drag moves it, snapping to the grid, and
- * the toolbar's Move and resize does the same with buttons.
+ * only looked at until the layout is edited; then a press chooses it, a drag on it moves it and a drag on a corner
+ * handle resizes it, as for a zone, and the toolbar's Move and resize does the same with buttons.
  */
 @Composable
 private fun StructureTile(
@@ -746,17 +737,20 @@ private fun StructureTile(
     offsetY: Float,
     editing: Boolean,
     selected: Boolean,
+    drag: ZoneDrag?,
     onTap: () -> Unit,
-    onMove: (ZoneRect) -> Unit,
+    onDrag: (DragPart, Offset, Offset) -> Unit,
+    onDragEnd: () -> Unit,
+    onNudge: (right: Int, down: Int) -> Unit,
 ) {
     val density = LocalDensity.current
+    val haptics = LocalHapticFeedback.current
     val rect = structure.rect
-    // How far a drag has carried it, in pixels, until it is dropped and the saved place comes back.
-    var moved by remember(rect) { mutableStateOf(Offset.Zero) }
-    val left = offsetX + rect.xCm * scale + moved.x
-    val top = offsetY + rect.yCm * scale + moved.y
-    val widthDp = with(density) { (rect.widthCm * scale).toDp() }
-    val heightDp = with(density) { (rect.heightCm * scale).toDp() }
+    val shown = drag?.let { dragged(rect, it) } ?: rect
+    val left = offsetX + shown.xCm * scale
+    val top = offsetY + shown.yCm * scale
+    val widthDp = with(density) { (shown.widthCm * scale).toDp() }
+    val heightDp = with(density) { (shown.heightCm * scale).toDp() }
     val shape = if (structure.shape == StructureShape.OVAL) CircleShape else RoundedCornerShape(4.dp)
     val wet = structure.kind == StructureKind.POOL || structure.kind == StructureKind.WATER_TANK
     val colours = MaterialTheme.colorScheme
@@ -767,46 +761,134 @@ private fun StructureTile(
         UiFormat.metresFromCm(rect.widthCm),
         UiFormat.metresFromCm(rect.heightCm),
     )
-    val currentScale by rememberUpdatedState(scale)
-    val currentRect by rememberUpdatedState(rect)
-    val move by rememberUpdatedState(onMove)
+    val moves = listOf(
+        stringResource(R.string.move_left) to (-1 to 0),
+        stringResource(R.string.move_up) to (0 to -1),
+        stringResource(R.string.move_down) to (0 to 1),
+        stringResource(R.string.move_right) to (1 to 0),
+    )
+    // Read through these, so the gesture, which lives as long as the structure, always sees the latest place.
+    val corner by rememberUpdatedState(Offset(left, top))
+    val dragTo by rememberUpdatedState(onDrag)
+    val dropped by rememberUpdatedState(onDragEnd)
     val press by rememberUpdatedState(onTap)
-    val base = Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }.size(widthDp, heightDp)
-    val touch = if (editing) {
-        Modifier
-            .clip(shape)
-            .clickable(onClickLabel = stringResource(R.string.structure_choose)) { press() }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { press() },
-                    onDrag = { change, amount ->
-                        change.consume()
-                        moved += amount
+
+    if (drag != null) LandingOutline(landing(rect, drag), scale, offsetX, offsetY, shape)
+    Box(Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }.size(widthDp, heightDp)) {
+        Surface(
+            shape = shape,
+            color = if (wet) colours.tertiaryContainer else colours.surfaceDim,
+            contentColor = if (wet) colours.onTertiaryContainer else colours.onSurfaceVariant,
+            border = BorderStroke(if (selected) 3.dp else 1.dp, if (selected) colours.primary else colours.outline),
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape)
+                .then(if (editing) Modifier.clickable(onClickLabel = stringResource(R.string.structure_choose)) { press() } else Modifier)
+                .clearAndSetSemantics {
+                    contentDescription = description
+                    this.selected = selected
+                    if (selected) customActions = moves.map { (label, step) -> CustomAccessibilityAction(label) { onNudge(step.first, step.second); true } }
+                    if (editing) onClick(label = null) { press(); true }
+                }
+                .then(
+                    if (editing) {
+                        Modifier.pointerInput(structure.id) {
+                            detectDragGestures(
+                                onDragStart = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                onDragEnd = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                    dropped()
+                                },
+                                onDragCancel = { dropped() },
+                            ) { change, amount ->
+                                change.consume()
+                                dragTo(DragPart.Move, amount, change.position + corner)
+                            }
+                        }
+                    } else {
+                        Modifier
                     },
-                    onDragEnd = {
-                        val to = currentRect.copy(
-                            xCm = currentRect.xCm + (moved.x / currentScale).roundToInt(),
-                            yCm = currentRect.yCm + (moved.y / currentScale).roundToInt(),
-                        )
-                        moved = Offset.Zero
-                        move(to)
-                    },
-                    onDragCancel = { moved = Offset.Zero },
-                )
+                ),
+        ) {
+            Column(Modifier.fillMaxSize().padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                if (heightDp >= 28.dp && widthDp >= 28.dp) Icon(painterResource(structure.kind.icon), contentDescription = null, modifier = Modifier.size(20.dp))
+                if (widthDp >= 64.dp && heightDp >= 52.dp) Text(structure.name, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-    } else {
-        Modifier
+        }
+        if (selected) CornerHandles(Offset(left, top), shown.widthCm * scale, shown.heightCm * scale, onDrag, onDragEnd)
     }
-    Surface(
-        shape = shape,
-        color = if (wet) colours.tertiaryContainer else colours.surfaceDim,
-        contentColor = if (wet) colours.onTertiaryContainer else colours.onSurfaceVariant,
-        border = BorderStroke(if (selected) 3.dp else 1.dp, if (selected) colours.primary else colours.outline),
-        modifier = base.then(touch).clearAndSetSemantics { contentDescription = description },
-    ) {
-        Column(Modifier.fillMaxSize().padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            if (heightDp >= 28.dp && widthDp >= 28.dp) Icon(painterResource(structure.kind.icon), contentDescription = null, modifier = Modifier.size(20.dp))
-            if (widthDp >= 64.dp && heightDp >= 52.dp) Text(structure.name, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+}
+
+/** Where a dragged zone or structure will land on the grid, outlined under the one being dragged. */
+@Composable
+private fun LandingOutline(landing: ZoneRect, scale: Float, offsetX: Float, offsetY: Float, shape: androidx.compose.ui.graphics.Shape) {
+    val density = LocalDensity.current
+    Box(
+        Modifier
+            .offset { IntOffset((offsetX + landing.xCm * scale).roundToInt(), (offsetY + landing.yCm * scale).roundToInt()) }
+            .size(with(density) { (landing.widthCm * scale).toDp() }, with(density) { (landing.heightCm * scale).toDp() })
+            .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), shape),
+    )
+}
+
+/**
+ * A handle on each corner of the chosen zone or structure, drawn 28 dp across and taking touches over 48 dp, centred
+ * on the corner. A drag on one resizes from that corner while the opposite corner stays. [topLeft] and the size are
+ * where the tile is on the canvas, in pixels, so the drag can tell where the finger is for panning at the edge.
+ */
+@Composable
+private fun BoxScope.CornerHandles(topLeft: Offset, width: Float, height: Float, onDrag: (DragPart, Offset, Offset) -> Unit, onDragEnd: () -> Unit) {
+    val haptics = LocalHapticFeedback.current
+    val dragTo by rememberUpdatedState(onDrag)
+    val dropped by rememberUpdatedState(onDragEnd)
+    val origin by rememberUpdatedState(topLeft)
+    val size by rememberUpdatedState(Size(width, height))
+    Corner.entries.forEach { corner ->
+        val description = stringResource(
+            when (corner) {
+                Corner.TOP_LEFT -> R.string.plot_handle_top_left
+                Corner.TOP_RIGHT -> R.string.plot_handle_top_right
+                Corner.BOTTOM_LEFT -> R.string.plot_handle_bottom_left
+                Corner.BOTTOM_RIGHT -> R.string.plot_handle_bottom_right
+            },
+        )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .align(
+                    when (corner) {
+                        Corner.TOP_LEFT -> Alignment.TopStart
+                        Corner.TOP_RIGHT -> Alignment.TopEnd
+                        Corner.BOTTOM_LEFT -> Alignment.BottomStart
+                        Corner.BOTTOM_RIGHT -> Alignment.BottomEnd
+                    },
+                )
+                .offset(if (corner.left) (-20).dp else 20.dp, if (corner.top) (-20).dp else 20.dp)
+                .size(48.dp)
+                .semantics { contentDescription = description }
+                .pointerInput(corner) {
+                    detectDragGestures(
+                        onDragStart = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                        onDragEnd = {
+                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                            dropped()
+                        },
+                        onDragCancel = { dropped() },
+                    ) { change, amount ->
+                        change.consume()
+                        // The handle sits on its corner, which is about where the finger is.
+                        val at = origin + Offset(if (corner.left) 0f else size.width, if (corner.top) 0f else size.height)
+                        dragTo(DragPart.Resize(corner), amount, at + change.position - Offset(this.size.width / 2f, this.size.height / 2f))
+                    }
+                },
+        ) {
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp)) {
+                Box(contentAlignment = Alignment.Center) {
+                    // The icon's arrows point out of the top right and bottom left; the other two corners turn it.
+                    val turn = if (corner == Corner.TOP_LEFT || corner == Corner.BOTTOM_RIGHT) 90f else 0f
+                    Icon(painterResource(R.drawable.ic_open_in_full), contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp).rotate(turn))
+                }
+            }
         }
     }
 }

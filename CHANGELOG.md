@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A chosen zone or structure has a handle on each of its four corners, and a drag on any of them resizes it from that
+  corner while the opposite corner stays. Move and resize also grows or shrinks a zone from its left and top sides.
+- A structure moves under the finger every time it is dragged, with the place it will land outlined and the distance
+  shown, as a zone does. Before, only its first drag after it was added followed the finger.
 - The plant library, in the Plot's More menu, lists every plant Pollenplot knows, to browse or search. When you
   choose to show photos, it fetches one for each plant from the Atlas of Living Australia the first time the plant
   is shown, keeps it on the phone, and credits it; only photos whose licence asks for a credit alone are used, and

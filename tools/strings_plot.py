@@ -53,7 +53,7 @@ STRINGS = {
     "plot_scale_description": "The bar shows %1$s m of yard at this zoom.",
     "zone_tile_more": "+%1$d",
     "zone_preview_open": "Open zone",
-    "plot_edit_hint": "Please drag a zone or a structure to move it, or tap it and use Move and resize. Both snap to a 50 cm grid.",
+    "plot_edit_hint": "Please drag a zone or a structure to move it, or tap it and drag a corner to resize it. Both snap to a 50 cm grid.",
     "plot_show_all": "Show the whole plot",
     "plot_zoom_in": "Zoom in",
     "plot_zoom_out": "Zoom out",
@@ -95,6 +95,12 @@ STRINGS = {
 
     # Moving and resizing
     "adjust_title": "Move and resize %1$s",
+    "adjust_left_edge": "From the left side",
+    "adjust_top_edge": "From the top side",
+    "plot_handle_top_left": "Resize from the top left corner",
+    "plot_handle_top_right": "Resize from the top right corner",
+    "plot_handle_bottom_left": "Resize from the bottom left corner",
+    "plot_handle_bottom_right": "Resize from the bottom right corner",
     "adjust_move": "Move",
     "move_left": "Move left",
     "move_up": "Move up",

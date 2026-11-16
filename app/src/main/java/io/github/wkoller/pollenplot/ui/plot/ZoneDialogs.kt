@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.domain.garden.Corner
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.ListItem
@@ -131,6 +132,21 @@ fun AdjustZoneSheet(name: String, rect: ZoneRect, onDismiss: () -> Unit, onAdjus
                 more = stringResource(R.string.longer),
                 onLess = { onAdjust { PlotLayout.resizedBySteps(it, 0, -1) } },
                 onMore = { onAdjust { PlotLayout.resizedBySteps(it, 0, 1) } },
+            )
+            // The right and bottom edges move above; these move the left and top edges, for a zone that should grow the other way.
+            Stepper(
+                label = stringResource(R.string.adjust_left_edge),
+                less = stringResource(R.string.narrower),
+                more = stringResource(R.string.wider),
+                onLess = { onAdjust { PlotLayout.resizedFrom(it, Corner.TOP_LEFT, PlotLayout.GRID_CM, 0, snap = true) } },
+                onMore = { onAdjust { PlotLayout.resizedFrom(it, Corner.TOP_LEFT, -PlotLayout.GRID_CM, 0, snap = true) } },
+            )
+            Stepper(
+                label = stringResource(R.string.adjust_top_edge),
+                less = stringResource(R.string.shorter),
+                more = stringResource(R.string.longer),
+                onLess = { onAdjust { PlotLayout.resizedFrom(it, Corner.TOP_LEFT, 0, PlotLayout.GRID_CM, snap = true) } },
+                onMore = { onAdjust { PlotLayout.resizedFrom(it, Corner.TOP_LEFT, 0, -PlotLayout.GRID_CM, snap = true) } },
             )
             Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.plot_done)) }
         }
