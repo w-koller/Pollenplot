@@ -33,6 +33,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -314,7 +316,11 @@ fun PlantDetailScreen(
             },
             onSave = { updated ->
                 editing = false
-                scope.launch { garden.updatePlant(updated) }
+                scope.launch {
+                    // The page shows only some of what the sheet edits, so a save always says that it happened.
+                    val saved = garden.updatePlant(updated)
+                    notices?.show(resources.getString(if (saved) R.string.edit_saved else R.string.edit_not_saved, loaded.title))
+                }
             },
         )
     }
@@ -356,6 +362,11 @@ private fun Header(view: PlantView) {
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            val planted = view.plant.plantedOn?.let { stringResource(R.string.plant_planted, UiFormat.longDate(it)) }
+            val status = view.plant.status.takeIf { it != PlantStatus.GROWING }?.let { stringResource(it.label) }
+            if (planted != null || status != null) {
+                Text(listOfNotNull(status, planted).joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
+            }
         }
     }
 }
@@ -720,8 +731,9 @@ private fun EditPlantSheet(
     var plantedOn by rememberSaveable { mutableStateOf(plant.plantedOn) }
     var choosingDay by rememberSaveable { mutableStateOf(false) }
     val today = LocalDate.now()
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    // Opened at its full height, and kept above the keyboard, so Save changes at the bottom can always be reached.
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        LazyColumn(Modifier.fillMaxWidth().imePadding(), contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item { Text(stringResource(R.string.edit_plant_title, view.title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() }) }
             item {
                 // A plant added under the wrong name is given the right one here; its photos and notes stay with it.
@@ -763,6 +775,7 @@ private fun EditPlantSheet(
             item { ChipGroup(stringResource(R.string.status_label), PlantStatus.entries, status, { stringResource(it.label) }) { status = it } }
             item {
                 val needsName = plant.speciesName == null && name.isBlank()
+                if (needsName) Text(stringResource(R.string.edit_needs_name), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
                 Button(
                     onClick = { onSave(plant.copy(zoneId = zoneId, quantity = quantity, plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status)) },
                     enabled = !needsName,

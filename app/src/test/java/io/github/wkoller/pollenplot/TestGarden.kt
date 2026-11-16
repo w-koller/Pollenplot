@@ -309,3 +309,11 @@ fun ComposeContentTestRule.addFromMenu(item: String) {
     pressWhenShown(hasText(item))
 }
 
+
+/**
+ * Reads every guide page, so the screens that show one find it already kept. A page read while its screen waits comes
+ * back from another thread, and under Robolectric that now and then never reached the screen.
+ */
+suspend fun io.github.wkoller.pollenplot.data.guides.GuideLibrary.readAll() {
+    io.github.wkoller.pollenplot.domain.guide.GuideSection.entries.forEach { section(it) }
+}

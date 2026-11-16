@@ -154,12 +154,14 @@ class GardenRepository(
     /** Puts a plant in the search index again, after the records kept under it, such as its harvests, change. */
     suspend fun reindexPlant(id: String) = db.withTransaction { plants.get(id)?.toDomain()?.let { index(it) } }
 
-    suspend fun updatePlant(plant: GardenPlant) {
-        val old = plants.get(plant.id) ?: return
+    /** Saves an edited plant, and says whether it did: a plant removed in the meantime is not brought back. */
+    suspend fun updatePlant(plant: GardenPlant): Boolean {
+        val old = plants.get(plant.id) ?: return false
         db.withTransaction {
             plants.upsert(plant.toEntity(old.createdAt, now()))
             index(plant)
         }
+        return true
     }
 
     suspend fun deletePlant(id: String) = db.withTransaction {

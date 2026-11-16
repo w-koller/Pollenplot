@@ -896,6 +896,10 @@
     <string name="plant_remove_confirm">Delete plant</string>
     <string name="edit_plant_title">Edit %1$s</string>
     <string name="edit_save">Save changes</string>
+    <string name="edit_saved">Your changes to %1$s are saved.</string>
+    <string name="edit_not_saved">Pollenplot could not save your changes to %1$s, because it is no longer in your garden.</string>
+    <string name="edit_needs_name">Please give this plant a name. Pollenplot does not know what it is, so it needs one.</string>
+    <string name="plant_planted">Planted on %1$s</string>
     <string name="edit_notes">Notes</string>
     <string name="status_label">Status</string>
     <string name="status_growing">Growing</string>

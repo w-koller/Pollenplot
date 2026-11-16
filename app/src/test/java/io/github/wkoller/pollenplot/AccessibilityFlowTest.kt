@@ -71,6 +71,8 @@ class AccessibilityFlowTest {
         runBlocking {
             val container = app.container
             container.knowledge.await()
+            // Read here, so a guide page opens from what is kept and not from a read on another thread.
+            container.guides.readAll()
             container.knowledge.awaitFauna()
             val place = GardenPlace.at(-27.4987, 152.9934, "Taringa")
             container.settingsStore.update { it.copy(gardenState = AuState.QLD, gardenPlace = place) }
@@ -126,6 +128,14 @@ class AccessibilityFlowTest {
         compose.onNodeWithText("Mum's lemon").performClick()
         reach(hasText("Bee forage"))
         visit("plant")
+        compose.onNodeWithContentDescription("Edit").performClick()
+        reach(hasText("Save changes"))
+        visit("plant_edit")
+        // With text at twice its size the button can sit partly under the sheet's edge, so its press is sent as an action.
+        compose.onNodeWithText("Save changes").performSemanticsAction(SemanticsActions.OnClick)
+        // The saved message lies over the bottom of the screens that follow until it leaves.
+        waitFor(hasText("Your changes to Mum's lemon are saved."))
+        compose.waitUntil(WAIT_MS) { compose.onAllNodes(hasText("Your changes to Mum's lemon are saved.")).fetchSemanticsNodes().isEmpty() }
         reach(hasText("Edit facts"))
         compose.onNodeWithText("Edit facts").performClick()
         reach(hasText("Water need"))

@@ -55,6 +55,8 @@ class NativeFlowTest {
         WorkManagerTestInitHelper.initializeTestWorkManager(app)
         runBlocking {
             app.container.knowledge.await()
+            // Read here, so a guide page opens from what is kept and not from a read on another thread.
+            app.container.guides.readAll()
             app.container.knowledge.awaitFauna()
             app.container.settingsStore.update { it.copy(gardenState = AuState.QLD) }
             DemoGarden.seed(app.container.garden)

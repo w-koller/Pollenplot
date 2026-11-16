@@ -12,10 +12,14 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -33,6 +37,7 @@ import io.github.wkoller.pollenplot.TestPhotos.bottlebrush
 import io.github.wkoller.pollenplot.TestPhotos.rosemary
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
+import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.domain.id.LabelScore
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.domain.plants.CareField
@@ -160,6 +165,37 @@ class PlantPageFlowTest {
         compose.onNodeWithText("Undo").performClick()
         compose.waitUntil(WAIT_MS) { runBlocking { garden.floweringOf(ids.lemon) }.isEmpty() }
         waitFor(hasText("Seen in flower today"))
+    }
+
+    @Test
+    fun anEditToAPlantIsSaved() {
+        val ids = seed()
+        show(ids.lemon)
+        waitFor(hasText("Light"))
+        compose.onNodeWithContentDescription("Edit").performClick()
+        waitFor(hasText("Edit Mum's lemon"))
+        shot("plant_edit_sheet")
+
+        compose.onNodeWithText("Veg Patch").performClick()
+        compose.onNodeWithContentDescription("One more").performClick()
+        compose.onAllNodes(hasScrollAction()).onLast().performScrollToNode(hasText("Save changes"))
+        compose.onNodeWithText("Died").performClick()
+        compose.onAllNodes(hasScrollAction()).onLast().performScrollToNode(hasText("Notes"))
+        compose.onNode(hasText("Notes") and hasSetTextAction()).performTextInput("By the back fence")
+        compose.onAllNodes(hasScrollAction()).onLast().performScrollToNode(hasText("Save changes"))
+        compose.onNodeWithText("Save changes").performClick()
+
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.plant(ids.lemon) }?.quantity == 2 }
+        val saved = runBlocking { garden.plant(ids.lemon) }!!
+        assertEquals(ids.veg, saved.zoneId)
+        assertEquals(PlantStatus.DIED, saved.status)
+        assertEquals("By the back fence", saved.notes)
+        // The page says the edit was saved, and shows what changed.
+        waitFor(hasText("Your changes to Mum's lemon are saved."))
+        waitFor(hasText("2 plants", substring = true))
+        waitFor(hasText("Veg Patch", substring = true))
+        waitFor(hasText("Died"))
+        shot("plant_edit_saved")
     }
 
     @Test
