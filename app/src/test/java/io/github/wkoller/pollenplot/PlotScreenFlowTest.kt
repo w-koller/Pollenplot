@@ -321,8 +321,7 @@ class PlotScreenFlowTest {
     fun theAssistantAndTheGuidesAreInTheMoreMenu() {
         seed()
         show()
-        compose.pressWhenShown(hasContentDescription("More"))
-        waitFor(hasText("Ask your garden"))
+        compose.openMore(hasText("Ask your garden"))
         // The review queue and the weeds are there even with nothing waiting.
         compose.onNodeWithText("Review").assertExists()
         compose.onNodeWithText("Weeds").assertExists()
