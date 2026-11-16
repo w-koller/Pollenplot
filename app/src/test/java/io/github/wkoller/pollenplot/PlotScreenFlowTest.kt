@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot
 
+import kotlinx.coroutines.flow.first
+import androidx.compose.ui.test.performScrollTo
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
@@ -111,6 +113,28 @@ class PlotScreenFlowTest {
         compose.onNodeWithText("Add to garden").performClick()
         waitFor(hasText("In Front Native Strip"))
         shot("add_plant_done")
+    }
+
+    @Test
+    fun addAPlantToTwoZones() {
+        seed()
+        show()
+        compose.addFromMenu("Add a plant by name")
+        waitFor(hasSetTextAction())
+        compose.onNode(hasSetTextAction()).performTextInput("bottle")
+        waitFor(hasText("Weeping bottlebrush"))
+        compose.onNodeWithText("Weeping bottlebrush").performClick()
+        compose.onNodeWithText("Front Native Strip").performClick()
+        compose.onNodeWithText("Veg Patch").performClick()
+        // With two zones chosen, Pollenplot asks what they hold.
+        waitFor(hasText("In these zones there is"))
+        shot("add_plant_two_zones")
+        compose.onNodeWithText("One plant in each zone").performClick()
+        compose.onNodeWithText("Add to garden").performScrollTo().performClick()
+        waitFor(hasText("In Front Native Strip"))
+        val added = runBlocking { app.container.garden.plantList.first() }.filter { it.speciesName == "Melaleuca viminalis" }
+        assertEquals("A plant of its own in each zone", 2, added.size)
+        assertEquals(2, added.flatMap { it.zoneIds }.distinct().size)
     }
 
     @Test

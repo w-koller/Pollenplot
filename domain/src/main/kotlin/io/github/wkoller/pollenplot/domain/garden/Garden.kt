@@ -45,14 +45,22 @@ data class Zone(
 enum class PlantStatus { GROWING, REMOVED, DIED }
 
 /**
+ * What adding a plant to several zones makes. [ONE_PLANT] is one record that grows in each of the zones, for the same
+ * plant with the same care in several places; [PLANT_EACH] is a record of its own in each zone, each with its own
+ * count, pot, pruning and history; [ASK] offers both each time.
+ */
+enum class ManyZones { ASK, ONE_PLANT, PLANT_EACH }
+
+/**
  * A plant in the garden. [speciesName] is the knowledge base's scientific name, or null for a plant the user named
- * themselves. [customName] is the user's own name for it, such as "Mum's lemon tree".
+ * themselves. [customName] is the user's own name for it, such as "Mum's lemon tree". [zoneIds] are the zones it grows
+ * in, the first chosen first, and none for a plant with no zone; [quantity] is how many there are in each of them.
  */
 data class GardenPlant(
     val id: String,
     val speciesName: String?,
     val customName: String?,
-    val zoneId: String?,
+    val zoneIds: List<String> = emptyList(),
     val quantity: Int = 1,
     val plantedOn: LocalDate? = null,
     val status: PlantStatus = PlantStatus.GROWING,
@@ -63,5 +71,19 @@ data class GardenPlant(
     init {
         require(speciesName != null || !customName.isNullOrBlank()) { "A plant needs a species or a name" }
         require(quantity >= 1) { "A plant entry counts at least one plant" }
+    }
+
+    /** How many plants the record counts across its zones. */
+    val total: Int get() = quantity * zoneIds.size.coerceAtLeast(1)
+
+    companion object {
+        /**
+         * The zones of each record to make when a plant is added to [zoneIds]: one record in all of them, or with
+         * [each] one record for every zone. No zone gives one record with none.
+         */
+        fun placings(zoneIds: List<String>, each: Boolean): List<List<String>> {
+            val zones = zoneIds.distinct()
+            return if (each && zones.size > 1) zones.map { listOf(it) } else listOf(zones)
+        }
     }
 }

@@ -25,7 +25,7 @@ fun SightingFields(
     onPlants: (Set<String>) -> Unit,
     onBehaviours: (Set<Behaviour>) -> Unit,
 ) {
-    val nearbyPlants = plants.filter { (it.isGrowing && (zoneId == null || it.plant.zoneId == zoneId)) || it.plant.id in plantIds }
+    val nearbyPlants = plants.filter { (it.isGrowing && (zoneId == null || zoneId in it.plant.zoneIds)) || it.plant.id in plantIds }
     ZoneChooser(zones, zoneId, onChoose = onZone)
     if (nearbyPlants.isNotEmpty()) {
         val titles = nearbyPlants.associate { it.plant.id to it.title }

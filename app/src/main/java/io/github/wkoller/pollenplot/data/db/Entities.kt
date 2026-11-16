@@ -33,16 +33,12 @@ data class ZoneEntity(
     val updatedAt: Long,
 )
 
-@Entity(
-    tableName = "plants",
-    foreignKeys = [ForeignKey(entity = ZoneEntity::class, parentColumns = ["id"], childColumns = ["zoneId"], onDelete = ForeignKey.SET_NULL)],
-    indices = [Index("zoneId"), Index("speciesName")],
-)
+@Entity(tableName = "plants", indices = [Index("speciesName")])
 data class PlantEntity(
     @PrimaryKey val id: String,
     val speciesName: String?,
     val customName: String?,
-    val zoneId: String?,
+    /** How many there are in each of the plant's zones, which are in [PlantZoneEntity]. */
     val quantity: Int,
     val plantedOnEpochDay: Long?,
     val status: String,
@@ -52,6 +48,18 @@ data class PlantEntity(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+/** A zone a plant grows in. A plant may have several, and each goes when its plant or its zone does. */
+@Entity(
+    tableName = "plant_zones",
+    primaryKeys = ["plantId", "zoneId"],
+    foreignKeys = [
+        ForeignKey(entity = PlantEntity::class, parentColumns = ["id"], childColumns = ["plantId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = ZoneEntity::class, parentColumns = ["id"], childColumns = ["zoneId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("zoneId")],
+)
+data class PlantZoneEntity(val plantId: String, val zoneId: String)
 
 /** A photo the app has kept, downscaled into its own storage so records survive if the original is deleted. */
 @Entity(tableName = "photos", indices = [Index("contentHash")])

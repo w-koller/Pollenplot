@@ -331,7 +331,7 @@ private fun PlotList(
     water: WaterState? = null,
     fed: Map<String, LastFed> = emptyMap(),
 ) {
-    val unzoned = plants.filter { it.plant.zoneId == null && it.isGrowing }
+    val unzoned = plants.filter { it.plant.zoneIds.isEmpty() && it.isGrowing }
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
     LazyColumn(
         Modifier.fillMaxSize(),

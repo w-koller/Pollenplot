@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.material3.OutlinedButton
 import android.util.Log
@@ -131,10 +132,10 @@ class DetectionActions(
     }
 
     /** Adds a find to the garden as a new plant, and hands the plant to [onAdded]. */
-    fun add(detection: DetectionRecord, speciesName: String?, customName: String?, zoneId: String?, flowering: Boolean, onAdded: (plantId: String) -> Unit = {}) {
+    fun add(detection: DetectionRecord, speciesName: String?, customName: String?, zoneIds: List<String>, each: Boolean, flowering: Boolean, onAdded: (plantId: String) -> Unit = {}) {
         scope.launch {
-            val plant = garden.confirmDetection(detection.id, speciesName, customName, zoneId, flowering = flowering)
-            if (zoneId != null) settings.update { it.copy(lastZoneId = zoneId) }
+            val plant = garden.confirmDetectionIn(detection.id, speciesName, customName, zoneIds, each, flowering = flowering)
+            zoneIds.firstOrNull()?.let { first -> settings.update { it.copy(lastZoneId = first) } }
             onAdded(plant.id)
         }
     }
@@ -265,11 +266,11 @@ fun PhotoReviewScreen(
     }
     val callbacks = remember(actions, leaving) {
         ReviewCallbacks(
-            onAdd = { detection, species, custom, zoneId, flowering ->
+            onAdd = { detection, species, custom, zoneIds, each, flowering ->
                 decided = true
-                actions.add(detection, species, custom, zoneId, flowering) { plantId ->
+                actions.add(detection, species, custom, zoneIds, each, flowering) { plantId ->
                     if (leaving) {
-                        val zone = zoneId?.let { zoneNames[it] }
+                        val zone = zoneIds.mapNotNull { zoneNames[it] }.joinToString(", ").ifEmpty { null }
                         notices?.show(
                             if (zone != null) resources.getString(R.string.review_added_to_zone, zone) else resources.getString(R.string.review_added),
                             action = resources.getString(R.string.review_open),
@@ -387,7 +388,7 @@ fun PhotoReviewScreen(
             startZoneId = current?.lastZoneId?.takeIf { it in zoneIds },
             onBack = { choosingZone = false },
         ) { zoneId ->
-            val growing = plants.filter { it.isGrowing && it.plant.zoneId == zoneId && it.plant.speciesName != null }
+            val growing = plants.filter { it.isGrowing && zoneId in it.plant.zoneIds && it.plant.speciesName != null }
                 .associate { it.plant.speciesName!! to it.plant.id }
             decided = true
             actions.addAll(adds, zoneId, growing)
@@ -468,7 +469,7 @@ fun PhotoReviewScreen(
                     }
                     // Plants in one photo usually grow together, so the zone the photo's other plants went into comes first.
                     val photoZones = review.detections.filter { it.status == DetectionStatus.CONFIRMED }
-                        .map { d -> plants.firstOrNull { it.plant.id == d.plantId }?.plant?.zoneId }
+                        .flatMap { d -> plants.firstOrNull { it.plant.id == d.plantId }?.plant?.zoneIds.orEmpty() }
                     val suggestedZone = ZoneSuggestion.suggest(photoZones, current?.lastZoneId, zoneIds)
                     // Each card keeps the number its marker has on the photo, whichever cards have left.
                     val cards = review.detections.withIndex().filter { !leaving || it.value.status == DetectionStatus.NEEDS_REVIEW }
@@ -495,6 +496,7 @@ fun PhotoReviewScreen(
                             sightings = sightings,
                             field = field,
                             help = help,
+                            manyZones = current?.manyZones ?: ManyZones.ASK,
                         )
                     }
                 }

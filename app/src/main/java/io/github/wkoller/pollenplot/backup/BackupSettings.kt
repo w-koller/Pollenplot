@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.backup
 
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
 import io.github.wkoller.pollenplot.domain.bees.stingless.HeatAlerts
@@ -35,6 +36,7 @@ data class BackupSettings(
     val wateringFromMinute: Int? = null,
     val wateringToMinute: Int? = null,
     val petsAtHome: Boolean? = null,
+    val manyZones: String? = null,
     val potReminders: Boolean? = null,
     val feedReminders: Boolean? = null,
     val conditionerBeforeHeat: Boolean? = null,
@@ -76,6 +78,7 @@ data class BackupSettings(
                 wateringToMinute?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
             } ?: current.wateringWindow,
             petsAtHome = petsAtHome ?: current.petsAtHome,
+            manyZones = ManyZones.entries.firstOrNull { it.name == manyZones } ?: current.manyZones,
         )
     }
 
@@ -111,6 +114,7 @@ data class BackupSettings(
             wateringFromMinute = settings.wateringWindow.fromMinute,
             wateringToMinute = settings.wateringWindow.toMinute,
             petsAtHome = settings.petsAtHome,
+            manyZones = settings.manyZones.name,
         )
 
         /** The settings in [text], or null when they cannot be read, in which case the phone's settings stay. */

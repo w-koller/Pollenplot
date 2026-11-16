@@ -9,7 +9,9 @@ object ZoneSuggestion {
      * [photoZones] are the zones of the plants already confirmed from the same photo (null for "no zone"), [lastUsed]
      * the zone chosen for the last plant added, and [zones] the zones that still exist.
      */
-    fun suggest(photoZones: List<String?>, lastUsed: String?, zones: Set<String>): String? {
+    fun suggest(photoZones: List<String?>, lastUsed: String?, zones: Set<String>, asked: String? = null): String? {
+        // A photo taken from a zone's own page is of that zone.
+        if (asked != null && asked in zones) return asked
         val counts = photoZones.filterNotNull().filter { it in zones }.groupingBy { it }.eachCount()
         val best = counts.maxOfOrNull { it.value } ?: return lastUsed?.takeIf { it in zones }
         // Ties go to the zone confirmed first, so the suggestion does not jump around as plants are added.

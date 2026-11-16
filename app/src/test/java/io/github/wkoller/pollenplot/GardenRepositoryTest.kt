@@ -110,7 +110,7 @@ class GardenRepositoryTest {
         garden.updateZone(garden.zone(ids.citrus)!!.copy(name = "Orchard Corner"))
         assertTrue(garden.search("orchard corner").any { it.title == "Mum's lemon" })
         garden.deleteZone(ids.citrus)
-        assertNull(garden.plant(ids.lemon)!!.zoneId)
+        assertNull(garden.plant(ids.lemon)!!.zoneIds.singleOrNull())
         assertFalse(garden.search("orchard corner").any { it.title == "Mum's lemon" })
         assertTrue(garden.search("lemon").any { it.title == "Mum's lemon" })
     }
@@ -206,7 +206,7 @@ class GardenRepositoryTest {
         val plant = garden.confirmDetection(bottlebrush.id, "Melaleuca citrina", null, zone.id, flowering = true)
 
         assertEquals("thumbs/bottlebrush.webp", garden.plant(plant.id)!!.thumbnail)
-        assertEquals(zone.id, garden.plant(plant.id)!!.zoneId)
+        assertEquals(zone.id, garden.plant(plant.id)!!.zoneIds.singleOrNull())
         val stored = garden.detection(bottlebrush.id)!!
         assertEquals(DetectionStatus.CONFIRMED, stored.status)
         assertEquals(plant.id, stored.plantId)
@@ -436,7 +436,7 @@ class GardenRepositoryTest {
         val plants = garden.plantList.first()
         assertEquals("One new bottlebrush beside the rosemary already there", 2, plants.size)
         val bottlebrush = plants.single { it.speciesName == "Melaleuca citrina" }
-        assertEquals(zone.id, bottlebrush.zoneId)
+        assertEquals(zone.id, bottlebrush.zoneIds.singleOrNull())
         assertEquals(growing.id, garden.detection(found[1].id)!!.plantId)
         assertEquals("The second photo of the same species in the batch goes to the plant just added", bottlebrush.id, garden.detection(second[0].id)!!.plantId)
         assertEquals(listOf(LocalDate.of(2026, 11, 2)), garden.floweringOf(bottlebrush.id))
@@ -495,4 +495,24 @@ class GardenRepositoryTest {
 
     /** A vector with 1 in place [i], so each record's vector differs. */
     private fun unit(i: Int) = FloatArray(32).also { it[i % 32] = 1f }
+
+    @Test
+    fun aPlantAddedToSeveralZonesIsOneRecordOrOneInEach() = runBlocking {
+        val front = garden.addZone("Front", ZoneKind.GARDEN_BED)
+        val back = garden.addZone("Back", ZoneKind.GARDEN_BED)
+
+        val one = garden.addPlants("Salvia rosmarinus", null, listOf(front.id, back.id), each = false, quantity = 2).single()
+        assertEquals(listOf(front.id, back.id), garden.plant(one.id)!!.zoneIds)
+        assertEquals("Two in each of two zones", 4, garden.plant(one.id)!!.total)
+        assertTrue("Found by either zone", garden.search("rosemary back").any { it.recordId == one.id })
+
+        val each = garden.addPlants("Lavandula dentata", null, listOf(front.id, back.id), each = true)
+        assertEquals(listOf(listOf(front.id), listOf(back.id)), each.map { garden.plant(it.id)!!.zoneIds })
+
+        // A zone that goes takes the plant out of it, and the plant stays in its other zone.
+        garden.deleteZone(back.id)
+        assertEquals(listOf(front.id), garden.plant(one.id)!!.zoneIds)
+        assertEquals(emptyList<String>(), garden.plant(each[1].id)!!.zoneIds)
+        assertEquals(3, garden.plantList.first().size)
+    }
 }

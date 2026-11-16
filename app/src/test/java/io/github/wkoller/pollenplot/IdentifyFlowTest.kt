@@ -104,7 +104,7 @@ class IdentifyFlowTest {
         compose.onAllNodesWithText("Add to garden")[0].performClick()
         waitFor(hasText("Added to Front Native Strip."))
         val crimson = plants().single { it.speciesName == "Melaleuca citrina" }
-        assertEquals(ids.front, crimson.zoneId)
+        assertEquals(ids.front, crimson.zoneIds.singleOrNull())
         assertNotNull("The cut-out becomes the plant's picture", crimson.thumbnail)
         assertEquals(1, runBlocking { garden.floweringOf(crimson.id) }.size)
 
@@ -136,7 +136,7 @@ class IdentifyFlowTest {
         waitFor(hasText("Your choice"))
         compose.onNodeWithText("Add to garden").performClick()
         compose.waitUntil(WAIT_MS) { plants().any { it.speciesName == "Hibbertia scandens" } }
-        assertEquals("The zone chosen for the first plant is offered for the others", ids.front, plants().single { it.speciesName == "Hibbertia scandens" }.zoneId)
+        assertEquals("The zone chosen for the first plant is offered for the others", ids.front, plants().single { it.speciesName == "Hibbertia scandens" }.zoneIds.singleOrNull())
         shot("identify_results_done")
 
         val photoId = photoIdOf(crimson)

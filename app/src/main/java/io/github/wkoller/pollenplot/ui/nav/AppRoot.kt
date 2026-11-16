@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.nav
 
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -487,6 +488,7 @@ fun AppRoot(
                             initialZoneId = route.zoneId,
                             initialSpecies = route.species,
                             onBack = back,
+                            manyZones = container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null).value?.manyZones ?: ManyZones.ASK,
                             onAdded = { plantId ->
                                 // A plant added from the wishlist marks its wish planted.
                                 route.wishId?.let(container::wishPlanted)

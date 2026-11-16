@@ -30,7 +30,7 @@ class GardenGraphTest {
     private val zone = Zone("11111111-1111-1111-1111-111111111111", "Back Citrus Patch", ZoneKind.ORCHARD, ZoneRect(0, 0, 400, 250), sun = Sun.FULL_SUN, mulched = true)
     private val lemon = Species("Citrus × limon", "Citrus", "Rutaceae", listOf("Lemon"), GrowthForm.TREE, emptySet(), false, emptyList(), CareProfile())
     private val plant = GardenPlant(
-        "22222222-2222-2222-2222-222222222222", "Citrus × limon", "Mum's lemon", zone.id, quantity = 1, plantedOn = LocalDate.of(2024, 9, 1),
+        "22222222-2222-2222-2222-222222222222", "Citrus × limon", "Mum's lemon", listOf(zone.id), quantity = 1, plantedOn = LocalDate.of(2024, 9, 1),
     )
 
     private fun node(doc: JsonObject, id: String): JsonObject =
@@ -75,7 +75,7 @@ class GardenGraphTest {
 
     @Test
     fun `blank values are left out`() {
-        val bare = GardenPlant("33333333-3333-3333-3333-333333333333", null, "Unknown shrub", null)
+        val bare = GardenPlant("33333333-3333-3333-3333-333333333333", null, "Unknown shrub")
         val p = node(JsonLd.document(GardenGraph.plant(bare, null, emptyList())), "urn:uuid:${bare.id}")
         assertTrue(p.keys.none { it == "dwc:scientificName" || it == "schema:containedInPlace" || it == "dwc:occurrenceRemarks" })
     }

@@ -163,7 +163,7 @@ class WildFindFlowTest {
         waitFor(hasText("In Front Native Strip"))
         compose.waitUntil(WAIT_MS) { runBlocking { wishes.wishes.first() }.single().status == WishStatus.PLANTED }
         val plant = runBlocking { garden.plantList.first() }.single { it.speciesName == "Hibbertia scandens" }
-        assertEquals("The plant goes in the wish's zone", ids.front, plant.zoneId)
+        assertEquals("The plant goes in the wish's zone", ids.front, plant.zoneIds.singleOrNull())
     }
 
     @Test

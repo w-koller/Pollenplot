@@ -135,7 +135,7 @@ class ReviewFlowTest {
         compose.onNodeWithText("Add the photo to it").performClick()
         waitFor(hasText("Added to the photos of Rosemary."))
         assertEquals(1, runBlocking { garden.pendingReviewCount.first() })
-        assertEquals(ids.hive, runBlocking { garden.plantList.first() }.single { it.speciesName == "Salvia rosmarinus" }.zoneId)
+        assertEquals(ids.hive, runBlocking { garden.plantList.first() }.single { it.speciesName == "Salvia rosmarinus" }.zoneIds.singleOrNull())
         // The decided find has left, and the one still waiting is at hand.
         compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Add the photo to it").fetchSemanticsNodes().isEmpty() }
         shot("review_queue_decided")
@@ -186,7 +186,7 @@ class ReviewFlowTest {
 
         val plants = runBlocking { garden.plantList.first() }
         assertEquals("The rosemary already in Hive Corner gets the photo", 1, plants.count { it.speciesName == "Salvia rosmarinus" })
-        assertEquals(ids.hive, plants.last { it.speciesName == "Melaleuca citrina" }.zoneId)
+        assertEquals(ids.hive, plants.last { it.speciesName == "Melaleuca citrina" }.zoneIds.singleOrNull())
         val seen = runBlocking { plants.sumOf { garden.floweringOf(it.id).size } }
         assertTrue("Finds added several at once take what the In flower switch says, not the models' guess", seen != 1)
     }

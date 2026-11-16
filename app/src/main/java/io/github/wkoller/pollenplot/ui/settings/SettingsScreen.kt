@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import io.github.wkoller.pollenplot.ui.components.ChipGroup
+import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.content.Intent
 import android.net.Uri
@@ -94,6 +98,9 @@ fun SettingsScreen(
                     supportingContent = { Text(stringResource(R.string.settings_pets_body)) },
                     trailingContent = { Switch(checked = settings.petsAtHome, onCheckedChange = null) },
                 ) { Text(stringResource(R.string.settings_pets)) }
+            }
+            item {
+                ManyZonesSetting(settings.manyZones, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { choice -> update { it.copy(manyZones = choice) } }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             item { SectionHeading(stringResource(R.string.settings_photos)) }
@@ -289,4 +296,37 @@ internal fun StateDialog(current: AuState?, onDismiss: () -> Unit, onChoose: (Au
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** What adding a plant to several zones makes, as a setting: asked in setup and changed in Settings. */
+@Composable
+fun ManyZonesSetting(choice: ManyZones, modifier: Modifier = Modifier, onChoose: (ManyZones) -> Unit) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        ChipGroup(
+            title = stringResource(R.string.settings_many_zones),
+            options = listOf(ManyZones.ASK, ManyZones.ONE_PLANT, ManyZones.PLANT_EACH),
+            selected = choice,
+            label = {
+                stringResource(
+                    when (it) {
+                        ManyZones.ASK -> R.string.many_zones_ask
+                        ManyZones.ONE_PLANT -> R.string.many_zones_one
+                        ManyZones.PLANT_EACH -> R.string.many_zones_each
+                    },
+                )
+            },
+            onChoose = onChoose,
+        )
+        Text(
+            stringResource(
+                when (choice) {
+                    ManyZones.ASK -> R.string.many_zones_ask_body
+                    ManyZones.ONE_PLANT -> R.string.many_zones_one_body
+                    ManyZones.PLANT_EACH -> R.string.many_zones_each_body
+                },
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }

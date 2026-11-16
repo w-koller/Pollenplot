@@ -127,7 +127,8 @@ class GardenViews(
     }
 
     val zones: Flow<List<ZoneView>> = combine(repository.zoneList, plants, sightings) { zones, plants, sightings ->
-        val byZone = plants.filter { it.isGrowing }.groupBy { it.plant.zoneId }
+        // A plant growing in several zones is in each zone's list.
+        val byZone = plants.filter { it.isGrowing }.flatMap { view -> view.plant.zoneIds.map { it to view } }.groupBy({ it.first }, { it.second })
         val seenIn = sightings.groupBy { it.sighting.zoneId }
         zones.map { zone ->
             val inZone = byZone[zone.id].orEmpty()
@@ -151,7 +152,7 @@ class GardenViews(
                 weed.isWeed -> listOf(EcoRole.WEED_RISK)
                 else -> emptyList()
             }
-            return PlantView(plant, species, care, roles, plant.zoneId?.let(zoneNames::get), weed)
+            return PlantView(plant, species, care, roles, plant.zoneIds.mapNotNull(zoneNames::get).joinToString(", ").ifEmpty { null }, weed)
         }
     }
 }
@@ -160,7 +161,7 @@ class GardenViews(
 private fun PlantView.waterPlant() = WaterPlant(
     id = plant.id,
     title = title,
-    zoneId = plant.zoneId,
+    zoneId = plant.zoneIds.firstOrNull(),
     plantFactorBp = care?.care?.water?.plantFactorBp,
     widthMm = null,
     form = species?.form,

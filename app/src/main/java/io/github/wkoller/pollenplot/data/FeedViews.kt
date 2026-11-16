@@ -33,9 +33,9 @@ class FeedViews(feeds: FeedRepository, private val views: GardenViews, water: Wa
 
     val due: Flow<List<ZoneFeedDue>> = combine(views.plants, views.zones, feeds.feeds, feeds.kinds, settings.settings) { plants, zones, list, kinds, current ->
         val names = zones.associate { it.zone.id to it.zone.name }
-        val feedPlants = plants.filter { it.isGrowing && it.plant.zoneId != null }.map { view ->
+        val feedPlants = plants.filter { it.isGrowing }.flatMap { view -> view.plant.zoneIds.map { it to view } }.map { (zoneId, view) ->
             val species = view.species
-            FeedPlant(view.title, view.plant.zoneId!!, library.guide.forPlant(species?.name ?: view.plant.speciesName, species?.genus, species?.family))
+            FeedPlant(view.title, zoneId, library.guide.forPlant(species?.name ?: view.plant.speciesName, species?.genus, species?.family))
         }
         FeedPlanner.due(feedPlants, list, kinds, LocalDate.now(clock), current.hemisphere)
             .mapNotNull { due -> names[due.zoneId]?.let { ZoneFeedDue(it, due) } }
@@ -52,7 +52,7 @@ class FeedViews(feeds: FeedRepository, private val views: GardenViews, water: Wa
 
     /** The feeding schedules the plants growing in a zone follow, each with its source. */
     fun zoneSchedules(zoneId: String): Flow<List<FeedSchedule>> = views.plants.map { plants ->
-        plants.filter { it.isGrowing && it.plant.zoneId == zoneId }
+        plants.filter { it.isGrowing && zoneId in it.plant.zoneIds }
             .mapNotNull { library.guide.forPlant(it.species?.name ?: it.plant.speciesName, it.species?.genus, it.species?.family) }
             .distinct()
     }

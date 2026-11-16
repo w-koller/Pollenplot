@@ -84,18 +84,19 @@ class WaterViews(
     val state: Flow<WaterState> = combine(records, views.plants, garden.zoneList, settings.settings, pottedZones) { records, plants, zones, current, potted ->
         val today = LocalDate.now(clock)
         val byZone = zones.associateBy { it.id }
-        val growing = plants.filter { it.plant.status == PlantStatus.GROWING && it.plant.zoneId != null }
-        fun waterPlants(zoneIds: Set<String>) = growing.filter { it.plant.zoneId in zoneIds }.map { view ->
+        // A plant growing in several zones is watered in each, so it is taken once for each of its zones.
+        val growing = plants.filter { it.plant.status == PlantStatus.GROWING }.flatMap { view -> view.plant.zoneIds.map { it to view } }
+        fun waterPlants(zoneIds: Set<String>) = growing.filter { it.first in zoneIds }.map { (zoneId, view) ->
             val care = view.care?.care
             WaterPlant(
                 id = view.plant.id,
                 title = view.title,
-                zoneId = view.plant.zoneId,
+                zoneId = zoneId,
                 plantFactorBp = care?.water?.plantFactorBp,
                 widthMm = care?.width?.let { (it.minMm + it.maxMm) / 2 },
                 form = view.species?.form,
                 quantity = view.plant.quantity,
-                soil = view.plant.zoneId?.let(byZone::get)?.soil,
+                soil = byZone[zoneId]?.soil,
             )
         }
         val lines = records.lines.map { line ->
@@ -140,7 +141,7 @@ class WaterViews(
             window = current.wateringWindow,
             zones = zoneWatering,
             potsBeforeHeat = PotsBeforeHeat.hotTomorrow(records.weather, today)?.let { max ->
-                val planted = growing.mapNotNull { it.plant.zoneId }.toSet()
+                val planted = growing.map { it.first }.toSet()
                 zones.filter { it.id in planted && (PotsBeforeHeat.isPots(it.kind, it.soil) || it.id in potted) }.takeIf { it.isNotEmpty() }?.let { PotsWarning(it, max) }
             },
         )

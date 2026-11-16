@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.review.NamesSaver
 import io.github.wkoller.pollenplot.ui.components.readableSides
 import io.github.wkoller.pollenplot.ui.components.LevelTag
 import io.github.wkoller.pollenplot.ui.components.FactCard
@@ -357,7 +358,7 @@ private fun Header(view: PlantView) {
             }
             Text(
                 listOfNotNull(
-                    if (view.plant.quantity > 1) pluralStringResource(R.plurals.plant_count, view.plant.quantity, view.plant.quantity) else null,
+                    if (view.plant.total > 1) pluralStringResource(R.plurals.plant_count, view.plant.total, view.plant.total) else null,
                     view.zoneName?.let { stringResource(R.string.plant_zone, it) } ?: stringResource(R.string.plant_no_zone),
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,
@@ -723,7 +724,7 @@ private fun EditPlantSheet(
     onSave: (io.github.wkoller.pollenplot.domain.garden.GardenPlant) -> Unit,
 ) {
     val plant = view.plant
-    var zoneId by rememberSaveable { mutableStateOf(plant.zoneId) }
+    var zoneIds by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(plant.zoneIds) }
     var quantity by rememberSaveable { mutableIntStateOf(plant.quantity) }
     var name by rememberSaveable { mutableStateOf(plant.customName.orEmpty()) }
     var notes by rememberSaveable { mutableStateOf(plant.notes) }
@@ -742,8 +743,8 @@ private fun EditPlantSheet(
                     Text(stringResource(R.string.plant_change))
                 }
             }
-            item { ZoneChooser(zones, zoneId) { zoneId = it } }
-            item { QuantityStepper(quantity) { quantity = it } }
+            item { ZonesChooser(zones, zoneIds) { zoneIds = it } }
+            item { QuantityStepper(quantity, title = if (zoneIds.size > 1) stringResource(R.string.add_sheet_quantity_each) else null) { quantity = it } }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(stringResource(R.string.planted_on), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
@@ -777,7 +778,7 @@ private fun EditPlantSheet(
                 val needsName = plant.speciesName == null && name.isBlank()
                 if (needsName) Text(stringResource(R.string.edit_needs_name), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
                 Button(
-                    onClick = { onSave(plant.copy(zoneId = zoneId, quantity = quantity, plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status)) },
+                    onClick = { onSave(plant.copy(zoneIds = zoneIds, quantity = quantity, plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status)) },
                     enabled = !needsName,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.edit_save)) }
