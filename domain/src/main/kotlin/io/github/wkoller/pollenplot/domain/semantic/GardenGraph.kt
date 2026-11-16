@@ -61,6 +61,7 @@ object GardenGraph {
             .integer(iri, Vocab.DWC + "individualCount", plant.quantity.toLong())
             .text(iri, Vocab.DWC + "occurrenceStatus", if (plant.status.name == "GROWING") "present" else "absent")
             .date(iri, Vocab.PP + "plantedOn", plant.plantedOn?.toString())
+            .date(iri, Vocab.PP + "endedOn", plant.endedOn?.toString())
             .also { graph ->
                 // A plant growing in several zones is contained in each.
                 plant.zoneIds.forEach {

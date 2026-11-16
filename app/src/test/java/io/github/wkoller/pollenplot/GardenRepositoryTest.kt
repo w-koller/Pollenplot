@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot
 
+import org.junit.Assert.assertNotNull
+import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.wkoller.pollenplot.data.BatchAdd
@@ -523,5 +525,18 @@ class GardenRepositoryTest {
         assertEquals(listOf(front.id), garden.plant(one.id)!!.zoneIds)
         assertEquals(emptyList<String>(), garden.plant(each[1].id)!!.zoneIds)
         assertEquals(4, garden.plantList.first().size)
+    }
+
+    @Test
+    fun aPlantThatStopsGrowingKeepsTheDayItEnded() = runBlocking {
+        val plant = garden.addPlant("Salvia rosmarinus", null, null)
+        garden.updatePlant(plant.copy(status = PlantStatus.DIED))
+        assertNotNull("The day it died is kept", garden.plant(plant.id)!!.endedOn)
+        val chosen = java.time.LocalDate.of(2026, 3, 9)
+        garden.updatePlant(garden.plant(plant.id)!!.copy(status = PlantStatus.REMOVED, endedOn = chosen))
+        assertEquals(chosen, garden.plant(plant.id)!!.endedOn)
+        garden.updatePlant(garden.plant(plant.id)!!.copy(status = PlantStatus.GROWING))
+        assertNull("Brought back, it has no end", garden.plant(plant.id)!!.endedOn)
+        assertEquals(0, garden.historyOf(plant.id).photos)
     }
 }

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.nav
 
+import io.github.wkoller.pollenplot.ui.plants.GraveyardScreen
 import io.github.wkoller.pollenplot.ui.library.LibraryScreen
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import android.content.Intent
@@ -274,6 +275,7 @@ fun AppRoot(
                         val scope = rememberCoroutineScope()
                         PlotScreen(
                             onLibrary = { navController.navigate(LibraryRoute()) },
+                            onGraveyard = { navController.navigate(GraveyardRoute) },
                             settings = container.settingsStore,
                             garden = container.garden,
                             views = container.views,
@@ -519,6 +521,9 @@ fun AppRoot(
                             onBack = back,
                             onOpenPlant = { navController.navigate(PlantRoute(it)) },
                         )
+                    }
+                    composable<GraveyardRoute> {
+                        GraveyardScreen(container.views, container.garden, onBack = back, onOpenPlant = { navController.navigate(PlantRoute(it)) })
                     }
                     composable<SearchRoute> {
                         SearchScreen(

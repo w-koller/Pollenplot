@@ -36,4 +36,12 @@ class PlantPlacingsTest {
         assertEquals("Five shared between two zones rounds to three", 3, total.countIn("a"))
         assertEquals("Each zone has at least one", 1, GardenPlant("p", "Salvia rosmarinus", null, listOf("a", "b", "c")).countIn("c"))
     }
+
+    @Test
+    fun aPlantThatEndedSaysHowLongItLived() {
+        val plant = GardenPlant("p", "Citrus × limon", null, plantedOn = java.time.LocalDate.of(2024, 11, 2), endedOn = java.time.LocalDate.of(2026, 3, 9))
+        assertEquals(java.time.Period.of(1, 4, 7), plant.lived)
+        assertEquals("Without a planted day it is not known", null, plant.copy(plantedOn = null).lived)
+        assertEquals("Ended before it was planted is not believed", null, plant.copy(endedOn = java.time.LocalDate.of(2024, 1, 1)).lived)
+    }
 }

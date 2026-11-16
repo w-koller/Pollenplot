@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.data
 
+import io.github.wkoller.pollenplot.domain.garden.PlantStatus
 import io.github.wkoller.pollenplot.data.db.remember
 import io.github.wkoller.pollenplot.domain.garden.StructureKind
 import io.github.wkoller.pollenplot.domain.garden.Structure
@@ -236,11 +237,19 @@ class GardenRepository(
     /** Puts a plant in the search index again, after the records kept under it, such as its harvests, change. */
     suspend fun reindexPlant(id: String) = db.withTransaction { plants.get(id)?.full()?.let { index(it) } }
 
-    /** Saves an edited plant, and says whether it did: a plant removed in the meantime is not brought back. */
+    /**
+     * Saves an edited plant, and says whether it did: a plant removed in the meantime is not brought back. A plant
+     * that stops growing keeps the day it ended, today unless a day was given; one brought back to growing loses it.
+     */
     suspend fun updatePlant(plant: GardenPlant): Boolean {
         val old = plants.get(plant.id) ?: return false
+        val ended = when {
+            plant.status == PlantStatus.GROWING -> plant.copy(endedOn = null)
+            plant.endedOn == null -> plant.copy(endedOn = LocalDate.now(clock))
+            else -> plant
+        }
         db.withTransaction {
-            store(plant, old.createdAt, now())
+            store(ended, old.createdAt, now())
             index(plant)
         }
         return true
@@ -671,6 +680,17 @@ class GardenRepository(
         sighting
     }
 
+    /** How much a plant's history holds: its photos, days in flower, harvests, problems and care records. */
+    suspend fun historyOf(plantId: String): PlantHistory = db.withTransaction {
+        PlantHistory(
+            photos = detections.forPlant(plantId).size,
+            flowering = flowering.forPlant(plantId).size,
+            harvests = db.harvestDao().countFor(plantId),
+            problems = db.problemDao().idsFor(plantId).size,
+            care = db.potDao().eventCountFor(plantId),
+        )
+    }
+
     suspend fun floweringOf(plantId: String): List<LocalDate> = flowering.forPlant(plantId).map { LocalDate.ofEpochDay(it.observedOnEpochDay) }
 
     /** Every time a plant was seen flowering, in a photo or by the user, as the plant and the day, the oldest first. */
@@ -847,6 +867,9 @@ private fun ByteArray.toFloats(): FloatArray {
 enum class ScanOutcome { PLANTS, NO_PLANT, FAILED }
 
 /** A kept photo with every plant found in it, for review. */
+/** How many records a plant's history holds, for the graveyard. */
+data class PlantHistory(val photos: Int, val flowering: Int, val harvests: Int, val problems: Int, val care: Int)
+
 data class PhotoReview(val photo: StoredPhoto, val takenAt: Instant, val detections: List<DetectionRecord>)
 
 /**

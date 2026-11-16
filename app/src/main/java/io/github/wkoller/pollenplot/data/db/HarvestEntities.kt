@@ -29,6 +29,9 @@ data class PlantHarvestEntity(
 
 @Dao
 interface HarvestDao {
+    @Query("SELECT COUNT(*) FROM plant_harvests WHERE plantId = :plantId")
+    suspend fun countFor(plantId: String): Int
+
     @Query("SELECT * FROM plant_harvests ORDER BY dateEpochDay DESC, createdAt DESC")
     fun observeAll(): Flow<List<PlantHarvestEntity>>
 

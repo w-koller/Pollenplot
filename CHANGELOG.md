@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- The graveyard, in the Plot's More menu and at the end of the Plot's list, holds every plant that died or was
+  removed, the most recent first. Each says when it ended, where it grew, how long it lived and how much history it
+  keeps: photos, days in flower, harvests, problems and care records. Choosing Died or Removed in a plant's Edit sheet
+  keeps the day, today unless another is chosen. A dead plant's page opens on that, with “Bring it back to the
+  garden”, and keeps its history without asking for more. Reports list the graveyard apart. A garden from an earlier
+  release candidate does not open in this one.
 - A press on a plant's picture in the plant library opens it over the whole screen, with a larger copy of the photo
   and its credit. Two fingers zoom in. Your own cut-outs open the same way.
 - Weeds recorded near the garden show a small stack of up to three photos in place of the photo icon, when you have

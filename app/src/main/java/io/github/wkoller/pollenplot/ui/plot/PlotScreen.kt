@@ -98,6 +98,7 @@ fun PlotScreen(
     onWeeds: () -> Unit,
     onWishlist: () -> Unit = {},
     onLibrary: () -> Unit = {},
+    onGraveyard: () -> Unit = {},
     today: TodayViews? = null,
     onOpenWater: () -> Unit = {},
     onOpenBees: () -> Unit = {},
@@ -218,6 +219,7 @@ fun PlotScreen(
                 MoreItem(stringResource(R.string.plot_appearance), R.drawable.ic_palette) { choosingLook = true }.takeIf { showCanvas && settings != null },
                 MoreItem(stringResource(R.string.library_title), R.drawable.ic_local_florist, onLibrary),
                 MoreItem(stringResource(R.string.wishlist_title), R.drawable.ic_bookmark, onWishlist),
+                MoreItem(stringResource(R.string.graveyard_title), R.drawable.ic_deceased, onGraveyard),
                 MoreItem(stringResource(R.string.review_title), R.drawable.ic_rate_review, onReview),
                 MoreItem(stringResource(R.string.weeds_title), R.drawable.ic_grass, onWeeds),
             )
@@ -324,7 +326,7 @@ fun PlotScreen(
             }
             else -> PlotList(
                 loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState, fed = fed,
-                structures = structures, onOpenStructure = { structureDetails = it },
+                structures = structures, onOpenStructure = { structureDetails = it }, onGraveyard = onGraveyard,
                 header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), todayActions) } },
             )
         }
@@ -446,6 +448,7 @@ private fun PlotList(
     fed: Map<String, LastFed> = emptyMap(),
     structures: List<Structure> = emptyList(),
     onOpenStructure: (String) -> Unit = {},
+    onGraveyard: () -> Unit = {},
 ) {
     val unzoned = plants.filter { it.plant.zoneIds.isEmpty() && it.isGrowing }
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
@@ -480,6 +483,15 @@ private fun PlotList(
                         Text(stringResource(R.string.structure_list_size, stringResource(structure.kind.label), UiFormat.metresFromCm(structure.rect.widthCm), UiFormat.metresFromCm(structure.rect.heightCm)))
                     },
                 ) { Text(structure.name) }
+            }
+        }
+        if (plants.any { !it.isGrowing }) {
+            item {
+                ListItem(
+                    onClick = onGraveyard,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_deceased), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.graveyard_list_body)) },
+                ) { Text(stringResource(R.string.graveyard_open)) }
             }
         }
         item {
