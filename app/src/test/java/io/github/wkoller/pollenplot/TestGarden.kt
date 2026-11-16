@@ -299,8 +299,22 @@ fun ComposeContentTestRule.pressWhenShown(matcher: SemanticsMatcher) {
 
 /** Opens a tab's More menu and presses its [item], each once it is on the screen. */
 fun ComposeContentTestRule.fromMore(item: String) {
-    pressWhenShown(hasContentDescription("More"))
+    openMore(hasText(item))
     pressWhenShown(hasText(item))
+}
+
+/**
+ * Presses More until [shows] is on the screen. On a busy machine a press can land while the screen beneath is still
+ * changing, and the menu it opened is gone; a second press only opens the menu again, so it is safe to repeat.
+ */
+fun ComposeContentTestRule.openMore(shows: SemanticsMatcher) {
+    waitUntil(WAIT_MS) {
+        if (onAllNodes(shows, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) return@waitUntil true
+        val more = onAllNodes(hasContentDescription("More")).fetchSemanticsNodes()
+        if (more.isNotEmpty()) runCatching { onAllNodes(hasContentDescription("More")).onFirst().performClick() }
+        waitForIdle()
+        onAllNodes(shows, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+    }
 }
 
 /** Opens a tab's add menu and presses its [item], each once it is on the screen. */
