@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot
 
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
@@ -83,6 +85,15 @@ class LibraryFlowTest {
         waitFor(hasText("Photo: Hejor1 · NatureMapr · CC-BY 3.0 (Au)"))
         assertTrue("Only the plant's name is sent", app.web.asked.filter { "taxon_name" in it }.none { "lat=" in it || "lon=" in it })
         shot("library_all")
+
+        // A press on a photo opens it over the whole screen, with its larger copy and its credit.
+        compose.onAllNodesWithContentDescription("Enlarge the photo of", substring = true)[0].performClick()
+        waitFor(hasText("Close"))
+        compose.waitUntil(WAIT_MS) { app.web.asked.any { "proxyImageThumbnailLarge" in it } }
+        waitFor(hasContentDescription("A photo of", substring = true))
+        shot("library_photo_viewer")
+        compose.onNodeWithText("Close").performClick()
+        compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Close").fetchSemanticsNodes().isEmpty() }
 
         compose.onNodeWithText("Select").performClick()
         // A row scrolled to may sit partly under the top bar, so its press is sent as an action rather than a tap.

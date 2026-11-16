@@ -877,6 +877,7 @@ fun AppRoot(
                             onCompare = { navController.navigate(CompareRoute(it)) },
                             onOpenFinder = { navController.navigate(WeedFinderRoute()) },
                             help = container.weedHelp,
+                            photos = container.libraryPhotos,
                         )
                     }
                     composable<WishlistRoute> {

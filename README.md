@@ -45,8 +45,8 @@ account, no analytics and no advertising. It goes online only for:
 - weed lists and plants and animals recorded near the garden, from Brisbane City Council and the Atlas of Living
   Australia;
 - suburb search and the council area, from Open-Meteo and the Atlas of Living Australia;
-- a photo of each plant in the plant library, from the Atlas of Living Australia, when you choose to show photos
-  (only the plant's name is sent);
+- photos of plants for the plant library and the weed lists, from the Atlas of Living Australia, when you choose
+  to show photos (only the plant's name is sent);
 - the optional models, when you choose to download them.
 
 The garden's location is rounded to about 1 km before it is sent to any of these.

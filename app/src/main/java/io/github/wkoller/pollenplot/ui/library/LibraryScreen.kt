@@ -1,5 +1,11 @@
 package io.github.wkoller.pollenplot.ui.library
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.clickable
+import java.io.File
+import androidx.compose.ui.platform.LocalContext
+import io.github.wkoller.pollenplot.ui.components.PhotoViewer
 import io.github.wkoller.pollenplot.ui.plants.PlantCounts
 import io.github.wkoller.pollenplot.ui.plants.PlantCount
 import androidx.activity.compose.BackHandler
@@ -119,6 +125,8 @@ fun LibraryScreen(
     var selection by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(emptyList<String>()) }
     var choosingZones by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf<String?>(null) }
+    // The plant whose picture is shown enlarged, with the photo fetched for it when it is not the user's own.
+    var viewing by remember { mutableStateOf<Pair<String, LibraryPhoto?>?>(null) }
     val scope = rememberCoroutineScope()
     val notices = LocalNotices.current
     val resources = LocalResources.current
@@ -279,10 +287,29 @@ fun LibraryScreen(
                 } else {
                     ListItem(
                         onClick = { adding = row.key },
-                        leadingContent = { LibraryPicture(row, photo) },
+                        leadingContent = { LibraryPicture(row, photo) { viewing = row.key to photo } },
                         supportingContent = details,
                     ) { Text(row.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
+            }
+        }
+    }
+
+    viewing?.let { (key, photo) ->
+        rows.firstOrNull { it.key == key }?.let { row ->
+            val context = LocalContext.current
+            val own = row.thumbnail?.let { File(context.filesDir, it) }
+            val larger by produceState<File?>(null, photo) { value = if (own == null && photo != null) photos.large(photo) else null }
+            val file = own ?: photo?.file
+            if (file != null) {
+                PhotoViewer(
+                    file = file,
+                    larger = larger,
+                    title = row.title,
+                    credit = if (own == null) photo?.credit else null,
+                    description = stringResource(R.string.library_photo_of, row.title),
+                    onDismiss = { viewing = null },
+                )
             }
         }
     }
@@ -303,21 +330,27 @@ fun LibraryScreen(
     }
 }
 
-/** A plant's picture in the library: the user's own cut-out, else a photo fetched for the species, else its icon. */
+/**
+ * A plant's picture in the library: the user's own cut-out, else a photo fetched for the species, else its icon. With
+ * [onEnlarge], a picture is its own button that opens it over the whole screen; the icon alone is not.
+ */
 @Composable
-private fun LibraryPicture(row: LibraryRow, photo: LibraryPhoto?) {
+private fun LibraryPicture(row: LibraryRow, photo: LibraryPhoto?, onEnlarge: (() -> Unit)? = null) {
+    val enlarge = onEnlarge?.takeIf { row.thumbnail != null || photo != null }
+    val label = stringResource(R.string.library_enlarge, row.title)
+    val press = if (enlarge != null) Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = label, role = Role.Button) { enlarge() }.semantics { contentDescription = label } else Modifier
     if (row.thumbnail != null || photo == null) {
-        PlantAvatar(row.form, 56.dp, thumbnail = row.thumbnail)
+        PlantAvatar(row.form, 56.dp, modifier = press, thumbnail = row.thumbnail)
     } else {
-        Box(Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))) {
+        Box(Modifier.size(56.dp).then(press).clip(RoundedCornerShape(12.dp))) {
             AsyncImage(model = photo.file, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
     }
 }
 
-/** Asks once whether the library may fetch photos, and says what is sent. */
+/** Asks once whether photos of plants may be fetched, for the library and the weed lists, and says what is sent. */
 @Composable
-private fun PhotosQuestion(onAnswer: (Boolean) -> Unit) {
+fun PhotosQuestion(onAnswer: (Boolean) -> Unit) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer), shape = RoundedCornerShape(24.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.library_photos_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
