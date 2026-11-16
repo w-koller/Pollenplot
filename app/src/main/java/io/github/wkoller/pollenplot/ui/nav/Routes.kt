@@ -68,6 +68,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SearchRoute
 
+/** The plant library, optionally opened from a zone, which is then offered first for what is added. */
+@Serializable data class LibraryRoute(val zoneId: String? = null)
+
 /** Identify with the camera, or check whether a plant is a weed. [group] is what the camera starts out looking for. */
 @Serializable data class IdentifyRoute(val checkingWeed: Boolean = false, val group: String? = null, val field: Boolean = false)
 

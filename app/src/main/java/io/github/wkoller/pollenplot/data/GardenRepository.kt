@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.data
 
+import io.github.wkoller.pollenplot.data.db.remember
 import io.github.wkoller.pollenplot.domain.garden.StructureKind
 import io.github.wkoller.pollenplot.domain.garden.Structure
 import io.github.wkoller.pollenplot.data.db.PlantZoneEntity
@@ -221,6 +222,9 @@ class GardenRepository(
             store(plant, time, time)
             index(plant)
             plant
+        }.also {
+            // Every plant added is kept in the user's library, to be added again elsewhere without looking it up.
+            db.libraryDao().remember(speciesName, customName, thumbnail, time)
         }
     }
 

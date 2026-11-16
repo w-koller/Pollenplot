@@ -100,6 +100,16 @@ fun SettingsScreen(
                 ) { Text(stringResource(R.string.settings_pets)) }
             }
             item {
+                val on = settings.libraryPhotos == true
+                ListItem(
+                    checked = on,
+                    onCheckedChange = { choice -> update { it.copy(libraryPhotos = choice) } },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.settings_library_photos_body)) },
+                    trailingContent = { Switch(checked = on, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_library_photos)) }
+            }
+            item {
                 ManyZonesSetting(settings.manyZones, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { choice -> update { it.copy(manyZones = choice) } }
             }
             item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }

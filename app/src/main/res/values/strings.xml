@@ -594,6 +594,36 @@
     <string name="picker_hint">Please type a common or scientific name.</string>
     <string name="picker_none">Pollenplot has no plant called “%1$s” yet.</string>
     <string name="picker_use">Use “%1$s”</string>
+    <string name="library_title">Plant library</string>
+    <string name="library_show">Show</string>
+    <string name="library_all">All plants</string>
+    <string name="library_mine">My library</string>
+    <string name="library_all_hint">These are the plants Pollenplot knows. Press one to add it to your garden, or press Select to choose several.</string>
+    <string name="library_mine_hint">These are the plants you have added or saved. Press one to add it to another zone, or press Select to choose several.</string>
+    <string name="library_mine_empty">Your library is empty. Every plant you add to your garden is kept here, and you can save plants from All plants.</string>
+    <string name="library_select_hint">Please choose the plants, then use the buttons at the bottom of the screen.</string>
+    <string name="library_in_mine">In your library</string>
+    <string name="library_photo_credit">Photo: %1$s</string>
+    <string name="library_photos_title">Photos of the plants</string>
+    <string name="library_photos_body">Pollenplot can show a photo of each plant from the Atlas of Living Australia. It fetches one the first time a plant is shown and keeps it on your phone. Only the plant\'s name is sent.</string>
+    <string name="library_photos_yes">Show photos</string>
+    <string name="library_photos_no">Not now</string>
+    <string name="library_add_selected">Add to zones (%1$d)</string>
+    <string name="library_save_selected">Save (%1$d)</string>
+    <string name="library_remove_selected">Remove (%1$d)</string>
+    <string name="library_quantity">How many of each plant</string>
+    <string name="library_quantity_each_zone">How many of each plant in each zone</string>
+    <string name="library_added_one">Added %1$s to your garden.</string>
+    <string name="library_added_one_zone">Added %1$s to %2$s.</string>
+    <string name="settings_library_photos">Photos in the plant library</string>
+    <string name="settings_library_photos_body">Pollenplot fetches one photo for each plant from the Atlas of Living Australia when the plant is first shown. Only the plant\'s name is sent.</string>
+    <string name="zone_add_plant_title">Add a plant to %1$s</string>
+    <string name="zone_add_from_library">Search the plant library</string>
+    <string name="zone_add_from_library_body">Choose from the plants Pollenplot knows and the plants you have added before.</string>
+    <string name="zone_add_by_photo">Take a photo</string>
+    <string name="zone_add_by_photo_body">Pollenplot names the plant from the photo, and offers this zone for it.</string>
+    <string name="zone_add_from_gallery">Choose photos</string>
+    <string name="zone_add_from_gallery_body">Pollenplot looks at photos from your gallery, and offers this zone for what it finds.</string>
     <string name="models_title">Models</string>
     <string name="models_intro">Pollenplot\'s models run on your phone, so your photos and notes stay on it. Extra models are downloaded once, when you ask, and checked before they are used.</string>
     <string name="models_meaning">Search by meaning</string>
@@ -2054,6 +2084,26 @@
     <plurals name="identify_found">
         <item quantity="one">Pollenplot found %d plant in this photo.</item>
         <item quantity="other">Pollenplot found %d plants in this photo.</item>
+    </plurals>
+    <plurals name="library_add_title">
+        <item quantity="one">Add %d plant</item>
+        <item quantity="other">Add %d plants</item>
+    </plurals>
+    <plurals name="library_added">
+        <item quantity="one">Added %d plant to your garden.</item>
+        <item quantity="other">Added %d plants to your garden.</item>
+    </plurals>
+    <plurals name="library_added_zone">
+        <item quantity="one">Added %1$d plant to %2$s.</item>
+        <item quantity="other">Added %1$d plants to %2$s.</item>
+    </plurals>
+    <plurals name="library_saved">
+        <item quantity="one">Saved %d plant to your library.</item>
+        <item quantity="other">Saved %d plants to your library.</item>
+    </plurals>
+    <plurals name="library_removed">
+        <item quantity="one">Removed %d plant from your library.</item>
+        <item quantity="other">Removed %d plants from your library.</item>
     </plurals>
     <plurals name="native_per_minute">
         <item quantity="one">%1$d bee coming home a minute</item>

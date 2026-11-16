@@ -91,6 +91,8 @@ data class Settings(
     val setupDone: Boolean = false,
     /** Cats or dogs live at home, so plants toxic to pets are flagged first and left out of suggestions. */
     val petsAtHome: Boolean = false,
+    /** Whether the plant library fetches photos online: null until the user has been asked. */
+    val libraryPhotos: Boolean? = null,
     val plotBackground: PlotBackground = PlotBackground.THEME,
     /** Whether the Plot's grid lines show while the layout is only looked at. They always show while it is edited. */
     val gridInView: Boolean = true,
@@ -153,6 +155,7 @@ class SettingsStore(context: Context) {
         val wateringToMinute = intPreferencesKey("watering_to_minute")
         val setupDone = booleanPreferencesKey("setup_done")
         val petsAtHome = booleanPreferencesKey("pets_at_home")
+        val libraryPhotos = booleanPreferencesKey("library_photos")
         val plotBackground = stringPreferencesKey("plot_background")
         val gridInView = booleanPreferencesKey("grid_in_view")
         val manyZones = stringPreferencesKey("many_zones")
@@ -205,6 +208,7 @@ class SettingsStore(context: Context) {
             } ?: defaults.wateringWindow,
             setupDone = this[Keys.setupDone] ?: defaults.setupDone,
             petsAtHome = this[Keys.petsAtHome] ?: defaults.petsAtHome,
+            libraryPhotos = this[Keys.libraryPhotos],
             plotBackground = this[Keys.plotBackground]?.let { runCatching { PlotBackground.valueOf(it) }.getOrNull() } ?: defaults.plotBackground,
             gridInView = this[Keys.gridInView] ?: defaults.gridInView,
             manyZones = this[Keys.manyZones]?.let { runCatching { ManyZones.valueOf(it) }.getOrNull() } ?: defaults.manyZones,
@@ -248,6 +252,7 @@ class SettingsStore(context: Context) {
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute
         this[Keys.setupDone] = settings.setupDone
         this[Keys.petsAtHome] = settings.petsAtHome
+        settings.libraryPhotos?.let { this[Keys.libraryPhotos] = it } ?: remove(Keys.libraryPhotos)
         this[Keys.plotBackground] = settings.plotBackground.name
         this[Keys.gridInView] = settings.gridInView
         this[Keys.manyZones] = settings.manyZones.name

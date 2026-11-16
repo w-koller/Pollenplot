@@ -90,6 +90,9 @@ fun ZoneDetailScreen(
     onEdit: () -> Unit,
     onOpenPlant: (String) -> Unit,
     onAddPlant: () -> Unit,
+    /** Adds a plant from a photo taken now or chosen from the gallery; without them only the library is offered. */
+    onAddByPhoto: (() -> Unit)? = null,
+    onAddFromGallery: (() -> Unit)? = null,
     onOpenSighting: (String) -> Unit = {},
     onAddSighting: () -> Unit = {},
     water: WaterViews? = null,
@@ -111,6 +114,29 @@ fun ZoneDetailScreen(
     val habitatView by remember(habitat, zoneId) { habitat?.zone(zoneId) ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val loaded = view
+    var addingPlant by rememberSaveable { mutableStateOf(false) }
+    if (addingPlant && loaded != null) {
+        AddPlantToZoneSheet(
+            zoneName = loaded.zone.name,
+            onDismiss = { addingPlant = false },
+            onLibrary = {
+                addingPlant = false
+                onAddPlant()
+            },
+            onPhoto = onAddByPhoto?.let { open ->
+                {
+                    addingPlant = false
+                    open()
+                }
+            },
+            onGallery = onAddFromGallery?.let { open ->
+                {
+                    addingPlant = false
+                    open()
+                }
+            },
+        )
+    }
     DetailScaffold(
         title = loaded?.zone?.name.orEmpty(),
         onBack = onBack,
@@ -161,7 +187,7 @@ fun ZoneDetailScreen(
             }
             items(loaded.plants, key = { it.plant.id }) { plant -> PlantRow(plant, onClick = { onOpenPlant(plant.plant.id) }, showZone = false) }
             item {
-                Button(onClick = onAddPlant, modifier = Modifier.padding(16.dp)) {
+                Button(onClick = { if (onAddByPhoto == null && onAddFromGallery == null) onAddPlant() else addingPlant = true }, modifier = Modifier.padding(16.dp)) {
                     Icon(painterResource(R.drawable.ic_add), contentDescription = null)
                     Text(stringResource(R.string.zone_add_plant), modifier = Modifier.padding(start = 8.dp))
                 }
@@ -378,3 +404,37 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
     }
 }
 
+
+/** The ways to add a plant to a zone: from the plant library, from a photo taken now, or from photos in the gallery. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun AddPlantToZoneSheet(zoneName: String, onDismiss: () -> Unit, onLibrary: () -> Unit, onPhoto: (() -> Unit)?, onGallery: (() -> Unit)?) {
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+            Text(
+                stringResource(R.string.zone_add_plant_title, zoneName),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).semantics { heading() },
+            )
+            ListItem(
+                onClick = onLibrary,
+                leadingContent = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+                supportingContent = { Text(stringResource(R.string.zone_add_from_library_body)) },
+            ) { Text(stringResource(R.string.zone_add_from_library)) }
+            if (onPhoto != null) {
+                ListItem(
+                    onClick = onPhoto,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.zone_add_by_photo_body)) },
+                ) { Text(stringResource(R.string.zone_add_by_photo)) }
+            }
+            if (onGallery != null) {
+                ListItem(
+                    onClick = onGallery,
+                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.zone_add_from_gallery_body)) },
+                ) { Text(stringResource(R.string.zone_add_from_gallery)) }
+            }
+        }
+    }
+}
