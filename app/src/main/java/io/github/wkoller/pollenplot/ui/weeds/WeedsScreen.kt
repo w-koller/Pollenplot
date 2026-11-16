@@ -1,5 +1,18 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.BorderStroke
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.rememberCoroutineScope
+import io.github.wkoller.pollenplot.ui.library.PhotosQuestion
+import io.github.wkoller.pollenplot.library.LibraryPhoto
+import io.github.wkoller.pollenplot.library.LibraryPhotos
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -66,12 +79,16 @@ fun WeedsScreen(
     onOpenFinder: () -> Unit = {},
     /** Native alternatives for each weed growing in the garden, and the wishlist to add them to. */
     help: WeedHelp? = null,
+    /** Photos of the weeds recorded nearby, shown when the user has agreed to fetch them. */
+    photos: LibraryPhotos? = null,
 ) {
     val context = LocalContext.current
     val uri = LocalUriHandler.current
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     val plants by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
     val place by remember { settings.settings }.collectAsStateWithLifecycle(initialValue = null)
+    val currentSettings = place
+    val photoScope = rememberCoroutineScope()
     val update by remember { WeedSyncWorker.state(context) }.collectAsStateWithLifecycle(initialValue = UpdateState.IDLE)
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val weeds = locality.weeds
@@ -156,9 +173,21 @@ fun WeedsScreen(
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
+                val showPhotos = photos != null && currentSettings?.libraryPhotos == true
+                if (photos != null && weeds.nearbyWeeds.isNotEmpty()) {
+                    item {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                            when (currentSettings?.libraryPhotos) {
+                                null -> PhotosQuestion { on -> photoScope.launch { settings.update { it.copy(libraryPhotos = on) } } }
+                                true -> Text(stringResource(R.string.weeds_photos_credit), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                false -> Unit
+                            }
+                        }
+                    }
+                }
                 val nearbyShown = if (showAllNearby) weeds.nearbyWeeds else weeds.nearbyWeeds.take(NEARBY_SHOWN)
                 items(nearbyShown, key = { "nearby-" + it.name }) { weed ->
-                    NearbyWeedRow(weed, commonName = kb?.species(weed.name)?.common?.firstOrNull() ?: weed.status.listedCommon, locality = locality) {
+                    NearbyWeedRow(weed, commonName = kb?.species(weed.name)?.common?.firstOrNull() ?: weed.status.listedCommon, locality = locality, photos = photos.takeIf { showPhotos }) {
                         onCompare(weed.name)
                     }
                 }
@@ -222,7 +251,8 @@ fun WeedsScreen(
 private const val NEARBY_SHOWN = 20
 
 @Composable
-private fun NearbyWeedRow(weed: NearbyWeed, commonName: String?, locality: Locality, onClick: () -> Unit) {
+private fun NearbyWeedRow(weed: NearbyWeed, commonName: String?, locality: Locality, photos: LibraryPhotos? = null, onClick: () -> Unit) {
+    val stack by produceState(emptyList<LibraryPhoto>(), weed.name, photos) { value = photos?.photos(weed.name, STACK_SIZE).orEmpty() }
     ListItem(
         onClick = onClick,
         supportingContent = {
@@ -232,8 +262,28 @@ private fun NearbyWeedRow(weed: NearbyWeed, commonName: String?, locality: Local
                 Text(pluralStringResource(R.plurals.weeds_records, weed.records, weed.records), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        trailingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
+        trailingContent = { if (stack.isEmpty()) Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) else PhotoStack(stack) },
     ) {
         Text(commonName ?: weed.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontStyle = if (commonName == null) FontStyle.Italic else null, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+private const val STACK_SIZE = 3
+
+/** Up to three photos of a weed, overlapping like a small pile, the first on top. They are only a picture of the row. */
+@Composable
+private fun PhotoStack(photos: List<LibraryPhoto>) {
+    val step = 14.dp
+    Box(Modifier.size(44.dp + step * (photos.size - 1), 44.dp)) {
+        photos.withIndex().reversed().forEach { (i, photo) ->
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.surface),
+                shadowElevation = 1.dp,
+                modifier = Modifier.offset(x = step * i).size(44.dp),
+            ) {
+                AsyncImage(model = photo.file, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+        }
     }
 }

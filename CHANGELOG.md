@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- A press on a plant's picture in the plant library opens it over the whole screen, with a larger copy of the photo
+  and its credit. Two fingers zoom in. Your own cut-outs open the same way.
+- Weeds recorded near the garden show a small stack of up to three photos in place of the photo icon, when you have
+  agreed to fetch photos. The Weeds screen asks, as the plant library does, and says where the photos come from;
+  Compare credits each one. The setting is now named “Photos of plants from the Atlas of Living Australia”.
 - A plant added to more than one zone is counted either zone by zone or as a total. Counted zone by zone, each zone
   has its own number, the plant's page says how many grow where, as “Front (2), Back (3)”, and the watering plan uses
   each zone's own number. Given a total, Pollenplot shares it evenly between the zones. A plant added as a plant in

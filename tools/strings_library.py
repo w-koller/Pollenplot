@@ -13,9 +13,15 @@ STRINGS = {
     "library_select_hint": "Please choose the plants, then use the buttons at the bottom of the screen.",
     "library_in_mine": "In your library",
     "library_photo_credit": "Photo: %1$s",
+    "library_enlarge": "Enlarge the photo of %1$s",
+    "library_photo_of": "A photo of %1$s",
+    "photo_close": "Close",
+    "weeds_photos_credit": "The photos are from records on the Atlas of Living Australia. Please press a weed to see "
+    "who took each one.",
     "library_photos_title": "Photos of the plants",
-    "library_photos_body": "Pollenplot can show a photo of each plant from the Atlas of Living Australia. It fetches "
-    "one the first time a plant is shown and keeps it on your phone. Only the plant's name is sent.",
+    "library_photos_body": "Pollenplot can show photos of plants from the Atlas of Living Australia in the plant library "
+    "and the weed lists. It fetches each photo the first time a plant is shown and keeps it on your phone. Only the "
+    "plant's name is sent.",
     "library_photos_yes": "Show photos",
     "library_photos_no": "Not now",
     "library_add_selected": "Add to zones (%1$d)",
@@ -24,9 +30,9 @@ STRINGS = {
     "library_count_each_plant": "The count below is for each plant you chose.",
     "library_added_one": "Added %1$s to your garden.",
     "library_added_one_zone": "Added %1$s to %2$s.",
-    "settings_library_photos": "Photos in the plant library",
-    "settings_library_photos_body": "Pollenplot fetches one photo for each plant from the Atlas of Living Australia "
-    "when the plant is first shown. Only the plant's name is sent.",
+    "settings_library_photos": "Photos of plants from the Atlas of Living Australia",
+    "settings_library_photos_body": "Pollenplot fetches photos for the plant library and the weed lists when a plant "
+    "is first shown, and keeps them on your phone. Only the plant's name is sent.",
     "zone_add_plant_title": "Add a plant to %1$s",
     "zone_add_from_library": "Search the plant library",
     "zone_add_from_library_body": "Choose from the plants Pollenplot knows and the plants you have added before.",

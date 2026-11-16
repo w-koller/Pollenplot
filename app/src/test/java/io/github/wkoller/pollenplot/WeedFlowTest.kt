@@ -101,6 +101,9 @@ class WeedFlowTest {
         waitFor(hasText("Lantana"))
         compose.onNodeWithText("Recorded near your garden").assertExists()
         shot("weeds_screen")
+        // Until the user says photos may be fetched, the nearby weeds keep their icon and nothing is asked for.
+        compose.scrollTo(hasText("Photos of the plants"))
+        assertTrue(app.web.asked.none { "taxon_name" in it })
         compose.scrollTo(hasText("Sphagneticola trilobata", substring = true))
         shot("weeds_nearby")
         compose.scrollTo(hasText("Lantana"))
@@ -173,6 +176,25 @@ class WeedFlowTest {
         waitFor(hasText("Striped marsh frog"))
         compose.onNodeWithText("Cane toad").assertExists()
         shot("wildlife_nearby_frogs")
+    }
+
+    @Test
+    fun nearbyWeedsShowAStackOfPhotos() {
+        seed()
+        runBlocking {
+            app.container.settingsStore.update { it.copy(gardenPlace = GardenPlace.at(-27.49, 152.98, "Taringa", "BRISBANE CITY"), gardenState = AuState.QLD, libraryPhotos = true) }
+            assertTrue(app.container.weedSync.update().complete)
+        }
+        show()
+        waitFor(hasContentDescription("1 plant in your garden is a weed where you live."))
+        compose.onNodeWithContentDescription("1 plant in your garden is a weed where you live.").performClick()
+        waitFor(hasText("Lantana"))
+        compose.scrollTo(hasText("Please press a weed to see who took each one.", substring = true))
+        compose.scrollTo(hasText("Sphagneticola trilobata", substring = true))
+        // Each weed's records are asked for once, by its name alone, and three photos under credit-only licences are kept.
+        compose.waitUntil(WAIT_MS) { app.web.asked.count { "images.ala.org.au" in it } >= 3 }
+        assertTrue(app.web.asked.filter { "taxon_name" in it }.none { "lat=" in it })
+        shot("weeds_nearby_photos")
     }
 
     @Test
