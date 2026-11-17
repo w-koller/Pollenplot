@@ -25,6 +25,23 @@ STRINGS = {
     "models.",
     "models_accurate_notification": "Downloading BioCAP for accurate identification.",
     "models_accurate_ready": "On your phone. Pollenplot uses BioCAP for every photo it identifies.",
+    "models_accurate_ready_unused": "On your phone, but BioCLIP 2 identifies photos while it is on your phone too. "
+    "Please delete BioCAP to free its space, or delete BioCLIP 2 to use BioCAP again.",
+    "models_bioclip2": "More accurate identification",
+    "models_bioclip2_body": "BioCLIP 2 is a larger model that names more Australian plants, weeds and animals than "
+    "BioCAP. While it is on your phone, Pollenplot uses it in place of BioCAP. %1$s, downloaded on Wi-Fi.",
+    "models_bioclip2_body_short": "BioCLIP 2 is a larger model that names more Australian plants, weeds and animals "
+    "than BioCAP.",
+    "models_bioclip2_notification": "Downloading BioCLIP 2 for more accurate identification.",
+    "models_bioclip2_ready": "On your phone. Pollenplot uses BioCLIP 2 for every photo it identifies.",
+    "models_high_end": "For high-end phones",
+    "models_requirements": "Recommended requirements",
+    "models_bioclip2_requirements": "A phone with 8 GB of memory or more, a flagship processor from 2023 or later, "
+    "such as a Snapdragon 8 Gen 2 or newer, and %1$s of free space while it unpacks. BioCLIP 2 uses about half a "
+    "gigabyte of memory while it looks at a photo. On a 2025 flagship phone it takes about a third of a second for "
+    "each look, and on a slower phone it can take several seconds.",
+    "models_bioclip2_low_memory": "This phone has %1$s of memory, less than the 8 GB recommended. BioCLIP 2 may be "
+    "slow on it, and other apps may close while it works.",
     "models_unpacking": "Unpacking and checking the models.",
     "models_damaged": "The unpacked models did not match their checksums, so they were removed. Please try again.",
     "models_not_ready": "Not ready yet. It will arrive in an update.",

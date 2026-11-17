@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.printToString
 import androidx.test.core.app.ApplicationProvider
@@ -81,6 +83,19 @@ class MeaningFlowTest {
         // The accurate pack and the garden assistant can still be downloaded.
         compose.onAllNodesWithText("Download").assertCountEquals(2)
         shot("models_installed")
+    }
+
+    @Test
+    fun bioclip2IsMarkedForHighEndPhonesWithItsRequirements() {
+        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.onNodeWithText("Models").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("For high-end phones"))
+        compose.onNodeWithText("More accurate identification").assertIsDisplayed()
+        compose.onNodeWithText("For high-end phones").assertIsDisplayed()
+        // The requirements open from a button, so they are not hidden behind a long press.
+        compose.onNodeWithContentDescription("Recommended requirements").performClick()
+        waitFor(hasText("8 GB of memory or more", substring = true))
+        shot("models_bioclip2_requirements")
     }
 
     private fun waitFor(matcher: SemanticsMatcher) {

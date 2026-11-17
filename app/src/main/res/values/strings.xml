@@ -669,6 +669,16 @@
     <string name="models_accurate_body_short">BioCAP knows many more Australian native plants, weeds and animals than the quick models.</string>
     <string name="models_accurate_notification">Downloading BioCAP for accurate identification.</string>
     <string name="models_accurate_ready">On your phone. Pollenplot uses BioCAP for every photo it identifies.</string>
+    <string name="models_accurate_ready_unused">On your phone, but BioCLIP 2 identifies photos while it is on your phone too. Please delete BioCAP to free its space, or delete BioCLIP 2 to use BioCAP again.</string>
+    <string name="models_bioclip2">More accurate identification</string>
+    <string name="models_bioclip2_body">BioCLIP 2 is a larger model that names more Australian plants, weeds and animals than BioCAP. While it is on your phone, Pollenplot uses it in place of BioCAP. %1$s, downloaded on Wi-Fi.</string>
+    <string name="models_bioclip2_body_short">BioCLIP 2 is a larger model that names more Australian plants, weeds and animals than BioCAP.</string>
+    <string name="models_bioclip2_notification">Downloading BioCLIP 2 for more accurate identification.</string>
+    <string name="models_bioclip2_ready">On your phone. Pollenplot uses BioCLIP 2 for every photo it identifies.</string>
+    <string name="models_high_end">For high-end phones</string>
+    <string name="models_requirements">Recommended requirements</string>
+    <string name="models_bioclip2_requirements">A phone with 8 GB of memory or more, a flagship processor from 2023 or later, such as a Snapdragon 8 Gen 2 or newer, and %1$s of free space while it unpacks. BioCLIP 2 uses about half a gigabyte of memory while it looks at a photo. On a 2025 flagship phone it takes about a third of a second for each look, and on a slower phone it can take several seconds.</string>
+    <string name="models_bioclip2_low_memory">This phone has %1$s of memory, less than the 8 GB recommended. BioCLIP 2 may be slow on it, and other apps may close while it works.</string>
     <string name="models_unpacking">Unpacking and checking the models.</string>
     <string name="models_damaged">The unpacked models did not match their checksums, so they were removed. Please try again.</string>
     <string name="models_not_ready">Not ready yet. It will arrive in an update.</string>
@@ -1491,6 +1501,7 @@
     <string name="licence_item_onnxruntime_notices">Libraries included in ONNX Runtime</string>
     <string name="licence_item_bge">bge-small-en-v1.5 text model, by BAAI (downloaded for search by meaning)</string>
     <string name="licence_item_biocap">BioCAP model, by the Imageomics Institute (downloaded for accurate identification)</string>
+    <string name="licence_item_bioclip2">BioCLIP 2 model, by the Imageomics Institute (downloaded for more accurate identification)</string>
     <string name="licence_item_litertlm">LiteRT-LM</string>
     <string name="licence_item_litertlm_notices">Libraries included in LiteRT-LM</string>
     <string name="licence_item_gemma">Gemma 4 E2B model, by Google (downloaded for the garden assistant)</string>
