@@ -64,3 +64,6 @@ What the measurements decided:
   and 88.2% in five (plants 55.5% and 84.3%), as PyTorch runs it (`eval_candidate.py`). Its image encoder would be about
   304 MB at 8 bits against 86 MB, and one look took 4.4 times as long on the runner. It has not been exported,
   quantised or timed on a phone.
+
+What could be done next, ranked by the gain expected for the cost, with how to measure each and what BioCLIP 2 would
+take on a phone, is in `accuracy-research.md`.
