@@ -15,13 +15,15 @@ name: Model pack
 #   whether ONNX Runtime's 8-bit arithmetic (accuracy level 4) names species as well (eval_levels.py).
 # - "level4" writes pack 4, the pinned pack 3 with its encoder at accuracy level 4 (level4_pack.py), measures it
 #   against pack 3 and records the fusion evaluation's answers with it.
+# - "bioclip2" builds the BioCLIP 2 pack offered to high-end phones (export_bioclip2.py), measures it against pack 4,
+#   and records the fusion evaluation's answers with it on pack 4's photos. Published as bioclip2-pack-N.
 on:
   workflow_dispatch:
     inputs:
       build:
         description: "What to build"
         type: choice
-        options: [prototypes, base, candidate, benchmark, levels, level4, none]
+        options: [prototypes, base, candidate, benchmark, levels, level4, bioclip2, none]
         default: prototypes
       vectors_from_run:
         description: "Reuse the prototype vectors an earlier run made, by its run ID, and only tune and write the pack"
@@ -309,9 +311,44 @@ jobs:
             build/eval/eval_outputs.json.gz
             build/eval/eval_outputs.md
 
+  bioclip2:
+    if: inputs.build == 'bioclip2' && inputs.from_run == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyTorch for the CPU and the export tools
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
+          pip install "open_clip_torch>=2.26" "onnx>=1.16" onnx_ir "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy ai-edge-litert
+          pip freeze > pip-freeze.txt
+      - name: Export BioCLIP 2 and build its pack
+        run: python tools/models/export_bioclip2.py --out build/biocap
+      - name: Record each model's answers with the new pack, on pack 4's photos
+        run: python tools/models/eval_fusion.py --pack build/biocap/bioclip2-pack-*.zip --seed 4 --out build/eval
+      - uses: actions/upload-artifact@v7
+        with:
+          name: biocap-pack
+          path: |
+            build/biocap/bioclip2-pack-*.zip
+            build/biocap/bioclip2-pack-*.zip.sha256
+            build/biocap/manifest.json
+            build/biocap/evaluation.md
+            build/biocap/reference.json
+            pip-freeze.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: eval-outputs
+          path: |
+            build/eval/eval_outputs.json.gz
+            build/eval/eval_outputs.md
+
   publish:
-    needs: [pack, base, level4]
-    if: ${{ !cancelled() && inputs.publish && (needs.pack.result == 'success' || needs.base.result == 'success' || needs.level4.result == 'success' || inputs.from_run != '') }}
+    needs: [pack, base, level4, bioclip2]
+    if: ${{ !cancelled() && inputs.publish && (needs.pack.result == 'success' || needs.base.result == 'success' || needs.level4.result == 'success' || needs.bioclip2.result == 'success' || inputs.from_run != '') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -328,10 +365,10 @@ jobs:
           path: .
       - name: Publish the pack as a release
         run: |
-          pack=$(ls build/biocap/biocap-pack-*.zip)
-          version=$(basename "$pack" .zip | sed 's/^biocap-pack-//')
-          (cd build/biocap && sha256sum --check "biocap-pack-$version.zip.sha256")
+          pack=$(ls build/biocap/*-pack-*.zip)
+          name=$(basename "$pack" .zip)
+          (cd build/biocap && sha256sum --check "$name.zip.sha256")
+          case "$name" in bioclip2-*) title="BioCLIP 2 model pack ${name#bioclip2-pack-}" ;; *) title="BioCAP model pack ${name#biocap-pack-}" ;; esac
           # Not marked as the latest release, which stays the newest app version.
-          gh release create "biocap-pack-$version" \
-            "build/biocap/biocap-pack-$version.zip" "build/biocap/biocap-pack-$version.zip.sha256" \
-            --title "BioCAP model pack $version" --notes-file build/biocap/evaluation.md --latest=false
+          gh release create "$name" "build/biocap/$name.zip" "build/biocap/$name.zip.sha256" \
+            --title "$title" --notes-file build/biocap/evaluation.md --latest=false
