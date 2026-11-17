@@ -9,20 +9,24 @@ name: Model pack
 #   writes the pack, and records the fusion evaluation's answers with it (eval_outputs.json.gz).
 # - "base" exports BioCAP's encoder and text vectors afresh (export_biocap.py), which needs PyTorch.
 # - "candidate" measures a larger model against BioCAP on the evaluation photos, and builds nothing.
+# - "disease" builds the plant problems pack, a classifier on the pinned accurate pack's image vectors: it chooses
+#   photos from PlantDoc, PlantVillage and iNaturalist (disease_photos.py), turns them into vectors in several jobs
+#   side by side, then fits, tunes, evaluates and writes disease-pack-N.zip (disease_head.py). Publishing it makes a
+#   disease-pack-N release.
 on:
   workflow_dispatch:
     inputs:
       build:
         description: "What to build"
         type: choice
-        options: [prototypes, base, candidate, none]
+        options: [prototypes, base, candidate, disease, none]
         default: prototypes
       vectors_from_run:
         description: "Reuse the prototype vectors an earlier run made, by its run ID, and only tune and write the pack"
         type: string
         default: ""
       publish:
-        description: "Publish the pack as a release (biocap-pack-N)"
+        description: "Publish the pack as a release (biocap-pack-N, or disease-pack-N for the disease build)"
         type: boolean
         default: false
       from_run:
@@ -183,7 +187,7 @@ jobs:
 
   publish:
     needs: [pack, base]
-    if: ${{ !cancelled() && inputs.publish && (needs.pack.result == 'success' || needs.base.result == 'success' || inputs.from_run != '') }}
+    if: ${{ !cancelled() && inputs.publish && inputs.build != 'disease' && (needs.pack.result == 'success' || needs.base.result == 'success' || inputs.from_run != '') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -207,3 +211,121 @@ jobs:
           gh release create "biocap-pack-$version" \
             "build/biocap/biocap-pack-$version.zip" "build/biocap/biocap-pack-$version.zip.sha256" \
             --title "BioCAP model pack $version" --notes-file build/biocap/evaluation.md --latest=false
+
+  disease-photos:
+    if: inputs.build == 'disease' && inputs.vectors_from_run == '' && inputs.from_run == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      # The dataset listings come from GitHub's API, which allows few requests without a token.
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Choose the photos the plant problems pack learns from and is judged on
+        run: python tools/models/disease_photos.py --out build/disease
+      - uses: actions/upload-artifact@v7
+        with:
+          name: disease-photos
+          path: build/disease/disease_photos.tsv
+
+  disease-vectors:
+    needs: disease-photos
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        share: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install $RUNTIME
+      - uses: actions/download-artifact@v7
+        with:
+          name: disease-photos
+          path: build/disease
+      - name: Turn the photos into vectors with the pinned accurate pack's encoder
+        run: >
+          python tools/models/disease_head.py vectors --photos build/disease/disease_photos.tsv
+          --out build/disease-vectors --share ${{ matrix.share }} --shares 6
+      - uses: actions/upload-artifact@v7
+        with:
+          name: disease-vectors-${{ matrix.share }}
+          path: build/disease-vectors
+
+  disease-pack:
+    needs: disease-vectors
+    # Runs after the vectors are made, or with those (and the photo list) an earlier run made.
+    if: ${{ !cancelled() && inputs.build == 'disease' && inputs.from_run == '' && (needs.disease-vectors.result == 'success' || inputs.vectors_from_run != '') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install $RUNTIME scikit-learn
+          pip freeze > pip-freeze.txt
+      - uses: actions/download-artifact@v7
+        with:
+          name: disease-photos
+          path: build/disease
+          run-id: ${{ inputs.vectors_from_run || github.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: disease-vectors-*
+          merge-multiple: true
+          path: build/disease-vectors
+          run-id: ${{ inputs.vectors_from_run || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Fit, tune, evaluate and write the pack
+        run: >
+          python tools/models/disease_head.py fit --photos build/disease/disease_photos.tsv
+          --vectors build/disease-vectors --out build/disease-pack
+      - uses: actions/upload-artifact@v7
+        with:
+          name: disease-pack
+          path: |
+            build/disease-pack/disease-pack-*.zip
+            build/disease-pack/disease-pack-*.zip.sha256
+            build/disease-pack/manifest.json
+            build/disease-pack/report.json
+            build/disease-pack/evaluation.md
+            pip-freeze.txt
+
+  publish-disease:
+    needs: disease-pack
+    if: ${{ !cancelled() && inputs.publish && inputs.build == 'disease' && (needs.disease-pack.result == 'success' || inputs.from_run != '') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: disease-pack
+          run-id: ${{ inputs.from_run || github.run_id }}
+          github-token: ${{ github.token }}
+          path: .
+      - name: Publish the pack as a release
+        run: |
+          pack=$(ls build/disease-pack/disease-pack-*.zip)
+          version=$(basename "$pack" .zip | sed 's/^disease-pack-//')
+          (cd build/disease-pack && sha256sum --check "disease-pack-$version.zip.sha256")
+          # Not marked as the latest release, which stays the newest app version.
+          gh release create "disease-pack-$version" \
+            "build/disease-pack/disease-pack-$version.zip" "build/disease-pack/disease-pack-$version.zip.sha256" \
+            --title "Plant problems pack $version" --notes-file build/disease-pack/evaluation.md --latest=false

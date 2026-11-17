@@ -52,6 +52,9 @@ STRINGS = {
     "licence_item_litertlm": "LiteRT-LM",
     "licence_item_litertlm_notices": "Libraries included in LiteRT-LM",
     "licence_item_gemma": "Gemma 4 E2B model, by Google (downloaded for the garden assistant)",
+    "licence_item_problem_photos": "PlantDoc, PlantVillage and iNaturalist photos (used to train the plant problems "
+    "model)",
+    "licence_creative_commons": "Creative Commons licences",
     "licence_gpl": "GNU General Public License, version 3",
     "licence_apache": "Apache License 2.0",
     "licence_mit": "MIT License",

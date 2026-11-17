@@ -35,7 +35,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.download.DownloadState
+import io.github.wkoller.pollenplot.download.VerifiedDownload
 import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.DiseasePack
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.search.MeaningSearch
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
@@ -44,15 +46,16 @@ import kotlinx.coroutines.launch
 
 /** Settings › Models: the models the app can download, how big they are, and whether they are on the phone. */
 @Composable
-fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, gemma: GemmaModel, onBack: () -> Unit) {
+fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, gemma: GemmaModel, problems: DiseasePack?, onBack: () -> Unit) {
     DetailScaffold(title = stringResource(R.string.models_title), onBack = onBack) { padding ->
-        ModelsContent(meaning, accurate, gemma, padding)
+        ModelsContent(meaning, accurate, gemma, padding, problems = problems)
     }
 }
 
 /**
  * A card for each model with its download controls, for Settings and the first-launch setup. [setup] puts accurate
- * identification first and marks it as recommended, and [top] adds items above the cards.
+ * identification first and marks it as recommended, [problems] adds the plant problems pack's card after the
+ * others (Settings only), and [top] adds items above the cards.
  */
 @Composable
 fun ModelsContent(
@@ -61,6 +64,7 @@ fun ModelsContent(
     gemma: GemmaModel,
     padding: PaddingValues,
     setup: Boolean = false,
+    problems: DiseasePack? = null,
     top: LazyListScope.() -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -118,30 +122,30 @@ fun ModelsContent(
                     stringResource(R.string.models_accurate_body_short)
                 },
             ) {
-                val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
-                when (current) {
-                    PackState.NotAvailable -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    PackState.Unpacking -> {
-                        Text(stringResource(R.string.models_unpacking), style = MaterialTheme.typography.bodyMedium, modifier = status)
-                        PollenProgressBar(null, Modifier.fillMaxWidth())
+                PackControls(current, accurate.download, R.string.models_accurate_ready) { scope.launch { accurate.delete() } }
+            }
+        }
+    }
+    val problemsItem: LazyListScope.() -> Unit = {
+        if (problems != null) {
+            item {
+                val current by problems.state.collectAsStateWithLifecycle()
+                val offered by problems.offered.collectAsStateWithLifecycle()
+                ModelCard(
+                    icon = R.drawable.ic_bug_report,
+                    title = stringResource(R.string.models_problems),
+                    body = if (problems.available) {
+                        stringResource(R.string.models_problems_body, Formatter.formatShortFileSize(context, problems.download.sizeBytes))
+                    } else {
+                        stringResource(R.string.models_problems_body_short)
+                    },
+                ) {
+                    when {
+                        !problems.available -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        // It runs on BioCAP's vectors, so it waits for the accurate pack; a pack already here can still be deleted.
+                        !offered && current != PackState.Ready -> Text(stringResource(R.string.models_problems_needs_accurate), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        else -> PackControls(current, problems.download, R.string.models_problems_ready) { scope.launch { problems.delete() } }
                     }
-                    PackState.Ready -> {
-                        Text(stringResource(R.string.models_accurate_ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
-                        OutlinedButton(onClick = { scope.launch { accurate.delete() } }) { Text(stringResource(R.string.models_delete)) }
-                    }
-                    PackState.Damaged -> {
-                        Text(stringResource(R.string.models_damaged), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = status)
-                        Button(onClick = { accurate.download.start() }) { Text(stringResource(R.string.models_try_again)) }
-                    }
-                    is PackState.Fetching -> DownloadControls(
-                        state = current.download,
-                        totalBytes = accurate.download.sizeBytes,
-                        ready = R.string.models_unpacking,
-                        onDownload = { accurate.download.start() },
-                        onUseMobileData = { accurate.download.restartWithMobileData() },
-                        onCancel = { accurate.download.cancel() },
-                        onDelete = { scope.launch { accurate.delete() } },
-                    )
                 }
             }
         }
@@ -160,6 +164,38 @@ fun ModelsContent(
         meaningItem()
         gemmaItem()
         if (!setup) accurateItem()
+        // Plant problems needs the accurate pack, so setup leaves it to Settings.
+        if (!setup) problemsItem()
+    }
+}
+
+/** What a model pack is doing, as a sentence, with the buttons that make sense now. [ready] says it is on the phone. */
+@Composable
+private fun PackControls(current: PackState, download: VerifiedDownload, ready: Int, onDelete: () -> Unit) {
+    val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+    when (current) {
+        PackState.NotAvailable -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        PackState.Unpacking -> {
+            Text(stringResource(R.string.models_unpacking), style = MaterialTheme.typography.bodyMedium, modifier = status)
+            PollenProgressBar(null, Modifier.fillMaxWidth())
+        }
+        PackState.Ready -> {
+            Text(stringResource(ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
+            OutlinedButton(onClick = onDelete) { Text(stringResource(R.string.models_delete)) }
+        }
+        PackState.Damaged -> {
+            Text(stringResource(R.string.models_damaged), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = status)
+            Button(onClick = { download.start() }) { Text(stringResource(R.string.models_try_again)) }
+        }
+        is PackState.Fetching -> DownloadControls(
+            state = current.download,
+            totalBytes = download.sizeBytes,
+            ready = R.string.models_unpacking,
+            onDownload = { download.start() },
+            onUseMobileData = { download.restartWithMobileData() },
+            onCancel = { download.cancel() },
+            onDelete = onDelete,
+        )
     }
 }
 

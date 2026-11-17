@@ -23,7 +23,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
-import java.util.zip.ZipInputStream
 
 /** Where the accurate pack is: not published for this version, being fetched, being unpacked, or ready. */
 sealed interface PackState {
@@ -155,34 +154,7 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
 
     private suspend fun unpack() {
         _state.value = PackState.Unpacking
-        val ok = withContext(Dispatchers.IO) {
-            val staging = File(directory.path + ".part")
-            staging.deleteRecursively()
-            staging.mkdirs()
-            try {
-                ZipInputStream(download.file.inputStream().buffered()).use { zip ->
-                    while (true) {
-                        val entry = zip.nextEntry ?: break
-                        val target = File(staging, entry.name)
-                        // Entries stay inside the pack's folder.
-                        check(!entry.isDirectory && target.canonicalPath.startsWith(staging.canonicalPath + File.separator)) { "Unexpected entry ${entry.name}" }
-                        target.outputStream().use { zip.copyTo(it) }
-                    }
-                }
-                val files = JSONObject(File(staging, MANIFEST).readText()).getJSONObject("files")
-                val matches = files.keys().asSequence().all { name -> VerifiedDownload.sha256(File(staging, name)) == files.getString(name) }
-                if (matches) {
-                    directory.deleteRecursively()
-                    check(staging.renameTo(directory)) { "The pack could not be moved into place" }
-                }
-                matches
-            } catch (e: Exception) {
-                Log.w(TAG, "The accurate pack could not be unpacked", e)
-                false
-            } finally {
-                staging.deleteRecursively()
-            }
-        }
+        val ok = withContext(Dispatchers.IO) { unpackVerified(download.file, directory, TAG) }
         // The zip is no longer needed either way: unpacked, or to be fetched again.
         download.cancel()
         _state.value = if (ok) PackState.Ready else PackState.Damaged

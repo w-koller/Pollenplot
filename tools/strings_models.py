@@ -25,6 +25,14 @@ STRINGS = {
     "models.",
     "models_accurate_notification": "Downloading BioCAP for accurate identification.",
     "models_accurate_ready": "On your phone. Pollenplot uses BioCAP for every photo it identifies.",
+    "models_problems": "Plant problems",
+    "models_problems_body": "Suggests which disease or pest a photo of a sick plant looks like when you record a "
+    "problem, using BioCAP's view of the photo. You still choose what to save. %1$s, downloaded on Wi-Fi.",
+    "models_problems_body_short": "Suggests which disease or pest a photo of a sick plant looks like when you record "
+    "a problem.",
+    "models_problems_notification": "Downloading the plant problems model.",
+    "models_problems_ready": "On your phone. Pollenplot suggests problems for photos you add when you record one.",
+    "models_problems_needs_accurate": "This model works with BioCAP. Please download accurate identification first.",
     "models_unpacking": "Unpacking and checking the models.",
     "models_damaged": "The unpacked models did not match their checksums, so they were removed. Please try again.",
     "models_not_ready": "Not ready yet. It will arrive in an update.",

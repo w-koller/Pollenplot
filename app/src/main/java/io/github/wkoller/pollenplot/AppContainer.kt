@@ -62,6 +62,9 @@ import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.domain.weeds.WeedAlternatives
 import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.DiseasePack
+import io.github.wkoller.pollenplot.ml.PlantProblemModel
+import io.github.wkoller.pollenplot.domain.problems.DiseaseCall
 import io.github.wkoller.pollenplot.ml.AiyModel
 import io.github.wkoller.pollenplot.ml.AccuratePlantIdentifier
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
@@ -136,6 +139,7 @@ class AppContainer(
     location: LocationSource? = null,
     fixedClock: Clock? = null,
     assistant: Assistant? = null,
+    private val problemModelOverride: PlantProblemModel? = null,
 ) {
     val appContext: Context = context.applicationContext
     val clock: Clock = fixedClock ?: PhoneClock
@@ -213,6 +217,21 @@ class AppContainer(
     )
 
     val accurate = AccuratePack(appContext, scope)
+
+    /** The optional plant problems pack, a head on the accurate pack's vectors; offered once that pack is ready. */
+    val diseasePack = DiseasePack(appContext, scope, accurate)
+
+    /** What looks at a problem's photo; the plant problems pack, or a fake in tests. */
+    private val problemModel: PlantProblemModel = problemModelOverride ?: diseasePack
+
+    /** Whether a problem's photo can be looked at now: the plant problems pack and the accurate pack are ready. */
+    val problemModelReady: Boolean get() = problemModelOverride != null || diseasePack.ready
+
+    /** What the plant problems model makes of a stored photo, or null when it is not on the phone or cannot look. */
+    suspend fun lookForProblems(path: String): DiseaseCall? {
+        val bitmap = withContext(Dispatchers.IO) { android.graphics.BitmapFactory.decodeFile(photos.file(path).path) } ?: return null
+        return problemModel.look(bitmap, problemCatalogue)
+    }
 
     /**
      * The plants the models can name, for the search that corrects a suggestion: the accurate pack's, which have

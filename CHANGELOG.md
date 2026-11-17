@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Recording a problem knows six diseases as well as the pests: powdery mildew, downy mildew, grey mould (botrytis),
+  anthracnose, late blight and myrtle rust, each from a state government page. Settings › Models has a fourth model,
+  Plant problems, offered once accurate identification is on the phone. With it, a photo added to a problem is
+  looked at, and the problems it looks like are offered as “Looks like” chips, each marked likely or possible, or
+  the screen says no problem was found. You still choose what to save. The model will arrive in an update.
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures

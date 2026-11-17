@@ -64,3 +64,25 @@ What the measurements decided:
   and 88.2% in five (plants 55.5% and 84.3%), as PyTorch runs it (`eval_candidate.py`). Its image encoder would be about
   304 MB at 8 bits against 86 MB, and one look took 4.4 times as long on the runner. It has not been exported,
   quantised or timed on a phone.
+
+## Plant problems pack
+
+`disease_head.py` fits a multinomial logistic regression on BioCAP's vector of a photo's middle square
+(`photos.phone_square`, as `AccurateModels.middleVector` prepares it on the phone), with one class for each problem
+it has enough photos of and one for a healthy plant. The photos are PlantDoc's (CC BY 4.0), PlantVillage's
+(CC BY-SA 3.0, weighted at a quarter because they are laboratory photos on a plain background) and research-grade
+iNaturalist observations under CC0 or CC BY, of the pathogens on their hosts and of common Australian garden plants
+as healthy plants (`disease_photos.py`). Each class weighs the same in fitting. Photos are split by observer as
+`photos.held_for` splits them; PlantDoc and PlantVillage have no observers, so a hash of each file's path stands in.
+
+The regularisation and the temperature are chosen on the tuning photos (the lowest log loss), and so are the two
+levels the app shows: `yes_bp`, the lowest share at which 85% of first answers are right ("likely", and "No problem
+found" for a healthy answer), and `maybe_bp`, the lowest at which 35% of the chips shown hold the right problem
+("possible"). Those two proportions are Pollenplot's choice. Problems the catalogue does not hold, such as early
+blight and septoria leaf spot, are learned as classes so their photos are not called something the app knows, and
+`DiseaseCall` never offers them.
+
+Held-out top-1, top-3, the expected calibration error before and after the temperature, and how often healthy garden
+plants are called healthy are written to the run's `evaluation.md` and the release notes. Not yet measured: the
+first pack has not been built.
+
