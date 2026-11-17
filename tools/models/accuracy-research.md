@@ -241,7 +241,7 @@ vectors alone. These are the encoder's own rankings within the photo's group, no
   missed 3 that it did; BioCLIP 2 gained 2 and lost 4. The lowest cosine between the two levels' vectors was 0.995
   for BioCAP and 0.998 for BioCLIP 2. The seven points that 8-bit activations cost before do not appear with
   `MatMulNBits`' blockwise rounding. Moving BioCAP's pack to level 4 makes a look 2.4 times as fast on this phone
-  for no measurable loss; it needs a new pack (the setting is in the model file) and `eval_fusion.py` on it.
+  for no measurable loss. Pack 4 is that change alone (`level4_pack.py`, `evaluation.md`), and the app uses it.
 - BioCLIP 2 with its text vectors alone, at one look, names 52.4% of plants first against 45.7% for pack 3 with its
   prototypes and three looks: 6.7 points on the same photos, past the ship rule's 5. With three looks, which level 4
   makes affordable on a fast phone, the gap is 9.2 points, before BioCLIP 2 has prototypes of its own. The rule
