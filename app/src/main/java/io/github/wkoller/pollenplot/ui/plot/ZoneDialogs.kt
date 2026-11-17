@@ -265,8 +265,6 @@ fun PlotAppearanceSheet(
     onDismiss: () -> Unit,
     onBackground: (PlotBackground) -> Unit,
     onGrid: (Boolean) -> Unit,
-    sunOverlay: Boolean = false,
-    onSunOverlay: (Boolean) -> Unit = {},
     north: NorthSide = NorthSide.TOP,
     onNorth: (NorthSide) -> Unit = {},
 ) {
@@ -299,13 +297,6 @@ fun PlotAppearanceSheet(
                 supportingContent = { Text(stringResource(R.string.plot_grid_body)) },
                 trailingContent = { Switch(checked = gridInView, onCheckedChange = null) },
             ) { Text(stringResource(R.string.plot_grid)) }
-            ListItem(
-                checked = sunOverlay,
-                onCheckedChange = onSunOverlay,
-                leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
-                supportingContent = { Text(stringResource(R.string.plot_sun_overlay_body)) },
-                trailingContent = { Switch(checked = sunOverlay, onCheckedChange = null) },
-            ) { Text(stringResource(R.string.plot_sun_overlay)) }
             Column(Modifier.padding(horizontal = 24.dp)) {
                 ChipGroup(
                     title = stringResource(R.string.plot_north),
@@ -324,6 +315,25 @@ fun PlotAppearanceSheet(
                     onChoose = onNorth,
                 )
             }
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text(stringResource(R.string.plot_done)) }
+        }
+    }
+}
+
+/** The Plot's layers, which lie over the zones as a map's layers lie over its streets. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlotLayersSheet(sunOverlay: Boolean, onDismiss: () -> Unit, onSunOverlay: (Boolean) -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(stringResource(R.string.plot_layers_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp).semantics { heading() })
+            ListItem(
+                checked = sunOverlay,
+                onCheckedChange = onSunOverlay,
+                leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
+                supportingContent = { Text(stringResource(R.string.plot_sun_overlay_body)) },
+                trailingContent = { Switch(checked = sunOverlay, onCheckedChange = null) },
+            ) { Text(stringResource(R.string.plot_sun_overlay)) }
             Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text(stringResource(R.string.plot_done)) }
         }
     }

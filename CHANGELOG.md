@@ -5,10 +5,11 @@
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures
-  have a soft shadow, stronger while one is chosen or dragged, and a veg patch, pots, a pond and a lawn each have a
-  faint pattern of their own.
-- “Plot appearance” can wash each zone with a colour for its sun or shade, with a key on the plot and the sun's icon
-  on each tile, and can set which side of the plot faces north for a north arrow.
+  have a soft shadow, stronger while one is chosen or dragged. Every zone shows its kind by its icon alone.
+- The Plot has a Layers button, as a map has, with a sun and shade layer. While it is on, the zones turn one plain
+  colour and their sun or shade lies over them in its own colour, with shade hatched as well, a key on the plot and
+  the sun's icon on each tile. A zone without a sun setting has a dashed edge. “Plot appearance” sets which side of
+  the plot faces north for a north arrow.
 - The graveyard, in the Plot's More menu and at the end of the Plot's list, holds every plant that died or was
   removed, the most recent first. Each says when it ended, where it grew, how long it lived and how much history it
   keeps: photos, days in flower, harvests, problems and care records. Choosing Died or Removed in a plant's Edit sheet
