@@ -1,7 +1,6 @@
 # How identification could be made more accurate
 
-Findings only, written on 17 November 2026. Nothing here has been built or measured yet, and no workflow was run for
-it. The starting point is pack 3 (BioCAP with prototypes), whose suggestions name 47.3% of the 357 held-out
+Findings, written on 17 November 2026; the BioCLIP 2 section adds what was measured on 17 and 18 November. The starting point is pack 3 (BioCAP with prototypes), whose suggestions name 47.3% of the 357 held-out
 Australian plant photos first and 75.6% in five (`evaluation.md`). Every gain below is an estimate from the papers it
 cites, and each one names the measurement that would replace the estimate. `CLAUDE.md` asks that a weight, threshold
 or look change only with a number from `FusionEvalTest`, and that still holds.
@@ -212,9 +211,9 @@ The phone stayed cool throughout (thermal status 0).
 - BioCLIP 2 takes 4.5 times as long as BioCAP at level 0 and 4.9 times at level 4, close to the 4.4 measured on the
   runner. On this phone a BioCLIP 2 look is well inside the 1.5 s of the ship rule, at either level.
 - Level 4 is 2.2 to 2.4 times as fast on this phone's Arm processor (1.6 times on the runner's Intel one). Its
-  vectors stayed within a cosine of 0.996 of PyTorch's (`encoders.md` of the same run), but whether it names species
-  as well has not been measured. If it does, it is worth having for BioCAP alone, and at 305 ms BioCLIP 2 could keep
-  three looks for a plant (about 0.9 s) on a phone like this one, which would change the ship rule's "one look".
+  vectors stayed within a cosine of 0.996 of PyTorch's (`encoders.md` of the same run), and it names species as well
+  as level 0 (below). It is worth having for BioCAP alone, and at 305 ms BioCLIP 2 could keep three looks for a plant
+  (about 0.9 s) on a phone like this one, which would change the ship rule's "one look".
 - Memory, as the process's PSS: BioCAP at level 0 added about 100 MB when loaded and 130 MB at its peak; level 4
   added about 230 and 260 MB, because ONNX Runtime repacks the weights for its integer kernels. BioCLIP 2 at level 4
   added about 510 MB loaded and 540 MB at its peak. Each model ran after the last in one process, and the memory an
@@ -222,6 +221,32 @@ The phone stayed cool throughout (thermal status 0).
   read). A run with one model at a time (`--es models <file>`) gives cleaner numbers.
 - This phone is one of the fastest Android phones sold. A mid-range phone with 8 GB has not been measured, and is
   the next phone to time, because the ship rule is set by the slowest phone the pack is offered on.
+
+**Level 4 on the evaluation photos (18 November 2026).** `eval_levels.py` (Model pack run 44100095336, build
+`levels`) scored the 1,029 evaluation photos of `eval_fusion.py`'s choice, 357 of them plants, with each encoder of
+run 44086488819. BioCAP is scored as the pack scores a photo (text vectors and prototypes), BioCLIP 2 by its text
+vectors alone. These are the encoder's own rankings within the photo's group, not the fused suggestions of
+`FusionEvalTest`, and the photos were fetched afresh, so pack 3's plant top-1 is 45.7% here against 47.3% in
+`evaluation.md`.
+
+| Encoder | Plants first, three looks | Plants first, one look | Plants in five, three looks | All first | All in five |
+|---|---|---|---|---|---|
+| BioCAP, the pack's own | 45.7% | 42.9% | 74.8% | 50.1% | 77.4% |
+| BioCAP, level 0 | 45.7% | 43.4% | 74.8% | 50.1% | 77.5% |
+| BioCAP, level 4 | 45.9% | 43.1% | 74.5% | 50.1% | 77.4% |
+| BioCLIP 2, level 0 | 54.9% | 52.4% | 84.6% | 64.1% | 88.3% |
+| BioCLIP 2, level 4 | 54.9% | 52.4% | 84.9% | 63.9% | 88.5% |
+
+- Level 4 names species as well as level 0. Of 1,029 photos, BioCAP at level 4 put 3 first that level 0 did not and
+  missed 3 that it did; BioCLIP 2 gained 2 and lost 4. The lowest cosine between the two levels' vectors was 0.995
+  for BioCAP and 0.998 for BioCLIP 2. The seven points that 8-bit activations cost before do not appear with
+  `MatMulNBits`' blockwise rounding. Moving BioCAP's pack to level 4 makes a look 2.4 times as fast on this phone
+  for no measurable loss; it needs a new pack (the setting is in the model file) and `eval_fusion.py` on it.
+- BioCLIP 2 with its text vectors alone, at one look, names 52.4% of plants first against 45.7% for pack 3 with its
+  prototypes and three looks: 6.7 points on the same photos, past the ship rule's 5. With three looks, which level 4
+  makes affordable on a fast phone, the gap is 9.2 points, before BioCLIP 2 has prototypes of its own. The rule
+  must still be checked on the fused suggestions of a BioCLIP 2 pack (step 5), and the time on a mid-range phone.
+- Three looks against one is worth 2.5 to 2.8 points of plant top-1 for both models.
 
 **Phone latency and memory, estimated.** No published benchmark of a ViT-L/14 under ONNX Runtime on an Android
 phone was found, so these are estimates to be replaced by the benchmark.
