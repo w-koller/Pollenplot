@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Settings › Models offers BioCLIP 2 beside BioCAP as “More accurate identification”, for high-end phones. BioCLIP 2
+  is a larger model that names more Australian plants and animals, and Pollenplot uses it in place of BioCAP while
+  it is on the phone. The ⓘ button beside “For high-end phones” lists the recommended phone: 8 GB of memory or more
+  and a flagship processor from 2023 or later. A phone with less memory is warned before it downloads.
 - Accurate identification pack 4 looks at a photo more than twice as fast. Its model now works with whole numbers
   inside, which took a look from 151 ms to 63 ms on a recent phone, and on 1,029 Australian photos it names species as
   well as pack 3 did (52% first and 78% in five). Nothing else in the pack changed. It is about 142 MB, and the old
