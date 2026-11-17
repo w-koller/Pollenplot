@@ -75,8 +75,8 @@ about 1 km). A learned SINR is the next step only if the grid's gain is large an
 **A finding first.** The 70,780 prototype vectors were never kept. `prototype_vectors.py` writes, for each species,
 only the sum of its photos' unit vectors and their count, and `add_prototypes.py` divides one by the other. A linear
 probe and several prototypes per species both need each photo's own vector. So the first step is to make
-`prototype_vectors.py` write each vector as well (70,780 × the encoder's dimensions × 2 bytes, about 72 MB if the manifest's
-`dimensions` is 512, as for a CLIP ViT-B/16), and rerun the vectors job. It need not choose the photos again: the pack already holds
+`prototype_vectors.py` write each vector as well (70,780 × the encoder's dimensions × 2 bytes, about 72 MB at BioCAP's 512
+dimensions), and rerun the vectors job. It need not choose the photos again: the pack already holds
 `prototype_photos.tsv.gz`, and the vectors job can read that in place of the 35 GB of open data.
 
 **A text-anchored linear probe.** A prototype is the class mean, which is SimpleShot (Wang et al., 2019) and the
@@ -142,7 +142,7 @@ examples.
 
 **What it needs.**
 
-- The detection keeps BioCAP's vector of the find (its `dimensions` numbers at 16 bits, about 1 KB). The detection table does not
+- The detection keeps BioCAP's vector of the find (512 numbers at 16 bits, 1 KB). The detection table does not
   keep it today, and the schema may still change in place before 1.0.0. The vectors stay on the phone and go into a
   backup with the rest.
 - For each name the user has accepted or chosen, a score of the same form as the pack's prototypes, summed over the
@@ -222,13 +222,16 @@ phone was found, so these are estimates to be replaced by the benchmark.
 
 **The steps.**
 
-1. **Export.** Extend `models.yml`'s `build: candidate` job to export BioCLIP 2's image encoder as
-   `export_biocap.py` exports BioCAP, with `MatMulNBits` at 8 bits and block size 128, and check it against PyTorch
-   on the reference photos. Upload the model as an artifact, not a release.
-2. **Benchmark on a phone.** A debug-only benchmark, run over `adb`, that loads a model from the app's files, takes
-   three runs to warm up and twenty to time, and reports the median and slowest look, the time to load, and the peak
-   memory (`Debug.getPss`, or `dumpsys meminfo` from the computer). Run it for BioCAP and BioCLIP 2 on the same phone,
-   and for `accuracy_level` 0 and 4. This is the gate: if BioCLIP 2 is over the time limit, stop here.
+1. **Export.** `models.yml`'s `build: benchmark` job runs `export_candidate.py`, which exports BioCAP's and
+   BioCLIP 2's image encoders as `export_biocap.py` exports BioCAP, with `MatMulNBits` at 8 bits and block size 128,
+   each at `accuracy_level` 0 and 4, and checks them against PyTorch on the fixtures and 24 plant photos. The models
+   are artifacts kept for a week, one for each model, never a release.
+2. **Benchmark on a phone.** `tools/models/run_benchmark.sh <run-id>` installs the debug build, pushes the four
+   models to the phone one download at a time, and starts `EncoderBenchmarkActivity` (debug builds only), which times
+   each of them and the installed pack's encoder with the app's settings: three looks to warm up and twenty timed,
+   the median, 90th percentile and slowest look, the time to load, the memory (PSS) loaded and at its peak, and the
+   phone's heat before and after. The results land in `build/benchmark/`. This is the gate: if BioCLIP 2 is over the
+   time limit, stop here.
 3. **Prototypes.** Make the vectors again with BioCLIP 2's encoder from the same `prototype_photos.tsv.gz`, keeping
    each photo's vector (number 2), and choose alpha and beta, or the probe, on the tuning photos.
 4. **Everything else that is model-specific.** `flowers.f16` and `flowers.yes_bp` and `no_bp`, the group check
@@ -248,7 +251,7 @@ phone was found, so these are estimates to be replaced by the benchmark.
 - `FusionEvalTest`'s honesty and genus tests pass on its answers.
 
 **A disease head.** A classifier for plant diseases trained on BioCAP's vectors (the optional disease work in another
-session) reads vectors from BioCAP's space. BioCLIP 2's vectors are another space, likely of another size, so such a
+session) reads BioCAP's 512 numbers. BioCLIP 2's vectors are another space, likely of another size, so such a
 head must be trained again for a BioCLIP 2 pack, and a phone that has both packs needs the head that matches the
 encoder it runs.
 

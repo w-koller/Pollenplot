@@ -271,7 +271,10 @@ just built) records them, and must be run again, and
 the file and the test's baseline replaced, after a change to a model or to how the phone looks at a photo: its looks
 mirror `FastPlantIdentifier` and `AccurateModels.lookAtOne` (three BioCAP looks as one for a photo of one plant, one
 look for an animal). Each run fetches the photos afresh, so numbers from two runs differ by a few photos.
-`tools/models/evaluation.md` says what was measured and decided. Change a weight, threshold or look only with a
+`tools/models/evaluation.md` says what was measured and decided. `tools/models/accuracy-research.md` ranks what could
+make identification more accurate. Encoders are timed on a phone by `EncoderBenchmarkActivity`, in debug builds
+only, which `tools/models/run_benchmark.sh` feeds with the models the Model pack workflow's `benchmark` build exports
+(`export_candidate.py`). Change a weight, threshold or look only with a
 number from this test.
 
 Model files are not committed. The build downloads each one once, checks it against its published SHA-256
