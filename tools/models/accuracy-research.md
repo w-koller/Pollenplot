@@ -198,6 +198,31 @@ non-commercial training images that BioCAP's weights already carry; check BioCAP
 to confirm the position is unchanged, and seek advice if Pollenplot is ever sold. The card also names a newer
 BioCLIP 2.5 with a ViT-H/14 encoder, which is about twice as large again and not a phone candidate.
 
+**Measured on a phone (17 November 2026).** `run_benchmark.sh` on a Xiaomi 2512BPNDAG (Qualcomm SM8850, 15 GB,
+Android 37), with the encoders of Model pack run 44086488819, four threads, three looks to warm up and twenty timed.
+The phone stayed cool throughout (thermal status 0).
+
+| Encoder | MB | Load | Median look | 90th percentile | Slowest |
+|---|---|---|---|---|---|
+| BioCAP, accuracy level 0 (as shipped) | 91 | 125 ms | 151 ms | 188 ms | 314 ms |
+| BioCAP, accuracy level 4 | 91 | 208 ms | 63 ms | 70 ms | 72 ms |
+| BioCLIP 2, accuracy level 0 | 317 | 509 ms | 672 ms | 787 ms | 866 ms |
+| BioCLIP 2, accuracy level 4 | 317 | 758 ms | 305 ms | 366 ms | 374 ms |
+
+- BioCLIP 2 takes 4.5 times as long as BioCAP at level 0 and 4.9 times at level 4, close to the 4.4 measured on the
+  runner. On this phone a BioCLIP 2 look is well inside the 1.5 s of the ship rule, at either level.
+- Level 4 is 2.2 to 2.4 times as fast on this phone's Arm processor (1.6 times on the runner's Intel one). Its
+  vectors stayed within a cosine of 0.996 of PyTorch's (`encoders.md` of the same run), but whether it names species
+  as well has not been measured. If it does, it is worth having for BioCAP alone, and at 305 ms BioCLIP 2 could keep
+  three looks for a plant (about 0.9 s) on a phone like this one, which would change the ship rule's "one look".
+- Memory, as the process's PSS: BioCAP at level 0 added about 100 MB when loaded and 130 MB at its peak; level 4
+  added about 230 and 260 MB, because ONNX Runtime repacks the weights for its integer kernels. BioCLIP 2 at level 4
+  added about 510 MB loaded and 540 MB at its peak. Each model ran after the last in one process, and the memory an
+  earlier session freed is not always given back, so the later rows are rough (BioCLIP 2 at level 0 could not be
+  read). A run with one model at a time (`--es models <file>`) gives cleaner numbers.
+- This phone is one of the fastest Android phones sold. A mid-range phone with 8 GB has not been measured, and is
+  the next phone to time, because the ship rule is set by the slowest phone the pack is offered on.
+
 **Phone latency and memory, estimated.** No published benchmark of a ViT-L/14 under ONNX Runtime on an Android
 phone was found, so these are estimates to be replaced by the benchmark.
 
