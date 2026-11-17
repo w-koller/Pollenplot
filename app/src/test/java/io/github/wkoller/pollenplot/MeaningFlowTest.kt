@@ -80,8 +80,8 @@ class MeaningFlowTest {
         compose.onNodeWithText("Models").performClick()
         waitFor(hasText("On your phone. Search shows related plants and zones after what your words find."))
         compose.onNodeWithText("Delete").assertIsDisplayed()
-        // The accurate pack and the garden assistant can still be downloaded.
-        compose.onAllNodesWithText("Download").assertCountEquals(2)
+        // Both accurate packs and the garden assistant can still be downloaded.
+        compose.onAllNodesWithText("Download").assertCountEquals(3)
         shot("models_installed")
     }
 

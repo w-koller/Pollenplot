@@ -11,8 +11,14 @@ import org.junit.Test
  * again by running the Fusion evaluation workflow, which is needed after a change to a model or to how the phone
  * looks at a photo.
  */
-class FusionEvalTest {
-    private val eval = FusionEval.load()
+open class FusionEvalTest {
+    /** The recorded answers, in the test resources' `id` folder. */
+    protected open val resource get() = "eval_outputs.json.gz"
+
+    /** Top 1 and top 5 in basis points with the accurate pack, by group. */
+    protected open val baseline get() = WITH_THE_PACK
+
+    private val eval by lazy { FusionEval.load(resource) }
 
     /** The app's suggestions with the accurate pack: BioCAP's look at the photo, through [CandidateFusion]. */
     private fun withThePack(photo: EvalPhoto) = eval.asTheApp(photo)
@@ -24,7 +30,7 @@ class FusionEvalTest {
     fun `with the accurate pack the app names at least as many photos as when it was last measured`() {
         val scores = eval.measure(::withThePack)
         report("With the accurate pack", scores)
-        for ((group, baseline) in WITH_THE_PACK) {
+        for ((group, baseline) in baseline) {
             val score = scores.getValue(group)
             assertTrue("$group: ${score.top1Bp} bp first, below the baseline of ${baseline.first}", score.top1Bp >= baseline.first)
             assertTrue("$group: ${score.top5Bp} bp in the first five, below the baseline of ${baseline.second}", score.top5Bp >= baseline.second)

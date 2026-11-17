@@ -248,6 +248,11 @@ vectors alone. These are the encoder's own rankings within the photo's group, no
   must still be checked on the fused suggestions of a BioCLIP 2 pack (step 5), and the time on a mid-range phone.
 - Three looks against one is worth 2.5 to 2.8 points of plant top-1 for both models.
 
+**BioCLIP 2 pack 1 (18 November 2026).** Built with its text vectors alone and offered in the app for high-end
+phones beside BioCAP's pack 4; its numbers are in `evaluation.md`. On the pack evaluation's photos it named 8.4 more
+plants first than pack 4, and on the fusion test's photos 2.0 more, so the ship rule's 5 points is met on one set and
+not the other. Its own prototypes (step 3) and a measurement on a mid-range phone are still to do.
+
 **Phone latency and memory, estimated.** No published benchmark of a ViT-L/14 under ONNX Runtime on an Android
 phone was found, so these are estimates to be replaced by the benchmark.
 

@@ -110,8 +110,8 @@ class ShellScreenFlowTest {
         // Back at the top, the whole row shows below the top bar.
         compose.onNode(hasScrollToNodeAction()).performScrollToIndex(0)
         compose.onNodeWithText("Models").performClick()
-        // Search by meaning, accurate identification and the garden assistant can each be downloaded.
-        compose.onAllNodesWithText("Download").assertCountEquals(3)
+        // Search by meaning, the garden assistant and both accurate packs can each be downloaded.
+        compose.onAllNodesWithText("Download").assertCountEquals(4)
         compose.onNodeWithText("Garden assistant").assertIsDisplayed()
         shot("models")
         compose.onNodeWithContentDescription("Back").performClick()

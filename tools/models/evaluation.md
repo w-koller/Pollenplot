@@ -69,6 +69,24 @@ app's suggestions by group, which are `FusionEvalTest`'s baseline:
 On these photos three looks as one brought the species into the first five for 22 plant photos and out of it for 6,
 and the genus was given for 123 photos and right in 104, where the first species was right in 48.
 
+**BioCLIP 2 pack 1** (`export_bioclip2.py`, Model pack run 44186039158, offered for high-end phones) is
+BioCLIP 2's image encoder in 8-bit weights at accuracy level 4 with its text vectors alone, no prototypes. On pack
+4's evaluation photos, each scored as the app scores a photo:
+
+| | All, first | All, in five | Plants, first | Plants, in five | Log share, all |
+|---|---|---|---|---|---|
+| BioCAP pack 4 | 50.6% | 77.8% | 47.1% | 74.0% | −2.378 |
+| BioCLIP 2 pack 1 | 65.3% | 88.7% | 55.5% | 84.6% | −1.399 |
+
+It named more first in every group, from 1.4 points for frogs to 32 for spiders, and was better at the group of the
+closest species overall (98.6% against 96.6%), though slightly worse for plants (97.2% against 98.3%). Its flower
+band answers 63.3% of plants, 90.0% of them right. With `eval_fusion.py --seed 4` its answers are on the 1,022 photos
+of pack 4's table above (`eval_outputs_bioclip2.json.gz`, `BioClip2FusionEvalTest`): the app's suggestions named
+68.2% first and 89.2% in five against 56.3% and 81.1%, and plants 57.5% and 81.9% against 55.5% and 80.2%. That
+plant gain of 2 points against 8.4 on the other photos shows how much one set of 353 plant photos can move. The words
+held: "Likely" was right for 586 of 702, "Possibly" 97 of 243 and "Unsure" 14 of 77, and the genus was given for 144
+photos and right in 122. Three looks gained less than with BioCAP (8 plants into the first five, 4 out).
+
 What the measurements decided (with pack 3, unless it says otherwise):
 
 - **The quick models give way to BioCAP.** The species was among the quick model's ten labels, for either look at the
