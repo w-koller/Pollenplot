@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A plant found in a photo can be added as several plants. Its review card asks how many there are, as the Add sheet
+  does: one number for one zone, and for several zones a count for each zone or a total. The message after adding it
+  names the number when there is more than one. A find added to several zones as one plant used to count one in each
+  zone; it now keeps the number the card shows.
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures
