@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A press on a plant in the plant library opens its page: its picture and names, whether it is native or a weed
+  where the garden is, its badges and the same fact cards as a garden plant's page, with Add to garden and Save to my
+  library. With Add mode on, a press adds the plant straight away, as before; the library opens in Add mode from a
+  zone. The list keeps its place when a page or the add screen closes.
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures
