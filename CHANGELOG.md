@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fewer notifications. A model download shows its progress in the notification bar while it downloads and leaves
+  nothing behind when it is done; Settings › Models says when it is on the phone. Plants and animals found in photos,
+  from scans and from photos you add, share one notification that changes without a sound or buzz and counts every
+  find waiting for review, and none is shown while Pollenplot is open, since its screens show the finds.
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures

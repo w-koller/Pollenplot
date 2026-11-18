@@ -168,6 +168,55 @@ class PhotoScanningTest {
         assertEquals(1, runBlocking { garden.pendingReviewCount.first() })
     }
 
+    private fun notificationBodies(): List<String> = shadowOf(app.getSystemService(NotificationManager::class.java)).allNotifications
+        .map { it.extras.getCharSequence("android.text")?.toString().orEmpty() }
+
+    @Test
+    fun `scans and added photos share one quiet notification that counts every find waiting`() {
+        app.gallery.add(1, now.minus(Duration.ofDays(2)), bedPhoto)
+        scan()
+        assertEquals(listOf("Pollenplot found 2 plants in your photos."), notificationTitles())
+
+        val birdPhoto = TestPhotos.gardenPhoto(listOf(rosemary))
+        app.identifier.animalFor = { photo, group ->
+            listOf(FastPlantIdentifier.region(photo, FastPlantIdentifier.CENTRE, mapOf(IdSource.AIY_BIRDS to listOf(LabelScore("Manorina melanocephala", 8_000))), group))
+        }
+        val bird = app.gallery.add(3, now, birdPhoto)
+        runBlocking {
+            app.container.knowledge.awaitFauna()
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(bird.uri), LifeGroup.BIRD)).build().doWork()
+        }
+        // The added photo's news takes the scan's place rather than adding a second notification.
+        assertEquals(listOf("Pollenplot found 1 animal in your photos."), notificationTitles())
+        assertTrue(notificationBodies().single(), "3 finds are waiting for review in all." in notificationBodies().single())
+        val shown = shadowOf(app.getSystemService(NotificationManager::class.java)).allNotifications.single()
+        assertTrue("A change to it makes no sound or buzz", shown.flags and android.app.Notification.FLAG_ONLY_ALERT_ONCE != 0)
+    }
+
+    @Test
+    fun `nothing is shown in the notification bar while the app is on show`() {
+        val activity = org.robolectric.Robolectric.buildActivity(androidx.activity.ComponentActivity::class.java).setup()
+        val lawn = app.gallery.add(2, now, lawnPhoto)
+        val bed = app.gallery.add(1, now, bedPhoto)
+        runBlocking {
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(lawn.uri))).build().doWork()
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(bed.uri))).build().doWork()
+        }
+        assertEquals("The app's screens show the finds", emptyList<String>(), notificationTitles())
+        assertEquals(2, runBlocking { garden.pendingReviewCount.first() })
+        // Once the app is put away, the next news is shown again.
+        activity.stop()
+        scanAfterPutAway()
+    }
+
+    private fun scanAfterPutAway() {
+        val lawn = app.gallery.add(4, now, lawnPhoto)
+        runBlocking {
+            TestListenableWorkerBuilder<AddPhotosWorker>(app).setInputData(AddPhotosWorker.input(listOf(lawn.uri))).build().doWork()
+        }
+        assertEquals(listOf("No plant was found in the photo you added."), notificationTitles())
+    }
+
     @Test
     fun `added photos with no plants say so`() {
         val lawn = app.gallery.add(2, now, lawnPhoto)

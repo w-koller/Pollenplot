@@ -2270,6 +2270,10 @@
         <item quantity="one">%d animal</item>
         <item quantity="other">%d animals</item>
     </plurals>
+    <plurals name="notify_waiting_all">
+        <item quantity="one">%d find is waiting for review in all.</item>
+        <item quantity="other">%d finds are waiting for review in all.</item>
+    </plurals>
     <plurals name="notify_none_title">
         <item quantity="one">No plant was found in the photo you added.</item>
         <item quantity="other">No plants were found in the %d photos you added.</item>

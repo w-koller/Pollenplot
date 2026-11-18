@@ -59,7 +59,7 @@ class AddPhotosWorker(context: Context, params: WorkerParameters) : CoroutineWor
             // The app keeps its own copy of a photo with plants in it, so the picker's grant is given back once read.
             runCatching { applicationContext.contentResolver.releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
-        container.notifications.showAddedResult(tally, wildlife = group?.isWildlife == true)
+        container.notifications.showAddedResult(tally, wildlife = group?.isWildlife == true, waiting = container.garden.pendingReviewCount.first())
         if (tally.found > 0) SecondOpinionWorker.enqueue(applicationContext)
         return Result.success()
     }
@@ -110,7 +110,7 @@ class LibraryScanWorker(context: Context, params: WorkerParameters) : CoroutineW
             }
             tally = tally.withPhoto(container.scanner.scanLibraryPhoto(photo))
         }
-        container.notifications.showScanResult(tally)
+        container.notifications.showScanResult(tally, waiting = container.garden.pendingReviewCount.first())
         if (more) ScanScheduler.scanNow(applicationContext)
         // The accurate pass follows while the phone charges, for new photos with plants and those without, and asks
         // for second opinions when it is done; without it, the second opinions follow straight on.
@@ -257,7 +257,7 @@ class AccurateScanWorker(context: Context, params: WorkerParameters) : Coroutine
                 tally = tally.withPhoto(container.scanner.recheckLibraryPhoto(mediaId, takenAt))
             }
         }
-        container.notifications.showScanResult(tally)
+        container.notifications.showScanResult(tally, waiting = container.garden.pendingReviewCount.first())
         if (more) enqueue(applicationContext) else SecondOpinionWorker.enqueue(applicationContext)
         return Result.success()
     }
