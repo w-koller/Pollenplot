@@ -97,8 +97,7 @@ class BackupFlowTest {
         }
         // The Plot opens once the app knows the garden needs no setup.
         waitFor(hasContentDescription("Settings"))
-        compose.onNodeWithContentDescription("Settings").performClick()
-        compose.scrollTo(hasText("Backup and restore"))
+        compose.openSettingsTo(hasText("Backup and restore"))
         compose.onNodeWithText("Backup and restore").performClick()
         waitFor(hasText("Choose a backup file"))
     }
