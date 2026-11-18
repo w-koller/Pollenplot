@@ -49,6 +49,44 @@ class GardenGraphTest {
     }
 
     @Test
+    fun `a plant counted zone by zone has a count for each zone beside its total`() {
+        val other = "44444444-4444-4444-4444-444444444444"
+        val counted = plant.copy(zoneIds = listOf(zone.id, other), quantity = 5, counts = mapOf(zone.id to 2, other to 3))
+        val doc = JsonLd.document(GardenGraph.plant(counted, lemon, emptyList()))
+        val p = node(doc, "urn:uuid:${plant.id}")
+        assertEquals("5", p["dwc:individualCount"]!!.jsonObject["@value"]!!.jsonPrimitive.content)
+        val byZone = listOf(zone.id to "2", other to "3").map { (zoneId, count) ->
+            val planting = node(doc, "urn:uuid:${GardenGraph.plantingId(plant.id, zoneId)}")
+            assertEquals("pp:ZonePlanting", planting["@type"]!!.jsonPrimitive.content)
+            assertEquals("urn:uuid:${plant.id}", planting["pp:plantingOf"]!!.jsonObject["@id"]!!.jsonPrimitive.content)
+            assertEquals("urn:uuid:$zoneId", planting["schema:containedInPlace"]!!.jsonObject["@id"]!!.jsonPrimitive.content)
+            planting["dwc:individualCount"]!!.jsonObject["@value"]!!.jsonPrimitive.content to count
+        }
+        byZone.forEach { (got, want) -> assertEquals(want, got) }
+        assertEquals("The same id in every export", GardenGraph.plantingId(plant.id, zone.id), GardenGraph.plantingId(plant.id, zone.id))
+    }
+
+    @Test
+    fun `a plant given only a total has no counts by zone`() {
+        val triples = GardenGraph.plant(plant.copy(quantity = 4), lemon, emptyList())
+        assertTrue(triples.none { it.predicate == Vocab.PP + "zonePlanting" })
+    }
+
+    @Test
+    fun `a problem from the catalogue says whether it is a disease`() {
+        val problem = io.github.wkoller.pollenplot.domain.problems.PlantProblem(
+            "55555555-5555-5555-5555-555555555555", plant.id, "powdery-mildew", null, LocalDate.of(2026, 11, 2), null, "",
+        )
+        val doc = JsonLd.document(ProblemGraph.problem(problem, "Powdery mildew", io.github.wkoller.pollenplot.domain.problems.ProblemKind.DISEASE))
+        val p = node(doc, "urn:uuid:${problem.id}")
+        assertEquals("disease", p["pp:problemKind"]!!.jsonPrimitive.content)
+        assertEquals("powdery-mildew", p["pp:problemKey"]!!.jsonPrimitive.content)
+        // A problem the user named has no kind.
+        val own = ProblemGraph.problem(problem.copy(problemKey = null, otherName = "Spots"), "Spots")
+        assertTrue(own.none { it.predicate == Vocab.PP + "problemKind" })
+    }
+
+    @Test
     fun `a day in flower is an observation of the plant`() {
         val id = "33333333-3333-3333-3333-333333333333"
         val doc = JsonLd.document(GardenGraph.flowering(id, plant.id, LocalDate.of(2026, 10, 28), fromPhoto = false))
