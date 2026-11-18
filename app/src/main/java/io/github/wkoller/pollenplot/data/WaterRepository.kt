@@ -8,10 +8,13 @@ import io.github.wkoller.pollenplot.domain.irrigation.WaterMethod
 import io.github.wkoller.pollenplot.domain.irrigation.WateringLine
 import io.github.wkoller.pollenplot.domain.irrigation.WeatherDay
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
+import io.github.wkoller.pollenplot.domain.semantic.Triple
+import io.github.wkoller.pollenplot.domain.semantic.WaterGraph
 import io.github.wkoller.pollenplot.domain.weather.OpenMeteoForecast
 import io.github.wkoller.pollenplot.web.Web
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 import java.time.Clock
@@ -66,6 +69,11 @@ class WaterRepository(private val db: PollenplotDatabase, private val web: Web, 
         dao.upsertEvent(WateringEventEntity(watering.id, watering.lineId, watering.zoneId, watering.date.toEpochDay(), watering.notes.trim(), now()))
 
     suspend fun deleteWatering(id: String) = dao.deleteEvent(id)
+
+    /** Every watering line and every watering recorded, as linked data. */
+    suspend fun triples(): List<Triple> =
+        lines.first().flatMap(WaterGraph::line) +
+            waterings.first().flatMap { WaterGraph.watering(it.id, it.lineId, it.zoneId, it.date, it.notes) }
 
     /**
      * Fetches the last week and the next for [place], keeps them, and forgets weather older than a fortnight. Returns
