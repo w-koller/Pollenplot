@@ -156,7 +156,10 @@ is always ready to tag.
   (watering lines, waterings recorded and the weather kept), `WaterViews` (each line's and zone's plan) and
   `TodayViews` (the Plot's Today card, from every part of the garden), `GuideLibrary` in `data/guides` (the guide pages from the assets), Room in `data/db`, photos and cut-outs in `data/photos`, the knowledge base loader in `data/kb` and
   DataStore settings in `data/prefs`.
-- `app/ml`: the `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
+- `app/ml`: `AccuratePacks` holds the two accurate packs the user may download, BioCAP's (`PackSpec.BIOCAP`) and
+  BioCLIP 2's for high-end phones (`PackSpec.BIOCLIP2`, both pinned in `gradle.properties`, and BioCLIP 2's offered
+  only once its SHA-256 is set); BioCLIP 2's identifies whenever it is ready, and only the pack in use keeps its
+  encoder open. The `Identifier` interface and `FastPlantIdentifier` (AIY Plants V1 on tiles of the photo, and AIY Birds
   and Insects V1 on the middle of the frame, through the LiteRT `Interpreter`), `AccuratePlantIdentifier` (BioCAP on
   top, limited to the species of the group the user chose), and bitmap helpers. The quick models cannot tell a plant
   from an animal, so the camera's group chips say which to ask. For a photo nobody chose a group for, `groupOf` asks
@@ -250,6 +253,11 @@ is always ready to tag.
 
 ## Models
 
+BioCLIP 2's pack (`tools/models/export_bioclip2.py`, Model pack build "bioclip2", published as `bioclip2-pack-N`)
+has the same files as BioCAP's, with its encoder named by the manifest's `encoder` and 768 dimensions, and no
+prototypes yet. It is measured against BioCAP's pack on the same evaluation photos, and `eval_fusion.py --seed`
+records its answers on BioCAP's photos.
+
 From pack 3 the BioCAP pack holds `prototypes.f16`: for each species with three or more photos, the unit mean of
 BioCAP's vectors of them, and in its manifest `prototypes.alpha` and `beta`. `SpeciesIndex` adds
 alpha × exp(−beta × (1 − closeness to the prototype)) to such a species' text similarity, and a pack without them
@@ -278,7 +286,10 @@ just built) records them, and must be run again, and
 the file and the test's baseline replaced, after a change to a model or to how the phone looks at a photo: its looks
 mirror `FastPlantIdentifier` and `AccurateModels.lookAtOne` (three BioCAP looks as one for a photo of one plant, one
 look for an animal). Each run fetches the photos afresh, so numbers from two runs differ by a few photos.
-`tools/models/evaluation.md` says what was measured and decided. Change a weight, threshold or look only with a
+`tools/models/evaluation.md` says what was measured and decided. `tools/models/accuracy-research.md` ranks what could
+make identification more accurate. Encoders are timed on a phone by `EncoderBenchmarkActivity`, in debug builds
+only, which `tools/models/run_benchmark.sh` feeds with the models the Model pack workflow's `benchmark` build exports
+(`export_candidate.py`). Change a weight, threshold or look only with a
 number from this test.
 
 Model files are not committed. The build downloads each one once, checks it against its published SHA-256

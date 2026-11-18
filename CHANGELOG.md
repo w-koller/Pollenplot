@@ -7,6 +7,14 @@
   Plant problems, offered once accurate identification is on the phone. With it, a photo added to a problem is
   looked at, and the problems it looks like are offered as “Looks like” chips, each marked likely or possible, or
   the screen says no problem was found. You still choose what to save. The model will arrive in an update.
+- Setup and Settings › Models offer BioCLIP 2 beside BioCAP as “More accurate identification”, for high-end phones.
+  BioCLIP 2 names more Australian plants and animals, and Pollenplot uses it in place of BioCAP while it is on the
+  phone. The ⓘ button beside “For high-end phones” says it is best on a recent top-of-the-range phone with 8 GB of
+  memory or more, and a phone with less memory is warned before it downloads. The models' descriptions are shorter.
+- Accurate identification pack 4 looks at a photo more than twice as fast. Its model now works with whole numbers
+  inside, which took a look from 151 ms to 63 ms on a recent phone, and on 1,029 Australian photos it names species as
+  well as pack 3 did (52% first and 78% in five). Nothing else in the pack changed. It is about 142 MB, and the old
+  pack is removed from the phone once the new one is on it.
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures

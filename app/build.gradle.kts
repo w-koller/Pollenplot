@@ -118,6 +118,11 @@ android {
         buildConfigField("String", "DISEASE_URL", "\"${providers.gradleProperty("pollenplot.disease.url").get()}\"")
         buildConfigField("String", "DISEASE_SHA256", "\"${providers.gradleProperty("pollenplot.disease.sha256").getOrElse("")}\"")
         buildConfigField("long", "DISEASE_BYTES", "${providers.gradleProperty("pollenplot.disease.bytes").get()}L")
+        // BioCLIP 2's pack for high-end phones, pinned the same way; offered once its SHA-256 is set.
+        buildConfigField("int", "BIOCLIP2_PACK", providers.gradleProperty("pollenplot.bioclip2.pack").get())
+        buildConfigField("String", "BIOCLIP2_URL", "\"${providers.gradleProperty("pollenplot.bioclip2.url").get()}\"")
+        buildConfigField("String", "BIOCLIP2_SHA256", "\"${providers.gradleProperty("pollenplot.bioclip2.sha256").get()}\"")
+        buildConfigField("long", "BIOCLIP2_BYTES", "${providers.gradleProperty("pollenplot.bioclip2.bytes").get()}L")
         // Gemma 4 E2B for the garden assistant, an optional download pinned the same way.
         buildConfigField("String", "GEMMA_URL", "\"${providers.gradleProperty("pollenplot.gemma.url").get()}\"")
         buildConfigField("String", "GEMMA_SHA256", "\"${providers.gradleProperty("pollenplot.gemma.sha256").get()}\"")
