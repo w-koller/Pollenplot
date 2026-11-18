@@ -99,6 +99,10 @@
     <string name="cancel">Cancel</string>
     <string name="undo">Undo</string>
     <string name="more">More</string>
+    <string name="unsaved_title">Save your changes?</string>
+    <string name="unsaved_body">You have changed this page but not saved it. Please choose Save to keep your changes, or Don\'t save to leave without them.</string>
+    <string name="unsaved_save">Save</string>
+    <string name="unsaved_discard">Don\'t save</string>
     <string name="missing_title">This is no longer in Pollenplot.</string>
     <string name="missing_body">It may have been deleted since the link to it was made. Please go back and choose another.</string>
     <string name="choose">Choose</string>
