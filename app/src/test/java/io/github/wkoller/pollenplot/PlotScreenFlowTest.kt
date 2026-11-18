@@ -137,7 +137,7 @@ class PlotScreenFlowTest {
         compose.onNodeWithText("Front Native Strip").performClick()
         compose.onNodeWithText("Veg Patch").performClick()
         // With two zones chosen, Pollenplot asks what they hold.
-        waitFor(hasText("In these zones there is"))
+        waitFor(hasText("Keeping the plant"))
         shot("add_plant_two_zones")
         // One plant in both zones, counted zone by zone: two in the front strip and three in the veg patch.
         compose.onNodeWithText("In each zone").performScrollTo().performClick()
