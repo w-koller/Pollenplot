@@ -389,6 +389,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # photos.py, which gives the observer split, imports Pillow and NumPy.
+      - run: pip install $RUNTIME
       - name: Choose the photos the plant problems pack learns from and is judged on
         run: python tools/models/disease_photos.py --out build/disease
       - uses: actions/upload-artifact@v7
