@@ -128,14 +128,33 @@ iNaturalist observations under CC0 or CC BY, of the pathogens on their hosts and
 as healthy plants (`disease_photos.py`). Each class weighs the same in fitting. Photos are split by observer as
 `photos.held_for` splits them; PlantDoc and PlantVillage have no observers, so a hash of each file's path stands in.
 
-The regularisation and the temperature are chosen on the tuning photos (the lowest log loss), and so are the two
-levels the app shows: `yes_bp`, the lowest share at which 85% of first answers are right ("likely", and "No problem
-found" for a healthy answer), and `maybe_bp`, the lowest at which 35% of the chips shown hold the right problem
-("possible"). Those two proportions are Pollenplot's choice. Problems the catalogue does not hold, such as early
+The regularisation and the temperature are chosen on the tuning photos (the lowest log loss). The two levels the app
+shows are chosen on the tuning photos taken in the field (iNaturalist and PlantDoc) alone, because the laboratory
+photos are far easier: `yes_bp`, the lowest share at which 85% of first answers are right, and never below half the
+belief ("likely", and "No problem found" for a healthy answer), and `maybe_bp`, the lowest at which 35% of the chips
+shown hold the right problem and at most 5% of healthy field photos are given a chip ("possible"). Those proportions
+are Pollenplot's choice. Problems the catalogue does not hold, such as early
 blight and septoria leaf spot, are learned as classes so their photos are not called something the app knows, and
 `DiseaseCall` never offers them.
 
 Held-out top-1, top-3, the expected calibration error before and after the temperature, and how often healthy garden
-plants are called healthy are written to the run's `evaluation.md` and the release notes. Not yet measured: the
-first pack has not been built.
+plants are called healthy are written to the run's `evaluation.md` and the release notes.
+
+Pack 1 (Model pack run 44401441095, published as `disease-pack-1`, 264,025 bytes) has 11 classes, fitted on 9,127
+photos, tuned on 3,179 and judged on 3,115. C = 100 and the temperature is 0.95. "Likely" starts at 5000 bp and
+"possible" at 1000 bp.
+
+| Held-out photos | Photos | Top-1 | Top-3 |
+|---|---:|---:|---:|
+| iNaturalist | 425 | 97.2% | 99.5% |
+| PlantDoc | 340 | 87.1% | 98.2% |
+| PlantVillage | 2,350 | 98.6% | 100.0% |
+| All | 3,115 | 97.1% | 99.7% |
+
+The overall figure is mostly PlantVillage's laboratory photos, so the field photos are the ones to judge it by. Of the
+765 field photos, 99.3% reach "likely" or "No problem found", and 93.0% of those are right; 93.5% of the problem
+photos have the right problem among the chips, and 3.3% of the healthy ones are given a chip. Healthy garden plants
+from iNaturalist are called "No problem found" 97.1% of the time. The expected calibration error is 0.9% before the
+temperature and 0.5% after. Downy mildew, anthracnose and most pests have too few photos to be a class, so the pack
+never suggests them.
 

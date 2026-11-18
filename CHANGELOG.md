@@ -6,7 +6,7 @@
   anthracnose, late blight and myrtle rust, each from a state government page. Settings › Models has a fourth model,
   Plant problems, offered once accurate identification is on the phone. With it, a photo added to a problem is
   looked at, and the problems it looks like are offered as “Looks like” chips, each marked likely or possible, or
-  the screen says no problem was found. You still choose what to save. The model will arrive in an update.
+  the screen says no problem was found. You still choose what to save. The model is a 264 KB download.
 - Setup and Settings › Models offer BioCLIP 2 beside BioCAP as “More accurate identification”, for high-end phones.
   BioCLIP 2 names more Australian plants and animals, and Pollenplot uses it in place of BioCAP while it is on the
   phone. The ⓘ button beside “For high-end phones” says it is best on a recent top-of-the-range phone with 8 GB of
