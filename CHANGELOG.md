@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The last step of the first-launch setup offers photos of plants from the Atlas of Living Australia, beside
+  notifications and photo scanning, so the plant library does not need to ask later.
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures
