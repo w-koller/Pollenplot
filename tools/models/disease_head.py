@@ -33,12 +33,18 @@ HEALTHY = "healthy"
 MIN_LEARNING = 30
 MIN_HELD = 5
 
-# The levels the app shows a suggestion at, chosen on the tuning photos. "Likely" (and "No problem found" for a
-# healthy answer) needs LIKELY_PRECISION of the photos at or above yes_bp to have the right class first; a "possible"
-# chip needs POSSIBLE_PRECISION of the chips shown at or above maybe_bp to be right. Both are Pollenplot's choice.
+# The levels the app shows a suggestion at, chosen on the tuning photos taken in the field (iNaturalist and PlantDoc),
+# because PlantVillage's single leaves on plain backgrounds are far easier than a phone's photo of a garden and made
+# every level look safe in pack 1. "Likely" (and "No problem found" for a healthy answer) needs LIKELY_PRECISION of
+# the field photos at or above yes_bp to have the right class first, and never starts below LIKELY_FLOOR_BP, half the
+# belief. A "possible" chip needs POSSIBLE_PRECISION of the chips shown at or above maybe_bp to be right, and may be
+# given to at most HEALTHY_CHIP_RATE of the healthy field photos. All of these are Pollenplot's choice.
 LIKELY_PRECISION = 0.85
 POSSIBLE_PRECISION = 0.35
+HEALTHY_CHIP_RATE = 0.05
+LIKELY_FLOOR_BP = 5_000
 FLOOR_BP = 1_000
+FIELD = ("inaturalist", "plantdoc")
 SHOWN = 3
 
 REGULARISATION = (1.0, 3.0, 10.0, 30.0, 100.0, 300.0)
@@ -154,32 +160,50 @@ def top_k(shares, labels, k):
     return float(np.mean([labels[i] in order[i] for i in range(len(labels))])) if len(labels) else float("nan")
 
 
+def chips_for(row, healthy, yes_bp, bp):
+    """The chips the app shows for one photo's shares at maybe_bp = bp: none when it says "No problem found"."""
+    if row.argmax() == healthy and row.max() * 10_000 >= yes_bp:
+        return []
+    return [c for c in np.argsort(-row) if c != healthy and row[c] * 10_000 >= bp][:SHOWN]
+
+
 def thresholds(shares, labels, healthy):
-    """yes_bp and maybe_bp from the tuning photos (see LIKELY_PRECISION and POSSIBLE_PRECISION)."""
-    steps = range(FLOOR_BP, 10_000, 250)
+    """yes_bp and maybe_bp from the field tuning photos (see LIKELY_PRECISION, POSSIBLE_PRECISION and HEALTHY_CHIP_RATE)."""
     top = shares.max(axis=1)
     first = shares.argmax(axis=1)
     yes_bp = 9_750
-    for bp in steps:
+    for bp in range(LIKELY_FLOOR_BP, 10_000, 250):
         at = top * 10_000 >= bp
         if at.sum() >= 10 and (first[at] == labels[at]).mean() >= LIKELY_PRECISION:
             yes_bp = bp
             break
     maybe_bp = yes_bp
-    for bp in steps:
-        if bp > yes_bp:
-            break
-        shown = right = 0
-        for i in range(len(labels)):
-            if first[i] == healthy and top[i] * 10_000 >= yes_bp:
-                continue
-            chips = [c for c in np.argsort(-shares[i]) if c != healthy and shares[i, c] * 10_000 >= bp][:SHOWN]
-            shown += len(chips)
-            right += labels[i] in chips
-        if shown >= 10 and right / shown >= POSSIBLE_PRECISION:
+    well = np.flatnonzero(labels == healthy)
+    for bp in range(FLOOR_BP, yes_bp, 250):
+        chips = [chips_for(shares[i], healthy, yes_bp, bp) for i in range(len(labels))]
+        shown = sum(len(c) for c in chips)
+        right = sum(labels[i] in c for i, c in enumerate(chips))
+        alarms = np.mean([bool(chips[i]) for i in well]) if len(well) else 0.0
+        if shown >= 10 and right / shown >= POSSIBLE_PRECISION and alarms <= HEALTHY_CHIP_RATE:
             maybe_bp = bp
             break
     return yes_bp, maybe_bp
+
+
+def field_report(shares, labels, healthy, yes_bp, maybe_bp):
+    """How the levels do on field photos: how often a "likely" or "No problem found" is right, and how many get one."""
+    top = shares.max(axis=1)
+    first = shares.argmax(axis=1)
+    sure = top * 10_000 >= yes_bp
+    chips = [chips_for(shares[i], healthy, yes_bp, maybe_bp) for i in range(len(labels))]
+    sick = labels != healthy
+    return {
+        "photos": int(len(labels)),
+        "sure": float(sure.mean()) if len(labels) else None,
+        "sure_right": float((first[sure] == labels[sure]).mean()) if sure.any() else None,
+        "sick_right_chip": float(np.mean([labels[i] in chips[i] for i in np.flatnonzero(sick)])) if sick.any() else None,
+        "healthy_given_a_chip": float(np.mean([bool(chips[i]) for i in np.flatnonzero(~sick)])) if (~sick).any() else None,
+    }
 
 
 def fit(args):
@@ -222,12 +246,13 @@ def fit(args):
     temperature = min(TEMPERATURES, key=lambda t: nll(head_shares(w, b, t, found[tune]), labels[tune]))
     tuned = head_shares(w, b, temperature, found[tune])
     healthy = classes.index(HEALTHY)
-    yes_bp, maybe_bp = thresholds(tuned, labels[tune], healthy)
+    sources = np.array([row["source"] for row in rows])
+    field = np.isin(sources, FIELD)
+    yes_bp, maybe_bp = thresholds(tuned[field[tune]], labels[tune][field[tune]], healthy)
 
     judge = split["evaluation"]
     raw = head_shares(w, b, 1.0, found[judge])
     shares = head_shares(w, b, temperature, found[judge])
-    sources = np.array([row["source"] for row in rows])
     report = {
         "classes": classes, "left_out": left_out, "uncatalogued": uncatalogued, "C": c, "temperature": float(temperature), "yes_bp": yes_bp, "maybe_bp": maybe_bp,
         "photos": {name: int(m.sum()) for name, m in split.items()},
@@ -241,11 +266,11 @@ def fit(args):
     for i, key in enumerate(classes):
         at = labels[judge] == i
         report["by_class"][key] = {"photos": int(at.sum()), "top1": top_k(shares[at], labels[judge][at], 1), "top3": top_k(shares[at], labels[judge][at], 3)}
+    report["field"] = field_report(shares[field[judge]], labels[judge][field[judge]], healthy, yes_bp, maybe_bp)
     garden = (sources[judge] == "inaturalist") & (labels[judge] == healthy)
     report["garden_healthy_called_healthy"] = float(((shares[garden].argmax(axis=1) == healthy) & (shares[garden].max(axis=1) * 10_000 >= yes_bp)).mean()) if garden.any() else None
     report["garden_healthy_given_a_chip"] = float(np.mean([
-        any(c != healthy and shares[i, c] * 10_000 >= maybe_bp for c in range(len(classes)))
-        for i in np.flatnonzero(garden)
+        bool(chips_for(shares[i], healthy, yes_bp, maybe_bp)) for i in np.flatnonzero(garden)
     ])) if garden.any() else None
 
     write_pack(args, classes, w, b, float(temperature), yes_bp, maybe_bp, rows, learn, found[judge][:6], report)
@@ -319,6 +344,10 @@ def markdown(number, report, size):
         f"- Expected calibration error {pct(report['ece_before'])} before the temperature, {pct(report['ece_after'])} after.",
         f"- Healthy garden plants from iNaturalist called \"No problem found\": {pct(report['garden_healthy_called_healthy'])}; "
         f"given at least one chip: {pct(report['garden_healthy_given_a_chip'])}.",
+        f"- Field photos judged (iNaturalist and PlantDoc): {report['field']['photos']:,}. "
+        f"{pct(report['field']['sure'])} reach \"likely\" or \"No problem found\", and {pct(report['field']['sure_right'])} of those are right. "
+        f"{pct(report['field']['sick_right_chip'])} of the problem photos have the right problem among the chips, and "
+        f"{pct(report['field']['healthy_given_a_chip'])} of the healthy ones are given a chip.",
         f"- Problems in the catalogue with too few photos to be a class (most pests have none): {', '.join(report['left_out']) or 'none'}.",
         f"- Classes the app's catalogue does not hold, learned so their photos are not called something else and "
         f"never offered: {', '.join(report['uncatalogued']) or 'none'}.",
