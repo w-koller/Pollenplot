@@ -59,9 +59,8 @@ fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePacks, gemma: GemmaMo
 }
 
 /**
- * A card for each model with its download controls, for Settings and the first-launch setup. [setup] puts accurate
- * identification first and marks it as recommended, and leaves BioCLIP 2 for Settings; [top] adds items above the
- * cards.
+ * A card for each model with its download controls, for Settings and the first-launch setup. [setup] puts the
+ * identification packs first, with BioCAP's marked as recommended; [top] adds items above the cards.
  */
 @Composable
 fun ModelsContent(
@@ -130,7 +129,10 @@ fun ModelsContent(
             )
         }
         // Accurate identification matters most to a new garden, so setup offers it first.
-        if (setup) biocapItem()
+        if (setup) {
+            biocapItem()
+            bioclip2Item()
+        }
         meaningItem()
         gemmaItem()
         if (!setup) {
@@ -155,7 +157,7 @@ private fun PackCard(packs: AccuratePacks, accurate: AccuratePack, setup: Boolea
     val title = stringResource(if (bioclip2) R.string.models_bioclip2 else R.string.models_accurate)
     ModelCard(
         icon = R.drawable.ic_local_florist,
-        title = if (setup) stringResource(R.string.setup_recommended_model, title) else title,
+        title = if (setup && !bioclip2) stringResource(R.string.setup_recommended_model, title) else title,
         body = when {
             bioclip2 && accurate.available -> stringResource(R.string.models_bioclip2_body, size)
             bioclip2 -> stringResource(R.string.models_bioclip2_body_short)
@@ -164,8 +166,8 @@ private fun PackCard(packs: AccuratePacks, accurate: AccuratePack, setup: Boolea
         },
     ) {
         if (bioclip2) {
-            HighEndRequirements(Formatter.formatShortFileSize(context, 2 * accurate.download.sizeBytes))
-            if (!packs.meetsBioclip2Memory) {
+            HighEndRequirements()
+            if (packs.memoryBytes > 0 && !packs.meetsBioclip2Memory) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                     Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     Text(
@@ -212,7 +214,7 @@ private fun PackCard(packs: AccuratePacks, accurate: AccuratePack, setup: Boolea
 /** "For high-end phones", with a button that shows the recommended requirements in a tooltip. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HighEndRequirements(space: String) {
+private fun HighEndRequirements() {
     val scope = rememberCoroutineScope()
     val tooltip = rememberTooltipState(isPersistent = true)
     val heading = stringResource(R.string.models_requirements)
@@ -221,7 +223,7 @@ private fun HighEndRequirements(space: String) {
         TooltipBox(
             positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
             tooltip = {
-                RichTooltip(title = { Text(heading) }) { Text(stringResource(R.string.models_bioclip2_requirements, space)) }
+                RichTooltip(title = { Text(heading) }) { Text(stringResource(R.string.models_bioclip2_requirements)) }
             },
             state = tooltip,
         ) {
