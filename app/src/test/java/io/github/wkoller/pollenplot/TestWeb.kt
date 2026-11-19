@@ -47,8 +47,11 @@ class FixedLocation(latitude: Double, longitude: Double) : LocationSource {
  * offline.
  */
 class RecordedWeb : Web {
-    /** Every address asked for, in order. */
-    val asked = mutableListOf<String>()
+    /**
+     * Every address asked for, in order. Photos and lists are fetched in the background while a test reads this, so
+     * it is a list that can be read while it grows.
+     */
+    val asked: MutableList<String> = java.util.concurrent.CopyOnWriteArrayList()
 
     /** Fails every request, as a phone without a connection does. */
     var offline = false
