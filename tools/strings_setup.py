@@ -21,9 +21,7 @@ STRINGS = {
 
     # Models
     "setup_models_title": "Identification models",
-    "setup_models_intro": "Pollenplot can identify common plants and animals with the models built into the app. These "
-    "downloads add more. Accurate identification is recommended for a new garden, and Wi-Fi is best for it. Downloads "
-    "carry on while you finish setup.",
+    "setup_models_intro": "Pollenplot can already identify common plants and animals. These downloads help it name more, and they carry on while you finish setup.",
     "setup_recommended_model": "%1$s (recommended)",
 
     # Zones
@@ -36,7 +34,7 @@ STRINGS = {
 
     # Permissions
     "setup_permissions_title": "Notifications and photos",
-    "setup_permissions_body": "Both are optional, and you can change them later in Settings.",
+    "setup_permissions_body": "All three are optional, and you can change them later in Settings.",
     "setup_notifications": "Notifications",
     "setup_notifications_body": "Pollenplot tells you when watering is due, when a hive check is due, when a hot day is "
     "coming for stingless bees and what it found in your photos.",
@@ -49,6 +47,12 @@ STRINGS = {
     "setup_scanning_on": "Photo scanning is on.",
     "setup_scanning_denied": "Pollenplot cannot see your photos. You can allow them later in Settings › Photo "
     "scanning.",
+    "setup_plant_photos": "Photos of plants",
+    "setup_plant_photos_body": "Pollenplot can show photos of plants from the Atlas of Living Australia in the plant "
+    "library and the weed lists. It fetches each photo the first time a plant is shown and keeps it on your phone. "
+    "Only the plant's name is sent.",
+    "setup_plant_photos_allow": "Show photos of plants",
+    "setup_plant_photos_on": "Pollenplot will show photos of plants.",
 
     # Settings
     "settings_setup_again": "Set up again",

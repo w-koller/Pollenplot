@@ -99,7 +99,9 @@ class VerifiedDownload(private val context: Context, private val spec: DownloadS
             )
             .setAllowedOverMetered(allowMobileData)
             .setAllowedOverRoaming(false)
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            // Progress shows while it downloads and goes when it is done, so finished downloads do not pile up in the
+            // notification bar; the Models screen says when a model is on the phone.
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
         val id = try {
             downloads.enqueue(request)
         } catch (error: RuntimeException) {

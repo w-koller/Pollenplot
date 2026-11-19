@@ -92,6 +92,10 @@ PLURALS = {
     },
     "count_plants": {"one": "%d plant", "other": "%d plants"},
     "count_animals": {"one": "%d animal", "other": "%d animals"},
+    "notify_waiting_all": {
+        "one": "%d find is waiting for review in all.",
+        "other": "%d finds are waiting for review in all.",
+    },
     "notify_none_title": {
         "one": "No plant was found in the photo you added.",
         "other": "No plants were found in the %d photos you added.",

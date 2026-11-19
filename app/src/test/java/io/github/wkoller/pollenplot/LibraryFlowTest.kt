@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.test.core.app.ApplicationProvider
@@ -107,14 +108,16 @@ class LibraryFlowTest {
         waitFor(hasText("Add 2 plants"))
         compose.onNodeWithText("Front Native Strip").performClick()
         compose.onNodeWithText("Veg Patch").performClick()
-        waitFor(hasText("In these zones there is"))
+        waitFor(hasText("Keeping the plant"))
         shot("library_add_many")
         compose.onNodeWithText("Add to garden").performClick()
         waitFor(hasText("Added 2 plants to Front Native Strip, Veg Patch."))
         val added = runBlocking { garden.plantList.first() }.filter { it.speciesName in setOf("Hibbertia scandens", "Melaleuca viminalis") }
         assertEquals("One plant of each, growing in both zones", listOf(listOf(ids.front, ids.veg), listOf(ids.front, ids.veg)), added.map { it.zoneIds })
 
-        // Every plant added is in the user's library, with the plants the garden already had.
+        // Every plant added is in the user's library, with the plants the garden already had. The list is where it
+        // was before the plants were added, so its top is scrolled to first.
+        compose.scrollTo(hasText("My library"))
         compose.onNodeWithText("My library").performClick()
         compose.scrollTo(hasText("Melaleuca viminalis"))
         val mine = runBlocking { app.container.library.plants.first() }.mapNotNull { it.speciesName }
@@ -150,6 +153,37 @@ class LibraryFlowTest {
         compose.onNodeWithText("Add to garden").performClick()
         waitFor(hasText("Added Weeping bottlebrush to Hive Corner."))
         assertEquals(listOf(ids.hive), runBlocking { garden.plantList.first() }.single { it.speciesName == "Melaleuca viminalis" }.zoneIds)
+    }
+
+    @Test
+    fun aPressShowsThePlantAndAddModeAddsAtOnce() {
+        seed()
+        runBlocking { app.container.settingsStore.update { it.copy(libraryPhotos = false) } }
+        showLibrary()
+        waitFor(hasText("Add mode"))
+        compose.scrollTo(hasText("Melaleuca viminalis"))
+        compose.onNodeWithText("Melaleuca viminalis").performSemanticsAction(SemanticsActions.OnClick)
+        // The plant's page, with the same facts as a garden plant's and a button to add it.
+        waitFor(hasText("Save to my library"))
+        shot("library_plant_page")
+        compose.scrollTo(hasText("Bee forage"))
+        compose.scrollTo(hasText("Add to garden"))
+        compose.onNodeWithText("Add to garden").performClick()
+        waitFor(hasText("Add Weeping bottlebrush"))
+        compose.onAllNodesWithText("Add to garden").onLast().performClick()
+        waitFor(hasText("Added Weeping bottlebrush to your garden.", substring = true))
+        assertTrue(runBlocking { garden.plantList.first() }.any { it.speciesName == "Melaleuca viminalis" })
+
+        // Back on the list, add mode makes a press add the plant straight away.
+        compose.onNodeWithContentDescription("Back").performClick()
+        // The list is where it was, at the plant, so the switch at its top is scrolled to.
+        waitFor(hasText("Melaleuca viminalis"))
+        compose.scrollTo(hasText("Add mode"))
+        compose.onNodeWithText("Add mode").performClick()
+        compose.scrollTo(hasText("Melaleuca viminalis"))
+        compose.onNodeWithText("Melaleuca viminalis").performSemanticsAction(SemanticsActions.OnClick)
+        waitFor(hasText("Add Weeping bottlebrush"))
+        compose.onNodeWithText("Bee forage").assertDoesNotExist()
     }
 
     private fun showLibrary() {

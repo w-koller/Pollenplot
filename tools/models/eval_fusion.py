@@ -90,6 +90,7 @@ def main():
     parser.add_argument("--out", required=True)
     parser.add_argument("--pack", help="A pack's zip to record in place of the published one, to judge a pack before it is published")
     parser.add_argument("--eval-photos", type=int, default=3, help="Photos of each species")
+    parser.add_argument("--seed", type=int, help="The pack number whose photos to use, so another model's answers are on the same photos")
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
@@ -109,7 +110,7 @@ def main():
         """The closest species of a group, or of all, with their scores as the pack scores them."""
         return [(i, round(score, 5)) for i, score in closest(pack.scorer(vector), None if group is None else groups == group)]
 
-    photos = evaluation_photos(rows, FUSION_PLAN, args.eval_photos, seed=manifest["pack"])
+    photos = evaluation_photos(rows, FUSION_PLAN, args.eval_photos, seed=args.seed or manifest["pack"])
     print(f"{len(photos)} photos")
     records = []
     tally = {}

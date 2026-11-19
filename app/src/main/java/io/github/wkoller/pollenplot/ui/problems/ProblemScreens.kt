@@ -35,6 +35,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,7 +48,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -59,6 +62,8 @@ import io.github.wkoller.pollenplot.ui.components.Found
 import io.github.wkoller.pollenplot.data.ProblemRepository
 import io.github.wkoller.pollenplot.data.ProblemView
 import io.github.wkoller.pollenplot.data.ProblemViews
+import io.github.wkoller.pollenplot.domain.problems.DiseaseCall
+import io.github.wkoller.pollenplot.domain.problems.DiseaseConfidence
 import io.github.wkoller.pollenplot.domain.problems.ProblemCatalogue
 import io.github.wkoller.pollenplot.domain.problems.ProblemTasks
 import io.github.wkoller.pollenplot.domain.problems.TreatmentMethod
@@ -124,7 +129,9 @@ fun ProblemsCard(problems: List<ProblemView>, onOpen: (String) -> Unit, onLog: (
 
 /**
  * Logs a problem on a plant: one from the catalogue or something else by name, the day it was seen, a photo the user
- * chooses (kept without looking for plants in it) and notes.
+ * chooses (kept without looking for plants in it) and notes. With [lookForProblems], which is there while the plant
+ * problems pack is on the phone, a chosen photo is looked at and the problems it looks like are offered as chips; the
+ * user still chooses one and saves.
  */
 @Composable
 fun LogProblemScreen(
@@ -133,6 +140,7 @@ fun LogProblemScreen(
     problems: ProblemRepository,
     today: LocalDate,
     savePhoto: suspend (Uri) -> String?,
+    lookForProblems: (suspend (String) -> DiseaseCall?)? = null,
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -155,6 +163,20 @@ fun LogProblemScreen(
         }
     }
     val ready = (key != null && !other) || (other && otherName.isNotBlank())
+    var call by remember { mutableStateOf<DiseaseCall?>(null) }
+    var looking by remember { mutableStateOf(false) }
+    LaunchedEffect(photo, lookForProblems) {
+        val chosen = photo
+        call = null
+        if (chosen != null && lookForProblems != null) {
+            looking = true
+            call = try {
+                lookForProblems(chosen)
+            } finally {
+                looking = false
+            }
+        }
+    }
 
     DetailScaffold(title = stringResource(R.string.problem_log_title), onBack = onBack) { padding ->
         Column(
@@ -187,6 +209,15 @@ fun LogProblemScreen(
                 Text(stringResource(if (photo == null) R.string.problem_add_photo else R.string.problem_change_photo), modifier = Modifier.padding(start = 8.dp))
             }
             if (photoFailed) Text(stringResource(R.string.problem_photo_failed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            if (looking) {
+                Text(stringResource(R.string.problem_looking), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            }
+            call?.let { found ->
+                LooksLike(found, selectedKey = key.takeIf { !other }) { chosen ->
+                    key = chosen
+                    other = false
+                }
+            }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
                 onClick = {
@@ -204,6 +235,37 @@ fun LogProblemScreen(
         PastDateDialog(date, today, onDismiss = { pickingDate = false }) {
             day = it.toEpochDay()
             pickingDate = false
+        }
+    }
+}
+
+/** What the plant problems model made of the photo: chips for the problems it looks like, or a sentence. */
+@Composable
+private fun LooksLike(call: DiseaseCall, selectedKey: String?, onChoose: (String) -> Unit) {
+    val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+    when (call) {
+        is DiseaseCall.NoProblemFound -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, modifier = status) {
+            Icon(painterResource(R.drawable.ic_check_circle), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.problem_none_found), style = MaterialTheme.typography.bodyMedium)
+        }
+        DiseaseCall.Unsure -> Text(stringResource(R.string.problem_unsure), style = MaterialTheme.typography.bodyMedium, modifier = status)
+        is DiseaseCall.LooksLike -> Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = status) {
+            Text(stringResource(R.string.problem_looks_like), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                call.guesses.forEach { guess ->
+                    val label = stringResource(
+                        if (guess.confidence == DiseaseConfidence.LIKELY) R.string.problem_guess_likely else R.string.problem_guess_possible,
+                        guess.problem.name,
+                    )
+                    FilterChip(
+                        selected = selectedKey == guess.problem.key,
+                        onClick = { onChoose(guess.problem.key) },
+                        label = { Text(label) },
+                        leadingIcon = { Icon(painterResource(R.drawable.ic_bug_report), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    )
+                }
+            }
+            Text(stringResource(R.string.problem_looks_like_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

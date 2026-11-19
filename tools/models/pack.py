@@ -62,7 +62,8 @@ class Pack:
         self.scorer = Scorer(self.species, halves(files[about["file"]], self.dimensions), about["alpha"], about["beta"]) if about else Scorer(self.species)
         options = ort.SessionOptions()
         options.log_severity_level = 3
-        self.encoder = ort.InferenceSession(files["biocap-visual.onnx"], options, providers=["CPUExecutionProvider"])
+        # BioCLIP 2's pack names its encoder; BioCAP's packs hold biocap-visual.onnx.
+        self.encoder = ort.InferenceSession(files[self.manifest.get("encoder", "biocap-visual.onnx")], options, providers=["CPUExecutionProvider"])
         self.mean = np.array(self.manifest["mean"], dtype=np.float32)
         self.std = np.array(self.manifest["std"], dtype=np.float32)
 

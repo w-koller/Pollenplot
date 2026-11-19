@@ -79,6 +79,8 @@ STRINGS = {
 
 PLURALS = {
     "review_added_many": {"one": "Added %d find to your garden.", "other": "Added %d finds to your garden."},
+    "review_added_plants": {"one": "Added %d plant to your garden.", "other": "Added %d plants to your garden."},
+    "review_added_plants_to_zone": {"one": "Added %1$d plant to %2$s.", "other": "Added %1$d plants to %2$s."},
     "review_added_many_zone": {"one": "Added %1$d find to %2$s.", "other": "Added %1$d finds to %2$s."},
     "identify_found": {"one": "Pollenplot found %d plant in this photo.", "other": "Pollenplot found %d plants in this photo."},
 }

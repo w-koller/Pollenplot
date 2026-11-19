@@ -32,7 +32,11 @@ import io.github.wkoller.pollenplot.ui.bees.label
 import java.time.LocalDate
 
 /** The app's notifications. Each kind has its own channel, so the user can turn one off and keep the rest. */
-class Notifications(private val context: Context) {
+class Notifications(
+    private val context: Context,
+    /** Whether the app is on show, when what was found in photos is left to its screens. */
+    private val appVisible: () -> Boolean = { false },
+) {
     private val manager = NotificationManagerCompat.from(context)
 
     init {
@@ -65,22 +69,31 @@ class Notifications(private val context: Context) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         )
 
-    /** Tells the user that a scan of the gallery found plants or animals, and opens the Review queue when tapped. */
-    fun showScanResult(tally: ScanTally) {
-        if (tally.found == 0) return
-        show(SCAN_RESULT, foundTitle(tally), foundBody(tally))
+    /**
+     * Tells the user that a scan of the gallery found plants or animals, and opens the Review queue when tapped.
+     * [waiting] is every find waiting for review, this scan's and earlier ones.
+     */
+    fun showScanResult(tally: ScanTally, waiting: Int = tally.found) {
+        if (tally.found == 0 || appVisible()) return
+        show(FOUND, foundTitle(tally), foundBody(tally, waiting), alertOnce = true)
     }
 
-    /** Tells the user what was found in the photos they added, which they said show [wildlife] or plants. */
-    fun showAddedResult(tally: ScanTally, wildlife: Boolean = false) {
+    /**
+     * Tells the user what was found in the photos they added, which they said show [wildlife] or plants. Scans and added
+     * photos share one notification, which changes quietly, and nothing is shown while the app is, since its screens
+     * show the finds.
+     */
+    fun showAddedResult(tally: ScanTally, wildlife: Boolean = false, waiting: Int = tally.found) {
+        if (appVisible()) return
         val res = context.resources
         if (tally.found > 0) {
-            show(ADDED_RESULT, foundTitle(tally), foundBody(tally))
+            show(FOUND, foundTitle(tally), foundBody(tally, waiting), alertOnce = true)
         } else {
             show(
-                ADDED_RESULT,
+                FOUND,
                 res.getQuantityString(if (wildlife) R.plurals.notify_none_animals_title else R.plurals.notify_none_title, tally.photos, tally.photos),
                 context.getString(if (wildlife) R.string.notify_none_animals_body else R.string.notify_none_body),
+                alertOnce = true,
             )
         }
     }
@@ -98,13 +111,15 @@ class Notifications(private val context: Context) {
         }
     }
 
-    private fun foundBody(tally: ScanTally): String {
+    private fun foundBody(tally: ScanTally, waiting: Int): String {
         val res = context.resources
-        return when {
+        val body = when {
             tally.animals == 0 -> res.getQuantityString(R.plurals.notify_found_body, tally.plants)
             tally.plants == 0 -> res.getQuantityString(R.plurals.notify_found_animals_body, tally.animals)
             else -> res.getString(R.string.notify_found_both_body)
         }
+        // Finds from earlier photos still waiting are counted too, since this notification takes the place of theirs.
+        return if (waiting > tally.found) body + " " + res.getQuantityString(R.plurals.notify_waiting_all, waiting, waiting) else body
     }
 
     /** Tells the user about weeds newly recorded near the garden, and opens the Weeds screen when tapped. */
@@ -237,6 +252,8 @@ class Notifications(private val context: Context) {
         channel: String = SCANS_CHANNEL,
         open: String = MainActivity.OPEN_REVIEW,
         icon: Int = R.drawable.ic_local_florist,
+        /** Changes to a notification already in the bar make no sound or buzz. */
+        alertOnce: Boolean = false,
     ) {
         if (!allowed) return
         val intent = Intent(context, MainActivity::class.java)
@@ -249,6 +266,7 @@ class Notifications(private val context: Context) {
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setContentIntent(PendingIntent.getActivity(context, id, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             .setAutoCancel(true)
+            .setOnlyAlertOnce(alertOnce)
             .build()
         try {
             manager.notify(id, notification)
@@ -263,8 +281,8 @@ class Notifications(private val context: Context) {
         const val HIVES_CHANNEL = "hive_tasks"
         const val WATERING_CHANNEL = "watering"
         const val POTS_CHANNEL = "pot_care"
-        const val SCAN_RESULT = 1
-        const val ADDED_RESULT = 2
+        /** What was found in photos, from scans and added photos alike. Id 2 was once the added photos' own. */
+        const val FOUND = 1
         const val WEEDS_NEARBY = 3
         const val HIVE_TASKS = 4
         const val HEAT = 5

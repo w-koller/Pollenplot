@@ -58,10 +58,14 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import io.github.wkoller.pollenplot.R
+import androidx.compose.material3.Switch
+import io.github.wkoller.pollenplot.data.Locality
+import androidx.compose.foundation.lazy.rememberLazyListState
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.LibraryPick
 import io.github.wkoller.pollenplot.data.LibraryRepository
@@ -85,7 +89,7 @@ import io.github.wkoller.pollenplot.ui.review.NamesSaver
 import kotlinx.coroutines.launch
 
 /** One plant the library lists: a species from the knowledge base, or a plant of the user's own. */
-private data class LibraryRow(
+internal data class LibraryRow(
     /** What the row is chosen by: the species name, or the library entry's id for a plant under the user's own name. */
     val key: String,
     val title: String,
@@ -125,6 +129,15 @@ fun LibraryScreen(
     var selection by rememberSaveable(stateSaver = NamesSaver) { mutableStateOf(emptyList<String>()) }
     var choosingZones by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf<String?>(null) }
+    // With add mode on, a press adds the plant at once, as the library did before it had pages; opened from a zone,
+    // it starts on, since the user came to add a plant there.
+    var addMode by rememberSaveable { mutableStateOf(initialZoneId != null) }
+    // The plant whose page is open, by its row's key.
+    var showing by rememberSaveable { mutableStateOf<String?>(null) }
+    val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
+    val gardenPlants by views.plants.collectAsStateWithLifecycle(initialValue = emptyList())
+    // Kept outside the page, so the list is where it was when the page closes.
+    val listState = rememberLazyListState()
     // The plant whose picture is shown enlarged, with the photo fetched for it when it is not the user's own.
     var viewing by remember { mutableStateOf<Pair<String, LibraryPhoto?>?>(null) }
     val scope = rememberCoroutineScope()
@@ -185,7 +198,30 @@ fun LibraryScreen(
     }
     if (selecting) BackHandler { leaveSelection() }
 
-    DetailScaffold(
+    val page = rows.firstOrNull { it.key == showing }.takeIf { !selecting }
+    if (page != null) {
+        BackHandler { showing = null }
+        val wanted = current.libraryPhotos == true && page.thumbnail == null && page.speciesName != null
+        val photo by produceState<LibraryPhoto?>(null, page.speciesName, wanted) { value = if (wanted) photos.photo(page.speciesName!!) else null }
+        LibraryPlantPage(
+            row = page,
+            photo = photo,
+            kb = loadedKb,
+            locality = locality,
+            all = gardenPlants,
+            onBack = { showing = null },
+            onAdd = { adding = page.key },
+            onSave = page.speciesName?.takeIf { page.libraryId == null }?.let { name ->
+                {
+                    scope.launch {
+                        library.save(listOf(name))
+                        notices?.show(resources.getQuantityString(R.plurals.library_saved, 1, 1))
+                    }
+                }
+            },
+            onEnlarge = { viewing = page.key to photo },
+        )
+    } else DetailScaffold(
         title = stringResource(R.string.library_title),
         onBack = onBack,
         actions = {
@@ -225,6 +261,7 @@ fun LibraryScreen(
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + if (selecting) 112.dp else 24.dp),
         ) {
             item(key = "top") {
@@ -247,6 +284,13 @@ fun LibraryScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    ListItem(
+                        checked = addMode,
+                        onCheckedChange = { addMode = it },
+                        leadingContent = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
+                        supportingContent = { Text(stringResource(R.string.library_add_mode_body)) },
+                        trailingContent = { Switch(checked = addMode, onCheckedChange = null) },
+                    ) { Text(stringResource(R.string.library_add_mode)) }
                     if (current.libraryPhotos == null) {
                         PhotosQuestion { on -> scope.launch { settings.update { it.copy(libraryPhotos = on) } } }
                     }
@@ -254,8 +298,10 @@ fun LibraryScreen(
                         when {
                             selecting -> stringResource(R.string.library_select_hint)
                             mine && saved.isEmpty() -> stringResource(R.string.library_mine_empty)
-                            mine -> stringResource(R.string.library_mine_hint)
-                            else -> stringResource(R.string.library_all_hint)
+                            mine && addMode -> stringResource(R.string.library_mine_hint)
+                            mine -> stringResource(R.string.library_mine_hint_info)
+                            addMode -> stringResource(R.string.library_all_hint)
+                            else -> stringResource(R.string.library_all_hint_info)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -286,8 +332,8 @@ fun LibraryScreen(
                     ) { Text(row.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 } else {
                     ListItem(
-                        onClick = { adding = row.key },
-                        leadingContent = { LibraryPicture(row, photo) { viewing = row.key to photo } },
+                        onClick = { if (addMode) adding = row.key else showing = row.key },
+                        leadingContent = { LibraryPicture(row, photo, onEnlarge = { viewing = row.key to photo }) },
                         supportingContent = details,
                     ) { Text(row.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
@@ -335,14 +381,14 @@ fun LibraryScreen(
  * [onEnlarge], a picture is its own button that opens it over the whole screen; the icon alone is not.
  */
 @Composable
-private fun LibraryPicture(row: LibraryRow, photo: LibraryPhoto?, onEnlarge: (() -> Unit)? = null) {
+internal fun LibraryPicture(row: LibraryRow, photo: LibraryPhoto?, size: Dp = 56.dp, onEnlarge: (() -> Unit)? = null) {
     val enlarge = onEnlarge?.takeIf { row.thumbnail != null || photo != null }
     val label = stringResource(R.string.library_enlarge, row.title)
     val press = if (enlarge != null) Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = label, role = Role.Button) { enlarge() }.semantics { contentDescription = label } else Modifier
     if (row.thumbnail != null || photo == null) {
-        PlantAvatar(row.form, 56.dp, modifier = press, thumbnail = row.thumbnail)
+        PlantAvatar(row.form, size, modifier = press, thumbnail = row.thumbnail)
     } else {
-        Box(Modifier.size(56.dp).then(press).clip(RoundedCornerShape(12.dp))) {
+        Box(Modifier.size(size).then(press).clip(RoundedCornerShape(12.dp))) {
             AsyncImage(model = photo.file, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
     }

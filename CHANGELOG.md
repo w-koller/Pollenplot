@@ -6,13 +6,46 @@
   pp:ZonePlanting for each zone beside the plant's total, and whether a recorded problem is a pest, a disease or a
   deficiency (pp:problemKind). Watering lines, with their method, flow and zones, and every watering recorded are in
   the export too.
+- Fewer notifications. A model download shows its progress in the notification bar while it downloads and leaves
+  nothing behind when it is done; Settings › Models says when it is on the phone. Plants and animals found in photos,
+  from scans and from photos you add, share one notification that changes without a sound or buzz and counts every
+  find waiting for review, and none is shown while Pollenplot is open, since its screens show the finds.
+- A press on a plant in the plant library opens its page: its picture and names, whether it is native or a weed
+  where the garden is, its badges and the same fact cards as a garden plant's page, with Add to garden and Save to my
+  library. With Add mode on, a press adds the plant straight away, as before; the library opens in Add mode from a
+  zone. The list keeps its place when a page or the add screen closes.
+- The last step of the first-launch setup offers photos of plants from the Atlas of Living Australia, beside
+  notifications and photo scanning, so the plant library does not need to ask later.
+- The setting for a plant added to more than one zone is now called “Plants in more than one zone”, and its choices
+  are plainer: “Keep as one plant”, “A plant in each zone” and “Ask me each time”, each saying what it makes and what
+  it suits.
+- Going back from a zone's edit screen with changes not saved, by the Back button or the back gesture, asks whether
+  to save them. Save keeps them, Don't save leaves without them, and pressing outside the question stays on the screen.
+- A plant found in a photo can be added as several plants. Its review card asks how many there are, as the Add sheet
+  does: one number for one zone, and for several zones a count for each zone or a total. The message after adding it
+  names the number when there is more than one. A find added to several zones as one plant used to count one in each
+  zone; it now keeps the number the card shows.
+- Recording a problem knows six diseases as well as the pests: powdery mildew, downy mildew, grey mould (botrytis),
+  anthracnose, late blight and myrtle rust, each from a state government page. Settings › Models has a fourth model,
+  Plant problems, offered once accurate identification is on the phone. With it, a photo added to a problem is
+  looked at, and the problems it looks like are offered as “Looks like” chips, each marked likely or possible, or
+  the screen says no problem was found. You still choose what to save. The model is a 264 KB download.
+- Setup and Settings › Models offer BioCLIP 2 beside BioCAP as “More accurate identification”, for high-end phones.
+  BioCLIP 2 names more Australian plants and animals, and Pollenplot uses it in place of BioCAP while it is on the
+  phone. The ⓘ button beside “For high-end phones” says it is best on a recent top-of-the-range phone with 8 GB of
+  memory or more, and a phone with less memory is warned before it downloads. The models' descriptions are shorter.
+- Accurate identification pack 4 looks at a photo more than twice as fast. Its model now works with whole numbers
+  inside, which took a look from 151 ms to 63 ms on a recent phone, and on 1,029 Australian photos it names species as
+  well as pack 3 did (52% first and 78% in five). Nothing else in the pack changed. It is about 142 MB, and the old
+  pack is removed from the phone once the new one is on it.
 - The Plot looks more like a garden. A zone with plants in flower now has a coloured edge and says how many are in
   flower, from their flowering months and the days they were seen in flower in the last month. Plants on a tile
   overlap as a bed's plants do, the ones with your own photo first, and grow on a roomy tile. Zones and structures
-  have a soft shadow, stronger while one is chosen or dragged, and a veg patch, pots, a pond and a lawn each have a
-  faint pattern of their own.
-- “Plot appearance” can wash each zone with a colour for its sun or shade, with a key on the plot and the sun's icon
-  on each tile, and can set which side of the plot faces north for a north arrow.
+  have a soft shadow, stronger while one is chosen or dragged. Every zone shows its kind by its icon alone.
+- The Plot has a Layers button, as a map has, with a sun and shade layer. While it is on, the zones turn one plain
+  colour and their sun or shade lies over them in its own colour, with shade hatched as well, a key on the plot and
+  the sun's icon on each tile. A zone without a sun setting has a dashed edge. “Plot appearance” sets which side of
+  the plot faces north for a north arrow.
 - The graveyard, in the Plot's More menu and at the end of the Plot's list, holds every plant that died or was
   removed, the most recent first. Each says when it ended, where it grew, how long it lived and how much history it
   keeps: photos, days in flower, harvests, problems and care records. Choosing Died or Removed in a plant's Edit sheet

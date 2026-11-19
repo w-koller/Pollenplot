@@ -2,7 +2,6 @@ package io.github.wkoller.pollenplot.ui.plot
 
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.lerp
 import io.github.wkoller.pollenplot.domain.plants.Sun
 import io.github.wkoller.pollenplot.data.prefs.NorthSide
 import androidx.compose.ui.semantics.onClick
@@ -165,8 +164,10 @@ fun PlotCanvas(
     background: Color? = null,
     /** Whether the grid shows while the layout is only looked at. It always shows while editing. */
     gridInView: Boolean = true,
-    /** Whether each zone is washed with a colour for its sun or shade, with a key in the corner. */
+    /** Whether the sun and shade layer lies over the zones, with a key in the corner. */
     sunOverlay: Boolean = false,
+    /** Opens the Plot's layers, or null for no Layers button. */
+    onLayers: (() -> Unit)? = null,
     /** Which side of the plot faces north, for the north arrow. */
     north: NorthSide = NorthSide.TOP,
 ) {
@@ -397,7 +398,14 @@ fun PlotCanvas(
                 CanvasControls(onFit = ::fit, onZoomIn = { zoomBy(ZOOM_STEP) }, onZoomOut = { zoomBy(1 / ZOOM_STEP) }, modifier = Modifier)
                 if (editing) ScaleBar(scale, Modifier.padding(start = 12.dp))
             }
-            NorthArrow(north, Modifier.align(if (editing) Alignment.BottomStart else Alignment.TopEnd).padding(12.dp))
+            if (editing) {
+                NorthArrow(north, Modifier.align(Alignment.BottomStart).padding(12.dp))
+            } else {
+                Column(Modifier.align(Alignment.TopEnd).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    NorthArrow(north, Modifier)
+                    if (onLayers != null) LayersButton(sunOverlay, onLayers, Modifier)
+                }
+            }
             previewId?.let { id ->
                 zones.firstOrNull { it.zone.id == id }?.let { view ->
                     val rect = view.zone.rect
@@ -572,10 +580,12 @@ private fun ZoneTile(
     val top = offsetY + shown.yCm * scale
     val widthDp = with(density) { (shown.widthCm * scale).toDp() }
     val heightDp = with(density) { (shown.heightCm * scale).toDp() }
-    val (kindContainer, content) = kindColours(view.zone.kind)
+    val (kindContainer, kindContent) = kindColours(view.zone.kind)
     val sun = view.zone.sun.takeIf { sunOverlay }
-    // The sun wash tints the tile's own colour, so the kind still shows; the icon on the tile says which it is.
-    val container = sun?.let { lerp(kindContainer, sunWash(it), 0.45f) } ?: kindContainer
+    // While the sun layer is on, the tiles step back to one plain colour, as a map greys its streets under a layer,
+    // so the layer's colours are the only ones on the plot. The kind's icon still says what each zone is.
+    val container = if (sunOverlay) MaterialTheme.colorScheme.surfaceContainerHigh else kindContainer
+    val content = if (sunOverlay) MaterialTheme.colorScheme.onSurface else kindContent
     val kinds = view.sightings.map { it.key }.distinct().size
     val hives = habitat?.let { it.hives.size + it.nativeHives.size } ?: 0
     val hotels = habitat?.hotels?.size ?: 0
@@ -659,7 +669,16 @@ private fun ZoneTile(
                     },
                 ),
         ) {
-            Box(Modifier.fillMaxSize().drawBehind { drawKindPattern(view.zone.kind, content.copy(alpha = 0.09f)) }) {
+            // The sun layer lies over the tile's background and under its words, as a map layer lies under its labels.
+            val layer = sun?.let { sunLayer(it) }
+            val unrecorded = sunOverlay && view.zone.sun == null
+            val outline = MaterialTheme.colorScheme.outline
+            Box(
+                Modifier.fillMaxSize().drawBehind {
+                    if (layer != null) drawSunLayer(layer)
+                    if (unrecorded) drawUnrecordedOutline(outline)
+                },
+            ) {
                 TileContent(view, kinds, hives, hotels, due, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value, sun)
             }
         }
@@ -682,7 +701,7 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due
             if (widthDp >= 96 && hotels > 0) BeeHomeCount(R.drawable.ic_cottage, hotels)
             // Jobs due today in the zone, which the Today card lists.
             if (widthDp >= 96 && due > 0) BeeHomeCount(R.drawable.ic_notifications, due)
-            if (widthDp >= 96 && sun != null) Icon(painterResource(sun.icon), contentDescription = null, modifier = Modifier.size(16.dp))
+            if (widthDp >= 56 && sun != null) Icon(painterResource(sun.icon), contentDescription = null, modifier = Modifier.size(16.dp))
         }
         if (heightDp >= 64 && view.inFlower > 0) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -931,30 +950,92 @@ private fun BoxScope.CornerHandles(topLeft: Offset, width: Float, height: Float,
     }
 }
 
-/** The colour each sun setting washes a zone with: warm for full sun, green for part shade, cool for full shade. */
+/**
+ * How the sun layer draws a setting: one colour from a single warm-to-cool scale, laid over the tile at
+ * [LAYER_ALPHA], and for shade a diagonal hatch, close for full shade and wide for part shade, so the layer does not
+ * rest on colour alone.
+ */
+private data class SunLayer(val colour: Color, val hatch: Color, val hatchStepDp: Float?)
+
+private const val LAYER_ALPHA = 0.55f
+
 @Composable
-private fun sunWash(sun: Sun): Color {
+private fun sunLayer(sun: Sun): SunLayer {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     return when (sun) {
-        Sun.FULL_SUN -> if (dark) Color(0xFF6B5310) else Color(0xFFFFD36B)
-        Sun.PART_SHADE -> if (dark) Color(0xFF34502F) else Color(0xFFBFD9A8)
-        Sun.FULL_SHADE -> if (dark) Color(0xFF2E3F57) else Color(0xFFAFC2DD)
+        Sun.FULL_SUN -> SunLayer(if (dark) Color(0xFFFFB300) else Color(0xFFFFB000), Color.Transparent, null)
+        Sun.PART_SHADE -> SunLayer(if (dark) Color(0xFF4DB6AC) else Color(0xFF26A69A), if (dark) Color(0xFFB2DFDB) else Color(0xFF00695C), 14f)
+        Sun.FULL_SHADE -> SunLayer(if (dark) Color(0xFF5C7CFA) else Color(0xFF3949AB), if (dark) Color(0xFFC5CAE9) else Color(0xFF1A237E), 7f)
     }
 }
 
-/** The key to the sun wash: each setting's colour, icon and name. */
+private fun DrawScope.drawSunLayer(layer: SunLayer) {
+    drawRect(layer.colour.copy(alpha = LAYER_ALPHA))
+    val step = layer.hatchStepDp?.dp?.toPx() ?: return
+    val hatch = layer.hatch.copy(alpha = 0.35f)
+    val stroke = 1.5.dp.toPx()
+    // Lines from the bottom left to the top right, across the whole tile.
+    var start = -size.height
+    while (start < size.width) {
+        drawLine(hatch, Offset(start, size.height), Offset(start + size.height, 0f), strokeWidth = stroke)
+        start += step
+    }
+}
+
+/** A dashed edge inside a zone with no sun setting, which the sun layer leaves uncoloured. */
+private fun DrawScope.drawUnrecordedOutline(colour: Color) {
+    val inset = 3.dp.toPx()
+    drawRoundRect(
+        colour,
+        topLeft = Offset(inset, inset),
+        size = Size(size.width - 2 * inset, size.height - 2 * inset),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(13.dp.toPx()),
+        style = Stroke(width = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
+    )
+}
+
+/** The key to the sun layer: each setting's swatch, icon and name, and the look of a zone with none recorded. */
 @Composable
 private fun SunKey(modifier: Modifier) {
-    Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f), modifier = modifier) {
+    val outline = MaterialTheme.colorScheme.outline
+    val base = MaterialTheme.colorScheme.surfaceContainerHigh
+    Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f), shadowElevation = 1.dp, modifier = modifier) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.plot_sun_key), style = MaterialTheme.typography.labelMedium, modifier = Modifier.semantics { heading() })
             Sun.entries.forEach { sun ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(Modifier.size(14.dp).background(sunWash(sun), RoundedCornerShape(4.dp)))
-                    Icon(painterResource(sun.icon), contentDescription = null, modifier = Modifier.size(14.dp))
-                    Text(stringResource(sun.label), style = MaterialTheme.typography.labelSmall)
+                val layer = sunLayer(sun)
+                KeyRow(stringResource(sun.label), sun.icon) {
+                    Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawSunLayer(layer) })
                 }
             }
+            KeyRow(stringResource(R.string.plot_sun_unrecorded), null) {
+                Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawUnrecordedOutline(outline) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun KeyRow(label: String, icon: Int?, swatch: @Composable () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        swatch()
+        if (icon != null) Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(14.dp))
+        Text(label, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+/** The round button that opens the Plot's layers, as on a map. */
+@Composable
+private fun LayersButton(on: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = if (on) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f),
+        shadowElevation = 1.dp,
+        modifier = modifier.size(44.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(painterResource(R.drawable.ic_layers), contentDescription = stringResource(R.string.plot_layers), modifier = Modifier.size(22.dp))
         }
     }
 }
@@ -989,51 +1070,5 @@ private fun NorthArrow(north: NorthSide, modifier: Modifier) {
                 },
             ).padding(2.dp))
         }
-    }
-}
-
-/**
- * A faint pattern for a zone's kind, drawn behind its words: rows for a veg patch, dots for pots, ripples for a pond
- * and mown stripes for a lawn. Other kinds keep a plain tile.
- */
-private fun DrawScope.drawKindPattern(kind: ZoneKind, colour: Color) {
-    val step = 14.dp.toPx()
-    when (kind) {
-        ZoneKind.VEG_PATCH -> {
-            var y = step
-            while (y < size.height) {
-                drawLine(colour, Offset(0f, y), Offset(size.width, y), strokeWidth = 2.dp.toPx())
-                y += step
-            }
-        }
-        ZoneKind.POTS -> {
-            var y = step / 2
-            while (y < size.height) {
-                var x = step / 2
-                while (x < size.width) {
-                    drawCircle(colour, radius = 2.5.dp.toPx(), center = Offset(x, y))
-                    x += step
-                }
-                y += step
-            }
-        }
-        ZoneKind.POND -> {
-            val centre = Offset(size.width / 2, size.height / 2)
-            var radius = step
-            while (radius < maxOf(size.width, size.height)) {
-                drawCircle(colour, radius = radius, center = centre, style = Stroke(width = 1.5.dp.toPx()))
-                radius += step
-            }
-        }
-        ZoneKind.LAWN -> {
-            var x = 0f
-            var stripe = false
-            while (x < size.width) {
-                if (stripe) drawRect(colour, topLeft = Offset(x, 0f), size = Size(step, size.height))
-                stripe = !stripe
-                x += step
-            }
-        }
-        else -> Unit
     }
 }
