@@ -40,6 +40,9 @@ sealed interface TodayItem {
     /** A plant in its pruning months with no prune recorded yet. */
     data class Prune(val plantId: String, val plant: String) : TodayItem
 
+    /** A compost bin due a turn, or a look whether it is ready to empty. */
+    data class Compost(val binId: String, val bin: String, val turn: Boolean) : TodayItem
+
     /** The user's own reminder: a hot day is coming and no conditioner was given lately. */
     data class Conditioner(val today: Boolean, val maxTenthsC: Int) : TodayItem
 }

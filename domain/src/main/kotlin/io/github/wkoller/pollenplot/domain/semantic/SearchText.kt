@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.domain.semantic
 
 import io.github.wkoller.pollenplot.domain.bees.honey.HoneyHive
+import io.github.wkoller.pollenplot.domain.compost.CompostBin
 import io.github.wkoller.pollenplot.domain.bees.stingless.NativeHive
 import io.github.wkoller.pollenplot.domain.garden.GardenPlant
 import io.github.wkoller.pollenplot.domain.hotels.BeeHotel
@@ -14,7 +15,7 @@ import io.github.wkoller.pollenplot.domain.plants.Species
 import io.github.wkoller.pollenplot.domain.wildlife.Animal
 import io.github.wkoller.pollenplot.domain.wildlife.Sighting
 
-enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL, WISH, PROBLEM, WATER_FEATURE }
+enum class SearchKind { ZONE, PLANT, SIGHTING, HIVE, NATIVE_HIVE, HOTEL, WISH, PROBLEM, WATER_FEATURE, COMPOST_BIN }
 
 /**
  * A record as the search index holds it: the record's key, its kind, the title shown in results and the words it
@@ -108,6 +109,14 @@ object SearchText {
         kind = SearchKind.WATER_FEATURE,
         title = words(feature.kind.name).replaceFirstChar(Char::uppercase) + (zoneName?.let { " in $it" } ?: ""),
         body = listOfNotNull("water for wildlife", "habitat", feature.notes.ifBlank { null }).joinToString(". "),
+    )
+
+    /** A compost bin, found by its name, its zone and its notes, and by the word compost. */
+    fun compostBin(bin: CompostBin, zoneName: String?): SearchDoc = SearchDoc(
+        id = bin.id,
+        kind = SearchKind.COMPOST_BIN,
+        title = bin.name,
+        body = listOfNotNull("compost bin", "compost heap", zoneName?.let { "in $it" }, bin.notes.ifBlank { null }).joinToString(". "),
     )
 
     /** A problem seen on a plant, found by its name, the plant, the notes and the products used on it. */

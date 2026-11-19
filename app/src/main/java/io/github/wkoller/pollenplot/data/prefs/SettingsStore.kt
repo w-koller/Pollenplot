@@ -93,6 +93,10 @@ data class Settings(
     val pruneReminders: Boolean = true,
     /** The prunes still due that a notification has told about, as `PruneDue.key` gives them. */
     val pruneTasksTold: Set<String> = emptySet(),
+    /** A notification in the morning when a compost bin is due a turn or a look whether it is ready. */
+    val compostReminders: Boolean = true,
+    /** The compost jobs a notification has already told about. */
+    val compostTasksTold: Set<String> = emptySet(),
     /** The user's own reminder to give a conditioner before a hot day. */
     val conditionerBeforeHeat: Boolean = false,
     /** When a backup file was last saved on this phone, or the newest backup restored here, in epoch milliseconds. */
@@ -170,6 +174,8 @@ class SettingsStore(context: Context) {
         val problemTasksTold = stringSetPreferencesKey("problem_tasks_told")
         val pruneReminders = booleanPreferencesKey("prune_reminders")
         val pruneTasksTold = stringSetPreferencesKey("prune_tasks_told")
+        val compostReminders = booleanPreferencesKey("compost_reminders")
+        val compostTasksTold = stringSetPreferencesKey("compost_tasks_told")
         val lastBackupAt = longPreferencesKey("last_backup_at")
         val wateringFromMinute = intPreferencesKey("watering_from_minute")
         val wateringToMinute = intPreferencesKey("watering_to_minute")
@@ -227,6 +233,8 @@ class SettingsStore(context: Context) {
             problemTasksTold = this[Keys.problemTasksTold] ?: defaults.problemTasksTold,
             pruneReminders = this[Keys.pruneReminders] ?: defaults.pruneReminders,
             pruneTasksTold = this[Keys.pruneTasksTold] ?: defaults.pruneTasksTold,
+            compostReminders = this[Keys.compostReminders] ?: defaults.compostReminders,
+            compostTasksTold = this[Keys.compostTasksTold] ?: defaults.compostTasksTold,
             lastBackupAt = this[Keys.lastBackupAt],
             wateringWindow = this[Keys.wateringFromMinute]?.let { from ->
                 this[Keys.wateringToMinute]?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
@@ -276,6 +284,8 @@ class SettingsStore(context: Context) {
         this[Keys.problemTasksTold] = settings.problemTasksTold
         this[Keys.pruneReminders] = settings.pruneReminders
         this[Keys.pruneTasksTold] = settings.pruneTasksTold
+        this[Keys.compostReminders] = settings.compostReminders
+        this[Keys.compostTasksTold] = settings.compostTasksTold
         setOrRemove(Keys.lastBackupAt, settings.lastBackupAt)
         this[Keys.wateringFromMinute] = settings.wateringWindow.fromMinute
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute

@@ -67,6 +67,9 @@ fun TodayCard(
     onHotel: (String) -> Unit = { onBees() },
     onFeedZone: (String) -> Unit = onZone,
     onPrune: (String) -> Unit = onPlant,
+    onCompost: (String) -> Unit = {},
+    /** Records a compost bin as turned today; without it the line only opens the bin. */
+    onTurned: ((TodayItem.Compost) -> Unit)? = null,
     /** Records a watering that was due as done today; without it the line only opens the Water tab. */
     onWatered: ((TodayItem.Watering) -> Unit)? = null,
     /** Records a pot's flush as done today; without it the line only opens the plant. */
@@ -129,6 +132,14 @@ fun TodayCard(
                         onClick = { onProblem(item.problemId) },
                     )
                     is TodayItem.Prune -> Line(R.drawable.ic_content_cut, stringResource(R.string.today_prune, item.plant), onClick = { onPrune(item.plantId) })
+                    is TodayItem.Compost -> Line(
+                        R.drawable.ic_compost,
+                        stringResource(if (item.turn) R.string.today_compost_turn else R.string.today_compost_check, item.bin),
+                        onClick = { onCompost(item.binId) },
+                        done = onTurned?.takeIf { item.turn }?.let { record ->
+                            DoneButton(stringResource(R.string.today_compost_turned), stringResource(R.string.today_compost_turned_for, item.bin)) { record(item) }
+                        },
+                    )
                     is TodayItem.Feed -> Line(
                         R.drawable.ic_compost,
                         stringResource(R.string.today_feed, item.zone, UiFormat.joinAnd(item.plants, listWords())),
@@ -169,6 +180,8 @@ class TodayActions(
     val onHotel: ((String) -> Unit)? = null,
     val onFeedZone: ((String) -> Unit)? = null,
     val onPrune: ((String) -> Unit)? = null,
+    val onCompost: ((String) -> Unit)? = null,
+    val onTurned: ((TodayItem.Compost) -> Unit)? = null,
     val onWatered: ((TodayItem.Watering) -> Unit)? = null,
     val onFlushed: ((TodayItem.PotCare) -> Unit)? = null,
 )

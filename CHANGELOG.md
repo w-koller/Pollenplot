@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Compost bins, in the Plot's More menu. Each bin goes through three steps: fill it with browns and greens, wait
+  while it heats up, cools and cures, then empty it. You say when it is full and nothing more will go in, and from
+  then Pollenplot reminds you to turn it every fortnight (or every week or three weeks) and, eight weeks after it was
+  filled, to look whether it is ready. A picture of the bin shows what it is doing, with layers settling in, warmth
+  rising while it is hot and a seedling once it may be ready, and it stays still when the phone's animations are off.
+  A thermometer reading from the middle of the heap tells hot from cooling. The Today card lists the turns due with a
+  Turned button, Settings › Reminders has a compost switch, and bins are in search, reports' linked data and backups.
+  A garden from an earlier release candidate does not open in this one.
 - Settings is easier to read. Each section's rows are rounded tiles with a small gap between them, as the phone's own
   settings draw them, so the five reminder switches no longer run together. The reminder descriptions are shorter, a
   line says the reminders come at about seven in the morning, and a notice offers to allow notifications when they

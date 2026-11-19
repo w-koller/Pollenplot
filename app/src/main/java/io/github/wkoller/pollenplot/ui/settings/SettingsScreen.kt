@@ -90,7 +90,7 @@ fun SettingsScreen(
         if (on && access != null && !access.allowed) access.ask()
     }
     val anyReminder = settings.potReminders || settings.feedReminders || settings.problemReminders ||
-        settings.pruneReminders || settings.conditionerBeforeHeat
+        settings.pruneReminders || settings.compostReminders || settings.conditionerBeforeHeat
     DetailScaffold(title = stringResource(R.string.settings_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item { SectionHeading(stringResource(R.string.settings_garden)) }
@@ -178,6 +178,11 @@ fun SettingsScreen(
                     row { segment ->
                         SwitchRow(segment, settings.pruneReminders, R.drawable.ic_content_cut, stringResource(R.string.settings_prune_reminders), stringResource(R.string.settings_prune_reminders_body)) { on ->
                             remind({ it.copy(pruneReminders = on) }, on)
+                        }
+                    }
+                    row { segment ->
+                        SwitchRow(segment, settings.compostReminders, R.drawable.ic_compost, stringResource(R.string.settings_compost_reminders), stringResource(R.string.settings_compost_reminders_body)) { on ->
+                            remind({ it.copy(compostReminders = on) }, on)
                         }
                     }
                     row { segment ->
