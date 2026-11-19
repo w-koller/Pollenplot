@@ -29,6 +29,9 @@ interface LibraryDao {
     @Query("SELECT * FROM library_plants ORDER BY createdAt")
     fun observeAll(): Flow<List<LibraryPlantEntity>>
 
+    @Query("SELECT * FROM library_plants ORDER BY createdAt")
+    suspend fun all(): List<LibraryPlantEntity>
+
     @Query("SELECT * FROM library_plants WHERE speciesName = :speciesName LIMIT 1")
     suspend fun bySpecies(speciesName: String): LibraryPlantEntity?
 
