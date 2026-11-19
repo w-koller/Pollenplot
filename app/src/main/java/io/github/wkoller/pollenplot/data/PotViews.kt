@@ -46,6 +46,11 @@ class PotViews(pots: PotRepository, views: GardenViews, private val clock: Clock
         }
     }
 
+    /** Every pot job to come, due or not, for plants still growing, for the calendar. */
+    val upcoming: Flow<List<PotDue>> = combine(states, views.plants) { states, plants ->
+        plants.filter { it.isGrowing }.flatMap { view -> states[view.plant.id]?.tasks.orEmpty().map { PotDue(view.plant.id, view.title, it) } }
+    }
+
     /** The zones that hold a potted plant, whatever the zone's kind, for watering before a hot day. */
     val pottedZones: Flow<Set<String>> = combine(views.plants, pots.pots) { plants, potsByPlant ->
         plants.filter { it.isGrowing && it.plant.id in potsByPlant }.flatMap { it.plant.zoneIds }.toSet()

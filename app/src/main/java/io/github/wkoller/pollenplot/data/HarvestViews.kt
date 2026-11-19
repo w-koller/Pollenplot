@@ -40,8 +40,8 @@ data class PruneDue(val plantId: String, val title: String, val since: LocalDate
 /** Harvests and pruning, joined with the garden. */
 class HarvestViews(
     harvests: HarvestRepository,
-    views: GardenViews,
-    pots: PotRepository,
+    private val views: GardenViews,
+    private val pots: PotRepository,
     private val guide: () -> PruningGuide,
     private val clock: Clock,
 ) {
@@ -89,6 +89,16 @@ class HarvestViews(
         plants.mapNotNull { view ->
             val state = states[view.plant.id]?.takeIf { it.due } ?: return@mapNotNull null
             PruneDue(view.plant.id, view.title, PruneTasks.runStart(state.months!!, today)!!)
+        }
+    }
+
+    /** The days each growing plant is due a prune from today to [until], for the calendar. */
+    fun upcoming(until: LocalDate): Flow<List<PruneDue>> = combine(pruneStates, views.plants, pots.events) { states, plants, events ->
+        val today = LocalDate.now(clock)
+        val byPlant = events.groupBy { it.plantId }
+        plants.filter { it.isGrowing }.flatMap { view ->
+            val months = states[view.plant.id]?.months
+            PruneTasks.upcoming(months, byPlant[view.plant.id].orEmpty(), today, until).map { PruneDue(view.plant.id, view.title, it) }
         }
     }
 

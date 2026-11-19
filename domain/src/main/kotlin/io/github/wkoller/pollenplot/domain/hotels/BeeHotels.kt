@@ -84,6 +84,17 @@ data class HotelState(val latest: HotelObservation?, val lastCleaned: LocalDate?
  * bees have come out, so in spring a hotel not cleaned in the last six months is worth a look.
  */
 object HotelCare {
+    /** The first day from [from] to [until] that a hotel is worth cleaning out, or null when none is. */
+    fun nextClean(state: HotelState, from: LocalDate, until: LocalDate, hemisphere: Hemisphere): LocalDate? {
+        if (cleanInSpring(state, from, hemisphere)) return from
+        var day = from.withDayOfMonth(1).plusMonths(1)
+        while (!day.isAfter(until)) {
+            if (cleanInSpring(state, day, hemisphere)) return day
+            day = day.plusMonths(1)
+        }
+        return null
+    }
+
     fun cleanInSpring(state: HotelState, today: LocalDate, hemisphere: Hemisphere): Boolean {
         if (Seasons.of(today.month, hemisphere) != Season.SPRING) return false
         val lastCleaned = state.lastCleaned ?: return true

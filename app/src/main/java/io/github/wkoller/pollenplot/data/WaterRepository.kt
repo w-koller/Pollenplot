@@ -42,7 +42,7 @@ class WaterRepository(private val db: PollenplotDatabase, private val web: Web, 
     }
 
     val weather: Flow<List<WeatherDay>> = dao.observeWeather().map { list ->
-        list.map { WeatherDay(LocalDate.ofEpochDay(it.dateEpochDay), it.et0Um, it.rainUm, it.rainChanceBp, it.maxTenthsC) }
+        list.map { WeatherDay(LocalDate.ofEpochDay(it.dateEpochDay), it.et0Um, it.rainUm, it.rainChanceBp, it.maxTenthsC, it.minTenthsC, it.weatherCode) }
     }
 
     /** The newest weather fetched, in epoch milliseconds, or null before the first. */
@@ -89,7 +89,7 @@ class WaterRepository(private val db: PollenplotDatabase, private val web: Web, 
         }
         if (days.isEmpty()) return false
         val fetched = now()
-        dao.upsertWeather(days.map { WeatherDayEntity(it.date.toEpochDay(), it.et0Um, it.rainUm, it.rainChanceBp, it.maxTenthsC, fetched) })
+        dao.upsertWeather(days.map { WeatherDayEntity(it.date.toEpochDay(), it.et0Um, it.rainUm, it.rainChanceBp, it.maxTenthsC, fetched, it.minTenthsC, it.code) })
         dao.deleteWeatherBefore(LocalDate.now(clock).minusDays(KEPT_DAYS).toEpochDay())
         return true
     }

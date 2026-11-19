@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.notify
 
+import io.github.wkoller.pollenplot.ui.calendar.CalendarWords
+import io.github.wkoller.pollenplot.data.CalendarItem
 import io.github.wkoller.pollenplot.domain.compost.CompostTask
 import io.github.wkoller.pollenplot.data.CompostDue
 import android.Manifest
@@ -258,6 +260,23 @@ class Notifications(
         return true
     }
 
+    /** The week's or month's to-do list: up to [LIST_LINES] jobs, each worded as the calendar words it. */
+    fun showList(items: List<CalendarItem>, monthly: Boolean): Boolean {
+        if (items.isEmpty() || !allowed) return false
+        val res = context.resources
+        val lines = items.take(LIST_LINES).map { CalendarWords.line(res, it) } +
+            listOfNotNull((items.size - LIST_LINES).takeIf { it > 0 }?.let { res.getQuantityString(R.plurals.notify_list_more, it, it) })
+        show(
+            TODO_LIST,
+            res.getString(if (monthly) R.string.notify_list_month else R.string.notify_list_week),
+            lines.joinToString("\n"),
+            channel = POTS_CHANNEL,
+            open = MainActivity.OPEN_CALENDAR,
+            icon = R.drawable.ic_calendar_month,
+        )
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -305,6 +324,10 @@ class Notifications(
         const val FOLLOW_UPS = 9
         const val PRUNING = 10
         const val COMPOST = 11
+        const val TODO_LIST = 12
+
+        /** The most jobs a to-do list's notification names before it counts the rest. */
+        const val LIST_LINES = 8
 
         /** The guide page on caring for a stingless bee hive, which says how to cool one. */
         const val HEAT_GUIDE = "native/hive-care"

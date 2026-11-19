@@ -123,4 +123,16 @@ class HiveReminderTest {
         assertEquals("Hive 1 is due for an inspection", shown().single().title)
         assertEquals("From 8 am, the next seven o'clock is tomorrow's", Duration.ofHours(23), HiveReminderWorker.untilMorning(DemoWildlife.clock))
     }
+
+    @Test
+    fun `with weekend reminders a check due on a Wednesday waits for Saturday`() {
+        hiveDueForInspection()
+        // The fixed morning is Wednesday 28 October 2026.
+        runBlocking { app.container.settingsStore.update { it.copy(reminderMode = io.github.wkoller.pollenplot.domain.calendar.ReminderMode.WEEKENDS) } }
+        runBlocking { TestListenableWorkerBuilder<HiveReminderWorker>(app).build().doWork() }
+        assertTrue("Nothing that can wait is told on a weekday", shown().none { it.channelId == "hive_tasks" })
+        runBlocking { app.container.settingsStore.update { it.copy(reminderMode = io.github.wkoller.pollenplot.domain.calendar.ReminderMode.CHOSEN_DAYS, reminderDays = setOf(java.time.DayOfWeek.WEDNESDAY)) } }
+        runBlocking { TestListenableWorkerBuilder<HiveReminderWorker>(app).build().doWork() }
+        assertEquals("On a chosen day it is told", 1, shown().count { it.channelId == "hive_tasks" })
+    }
 }

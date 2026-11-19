@@ -21,6 +21,8 @@ import io.github.wkoller.pollenplot.data.FeedRepository
 import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.CalendarViews
+import io.github.wkoller.pollenplot.notify.CalendarListCheck
 import io.github.wkoller.pollenplot.data.CompostRepository
 import io.github.wkoller.pollenplot.notify.CompostCheck
 import io.github.wkoller.pollenplot.data.CompostViews
@@ -280,6 +282,8 @@ class AppContainer(
     val pruneCheck = PruneCheck(harvestViews, settingsStore, notifications)
     val compostViews = CompostViews(compost, views, clock)
     val compostCheck = CompostCheck(compostViews, settingsStore, notifications)
+    val calendar = CalendarViews(beeViews, potViews, feedViews, problemViews, harvestViews, waterViews, water.weather, compostViews, settingsStore, clock)
+    val calendarList = CalendarListCheck(calendar, settingsStore, notifications)
     val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews, harvests, ::dueTasks)
     val today = TodayViews(
         water, waterViews, beeViews, garden, views, settingsStore, clock,

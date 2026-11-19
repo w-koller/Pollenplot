@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.ManyChipGroup
+import io.github.wkoller.pollenplot.domain.calendar.ReminderMode
 import io.github.wkoller.pollenplot.ui.components.SwitchRow
 import io.github.wkoller.pollenplot.ui.components.LinkRow
 import androidx.compose.foundation.layout.Arrangement
@@ -160,6 +162,9 @@ fun SettingsScreen(
             }
             item {
                 SegmentedGroup {
+                    row { segment ->
+                        SegmentSurface(segment) { ReminderWhen(settings) { change -> update(change) } }
+                    }
                     row { segment ->
                         SwitchRow(segment, settings.potReminders, R.drawable.ic_potted_plant, stringResource(R.string.settings_pot_reminders), stringResource(R.string.settings_pot_reminders_body)) { on ->
                             remind({ it.copy(potReminders = on) }, on)
@@ -349,5 +354,50 @@ fun ManyZonesSetting(choice: ManyZones, modifier: Modifier = Modifier, onChoose:
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/** When reminders come: each day, at weekends, on chosen days, or as a weekly or monthly to-do list. */
+@Composable
+private fun ReminderWhen(settings: Settings, update: ((Settings) -> Settings) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ChipGroup(
+            title = stringResource(R.string.settings_reminder_when),
+            options = ReminderMode.entries,
+            selected = settings.reminderMode,
+            label = {
+                stringResource(
+                    when (it) {
+                        ReminderMode.EACH_DAY -> R.string.reminder_each_day
+                        ReminderMode.WEEKENDS -> R.string.reminder_weekends
+                        ReminderMode.CHOSEN_DAYS -> R.string.reminder_chosen_days
+                        ReminderMode.WEEKLY_LIST -> R.string.reminder_weekly_list
+                        ReminderMode.MONTHLY_LIST -> R.string.reminder_monthly_list
+                    },
+                )
+            },
+        ) { mode -> update { it.copy(reminderMode = mode) } }
+        Text(
+            stringResource(
+                when (settings.reminderMode) {
+                    ReminderMode.EACH_DAY -> R.string.reminder_each_day_body
+                    ReminderMode.WEEKENDS -> R.string.reminder_weekends_body
+                    ReminderMode.CHOSEN_DAYS -> R.string.reminder_chosen_days_body
+                    ReminderMode.WEEKLY_LIST -> R.string.reminder_weekly_list_body
+                    ReminderMode.MONTHLY_LIST -> R.string.reminder_monthly_list_body
+                },
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        if (settings.reminderMode == ReminderMode.CHOSEN_DAYS) {
+            val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+            ManyChipGroup(
+                title = stringResource(R.string.reminder_days),
+                options = java.time.DayOfWeek.entries,
+                selected = settings.reminderDays,
+                label = { it.getDisplayName(java.time.format.TextStyle.SHORT, locale) },
+            ) { days -> update { it.copy(reminderDays = days) } }
+        }
+        Text(stringResource(R.string.settings_reminder_when_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

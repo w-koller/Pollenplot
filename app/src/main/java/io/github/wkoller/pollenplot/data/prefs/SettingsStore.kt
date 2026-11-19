@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.data.prefs
 
+import java.time.DayOfWeek
+import io.github.wkoller.pollenplot.domain.calendar.ReminderSchedule
+import io.github.wkoller.pollenplot.domain.calendar.ReminderMode
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -97,6 +100,12 @@ data class Settings(
     val compostReminders: Boolean = true,
     /** The compost jobs a notification has already told about. */
     val compostTasksTold: Set<String> = emptySet(),
+    /** When reminders that can wait come: each day, at weekends, on chosen days, or as a weekly or monthly to-do list. */
+    val reminderMode: ReminderMode = ReminderMode.EACH_DAY,
+    /** The days chosen for [ReminderMode.CHOSEN_DAYS]. */
+    val reminderDays: Set<DayOfWeek> = emptySet(),
+    /** The first day of the last period a to-do list was sent for, so each is sent once. */
+    val listToldFor: String? = null,
     /** The user's own reminder to give a conditioner before a hot day. */
     val conditionerBeforeHeat: Boolean = false,
     /** When a backup file was last saved on this phone, or the newest backup restored here, in epoch milliseconds. */
@@ -120,6 +129,9 @@ data class Settings(
     /** What adding a plant to several zones makes: one plant in them all, one in each, or a question each time. */
     val manyZones: ManyZones = ManyZones.ASK,
 ) {
+    /** When reminders that can wait are told. */
+    val reminderSchedule: ReminderSchedule get() = ReminderSchedule(reminderMode, reminderDays)
+
     /** The garden's hemisphere, from where it is, or the Southern Hemisphere until a place is chosen. */
     val hemisphere: Hemisphere get() = gardenPlace?.let { Hemisphere.ofLatitude(it.latE7) } ?: Hemisphere.SOUTHERN
 
@@ -176,6 +188,9 @@ class SettingsStore(context: Context) {
         val pruneTasksTold = stringSetPreferencesKey("prune_tasks_told")
         val compostReminders = booleanPreferencesKey("compost_reminders")
         val compostTasksTold = stringSetPreferencesKey("compost_tasks_told")
+        val reminderMode = stringPreferencesKey("reminder_mode")
+        val reminderDays = stringSetPreferencesKey("reminder_days")
+        val listToldFor = stringPreferencesKey("list_told_for")
         val lastBackupAt = longPreferencesKey("last_backup_at")
         val wateringFromMinute = intPreferencesKey("watering_from_minute")
         val wateringToMinute = intPreferencesKey("watering_to_minute")
@@ -235,6 +250,9 @@ class SettingsStore(context: Context) {
             pruneTasksTold = this[Keys.pruneTasksTold] ?: defaults.pruneTasksTold,
             compostReminders = this[Keys.compostReminders] ?: defaults.compostReminders,
             compostTasksTold = this[Keys.compostTasksTold] ?: defaults.compostTasksTold,
+            reminderMode = this[Keys.reminderMode]?.let { name -> ReminderMode.entries.firstOrNull { it.name == name } } ?: defaults.reminderMode,
+            reminderDays = this[Keys.reminderDays]?.mapNotNull { name -> DayOfWeek.entries.firstOrNull { it.name == name } }?.toSet() ?: defaults.reminderDays,
+            listToldFor = this[Keys.listToldFor],
             lastBackupAt = this[Keys.lastBackupAt],
             wateringWindow = this[Keys.wateringFromMinute]?.let { from ->
                 this[Keys.wateringToMinute]?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
@@ -286,6 +304,9 @@ class SettingsStore(context: Context) {
         this[Keys.pruneTasksTold] = settings.pruneTasksTold
         this[Keys.compostReminders] = settings.compostReminders
         this[Keys.compostTasksTold] = settings.compostTasksTold
+        this[Keys.reminderMode] = settings.reminderMode.name
+        this[Keys.reminderDays] = settings.reminderDays.map { it.name }.toSet()
+        settings.listToldFor?.let { this[Keys.listToldFor] = it } ?: remove(Keys.listToldFor)
         setOrRemove(Keys.lastBackupAt, settings.lastBackupAt)
         this[Keys.wateringFromMinute] = settings.wateringWindow.fromMinute
         this[Keys.wateringToMinute] = settings.wateringWindow.toMinute

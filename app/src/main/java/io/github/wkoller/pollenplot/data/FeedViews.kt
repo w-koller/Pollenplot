@@ -23,7 +23,7 @@ data class ZoneFeedDue(val zoneName: String, val due: FeedDue)
 data class ConditionerReminder(val day: LocalDate, val maxTenthsC: Int)
 
 /** Feeds joined with the garden: each zone's last feed, the zones due a feed, and the conditioner reminder. */
-class FeedViews(feeds: FeedRepository, private val views: GardenViews, water: WaterRepository, settings: SettingsStore, private val library: FeedLibrary, private val clock: Clock) {
+class FeedViews(private val feeds: FeedRepository, private val views: GardenViews, water: WaterRepository, private val settings: SettingsStore, private val library: FeedLibrary, private val clock: Clock) {
     val lastFed: Flow<Map<String, LastFed>> = combine(feeds.feeds, feeds.products) { list, products ->
         val today = LocalDate.now(clock)
         val byKey = products.associateBy { it.key }
@@ -45,6 +45,19 @@ class FeedViews(feeds: FeedRepository, private val views: GardenViews, water: Wa
         if (!current.conditionerBeforeHeat) return@combine null
         ConditionerBeforeHeat.remind(weather.map { it.date to it.maxTenthsC }, list, kinds, LocalDate.now(clock))?.let { ConditionerReminder(it.first, it.second) }
     }
+
+    /** The feeds each zone is due from today to [until], for the calendar. */
+    fun upcoming(until: LocalDate): Flow<List<ZoneFeedDue>> = combine(views.plants, views.zones, feeds.feeds, feeds.kinds, settings.settings) { plants, zones, list, kinds, current ->
+        val names = zones.associate { it.zone.id to it.zone.name }
+        FeedPlanner.upcoming(feedPlants(plants), list, kinds, LocalDate.now(clock), until, current.hemisphere)
+            .mapNotNull { due -> names[due.zoneId]?.let { ZoneFeedDue(it, due) } }
+    }
+
+    private fun feedPlants(plants: List<PlantView>): List<FeedPlant> =
+        plants.filter { it.isGrowing }.flatMap { view -> view.plant.zoneIds.map { it to view } }.map { (zoneId, view) ->
+            val species = view.species
+            FeedPlant(view.title, zoneId, library.guide.forPlant(species?.name ?: view.plant.speciesName, species?.genus, species?.family))
+        }
 
     fun zoneLastFed(zoneId: String): Flow<LastFed?> = lastFed.map { it[zoneId] }
 

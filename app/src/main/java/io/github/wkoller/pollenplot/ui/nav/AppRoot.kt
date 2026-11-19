@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.nav
 
+import io.github.wkoller.pollenplot.data.CalendarKind
+import io.github.wkoller.pollenplot.data.CalendarItem
+import io.github.wkoller.pollenplot.ui.calendar.CalendarDayScreen
+import io.github.wkoller.pollenplot.ui.calendar.CalendarScreen
 import kotlinx.coroutines.flow.first
 import io.github.wkoller.pollenplot.ui.compost.CompostScreen
 import io.github.wkoller.pollenplot.ui.compost.CompostBinScreen
@@ -221,6 +225,7 @@ fun AppRoot(
             open == MainActivity.OPEN_WATER -> openTab(TopLevelTab.WATER)
             open == MainActivity.OPEN_PLOT -> openTab(TopLevelTab.PLOT)
             open == MainActivity.OPEN_COMPOST -> navController.navigate(CompostRoute) { launchSingleTop = true }
+            open == MainActivity.OPEN_CALENDAR -> navController.navigate(CalendarRoute) { launchSingleTop = true }
             open != null && open.startsWith(MainActivity.OPEN_GUIDE) -> navController.navigate(GuideRoute(open.removePrefix(MainActivity.OPEN_GUIDE)))
             else -> return@LaunchedEffect
         }
@@ -261,9 +266,24 @@ fun AppRoot(
         ) { padding ->
             val railInsets = if (wide && showTabs) Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)) else Modifier
             // Every tab's More menu ends with these, so the assistant and the guides are one press from anywhere.
+            // A job on the calendar opens the page it is about, as the Today card's lines do.
+            val openCalendarItem: (CalendarItem) -> Unit = { item ->
+                val id = item.target
+                when (item.kind) {
+                    CalendarKind.WATER -> openTab(TopLevelTab.WATER)
+                    CalendarKind.HIVE -> id?.let { navController.navigate(HiveRoute(it)) }
+                    CalendarKind.POT -> id?.let { navController.navigate(PlantRoute(it)) }
+                    CalendarKind.FEED -> navController.navigate(FeedRoute(id))
+                    CalendarKind.PROBLEM -> id?.let { navController.navigate(ProblemRoute(it)) }
+                    CalendarKind.PRUNE -> id?.let { navController.navigate(PlantEventRoute(it, pruning = true)) }
+                    CalendarKind.HOTEL -> id?.let { navController.navigate(HotelRoute(it)) }
+                    CalendarKind.COMPOST -> id?.let { navController.navigate(CompostBinRoute(it)) }
+                }
+            }
             val appMenu = listOf(
                 MoreItem(stringResource(R.string.ask_garden_open), R.drawable.ic_forum) { navController.navigate(AskRoute()) },
                 MoreItem(stringResource(R.string.guides_title), R.drawable.ic_menu_book) { navController.navigate(GuidesRoute) },
+                MoreItem(stringResource(R.string.calendar_title), R.drawable.ic_calendar_month) { navController.navigate(CalendarRoute) },
             )
             CompositionLocalProvider(LocalOpenSearch provides { navController.navigate(SearchRoute) }, LocalNotices provides rememberNotices(), LocalAppMenu provides appMenu) {
                 NavHost(
@@ -281,6 +301,7 @@ fun AppRoot(
                             onLibrary = { navController.navigate(LibraryRoute()) },
                             onGraveyard = { navController.navigate(GraveyardRoute) },
                             onCompost = { navController.navigate(CompostRoute) },
+                            onCalendar = { navController.navigate(CalendarRoute) },
                             settings = container.settingsStore,
                             garden = container.garden,
                             views = container.views,
@@ -397,6 +418,19 @@ fun AppRoot(
                             onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
                             onOpenHotel = { navController.navigate(HotelRoute(it)) },
                         )
+                    }
+                    composable<CalendarRoute> {
+                        CalendarScreen(
+                            container.calendar,
+                            container.water,
+                            container.settingsStore,
+                            onBack = back,
+                            onOpenDay = { navController.navigate(CalendarDayRoute(it.toEpochDay())) },
+                            onOpenItem = openCalendarItem,
+                        )
+                    }
+                    composable<CalendarDayRoute> { entry ->
+                        CalendarDayScreen(container.calendar, LocalDate.ofEpochDay(entry.toRoute<CalendarDayRoute>().epochDay), onBack = back, onOpenItem = openCalendarItem)
                     }
                     composable<CompostRoute> {
                         CompostScreen(container.compostViews, container.compost, onBack = back, onOpenBin = { navController.navigate(CompostBinRoute(it)) })

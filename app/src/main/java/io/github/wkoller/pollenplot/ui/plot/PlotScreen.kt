@@ -96,6 +96,8 @@ fun PlotScreen(
     onEditZone: (String) -> Unit,
     onOpenPlant: (String) -> Unit,
     onSearch: () -> Unit,
+    /** Opens the calendar of every reminder, or null for no calendar button. */
+    onCalendar: (() -> Unit)? = null,
     onReview: () -> Unit,
     onWeeds: () -> Unit,
     onWishlist: () -> Unit = {},
@@ -196,6 +198,11 @@ fun PlotScreen(
                         BadgedBox(badge = { Badge { Text(weeds.toString()) } }, modifier = Modifier.clearAndSetSemantics { }) {
                             Icon(painterResource(R.drawable.ic_grass), contentDescription = null)
                         }
+                    }
+                }
+                if (onCalendar != null) {
+                    IconButton(onClick = onCalendar) {
+                        Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = stringResource(R.string.calendar_open))
                     }
                 }
                 IconButton(onClick = onSearch) {
