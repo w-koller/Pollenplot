@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The setting for a plant added to more than one zone is now called “Plants in more than one zone”, and its choices
+  are plainer: “Keep as one plant”, “A plant in each zone” and “Ask me each time”, each saying what it makes and what
+  it suits.
 - Going back from a zone's edit screen with changes not saved, by the Back button or the back gesture, asks whether
   to save them. Save keeps them, Don't save leaves without them, and pressing outside the question stays on the screen.
 - A plant found in a photo can be added as several plants. Its review card asks how many there are, as the Add sheet
