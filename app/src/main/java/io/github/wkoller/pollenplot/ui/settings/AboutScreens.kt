@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.LinkRow
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
 import io.github.wkoller.pollenplot.ui.components.listPadding

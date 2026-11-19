@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.SwitchRow
+import io.github.wkoller.pollenplot.ui.components.LinkRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
@@ -251,32 +253,6 @@ fun SettingsScreen(
             }
         }
     }
-}
-
-/** A setting that opens another screen, on its group's tile. */
-@Composable
-internal fun LinkRow(segment: Segment, icon: Int, title: String, body: String?, onClick: () -> Unit) {
-    ListItem(
-        onClick = onClick,
-        leadingContent = { Icon(painterResource(icon), contentDescription = null) },
-        supportingContent = body?.let { { Text(it) } },
-        shapes = segment.shapes,
-        colors = segment.colors,
-    ) { Text(title) }
-}
-
-/** A setting that is on or off, on its group's tile. The whole row turns it, and the switch shows which it is. */
-@Composable
-internal fun SwitchRow(segment: Segment, on: Boolean, icon: Int?, title: String, body: String?, onChange: (Boolean) -> Unit) {
-    ListItem(
-        checked = on,
-        onCheckedChange = onChange,
-        leadingContent = icon?.let { { Icon(painterResource(it), contentDescription = null) } },
-        supportingContent = body?.let { { Text(it) } },
-        trailingContent = { Switch(checked = on, onCheckedChange = null) },
-        shapes = segment.shapes,
-        colors = segment.colors,
-    ) { Text(title) }
 }
 
 /**

@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.SwitchRow
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Column
@@ -64,7 +66,7 @@ internal fun LazyListScope.nativeSection(
     item(key = "native-seen") { SectionHeading(stringResource(R.string.native_seen)) }
     if (seen.isEmpty()) {
         item(key = "native-seen-none") {
-            Text(stringResource(R.string.native_seen_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+            Text(stringResource(R.string.native_seen_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
     }
     items(seen, key = { "seen-" + it.key }) { bee ->
@@ -92,15 +94,14 @@ internal fun LazyListScope.nativeSection(
     item(key = "native-heat") {
         Column {
             SectionHeading(stringResource(R.string.native_heat))
-            ListItem(
-                checked = settings.heatAlerts,
-                onCheckedChange = { on ->
-                    onSettings { it.copy(heatAlerts = on) }
-                    if (on && !notifications.allowed) notifications.ask()
-                },
-                supportingContent = { Text(stringResource(R.string.native_heat_body)) },
-                trailingContent = { Switch(checked = settings.heatAlerts, onCheckedChange = null) },
-            ) { Text(stringResource(R.string.native_heat_switch)) }
+            SegmentedGroup {
+                row { segment ->
+                    SwitchRow(segment, settings.heatAlerts, R.drawable.ic_sunny, stringResource(R.string.native_heat_switch), stringResource(R.string.native_heat_body)) { on ->
+                        onSettings { it.copy(heatAlerts = on) }
+                        if (on && !notifications.allowed) notifications.ask()
+                    }
+                }
+            }
             if (settings.heatAlerts && settings.gardenPlace == null) {
                 Text(stringResource(R.string.native_heat_no_place), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             }

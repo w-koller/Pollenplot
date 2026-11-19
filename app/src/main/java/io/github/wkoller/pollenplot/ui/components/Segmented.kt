@@ -8,6 +8,11 @@ import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -56,4 +61,30 @@ fun SegmentSurface(segment: Segment, modifier: Modifier = Modifier, content: @Co
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { content() }
     }
+}
+
+/** A setting that opens another screen, on its group's tile. */
+@Composable
+fun LinkRow(segment: Segment, icon: Int, title: String, body: String?, onClick: () -> Unit) {
+    ListItem(
+        onClick = onClick,
+        leadingContent = { Icon(painterResource(icon), contentDescription = null) },
+        supportingContent = body?.let { { Text(it) } },
+        shapes = segment.shapes,
+        colors = segment.colors,
+    ) { Text(title) }
+}
+
+/** A setting that is on or off, on its group's tile. The whole row turns it, and the switch shows which it is. */
+@Composable
+fun SwitchRow(segment: Segment, on: Boolean, icon: Int?, title: String, body: String?, onChange: (Boolean) -> Unit) {
+    ListItem(
+        checked = on,
+        onCheckedChange = onChange,
+        leadingContent = icon?.let { { Icon(painterResource(it), contentDescription = null) } },
+        supportingContent = body?.let { { Text(it) } },
+        trailingContent = { Switch(checked = on, onCheckedChange = null) },
+        shapes = segment.shapes,
+        colors = segment.colors,
+    ) { Text(title) }
 }
