@@ -10,6 +10,11 @@ STRINGS = {
     "cancel": "Cancel",
     "undo": "Undo",
     "more": "More",
+    "unsaved_title": "Save your changes?",
+    "unsaved_body": "You have changed this page but not saved it. Please choose Save to keep your changes, or Don't "
+    "save to leave without them.",
+    "unsaved_save": "Save",
+    "unsaved_discard": "Don't save",
     "missing_title": "This is no longer in Pollenplot.",
     "missing_body": "It may have been deleted since the link to it was made. Please go back and choose another.",
     "choose": "Choose",

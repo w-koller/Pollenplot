@@ -448,6 +448,7 @@ fun AppRoot(
                             problems = container.problems,
                             today = LocalDate.now(container.clock),
                             savePhoto = container::saveProblemPhoto,
+                            lookForProblems = if (container.problemModelReady) container::lookForProblems else null,
                             onBack = back,
                         )
                     }
@@ -865,7 +866,7 @@ fun AppRoot(
                         val current by container.settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
                         BackupScreen(model, current?.lastBackupAt, container.clock.zone, onBack = back)
                     }
-                    composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, container.gemma, onBack = back) }
+                    composable<ModelsRoute> { ModelsScreen(container.meaning, container.accurate, container.gemma, container.diseasePack, onBack = back) }
                     composable<GardenLocationRoute> {
                         val model = viewModel { GardenLocationModel(container.places, container.location, container.settingsStore) }
                         GardenLocationScreen(model, container.settingsStore, onBack = back)

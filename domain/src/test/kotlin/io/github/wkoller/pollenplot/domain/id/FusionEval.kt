@@ -126,8 +126,8 @@ class FusionEval(val photos: List<EvalPhoto>, val logitScale: Float, private val
         val SOURCES = mapOf(PLANT to IdSource.AIY_PLANTS, "bird" to IdSource.AIY_BIRDS, "insect" to IdSource.AIY_INSECTS)
 
         /** The recorded answers in the test resources, with the knowledge bases the app ships. */
-        fun load(): FusionEval {
-            val stream = FusionEval::class.java.getResourceAsStream("/id/eval_outputs.json.gz") ?: error("eval_outputs.json.gz is in the test resources")
+        fun load(resource: String = "eval_outputs.json.gz"): FusionEval {
+            val stream = FusionEval::class.java.getResourceAsStream("/id/$resource") ?: error("$resource is in the test resources")
             val root = Json.parseToJsonElement(GZIPInputStream(stream).bufferedReader().use { it.readText() }).jsonObject
             val names = root.getValue("names").jsonArray.map { it.jsonPrimitive.content }
             fun name(index: Int) = names[index]

@@ -202,6 +202,48 @@ class GardenRepositoryTest {
     }
 
     @Test
+    fun `a find added to several zones as one plant keeps a total or each zone's count`() = runBlocking {
+        val front = garden.addZone("Front Native Strip", ZoneKind.GARDEN_BED)
+        val hive = garden.addZone("Hive Corner", ZoneKind.HIVE_CORNER)
+        val found = recordBedPhoto()
+        val total = garden.confirmDetectionIn(found[0].id, "Melaleuca citrina", null, listOf(front.id, hive.id), each = false, quantity = 5, flowering = false)
+        val counted = garden.confirmDetectionIn(
+            found[1].id, "Salvia rosmarinus", null, listOf(front.id, hive.id), each = false, quantity = 7, flowering = false,
+            counts = mapOf(front.id to 3, hive.id to 4),
+        )
+
+        with(garden.plant(total.id)!!) {
+            assertEquals(listOf(front.id, hive.id), zoneIds)
+            assertEquals(5, quantity)
+            assertTrue("A total is not split zone by zone", counts.isEmpty())
+        }
+        with(garden.plant(counted.id)!!) {
+            assertEquals(7, quantity)
+            assertEquals(mapOf(front.id to 3, hive.id to 4), counts)
+        }
+        assertEquals(2, garden.plantList.first().size)
+    }
+
+    @Test
+    fun `a find added as a plant in each zone keeps each zone's count`() = runBlocking {
+        val front = garden.addZone("Front Native Strip", ZoneKind.GARDEN_BED)
+        val hive = garden.addZone("Hive Corner", ZoneKind.HIVE_CORNER)
+        val found = recordBedPhoto()
+        val first = garden.confirmDetectionIn(
+            found[0].id, "Melaleuca citrina", null, listOf(front.id, hive.id), each = true, quantity = 5, flowering = false,
+            counts = mapOf(front.id to 2, hive.id to 3),
+        )
+        garden.confirmDetectionIn(found[1].id, "Salvia rosmarinus", null, listOf(front.id, hive.id), each = true, quantity = 4, flowering = false)
+
+        val plants = garden.plantList.first()
+        val bottlebrushes = plants.filter { it.speciesName == "Melaleuca citrina" }.associate { it.zoneIds.single() to it.quantity }
+        assertEquals(mapOf(front.id to 2, hive.id to 3), bottlebrushes)
+        assertEquals("The photo joins the first", first.id, garden.detection(found[0].id)!!.plantId)
+        val rosemary = plants.filter { it.speciesName == "Salvia rosmarinus" }.associate { it.zoneIds.single() to it.quantity }
+        assertEquals("Without counts, each zone gets the number given", mapOf(front.id to 4, hive.id to 4), rosemary)
+    }
+
+    @Test
     fun `a confirmed plant gets the cut-out as its picture and a flowering record`() = runBlocking {
         val zone = garden.addZone("Front Native Strip", ZoneKind.GARDEN_BED)
         val bottlebrush = recordBedPhoto()[0]

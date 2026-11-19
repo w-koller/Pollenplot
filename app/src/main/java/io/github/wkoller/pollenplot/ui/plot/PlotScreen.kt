@@ -118,6 +118,7 @@ fun PlotScreen(
     var addingStructure by rememberSaveable { mutableStateOf(false) }
     var structureDetails by rememberSaveable { mutableStateOf<String?>(null) }
     var choosingLook by rememberSaveable { mutableStateOf(false) }
+    var choosingLayers by rememberSaveable { mutableStateOf(false) }
     val fed by remember(feeding) { feeding?.lastFed ?: flowOf(emptyMap()) }.collectAsStateWithLifecycle(initialValue = emptyMap())
     val todayState by remember(today) { today?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
     val waterState by remember(water) { water?.state ?: flowOf(null) }.collectAsStateWithLifecycle(initialValue = null)
@@ -289,6 +290,7 @@ fun PlotScreen(
                             background = plotBackgroundColour(look.plotBackground, MaterialTheme.colorScheme.background.luminance() < 0.5f),
                             gridInView = look.gridInView,
                             sunOverlay = look.sunOverlay,
+                            onLayers = { choosingLayers = true }.takeIf { settings != null },
                             north = look.plotNorth,
                             onChangeZone = { id, rect ->
                                 scope.launch {
@@ -388,10 +390,15 @@ fun PlotScreen(
             onDismiss = { choosingLook = false },
             onBackground = { choice -> scope.launch { settings.update { it.copy(plotBackground = choice) } } },
             onGrid = { on -> scope.launch { settings.update { it.copy(gridInView = on) } } },
-            sunOverlay = look.sunOverlay,
-            onSunOverlay = { on -> scope.launch { settings.update { it.copy(sunOverlay = on) } } },
             north = look.plotNorth,
             onNorth = { side -> scope.launch { settings.update { it.copy(plotNorth = side) } } },
+        )
+    }
+    if (choosingLayers && settings != null) {
+        PlotLayersSheet(
+            sunOverlay = look.sunOverlay,
+            onDismiss = { choosingLayers = false },
+            onSunOverlay = { on -> scope.launch { settings.update { it.copy(sunOverlay = on) } } },
         )
     }
     if (adjusting && selectedZone == null && selectedStructure != null) {
