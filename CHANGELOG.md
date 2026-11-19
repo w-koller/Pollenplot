@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-rc.5
 
 - A calendar of every reminder, from the calendar button on the Plot or any tab's More menu. The month shows each
   day's jobs counted and, for the week the forecast covers, its weather with the day's high. A press on a day lists
