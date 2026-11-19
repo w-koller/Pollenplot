@@ -291,7 +291,7 @@ fun PlotScreen(
                             },
                             background = plotBackgroundColour(look.plotBackground, MaterialTheme.colorScheme.background.luminance() < 0.5f),
                             gridInView = look.gridInView,
-                            sunOverlay = look.sunOverlay,
+                            layer = look.plotLayer,
                             onLayers = { choosingLayers = true }.takeIf { settings != null },
                             north = look.plotNorth,
                             onChangeZone = { id, rect ->
@@ -398,9 +398,11 @@ fun PlotScreen(
     }
     if (choosingLayers && settings != null) {
         PlotLayersSheet(
-            sunOverlay = look.sunOverlay,
+            layer = look.plotLayer,
+            laterMonths = look.bloomLaterMonths,
             onDismiss = { choosingLayers = false },
-            onSunOverlay = { on -> scope.launch { settings.update { it.copy(sunOverlay = on) } } },
+            onLayer = { choice -> scope.launch { settings.update { it.copy(plotLayer = choice) } } },
+            onLaterMonths = { months -> scope.launch { settings.update { it.copy(bloomLaterMonths = months) } } },
         )
     }
     if (adjusting && selectedZone == null && selectedStructure != null) {

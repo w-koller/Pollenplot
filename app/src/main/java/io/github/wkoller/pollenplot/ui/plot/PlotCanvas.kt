@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import java.time.Month
+import io.github.wkoller.pollenplot.domain.garden.BloomGrade
+import io.github.wkoller.pollenplot.data.prefs.PlotLayer
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.draw.shadow
 import io.github.wkoller.pollenplot.domain.plants.Sun
@@ -165,7 +168,8 @@ fun PlotCanvas(
     /** Whether the grid shows while the layout is only looked at. It always shows while editing. */
     gridInView: Boolean = true,
     /** Whether the sun and shade layer lies over the zones, with a key in the corner. */
-    sunOverlay: Boolean = false,
+    /** The layer over the zones, with its key in the corner, or null for none. */
+    layer: PlotLayer? = null,
     /** Opens the Plot's layers, or null for no Layers button. */
     onLayers: (() -> Unit)? = null,
     /** Which side of the plot faces north, for the north arrow. */
@@ -378,7 +382,7 @@ fun PlotCanvas(
                         onNudge = { right, down -> onChangeZone(id, PlotLayout.nudged(view.zone.rect, right, down)) },
                         water = water,
                         due = due[id] ?: 0,
-                        sunOverlay = sunOverlay,
+                        layer = layer,
                     )
                 }
             }
@@ -393,7 +397,7 @@ fun PlotCanvas(
             }
             // The scale bar sits on the canvas side of the zoom buttons: under them while editing, above them otherwise.
             Column(Modifier.align(if (editing) Alignment.TopStart else Alignment.BottomStart).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!editing && sunOverlay) SunKey(Modifier.padding(start = 12.dp))
+                if (!editing && layer != null) LayerKey(layer, zones.firstNotNullOfOrNull { it.laterMonth }, Modifier.padding(start = 12.dp))
                 if (!editing) ScaleBar(scale, Modifier.padding(start = 12.dp))
                 CanvasControls(onFit = ::fit, onZoomIn = { zoomBy(ZOOM_STEP) }, onZoomOut = { zoomBy(1 / ZOOM_STEP) }, modifier = Modifier)
                 if (editing) ScaleBar(scale, Modifier.padding(start = 12.dp))
@@ -403,7 +407,7 @@ fun PlotCanvas(
             } else {
                 Column(Modifier.align(Alignment.TopEnd).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     NorthArrow(north, Modifier)
-                    if (onLayers != null) LayersButton(sunOverlay, onLayers, Modifier)
+                    if (onLayers != null) LayersButton(layer != null, onLayers, Modifier)
                 }
             }
             previewId?.let { id ->
@@ -570,7 +574,7 @@ private fun ZoneTile(
     onNudge: (right: Int, down: Int) -> Unit,
     water: WaterState?,
     due: Int,
-    sunOverlay: Boolean = false,
+    layer: PlotLayer? = null,
 ) {
     val rect = view.zone.rect
     val density = LocalDensity.current
@@ -581,11 +585,13 @@ private fun ZoneTile(
     val widthDp = with(density) { (shown.widthCm * scale).toDp() }
     val heightDp = with(density) { (shown.heightCm * scale).toDp() }
     val (kindContainer, kindContent) = kindColours(view.zone.kind)
-    val sun = view.zone.sun.takeIf { sunOverlay }
-    // While the sun layer is on, the tiles step back to one plain colour, as a map greys its streets under a layer,
-    // so the layer's colours are the only ones on the plot. The kind's icon still says what each zone is.
-    val container = if (sunOverlay) MaterialTheme.colorScheme.surfaceContainerHigh else kindContainer
-    val content = if (sunOverlay) MaterialTheme.colorScheme.onSurface else kindContent
+    val sun = view.zone.sun.takeIf { layer == PlotLayer.SUN }
+    val bloom = view.bloom(layer)
+    // While a layer is on, the tiles step back to one plain colour, as a map greys its streets under a layer, so the
+    // layer's colours are the only ones on the plot. The kind's icon still says what each zone is.
+    val container = if (layer != null) MaterialTheme.colorScheme.surfaceContainerHigh else kindContainer
+    val content = if (layer != null) MaterialTheme.colorScheme.onSurface else kindContent
+    val bloomLine = bloomLine(view, layer)
     val kinds = view.sightings.map { it.key }.distinct().size
     val hives = habitat?.let { it.hives.size + it.nativeHives.size } ?: 0
     val hotels = habitat?.hotels?.size ?: 0
@@ -602,6 +608,7 @@ private fun ZoneTile(
         (if (due > 0) ", " + pluralStringResource(R.plurals.zone_tile_due, due, due) else "") +
         (if (view.inFlower > 0) ", " + pluralStringResource(R.plurals.zone_tile_in_flower, view.inFlower, view.inFlower) else "") +
         (sun?.let { ", " + stringResource(it.label) } ?: "") +
+        (bloomLine?.let { ", $it" } ?: "") +
         (next?.let { ". " + nextWateringSentence(it, water.today, water.window, watering.byHand) } ?: "")
     val moves = listOf(
         stringResource(R.string.move_left) to (-1 to 0),
@@ -625,7 +632,8 @@ private fun ZoneTile(
             // A zone with plants in flower has a coloured edge, and its tile says how many in words too.
             border = when {
                 selected -> BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
-                view.inFlower > 0 -> BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary)
+                // A flowering layer says the same in its own way, so the edge would only repeat it.
+                view.inFlower > 0 && layer != PlotLayer.BLOOM_NOW && layer != PlotLayer.BLOOM_LATER -> BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary)
                 else -> null
             },
             modifier = Modifier
@@ -670,16 +678,20 @@ private fun ZoneTile(
                 ),
         ) {
             // The sun layer lies over the tile's background and under its words, as a map layer lies under its labels.
-            val layer = sun?.let { sunLayer(it) }
-            val unrecorded = sunOverlay && view.zone.sun == null
+            val paint = when (layer) {
+                PlotLayer.SUN -> sun?.let { sunLayer(it) }
+                PlotLayer.BLOOM_NOW, PlotLayer.BLOOM_LATER -> bloom?.let { bloomLayer(it) }
+                null -> null
+            }
+            val unrecorded = layer != null && paint == null
             val outline = MaterialTheme.colorScheme.outline
             Box(
                 Modifier.fillMaxSize().drawBehind {
-                    if (layer != null) drawSunLayer(layer)
+                    if (paint != null) drawLayer(paint)
                     if (unrecorded) drawUnrecordedOutline(outline)
                 },
             ) {
-                TileContent(view, kinds, hives, hotels, due, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value, sun)
+                TileContent(view, kinds, hives, hotels, due, next?.let { it to nextWateringShort(it, water.today, water.window) }, widthDp.value, heightDp.value, sun, bloomLine)
             }
         }
         if (selected) CornerHandles(Offset(left, top), shown.widthCm * scale, shown.heightCm * scale, onDrag, onDragEnd)
@@ -691,7 +703,7 @@ private fun ZoneTile(
  * plants, then badges, then how many [kinds] of animals have been seen there.
  */
 @Composable
-private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float, sun: Sun? = null) {
+private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float, sun: Sun? = null, bloomLine: String? = null) {
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (widthDp >= 72) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
@@ -703,10 +715,11 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due
             if (widthDp >= 96 && due > 0) BeeHomeCount(R.drawable.ic_notifications, due)
             if (widthDp >= 56 && sun != null) Icon(painterResource(sun.icon), contentDescription = null, modifier = Modifier.size(16.dp))
         }
-        if (heightDp >= 64 && view.inFlower > 0) {
+        val flowers = bloomLine ?: view.inFlower.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.zone_tile_in_flower, it, it) }
+        if (heightDp >= 64 && flowers != null) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Icon(painterResource(R.drawable.ic_local_florist), contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(14.dp))
-                Text(pluralStringResource(R.plurals.zone_tile_in_flower, view.inFlower, view.inFlower), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(flowers, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         // The next watering takes a line, so what comes after it needs that much more room.
@@ -955,24 +968,58 @@ private fun BoxScope.CornerHandles(topLeft: Offset, width: Float, height: Float,
  * [LAYER_ALPHA], and for shade a diagonal hatch, close for full shade and wide for part shade, so the layer does not
  * rest on colour alone.
  */
-private data class SunLayer(val colour: Color, val hatch: Color, val hatchStepDp: Float?)
+private data class LayerPaint(val colour: Color, val mark: Color, val stepDp: Float?, val dots: Boolean = false)
 
 private const val LAYER_ALPHA = 0.55f
 
 @Composable
-private fun sunLayer(sun: Sun): SunLayer {
+private fun sunLayer(sun: Sun): LayerPaint {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     return when (sun) {
-        Sun.FULL_SUN -> SunLayer(if (dark) Color(0xFFFFB300) else Color(0xFFFFB000), Color.Transparent, null)
-        Sun.PART_SHADE -> SunLayer(if (dark) Color(0xFF4DB6AC) else Color(0xFF26A69A), if (dark) Color(0xFFB2DFDB) else Color(0xFF00695C), 14f)
-        Sun.FULL_SHADE -> SunLayer(if (dark) Color(0xFF5C7CFA) else Color(0xFF3949AB), if (dark) Color(0xFFC5CAE9) else Color(0xFF1A237E), 7f)
+        Sun.FULL_SUN -> LayerPaint(if (dark) Color(0xFFFFB300) else Color(0xFFFFB000), Color.Transparent, null)
+        Sun.PART_SHADE -> LayerPaint(if (dark) Color(0xFF4DB6AC) else Color(0xFF26A69A), if (dark) Color(0xFFB2DFDB) else Color(0xFF00695C), 14f)
+        Sun.FULL_SHADE -> LayerPaint(if (dark) Color(0xFF5C7CFA) else Color(0xFF3949AB), if (dark) Color(0xFFC5CAE9) else Color(0xFF1A237E), 7f)
     }
 }
 
-private fun DrawScope.drawSunLayer(layer: SunLayer) {
+/**
+ * How a flowering layer draws a zone's [BloomGrade]: one colour from a single pale-to-deep scale, and dots that come
+ * closer as more of the zone is in flower, so the grade does not rest on colour alone. A zone with none in flower has
+ * the palest wash and no dots.
+ */
+@Composable
+private fun bloomLayer(grade: BloomGrade): LayerPaint {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val mark = if (dark) Color(0xFFF8E1F4) else Color(0xFF4A0D45)
+    return when (grade) {
+        BloomGrade.NONE -> LayerPaint(if (dark) Color(0xFF4A3B4F) else Color(0xFFEDE0EC), mark, null, dots = true)
+        BloomGrade.FEW -> LayerPaint(if (dark) Color(0xFF7E4C86) else Color(0xFFE1B4DC), mark, 16f, dots = true)
+        BloomGrade.SOME -> LayerPaint(if (dark) Color(0xFFB0549F) else Color(0xFFCB6FBF), mark, 11f, dots = true)
+        BloomGrade.MOST -> LayerPaint(if (dark) Color(0xFFE07BC9) else Color(0xFF9C2A8C), mark, 7f, dots = true)
+    }
+}
+
+private fun DrawScope.drawLayer(layer: LayerPaint) {
     drawRect(layer.colour.copy(alpha = LAYER_ALPHA))
-    val step = layer.hatchStepDp?.dp?.toPx() ?: return
-    val hatch = layer.hatch.copy(alpha = 0.35f)
+    val step = layer.stepDp?.dp?.toPx() ?: return
+    if (layer.dots) {
+        val dot = layer.mark.copy(alpha = 0.45f)
+        val radius = 1.6.dp.toPx()
+        var row = 0
+        var y = step / 2
+        while (y < size.height) {
+            // Every other row is set half a step along, as a printed stipple is.
+            var x = if (row % 2 == 0) step / 2 else step
+            while (x < size.width) {
+                drawCircle(dot, radius, Offset(x, y))
+                x += step
+            }
+            y += step
+            row++
+        }
+        return
+    }
+    val hatch = layer.mark.copy(alpha = 0.35f)
     val stroke = 1.5.dp.toPx()
     // Lines from the bottom left to the top right, across the whole tile.
     var start = -size.height
@@ -994,25 +1041,68 @@ private fun DrawScope.drawUnrecordedOutline(colour: Color) {
     )
 }
 
-/** The key to the sun layer: each setting's swatch, icon and name, and the look of a zone with none recorded. */
+/** The key to the layer that is on: each step's swatch, icon and name, and the look of a zone with nothing recorded. */
 @Composable
-private fun SunKey(modifier: Modifier) {
+private fun LayerKey(layer: PlotLayer, laterMonth: Month?, modifier: Modifier) {
     val outline = MaterialTheme.colorScheme.outline
     val base = MaterialTheme.colorScheme.surfaceContainerHigh
     Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f), shadowElevation = 1.dp, modifier = modifier) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(R.string.plot_sun_key), style = MaterialTheme.typography.labelMedium, modifier = Modifier.semantics { heading() })
-            Sun.entries.forEach { sun ->
-                val layer = sunLayer(sun)
-                KeyRow(stringResource(sun.label), sun.icon) {
-                    Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawSunLayer(layer) })
+            val title = when (layer) {
+                PlotLayer.SUN -> stringResource(R.string.plot_sun_key)
+                PlotLayer.BLOOM_NOW -> stringResource(R.string.plot_bloom_key_now)
+                PlotLayer.BLOOM_LATER -> stringResource(R.string.plot_bloom_key_later, laterMonth?.let { UiFormat.monthName(it) }.orEmpty())
+            }
+            Text(title, style = MaterialTheme.typography.labelMedium, modifier = Modifier.semantics { heading() })
+            if (layer == PlotLayer.SUN) {
+                Sun.entries.forEach { sun ->
+                    val paint = sunLayer(sun)
+                    KeyRow(stringResource(sun.label), sun.icon) {
+                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawLayer(paint) })
+                    }
+                }
+            } else {
+                BloomGrade.entries.reversed().forEach { grade ->
+                    val paint = bloomLayer(grade)
+                    KeyRow(stringResource(grade.label), null) {
+                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawLayer(paint) })
+                    }
                 }
             }
-            KeyRow(stringResource(R.string.plot_sun_unrecorded), null) {
+            KeyRow(stringResource(if (layer == PlotLayer.SUN) R.string.plot_sun_unrecorded else R.string.plot_bloom_unrecorded), null) {
                 Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawUnrecordedOutline(outline) })
             }
         }
     }
+}
+
+private val BloomGrade.label: Int
+    get() = when (this) {
+        BloomGrade.MOST -> R.string.plot_bloom_most
+        BloomGrade.SOME -> R.string.plot_bloom_some
+        BloomGrade.FEW -> R.string.plot_bloom_few
+        BloomGrade.NONE -> R.string.plot_bloom_none
+    }
+
+/** A zone's grade under a flowering [layer], or null under another layer or when its plants' flowering is unknown. */
+private fun ZoneView.bloom(layer: PlotLayer?): BloomGrade? = when (layer) {
+    PlotLayer.BLOOM_NOW -> BloomGrade.of(inFlower, floweringKnown)
+    PlotLayer.BLOOM_LATER -> BloomGrade.of(inFlowerLater, floweringKnown)
+    else -> null
+}
+
+/** The words a tile shows under a flowering layer, such as "4 of 6 in flower", or null under any other. */
+@Composable
+private fun bloomLine(view: ZoneView, layer: PlotLayer?): String? = when {
+    view.floweringKnown == 0 -> null
+    layer == PlotLayer.BLOOM_NOW -> stringResource(R.string.zone_tile_bloom_now, view.inFlower, view.floweringKnown)
+    layer == PlotLayer.BLOOM_LATER -> stringResource(
+        R.string.zone_tile_bloom_later,
+        view.inFlowerLater,
+        view.floweringKnown,
+        view.laterMonth?.let { UiFormat.monthName(it) }.orEmpty(),
+    )
+    else -> null
 }
 
 @Composable

@@ -8,6 +8,11 @@
   are off. Bee and watering reminders, which are set on their own tabs, have rows that open those tabs. The theme,
   scanning, export, backup, location and About screens use the same tiles and headings, and the reminder switches on
   the Bees and Water tabs match them.
+- The Plot's Layers button offers two flowering layers beside sun and shade, one at a time as on a map. "In flower
+  now" shades each zone by how many of its plants are likely in flower, from their flowering months and the days you
+  saw them in flower, and "In flower later" does the same for a month you choose, from next month to six months
+  ahead, using last year's sightings too. More flowers make a deeper colour with closer dots, each tile says "4 of 6
+  in flower", and the key names each step in words. A zone whose plants' flowering is not known has a dashed edge.
 - On a tablet or a wide window, lists keep to a readable width, as the Plot's and the Bees tab's already did. The
   Plot's list keeps its zone cards apart and its other rows together, and the More menu has a line between a tab's
   own choices and the ones every tab has.

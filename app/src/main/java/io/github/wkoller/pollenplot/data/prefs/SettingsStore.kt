@@ -30,6 +30,15 @@ enum class PlotBackground { THEME, GRASS, SOIL, SAND, PAVING }
 /** Which side of the Plot, as it is drawn, faces north, for the north arrow. */
 enum class NorthSide { TOP, RIGHT, BOTTOM, LEFT }
 
+/**
+ * A layer over the Plot's zones, one at a time as on a map: their sun or shade, how much of each is in flower now, or
+ * how much will be in flower in a month ahead.
+ */
+enum class PlotLayer { SUN, BLOOM_NOW, BLOOM_LATER }
+
+/** How no layer is written, which is not the same as never having chosen one. */
+private const val NO_LAYER = "NONE"
+
 data class Settings(
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     /** Use the colours of the phone's wallpaper instead of Pollenplot's leaf and pollen colours. */
@@ -99,8 +108,10 @@ data class Settings(
     val plotBackground: PlotBackground = PlotBackground.THEME,
     /** Whether the Plot's grid lines show while the layout is only looked at. They always show while it is edited. */
     val gridInView: Boolean = true,
-    /** Whether each zone is washed with a colour for its sun or shade, with a legend. */
-    val sunOverlay: Boolean = false,
+    /** The layer over the Plot's zones, with its key, or null for none. */
+    val plotLayer: PlotLayer? = null,
+    /** How many months ahead the "In flower later" layer looks, from one to [BLOOM_LATER_MOST]. */
+    val bloomLaterMonths: Int = 1,
     val plotNorth: NorthSide = NorthSide.TOP,
     /** What adding a plant to several zones makes: one plant in them all, one in each, or a question each time. */
     val manyZones: ManyZones = ManyZones.ASK,
@@ -114,6 +125,9 @@ data class Settings(
 
         /** The inspection intervals a beekeeper can choose, from a week to a fortnight. */
         val INSPECT_EVERY_CHOICES = listOf(7, 10, 14)
+
+        /** The furthest ahead the "In flower later" layer looks, in months. */
+        const val BLOOM_LATER_MOST = 6
     }
 }
 
@@ -164,7 +178,10 @@ class SettingsStore(context: Context) {
         val libraryPhotos = booleanPreferencesKey("library_photos")
         val plotBackground = stringPreferencesKey("plot_background")
         val gridInView = booleanPreferencesKey("grid_in_view")
+        /** The sun layer's old switch, read for a garden set up before there was more than one layer. */
         val sunOverlay = booleanPreferencesKey("sun_overlay")
+        val plotLayer = stringPreferencesKey("plot_layer")
+        val bloomLaterMonths = intPreferencesKey("bloom_later_months")
         val plotNorth = stringPreferencesKey("plot_north")
         val manyZones = stringPreferencesKey("many_zones")
     }
@@ -219,7 +236,9 @@ class SettingsStore(context: Context) {
             libraryPhotos = this[Keys.libraryPhotos],
             plotBackground = this[Keys.plotBackground]?.let { runCatching { PlotBackground.valueOf(it) }.getOrNull() } ?: defaults.plotBackground,
             gridInView = this[Keys.gridInView] ?: defaults.gridInView,
-            sunOverlay = this[Keys.sunOverlay] ?: defaults.sunOverlay,
+            plotLayer = this[Keys.plotLayer]?.let { name -> PlotLayer.entries.firstOrNull { it.name == name } }
+                ?: PlotLayer.SUN.takeIf { this[Keys.sunOverlay] == true && this[Keys.plotLayer] == null },
+            bloomLaterMonths = (this[Keys.bloomLaterMonths] ?: defaults.bloomLaterMonths).coerceIn(1, Settings.BLOOM_LATER_MOST),
             plotNorth = this[Keys.plotNorth]?.let { runCatching { NorthSide.valueOf(it) }.getOrNull() } ?: defaults.plotNorth,
             manyZones = this[Keys.manyZones]?.let { runCatching { ManyZones.valueOf(it) }.getOrNull() } ?: defaults.manyZones,
         )
@@ -265,7 +284,10 @@ class SettingsStore(context: Context) {
         settings.libraryPhotos?.let { this[Keys.libraryPhotos] = it } ?: remove(Keys.libraryPhotos)
         this[Keys.plotBackground] = settings.plotBackground.name
         this[Keys.gridInView] = settings.gridInView
-        this[Keys.sunOverlay] = settings.sunOverlay
+        // "None" is kept as a word, so a garden that turned the old sun switch off and on does not come back to it.
+        this[Keys.plotLayer] = settings.plotLayer?.name ?: NO_LAYER
+        remove(Keys.sunOverlay)
+        this[Keys.bloomLaterMonths] = settings.bloomLaterMonths
         this[Keys.plotNorth] = settings.plotNorth.name
         this[Keys.manyZones] = settings.manyZones.name
     }
