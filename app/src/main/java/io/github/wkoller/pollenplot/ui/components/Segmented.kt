@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -40,7 +41,8 @@ class SegmentedGroupScope internal constructor() {
 @Composable
 fun SegmentedGroup(modifier: Modifier = Modifier, content: SegmentedGroupScope.() -> Unit) {
     val scope = SegmentedGroupScope().apply(content)
-    val colors = ListItemDefaults.segmentedColors()
+    // The tiles stand out from the page in the theme's container colour, as the phone's own settings draw them.
+    val colors = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     val count = scope.rows.size
     Column(
         modifier.fillMaxWidth().padding(horizontal = 16.dp),

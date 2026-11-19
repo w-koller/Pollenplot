@@ -215,22 +215,18 @@ fun SettingsScreen(
             }
             item { SectionHeading(stringResource(R.string.settings_appearance)) }
             item {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+                    ConnectedChoice(
+                        options = ThemeChoice.entries,
+                        selected = settings.theme,
+                        label = { stringResource(it.label) },
+                        onChoose = { choice -> update { it.copy(theme = choice) } },
+                    )
+                }
+            }
+            item {
                 SegmentedGroup {
-                    row { segment ->
-                        SegmentSurface(segment) {
-                            Text(
-                                stringResource(R.string.settings_theme),
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.padding(bottom = 8.dp).semantics { heading() },
-                            )
-                            ConnectedChoice(
-                                options = ThemeChoice.entries,
-                                selected = settings.theme,
-                                label = { stringResource(it.label) },
-                                onChoose = { choice -> update { it.copy(theme = choice) } },
-                            )
-                        }
-                    }
                     row { segment ->
                         SwitchRow(
                             segment,
