@@ -21,9 +21,7 @@ STRINGS = {
 
     # Models
     "setup_models_title": "Identification models",
-    "setup_models_intro": "Pollenplot can identify common plants and animals with the models built into the app. These "
-    "downloads add more. Accurate identification is recommended for a new garden, and Wi-Fi is best for it. Downloads "
-    "carry on while you finish setup.",
+    "setup_models_intro": "Pollenplot can already identify common plants and animals. These downloads help it name more, and they carry on while you finish setup.",
     "setup_recommended_model": "%1$s (recommended)",
 
     # Zones

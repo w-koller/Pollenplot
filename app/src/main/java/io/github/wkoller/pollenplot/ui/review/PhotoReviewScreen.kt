@@ -132,9 +132,19 @@ class DetectionActions(
     }
 
     /** Adds a find to the garden as a new plant, and hands the plant to [onAdded]. */
-    fun add(detection: DetectionRecord, speciesName: String?, customName: String?, zoneIds: List<String>, each: Boolean, flowering: Boolean, onAdded: (plantId: String) -> Unit = {}) {
+    fun add(
+        detection: DetectionRecord,
+        speciesName: String?,
+        customName: String?,
+        zoneIds: List<String>,
+        each: Boolean,
+        quantity: Int,
+        counts: Map<String, Int>?,
+        flowering: Boolean,
+        onAdded: (plantId: String) -> Unit = {},
+    ) {
         scope.launch {
-            val plant = garden.confirmDetectionIn(detection.id, speciesName, customName, zoneIds, each, flowering = flowering)
+            val plant = garden.confirmDetectionIn(detection.id, speciesName, customName, zoneIds, each, quantity, flowering, counts)
             zoneIds.firstOrNull()?.let { first -> settings.update { it.copy(lastZoneId = first) } }
             onAdded(plant.id)
         }
@@ -266,13 +276,18 @@ fun PhotoReviewScreen(
     }
     val callbacks = remember(actions, leaving) {
         ReviewCallbacks(
-            onAdd = { detection, species, custom, zoneIds, each, flowering ->
+            onAdd = { detection, species, custom, zoneIds, each, quantity, counts, flowering ->
                 decided = true
-                actions.add(detection, species, custom, zoneIds, each, flowering) { plantId ->
+                actions.add(detection, species, custom, zoneIds, each, quantity, counts, flowering) { plantId ->
                     if (leaving) {
                         val zone = zoneIds.mapNotNull { zoneNames[it] }.joinToString(", ").ifEmpty { null }
                         notices?.show(
-                            if (zone != null) resources.getString(R.string.review_added_to_zone, zone) else resources.getString(R.string.review_added),
+                            when {
+                                quantity > 1 && zone != null -> resources.getQuantityString(R.plurals.review_added_plants_to_zone, quantity, quantity, zone)
+                                quantity > 1 -> resources.getQuantityString(R.plurals.review_added_plants, quantity, quantity)
+                                zone != null -> resources.getString(R.string.review_added_to_zone, zone)
+                                else -> resources.getString(R.string.review_added)
+                            },
                             action = resources.getString(R.string.review_open),
                         ) { openPlant(plantId) }
                     }

@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import androidx.activity.compose.BackHandler
+import io.github.wkoller.pollenplot.ui.components.UnsavedChangesDialog
 import io.github.wkoller.pollenplot.ui.components.readableSides
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
@@ -297,8 +299,45 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
         }
     }
     val zone = original ?: return
+    var askingToLeave by rememberSaveable { mutableStateOf(false) }
+    val storedArea = zone.measuredAreaCm2?.let(UiFormat::squareMetres).orEmpty()
+    // What the form holds differs from the zone as stored, so leaving now would lose it.
+    val changed = name.trim() != zone.name || kind != zone.kind || sun != zone.sun || soil != zone.soil ||
+        mulched != zone.mulched || rocksAndLogs != zone.rocksAndLogs || denseShrubs != zone.denseShrubs ||
+        area.trim() != storedArea || notes.trim() != zone.notes
 
-    DetailScaffold(title = stringResource(R.string.zone_edit_title, zone.name), onBack = onBack) { padding ->
+    /** Saves the form and goes back, or marks what needs fixing and stays. */
+    fun save() {
+        val measured = if (area.isBlank()) null else UiFormat.parseSquareMetres(area)
+        nameError = name.isBlank()
+        areaError = area.isNotBlank() && measured == null
+        if (!nameError && !areaError) {
+            scope.launch {
+                garden.updateZone(zone.copy(name = name.trim(), kind = kind, sun = sun, soil = soil, mulched = mulched, rocksAndLogs = rocksAndLogs, denseShrubs = denseShrubs, measuredAreaCm2 = measured, notes = notes.trim()))
+                // The database finishes on its own thread; going back has to happen on the main one.
+                withContext(Dispatchers.Main) { onBack() }
+            }
+        }
+    }
+
+    val leave = { if (changed) askingToLeave = true else onBack() }
+    // The back gesture asks too, as the top bar's back button does.
+    BackHandler(changed) { askingToLeave = true }
+    if (askingToLeave) {
+        UnsavedChangesDialog(
+            onSave = {
+                askingToLeave = false
+                save()
+            },
+            onDiscard = {
+                askingToLeave = false
+                onBack()
+            },
+            onKeepEditing = { askingToLeave = false },
+        )
+    }
+
+    DetailScaffold(title = stringResource(R.string.zone_edit_title, zone.name), onBack = leave) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 OutlinedTextField(
@@ -361,21 +400,7 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
                 )
             }
             item {
-                Button(
-                    onClick = {
-                        val measured = if (area.isBlank()) null else UiFormat.parseSquareMetres(area)
-                        nameError = name.isBlank()
-                        areaError = area.isNotBlank() && measured == null
-                        if (!nameError && !areaError) {
-                            scope.launch {
-                                garden.updateZone(zone.copy(name = name.trim(), kind = kind, sun = sun, soil = soil, mulched = mulched, rocksAndLogs = rocksAndLogs, denseShrubs = denseShrubs, measuredAreaCm2 = measured, notes = notes.trim()))
-                                // The database finishes on its own thread; going back has to happen on the main one.
-                                withContext(Dispatchers.Main) { onBack() }
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.zone_save)) }
+                Button(onClick = ::save, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.zone_save)) }
             }
             item {
                 OutlinedButton(onClick = { confirmRemove = true }, modifier = Modifier.fillMaxWidth()) {

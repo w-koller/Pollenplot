@@ -107,7 +107,7 @@ class LibraryFlowTest {
         waitFor(hasText("Add 2 plants"))
         compose.onNodeWithText("Front Native Strip").performClick()
         compose.onNodeWithText("Veg Patch").performClick()
-        waitFor(hasText("In these zones there is"))
+        waitFor(hasText("Keeping the plant"))
         shot("library_add_many")
         compose.onNodeWithText("Add to garden").performClick()
         waitFor(hasText("Added 2 plants to Front Native Strip, Veg Patch."))
