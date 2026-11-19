@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.data
 
 import java.time.LocalDate
+import java.time.Month
 import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
 import io.github.wkoller.pollenplot.domain.garden.Structure
 import io.github.wkoller.pollenplot.data.kb.KnowledgeRepository
@@ -93,6 +94,12 @@ data class ZoneView(
     val sightings: List<SightingView> = emptyList(),
     /** How many of the zone's plants are likely in flower now. */
     val inFlower: Int = 0,
+    /** How many of the zone's plants something says the flowering of, which the flowering layers grade against. */
+    val floweringKnown: Int = 0,
+    /** How many of the zone's plants are likely in flower in [laterMonth], for the "In flower later" layer. */
+    val inFlowerLater: Int = 0,
+    /** The month the "In flower later" layer looks at. */
+    val laterMonth: Month? = null,
 )
 
 /** The garden for the screens: records joined with the knowledge base, the garden's state and its weed lists. */
@@ -141,21 +148,41 @@ class GardenViews(
         }
     }
 
-    val zones: Flow<List<ZoneView>> = combine(repository.zoneList, plants, sightings, repository.floweringList, locality) { zones, plants, sightings, flowering, locality ->
+    /** The garden's place and how many months ahead the "In flower later" layer looks. */
+    private val bloomAhead: Flow<Pair<Locality, Int>> = combine(locality, settings.settings.map { it.bloomLaterMonths }.distinctUntilChanged()) { place, months -> place to months }
+
+    val zones: Flow<List<ZoneView>> = combine(repository.zoneList, plants, sightings, repository.floweringList, bloomAhead) { zones, plants, sightings, flowering, (locality, monthsAhead) ->
         // A plant growing in several zones is in each zone's list.
         val byZone = plants.filter { it.isGrowing }.flatMap { view -> view.plant.zoneIds.map { it to view } }.groupBy({ it.first }, { it.second })
         val seenIn = sightings.groupBy { it.sighting.zoneId }
         // In flower now: this month among its flowering months, turned for the garden's hemisphere, or seen lately.
         val day = today()
         val seenFlowering = flowering.groupBy({ it.first }, { it.second })
-        val flowering = plants.filter { view ->
-            view.isGrowing && FloweringSeen.inFlowerNow(view.care?.care?.flowering?.fromSouthern(locality.hemisphere), seenFlowering[view.plant.id].orEmpty(), day)
+        val expected = { view: PlantView -> view.care?.care?.flowering?.fromSouthern(locality.hemisphere) }
+        val growing = plants.filter { it.isGrowing }
+        val flowering = growing.filter { view ->
+            FloweringSeen.inFlowerNow(expected(view), seenFlowering[view.plant.id].orEmpty(), day)
+        }.map { it.plant.id }.toSet()
+        val known = growing.filter { FloweringSeen.known(expected(it), seenFlowering[it.plant.id].orEmpty()) }.map { it.plant.id }.toSet()
+        // Later is judged from the flowering months and from the months seen in flower in the last year.
+        val later = day.plusMonths(monthsAhead.toLong()).month
+        val floweringLater = growing.filter { view ->
+            FloweringSeen.inFlowerIn(expected(view), FloweringSeen.lastYear(seenFlowering[view.plant.id].orEmpty(), day), later)
         }.map { it.plant.id }.toSet()
         zones.map { zone ->
             val inZone = byZone[zone.id].orEmpty()
             val seen = seenIn[zone.id].orEmpty()
             val groups = seen.map { it.animal?.group ?: it.sighting.group }.toSet()
-            ZoneView(zone, inZone, ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles, it.species?.form) }, groups), seen, inZone.count { it.plant.id in flowering })
+            ZoneView(
+                zone,
+                inZone,
+                ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles, it.species?.form) }, groups),
+                seen,
+                inFlower = inZone.count { it.plant.id in flowering },
+                floweringKnown = inZone.count { it.plant.id in known },
+                inFlowerLater = inZone.count { it.plant.id in floweringLater },
+                laterMonth = later,
+            )
         }
     }
 

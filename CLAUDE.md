@@ -62,7 +62,8 @@ is always ready to tag.
     in each), `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
     `Structures` (what is built in the yard: a kind, a rectangle or an oval, and a place on the Plot's grid; a
     structure is not a zone, holds no plants, and is not in the search index),
-    `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year, from the `flowering`
+    `Wishlist`, `FloweringSeen` (the months a plant was seen in flower in the last year, `BloomGrade` for the Plot's
+    flowering layers, which grades a zone by the share of its plants with known flowering that are in flower, from the `flowering`
     table's days: a photo's through the review card's switch, the user's through `GardenRepository.recordFlowering`
     on the plant's page, once a day for each plant) and `Pots` (a plant's pot,
     the care done to plants, and `PotCare`: a flush four months after the last flush or fresh mix, after the
@@ -204,7 +205,8 @@ is always ready to tag.
   a tab's own `more` choices and then `LocalAppMenu`'s, pressed in tests with `fromMore` in `TestGarden.kt`; `Layout.kt`
   has `SectionHeading`, `ChipGroup`, `readable()` and `readableSides()` for a list's sides on a wide screen; a page
   reads its record as a `Found` and shows `MissingRecord` when it is gone), `ui/nav` the routes and the app frame,
-  `ui/plot` the canvas and zones, `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
+  `ui/plot` the canvas and zones (its layers are `PlotLayer` in the settings: sun and shade, in flower now and in flower
+  later, one at a time), `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera
   (`IdentifyModel` keeps its state across turns), `ui/weeds` the Weed card, the Weeds screen, Compare and the Weed
   finder, `ui/wildlife` the Wildlife tab, an animal's page, a sighting's page and the safety notice, and `ui/review`
   the review cards (`AnimalCards` for animals; a card's choice is stored on its detection as `chosenLabel`,

@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.backup
 
 import io.github.wkoller.pollenplot.data.prefs.NorthSide
+import io.github.wkoller.pollenplot.data.prefs.PlotLayer
 import io.github.wkoller.pollenplot.data.prefs.PlotBackground
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.data.prefs.Settings
@@ -40,7 +41,10 @@ data class BackupSettings(
     val petsAtHome: Boolean? = null,
     val plotBackground: String? = null,
     val gridInView: Boolean? = null,
+    /** The sun layer's switch in backups made before the Plot had more than one layer. */
     val sunOverlay: Boolean? = null,
+    val plotLayer: String? = null,
+    val bloomLaterMonths: Int? = null,
     val plotNorth: String? = null,
     val manyZones: String? = null,
     val potReminders: Boolean? = null,
@@ -86,7 +90,12 @@ data class BackupSettings(
             petsAtHome = petsAtHome ?: current.petsAtHome,
             plotBackground = PlotBackground.entries.firstOrNull { it.name == plotBackground } ?: current.plotBackground,
             gridInView = gridInView ?: current.gridInView,
-            sunOverlay = sunOverlay ?: current.sunOverlay,
+            plotLayer = when {
+                plotLayer != null -> PlotLayer.entries.firstOrNull { it.name == plotLayer }
+                sunOverlay != null -> PlotLayer.SUN.takeIf { sunOverlay }
+                else -> current.plotLayer
+            },
+            bloomLaterMonths = bloomLaterMonths?.coerceIn(1, Settings.BLOOM_LATER_MOST) ?: current.bloomLaterMonths,
             plotNorth = NorthSide.entries.firstOrNull { it.name == plotNorth } ?: current.plotNorth,
             manyZones = ManyZones.entries.firstOrNull { it.name == manyZones } ?: current.manyZones,
         )
@@ -126,7 +135,8 @@ data class BackupSettings(
             petsAtHome = settings.petsAtHome,
             plotBackground = settings.plotBackground.name,
             gridInView = settings.gridInView,
-            sunOverlay = settings.sunOverlay,
+            plotLayer = settings.plotLayer?.name ?: "NONE",
+            bloomLaterMonths = settings.bloomLaterMonths,
             plotNorth = settings.plotNorth.name,
             manyZones = settings.manyZones.name,
         )

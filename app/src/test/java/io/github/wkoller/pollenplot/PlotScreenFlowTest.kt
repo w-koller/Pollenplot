@@ -2,6 +2,7 @@ package io.github.wkoller.pollenplot
 
 import androidx.compose.ui.semantics.SemanticsProperties
 import io.github.wkoller.pollenplot.data.prefs.NorthSide
+import io.github.wkoller.pollenplot.data.prefs.PlotLayer
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import org.junit.Assert.assertTrue
 import androidx.compose.ui.geometry.Offset
@@ -297,9 +298,9 @@ class PlotScreenFlowTest {
         shot("plot_flowering")
         // The sun and shade layer is turned on from the Layers button on the plot, as on a map.
         compose.pressWhenShown(hasContentDescription("Map layers"))
-        compose.pressWhenShown(hasText("Show sun and shade"))
+        compose.pressWhenShown(hasText("Sun and shade"))
         compose.pressWhenShown(hasText("Done"))
-        compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.settings.first().sunOverlay } }
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.settings.first().plotLayer == PlotLayer.SUN } }
         val citrus = compose.onNode(hasContentDescription("Back Citrus Patch", substring = true)).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
         assertTrue("The zone says how many are in flower: $citrus", "in flower" in citrus)
         assertTrue("And its sun, in words: $citrus", "Full sun" in citrus)
@@ -313,11 +314,41 @@ class PlotScreenFlowTest {
         val ids = seed()
         runBlocking {
             app.container.garden.recordFlowering(ids.lemon, java.time.LocalDate.now())
-            app.container.settingsStore.update { it.copy(sunOverlay = true, plotNorth = NorthSide.RIGHT) }
+            app.container.settingsStore.update { it.copy(plotLayer = PlotLayer.SUN, plotNorth = NorthSide.RIGHT) }
         }
         show(Settings(gardenState = AuState.QLD, theme = ThemeChoice.DARK))
         waitFor(hasText("Sun and shade"))
         shot("plot_flowering_sun_dark")
+    }
+
+    @Test
+    fun zonesShowHowMuchIsInFlowerNowAndLater() {
+        val ids = seed()
+        runBlocking { app.container.garden.recordFlowering(ids.lemon, java.time.LocalDate.now()) }
+        show()
+        waitFor(hasContentDescription("Back Citrus Patch", substring = true))
+        compose.pressWhenShown(hasContentDescription("Map layers"))
+        compose.pressWhenShown(hasText("In flower now"))
+        compose.pressWhenShown(hasText("Done"))
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.settings.first().plotLayer == PlotLayer.BLOOM_NOW } }
+        val citrus = compose.onNode(hasContentDescription("Back Citrus Patch", substring = true)).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
+        assertTrue("The zone says how many of its plants are in flower: $citrus", Regex("\\d+ of \\d+ in flower").containsMatchIn(citrus))
+        // The key names each grade in words as well as by its colour and dots.
+        waitFor(hasText("Most plants"))
+        waitFor(hasText("Not recorded"))
+        shot("plot_bloom_now")
+
+        // Later looks at the month chosen in the sheet.
+        compose.pressWhenShown(hasContentDescription("Map layers"))
+        compose.pressWhenShown(hasText("In flower later"))
+        compose.pressWhenShown(hasText("In 3 months"))
+        compose.pressWhenShown(hasText("Done"))
+        compose.waitUntil(WAIT_MS) {
+            runBlocking { app.container.settingsStore.settings.first().let { it.plotLayer == PlotLayer.BLOOM_LATER && it.bloomLaterMonths == 3 } }
+        }
+        val month = java.time.LocalDate.now().plusMonths(3).month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+        waitFor(hasText("In flower in $month"))
+        shot("plot_bloom_later")
     }
 
     @Test

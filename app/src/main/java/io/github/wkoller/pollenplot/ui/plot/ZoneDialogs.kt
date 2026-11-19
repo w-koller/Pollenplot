@@ -1,5 +1,10 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.RadioButton
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
+import io.github.wkoller.pollenplot.data.prefs.Settings
+import io.github.wkoller.pollenplot.data.prefs.PlotLayer
 import io.github.wkoller.pollenplot.data.prefs.NorthSide
 import io.github.wkoller.pollenplot.domain.garden.Corner
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -322,23 +327,74 @@ fun PlotAppearanceSheet(
     }
 }
 
-/** The Plot's layers, which lie over the zones as a map's layers lie over its streets. */
+/**
+ * The Plot's layers, which lie over the zones as a map's layers lie over its streets: one at a time, or none. "In
+ * flower later" has a month to look ahead to.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlotLayersSheet(sunOverlay: Boolean, onDismiss: () -> Unit, onSunOverlay: (Boolean) -> Unit) {
+fun PlotLayersSheet(
+    layer: PlotLayer?,
+    laterMonths: Int,
+    onDismiss: () -> Unit,
+    onLayer: (PlotLayer?) -> Unit,
+    onLaterMonths: (Int) -> Unit,
+) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(stringResource(R.string.plot_layers_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp).semantics { heading() })
-            ListItem(
-                checked = sunOverlay,
-                onCheckedChange = onSunOverlay,
-                // The sheet's words start 24 dp in, and a list item insets its own by 16.
-                modifier = Modifier.padding(horizontal = 8.dp),
-                leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
-                supportingContent = { Text(stringResource(R.string.plot_sun_overlay_body)) },
-                trailingContent = { Switch(checked = sunOverlay, onCheckedChange = null) },
-            ) { Text(stringResource(R.string.plot_sun_overlay)) }
+            // The sheet's words start 24 dp in, and a group's tiles 16 dp in with their own inset inside.
+            SegmentedGroup(Modifier.padding(horizontal = 8.dp).selectableGroup()) {
+                listOf<PlotLayer?>(null, PlotLayer.SUN, PlotLayer.BLOOM_NOW, PlotLayer.BLOOM_LATER).forEach { choice ->
+                    row { segment ->
+                        ListItem(
+                            selected = layer == choice,
+                            onClick = { onLayer(choice) },
+                            leadingContent = { RadioButton(selected = layer == choice, onClick = null) },
+                            trailingContent = { Icon(painterResource(choice.icon), contentDescription = null) },
+                            supportingContent = choice.body?.let { body -> { Text(stringResource(body)) } },
+                            shapes = segment.shapes,
+                            colors = segment.colors,
+                        ) { Text(stringResource(choice.label)) }
+                    }
+                }
+            }
+            if (layer == PlotLayer.BLOOM_LATER) {
+                Column(Modifier.padding(horizontal = 24.dp)) {
+                    ChipGroup(
+                        title = stringResource(R.string.plot_layer_month),
+                        options = (1..Settings.BLOOM_LATER_MOST).toList(),
+                        selected = laterMonths,
+                        label = { months -> if (months == 1) stringResource(R.string.plot_layer_month_next) else stringResource(R.string.plot_layer_month_ahead, months) },
+                        onChoose = onLaterMonths,
+                    )
+                }
+            }
             Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text(stringResource(R.string.plot_done)) }
         }
     }
 }
+
+private val PlotLayer?.label: Int
+    get() = when (this) {
+        null -> R.string.plot_layer_none
+        PlotLayer.SUN -> R.string.plot_layer_sun
+        PlotLayer.BLOOM_NOW -> R.string.plot_layer_bloom_now
+        PlotLayer.BLOOM_LATER -> R.string.plot_layer_bloom_later
+    }
+
+private val PlotLayer?.body: Int?
+    get() = when (this) {
+        null -> R.string.plot_layer_none_body
+        PlotLayer.SUN -> R.string.plot_sun_overlay_body
+        PlotLayer.BLOOM_NOW -> R.string.plot_layer_bloom_now_body
+        PlotLayer.BLOOM_LATER -> R.string.plot_layer_bloom_later_body
+    }
+
+private val PlotLayer?.icon: Int
+    get() = when (this) {
+        null -> R.drawable.ic_layers
+        PlotLayer.SUN -> R.drawable.ic_sunny
+        PlotLayer.BLOOM_NOW -> R.drawable.ic_local_florist
+        PlotLayer.BLOOM_LATER -> R.drawable.ic_calendar_month
+    }

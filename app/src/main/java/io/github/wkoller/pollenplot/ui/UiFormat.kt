@@ -73,6 +73,9 @@ object UiFormat {
         else -> String.format(words.and, items.dropLast(1).joinToString(", "), items.last())
     }
 
+    /** A month's full name, such as "January". */
+    fun monthName(month: Month, locale: Locale = Locale.getDefault()): String = month.getDisplayName(TextStyle.FULL, locale)
+
     /**
      * Months as runs, such as "September to November" or "November to February", in the order the runs start in the
      * calendar. Runs can wrap past December, as flowering often does in the south.
