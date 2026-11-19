@@ -307,6 +307,11 @@ class AppContainer(
             gemma.state.first { it == DownloadState.Complete }
             SecondOpinionWorker.enqueue(appContext)
         }
+        // A plant saved under a name the knowledge base did not know gets its record once a newer knowledge base has
+        // it. A garden holds hundreds of plants at most, and a plant matched once is not looked at again.
+        scope.launch {
+            garden.rematchSpecies(knowledge.await())
+        }
         // The search text includes knowledge base facts and badges, so it is rebuilt when the app starts and whenever
         // the garden's state, its weed lists or the user's corrections change. A garden holds hundreds of records at
         // most, so this takes a moment.

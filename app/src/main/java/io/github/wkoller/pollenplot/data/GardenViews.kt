@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.data
 
+import io.github.wkoller.pollenplot.domain.plants.Taxon
 import java.time.LocalDate
 import java.time.Month
 import io.github.wkoller.pollenplot.domain.garden.FloweringSeen
@@ -62,12 +63,28 @@ data class PlantView(
     val zoneName: String?,
     /** Its weed status in the garden's area. */
     val weed: WeedStatus = WeedStatus.NONE,
+    /**
+     * The genus, family and common name of a plant the knowledge base has no record of but the models can name, whose
+     * [care] then comes from its genus and family.
+     */
+    val taxon: Taxon? = null,
 ) {
+    /** The name the knowledge base does not know, with what is known of it, when the plant has no record of its own. */
+    val unknownName: String? get() = if (species != null) null else plant.speciesName ?: plant.customName
+
+    /** Whether the plant's own name is just the scientific name a model gave it, rather than one the user chose. */
+    private val namedByModel: Boolean
+        get() = taxon != null && plant.customName.let { own -> own == null || KnowledgeBase.normalise(own) == KnowledgeBase.normalise(taxon.name) }
+
     /** The user's own name for the plant, or else its common name, or else its scientific name. */
-    val title: String get() = plant.customName ?: species?.displayName ?: plant.speciesName.orEmpty()
+    val title: String
+        get() = when {
+            namedByModel -> taxon?.common ?: taxon?.name.orEmpty()
+            else -> plant.customName ?: species?.displayName ?: plant.speciesName.orEmpty()
+        }
 
     /** The scientific name, shown under the title when the title is something else. */
-    val scientificName: String? get() = species?.name?.takeIf { it != title }
+    val scientificName: String? get() = (species?.name ?: taxon?.name)?.takeIf { it != title }
 
     val isGrowing: Boolean get() = plant.status == PlantStatus.GROWING
 }
@@ -193,8 +210,17 @@ class GardenViews(
     companion object {
         fun view(plant: GardenPlant, kb: KnowledgeBase?, locality: Locality, zoneNames: Map<String, String>, overwatering: Boolean = false): PlantView {
             val species = plant.speciesName?.let { kb?.species(it) }
-            val care = if (kb != null && species != null) CareResolver.resolve(kb, species) else null
-            val weed = species?.let(locality::weed) ?: plant.speciesName?.let(locality::weed) ?: WeedStatus.NONE
+            // A plant the knowledge base has no record of takes its genus's and family's facts, when the models'
+            // table of names says what they are.
+            val unknown = if (species == null) plant.speciesName ?: plant.customName else null
+            val taxon = unknown?.let { kb?.taxon(it) }
+            val care = when {
+                kb == null -> null
+                species != null -> CareResolver.resolve(kb, species)
+                taxon != null -> CareResolver.resolveGroup(kb, taxon.genus, taxon.family)
+                else -> null
+            }
+            val weed = species?.let(locality::weed) ?: (taxon?.name ?: plant.speciesName)?.let(locality::weed) ?: WeedStatus.NONE
             val roles = when {
                 care != null -> EcoRoles.of(species, care.care, locality.state, weedRisk = weed.isWeed, overwatering = overwatering)
                 weed.isWeed -> listOf(EcoRole.WEED_RISK)
@@ -202,7 +228,7 @@ class GardenViews(
             }
             // A plant counted zone by zone says how many grow in each, as "Front (2), Back (3)".
             val places = plant.zoneIds.mapNotNull { id -> zoneNames[id]?.let { name -> plant.counts[id]?.takeIf { plant.zoneIds.size > 1 }?.let { "$name ($it)" } ?: name } }
-            return PlantView(plant, species, care, roles, places.joinToString(", ").ifEmpty { null }, weed)
+            return PlantView(plant, species, care, roles, places.joinToString(", ").ifEmpty { null }, weed, taxon)
         }
     }
 }

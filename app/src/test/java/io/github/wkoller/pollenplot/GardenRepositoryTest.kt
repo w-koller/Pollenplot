@@ -581,4 +581,31 @@ class GardenRepositoryTest {
         assertNull("Brought back, it has no end", garden.plant(plant.id)!!.endedOn)
         assertEquals(0, garden.historyOf(plant.id).photos)
     }
+
+    @Test
+    fun aPlantAModelNamedTakesItsGenusFactsAndItsCommonName() = runBlocking {
+        val kb = knowledge.await()
+        // A wattle the models can name but the knowledge base has no record of.
+        val taxon = kb.taxa.all.first { it.genus == "Acacia" && kb.species(it.name) == null && it.common != null }
+        val plant = garden.addPlant(null, taxon.name, null)
+        val views = GardenViews(garden, knowledge, ApplicationProvider.getApplicationContext<PollenplotApp>().container.settingsStore, flowOf(WeedData.EMPTY))
+        val view = views.plants.first().single { it.plant.id == plant.id }
+        assertEquals("Its title is the common name", taxon.common, view.title)
+        assertEquals(taxon.name, view.scientificName)
+        assertEquals(taxon.name, view.unknownName)
+        assertEquals("The facts come from the genus", io.github.wkoller.pollenplot.domain.plants.FactLevel.GENUS, view.care!!.levelOf(io.github.wkoller.pollenplot.domain.plants.CareField.SUN))
+    }
+
+    @Test
+    fun aPlantSavedUnderANameTheKnowledgeBaseLaterHasIsMatched() = runBlocking {
+        val kb = knowledge.await()
+        val named = garden.addPlant(null, "grevillea ROBUSTA", null)
+        val own = garden.addPlant(null, "Mum's favourite", null)
+        assertEquals(1, garden.rematchSpecies(kb))
+        assertEquals("Grevillea robusta", garden.plant(named.id)!!.speciesName)
+        assertNull(garden.plant(named.id)!!.customName)
+        assertNull("A name the user made up is left alone", garden.plant(own.id)!!.speciesName)
+        assertEquals("Mum's favourite", garden.plant(own.id)!!.customName)
+        assertEquals("Nothing is matched twice", 0, garden.rematchSpecies(kb))
+    }
 }

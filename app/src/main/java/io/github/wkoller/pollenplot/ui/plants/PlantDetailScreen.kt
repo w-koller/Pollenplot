@@ -264,8 +264,12 @@ fun PlantDetailScreen(
                     )
                 }
             }
-            val unknownName = loaded.plant.speciesName
-            if (resolved == null && unknownName != null && assistant != null) {
+            val unknownName = loaded.unknownName
+            if (unknownName != null) {
+                // A plant without a record of its own says so, and what the facts below are for, if any.
+                item { UnknownPlantNotice(unknownName, loaded.taxon?.genus, loaded.taxon?.family, resolved) }
+            }
+            if (unknownName != null && assistant != null) {
                 // Gemma 4 can draft the care of a plant the knowledge base does not have, kept apart from it.
                 item {
                     CareDraftCard(
@@ -285,10 +289,9 @@ fun PlantDetailScreen(
                         onOpenModels = onOpenModels,
                     )
                 }
-            } else if (resolved == null) {
-                item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
-            } else {
-                facts(resolved, loaded.species, loaded.plant.id, all, kb, locality.hemisphere, onEditFacts, onEditPot.takeIf { pots != null && pot?.potted == false }) {
+            }
+            if (resolved != null) {
+                facts(resolved, loaded.species, loaded.plant.id, all, kb, locality.hemisphere, onEditFacts?.takeIf { loaded.species != null }, onEditPot.takeIf { pots != null && pot?.potted == false }) {
                     if (finds.isNotEmpty()) item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
                 }
             }
@@ -479,8 +482,8 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.facts(
     item {
         val l = levels(CareField.HEIGHT, CareField.WIDTH, CareField.GROUND_COVER, CareField.PRUNING)
         FactCard(R.drawable.ic_straighten, stringResource(R.string.plant_size), l.card) {
-            care.height?.let { Line(stringResource(R.string.plant_height, stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(it.minMm), UiFormat.metresFromMm(it.maxMm))), level = l.line(CareField.HEIGHT)) }
-            care.width?.let { Line(stringResource(R.string.plant_width, stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(it.minMm), UiFormat.metresFromMm(it.maxMm))), level = l.line(CareField.WIDTH)) }
+            care.height?.let { Line(stringResource(R.string.plant_height, sizeText(it)), level = l.line(CareField.HEIGHT)) }
+            care.width?.let { Line(stringResource(R.string.plant_width, sizeText(it)), level = l.line(CareField.WIDTH)) }
             if (care.groundCover == true) Line(stringResource(R.string.role_ground_cover), level = l.line(CareField.GROUND_COVER))
             care.pruning?.let { Line(stringResource(R.string.plant_pruning, it), level = l.line(CareField.PRUNING)) }
             if (care.height == null && care.width == null && care.pruning == null) Line(null)
@@ -859,4 +862,30 @@ private fun GraveyardBanner(view: io.github.wkoller.pollenplot.data.PlantView, o
             OutlinedButton(onClick = onBringBack) { Text(stringResource(R.string.graveyard_bring_back)) }
         }
     }
+}
+
+/**
+ * What Pollenplot knows of a plant it has no record of: nothing, or the facts its genus or family share, which the
+ * cards below then show.
+ */
+@Composable
+internal fun UnknownPlantNotice(name: String, genus: String?, family: String?, resolved: ResolvedCare?) {
+    val fromGenus = resolved?.levels?.values?.any { it == FactLevel.GENUS } == true
+    val text = when {
+        resolved != null && fromGenus && genus != null -> stringResource(R.string.unknown_species_genus, name, genus)
+        resolved != null && family != null -> stringResource(R.string.unknown_species_family, name, family)
+        else -> stringResource(R.string.unknown_species_none, name)
+    }
+    Text(text, style = MaterialTheme.typography.bodyLarge)
+}
+
+/**
+ * A size range in words: "1 to 2 m", or "up to 2 m" when a source gave only the largest, or "about 2 m" when it gave
+ * one figure.
+ */
+@Composable
+internal fun sizeText(range: io.github.wkoller.pollenplot.domain.plants.SizeRange): String = when {
+    range.minMm == 0 -> stringResource(R.string.plant_up_to_metres, UiFormat.metresFromMm(range.maxMm))
+    range.minMm == range.maxMm -> stringResource(R.string.plant_about_metres, UiFormat.metresFromMm(range.maxMm))
+    else -> stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(range.minMm), UiFormat.metresFromMm(range.maxMm))
 }
