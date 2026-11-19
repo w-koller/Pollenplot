@@ -131,6 +131,8 @@ class WaterFlowTest {
         compose.onAllNodesWithText("I watered today").onFirst().performClick()
         waitFor(hasText("Last watered on 28 October 2026"))
         assertEquals(LocalDate.of(2026, 10, 28), runBlocking { water.waterings.first().single().date })
+        val export = runBlocking { app.container.exportJsonLd() }
+        assertTrue("The line and the watering are in the linked data", "pp:WateringLine" in export && "pp:Watering\"" in export)
         shot("water")
     }
 

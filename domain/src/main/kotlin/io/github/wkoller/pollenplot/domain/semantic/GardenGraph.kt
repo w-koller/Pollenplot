@@ -12,7 +12,8 @@ import java.time.LocalDate
 
 /**
  * Describes garden records in standard vocabularies. A zone is a schema.org Place; a plant in the garden is a Darwin
- * Core Occurrence of its taxon, placed in its zone; eco-roles use Pollenplot's own terms.
+ * Core Occurrence of its taxon, placed in its zone, and a plant counted zone by zone has a pp:ZonePlanting for each
+ * zone with that zone's count; eco-roles use Pollenplot's own terms.
  */
 object GardenGraph {
     /** A structure is a place in the yard with its kind and footprint; it is not a zone, and nothing grows in it. */
@@ -70,6 +71,18 @@ object GardenGraph {
                 }
             }
             .text(iri, Vocab.DWC + "occurrenceRemarks", plant.notes)
+        // A plant counted zone by zone says how many grow in each zone, beside its total. Each zone's count has an IRI
+        // made from the plant and the zone, so it is the same in every export.
+        plant.zoneIds.distinct().forEach { zoneId ->
+            val count = plant.counts[zoneId] ?: return@forEach
+            val planting = Vocab.recordIri(plantingId(plant.id, zoneId))
+            builder
+                .iri(iri, Vocab.PP + "zonePlanting", planting)
+                .type(planting, Vocab.PP + "ZonePlanting")
+                .iri(planting, Vocab.PP + "plantingOf", iri)
+                .iri(planting, Vocab.SCHEMA + "containedInPlace", Vocab.recordIri(zoneId))
+                .integer(planting, Vocab.DWC + "individualCount", count.toLong())
+        }
         roles.forEach { builder.iri(iri, Vocab.PP + "ecoRole", Vocab.PP + roleName(it)) }
         return builder.build()
     }
@@ -110,6 +123,10 @@ object GardenGraph {
             .date(iri, Vocab.SCHEMA + "startDate", day.toString())
             .build()
     }
+
+    /** The id of a plant's count in one zone: a name-based UUID of the two ids, so it never changes. */
+    fun plantingId(plantId: String, zoneId: String): String =
+        java.util.UUID.nameUUIDFromBytes("pollenplot:zone-planting:$plantId:$zoneId".toByteArray()).toString()
 
     /** An eco-role's term, such as PollinatorMagnet. */
     fun roleName(role: EcoRole): String = role.name.lowercase().split('_').joinToString("") { part -> part.replaceFirstChar { it.uppercase() } }

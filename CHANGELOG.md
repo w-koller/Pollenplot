@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The linked data export says how many of a plant grow in each zone when it was counted zone by zone, as a
+  pp:ZonePlanting for each zone beside the plant's total, and whether a recorded problem is a pest, a disease or a
+  deficiency (pp:problemKind). Watering lines, with their method, flow and zones, and every watering recorded are in
+  the export too.
 - Fewer notifications. A model download shows its progress in the notification bar while it downloads and leaves
   nothing behind when it is done; Settings › Models says when it is on the phone. Plants and animals found in photos,
   from scans and from photos you add, share one notification that changes without a sound or buzz and counts every

@@ -80,7 +80,7 @@ class ProblemRepository(
 
     /** Every problem and treatment as linked data. */
     suspend fun triples(): List<Triple> =
-        dao.allProblems().flatMap { entity -> entity.toDomain().let { ProblemGraph.problem(it, nameOf(it)) } } +
+        dao.allProblems().flatMap { entity -> entity.toDomain().let { ProblemGraph.problem(it, nameOf(it), it.problemKey?.let { key -> catalogue().problem(key)?.kind }) } } +
             dao.allTreatments().mapNotNull { it.toDomain() }.flatMap { ProblemGraph.treatment(it) }
 
     /** Puts every problem in the search index again, after the garden's index has been rebuilt. */

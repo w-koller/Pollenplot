@@ -401,7 +401,7 @@ class AppContainer(
         if (problems.isNotEmpty()) Log.w("Feeding", problems.joinToString("\n"))
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples() + habitat.triples() + harvests.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples() + habitat.triples() + harvests.triples() + water.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {

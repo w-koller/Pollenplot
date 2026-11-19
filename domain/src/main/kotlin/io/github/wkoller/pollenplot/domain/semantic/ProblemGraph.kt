@@ -1,14 +1,16 @@
 package io.github.wkoller.pollenplot.domain.semantic
 
 import io.github.wkoller.pollenplot.domain.problems.PlantProblem
+import io.github.wkoller.pollenplot.domain.problems.ProblemKind
 import io.github.wkoller.pollenplot.domain.problems.Treatment
 
 /**
- * Problems as linked data: each is a SOSA observation of its plant, with the problem named as its result, and each
- * treatment an event that acts on the problem.
+ * Problems as linked data: each is a SOSA observation of its plant, with the problem named as its result and, for a
+ * problem from the catalogue, whether it is a pest, a disease or a deficiency; each treatment is an event that acts on
+ * the problem.
  */
 object ProblemGraph {
-    fun problem(problem: PlantProblem, name: String): List<Triple> {
+    fun problem(problem: PlantProblem, name: String, kind: ProblemKind? = null): List<Triple> {
         val iri = Vocab.recordIri(problem.id)
         return GraphBuilder()
             .type(iri, Vocab.SOSA + "Observation")
@@ -17,6 +19,7 @@ object ProblemGraph {
             .iri(iri, Vocab.SOSA + "observedProperty", Vocab.PP + "PlantHealth")
             .text(iri, Vocab.SOSA + "hasSimpleResult", name)
             .text(iri, Vocab.PP + "problemKey", problem.problemKey)
+            .text(iri, Vocab.PP + "problemKind", kind?.name?.lowercase())
             .date(iri, Vocab.SOSA + "resultTime", problem.observedOn.toString())
             .date(iri, Vocab.PP + "resolvedOn", problem.resolvedOn?.toString())
             .text(iri, Vocab.SCHEMA + "description", problem.notes.ifBlank { null })

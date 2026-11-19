@@ -12,6 +12,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
@@ -119,8 +120,7 @@ class AccessibilityFlowTest {
         compose.fromMore("Graveyard")
         reach(hasText("No plant has died or been removed yet."))
         visit("graveyard")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Back Citrus Patch"))
+        backTo(hasText("Back Citrus Patch"))
         compose.onNodeWithText("Back Citrus Patch").performClick()
         reach(hasText("Mum's lemon"))
         visit("zone")
@@ -128,8 +128,7 @@ class AccessibilityFlowTest {
         compose.onNodeWithText("Add water for wildlife").performClick()
         reach(hasText("Kind of water"))
         visit("water_feature")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Mum's lemon"))
+        backTo(hasText("Mum's lemon"))
         compose.onNodeWithText("Mum's lemon").performClick()
         reach(hasText("Bee forage"))
         visit("plant")
@@ -151,18 +150,15 @@ class AccessibilityFlowTest {
         compose.onNodeWithText("Add pot details").performSemanticsAction(SemanticsActions.OnClick)
         reach(hasText("Potting mix"))
         visit("pot_edit")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Record a problem"))
+        backTo(hasText("Record a problem"))
         compose.onNodeWithText("Record a problem").performSemanticsAction(SemanticsActions.OnClick)
         reach(hasText("What you saw"))
         visit("problem_log")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Record a harvest"))
+        backTo(hasText("Record a harvest"))
         compose.onNodeWithText("Record a harvest").performSemanticsAction(SemanticsActions.OnClick)
         reach(hasText("Taste and notes"))
         visit("harvest")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Record pruning"))
+        backTo(hasText("Record pruning"))
         compose.onNodeWithContentDescription("Back").performClick()
         compose.onNodeWithContentDescription("Back").performClick()
         tab("Rhythms").performClick()
@@ -179,21 +175,18 @@ class AccessibilityFlowTest {
         compose.onNodeWithText("Hive 1").performClick()
         reach(hasText("Inspections"))
         visit("hive")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("What every beekeeper must do"))
+        backTo(hasText("What every beekeeper must do"))
         compose.onNodeWithText("What every beekeeper must do").performClick()
         reach(hasText("Sources"))
         visit("guide")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Native bees") and hasClickAction())
+        backTo(hasText("Native bees") and hasClickAction())
         compose.onNode(hasText("Native bees") and hasClickAction()).performClick()
         reach(hasText("Sugarbag"))
         visit("bees_native")
         compose.onNodeWithText("Sugarbag").performClick()
         reach(hasText("Records"))
         visit("native_hive")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Bee hotels") and hasClickAction())
+        backTo(hasText("Bee hotels") and hasClickAction())
         compose.onNode(hasText("Bee hotels") and hasClickAction()).performClick()
         reach(hasText("Fence hotel"))
         visit("bees_hotels")
@@ -204,20 +197,17 @@ class AccessibilityFlowTest {
         tab("Water").performClick()
         reach(hasText("Citrus drip"))
         visit("water")
-        compose.onNodeWithContentDescription("Settings").performClick()
-        reach(hasText("Use colours from your wallpaper"))
+        compose.openSettingsTo(hasText("Use colours from your wallpaper"))
         visit("settings")
         reach(hasText("Backup and restore"))
         compose.onNodeWithText("Backup and restore").performClick()
         reach(hasText("Choose a backup file"))
         visit("backup")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Reports and export"))
+        backTo(hasText("Reports and export"))
         compose.onNodeWithText("Reports and export").performClick()
         reach(hasText("Sightings as Darwin Core"))
         visit("export")
-        compose.onNodeWithContentDescription("Back").performClick()
-        reach(hasText("Set up again"))
+        backTo(hasText("Set up again"))
         compose.onNodeWithText("Set up again").performClick()
         reach(hasText("Welcome to Pollenplot"))
         visit("setup_welcome")
@@ -244,6 +234,29 @@ class AccessibilityFlowTest {
             val scrollers = compose.onAllNodes(hasScrollToNodeAction())
             val scrolled = (0 until scrollers.fetchSemanticsNodes().size).any { runCatching { scrollers[it].performScrollToNode(matcher) }.isSuccess }
             scrolled || compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /**
+     * Presses Back, then waits for [matcher] to show. On a busy machine a press can land while the page is still
+     * changing and do nothing, so Back is pressed again only when [matcher] has not shown [BACK_AGAIN_MS] after a press.
+     */
+    private fun backTo(matcher: SemanticsMatcher) {
+        compose.onAllNodes(hasContentDescription("Back")).onFirst().performClick()
+        compose.waitForIdle()
+        var pressedAt = System.currentTimeMillis()
+        compose.waitUntil(WAIT_MS) {
+            val scrollers = compose.onAllNodes(hasScrollToNodeAction())
+            val scrolled = (0 until scrollers.fetchSemanticsNodes().size).any { runCatching { scrollers[it].performScrollToNode(matcher) }.isSuccess }
+            val reached = scrolled || compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+            val stuck = System.currentTimeMillis() - pressedAt > BACK_AGAIN_MS
+            if (!reached && stuck && compose.onAllNodes(hasContentDescription("Back")).fetchSemanticsNodes().isNotEmpty()) {
+                println("backTo: pressing Back again for $matcher")
+                runCatching { compose.onAllNodes(hasContentDescription("Back")).onFirst().performClick() }
+                compose.waitForIdle()
+                pressedAt = System.currentTimeMillis()
+            }
+            reached
         }
     }
 
@@ -279,5 +292,10 @@ class AccessibilityFlowTest {
         val bitmap: Bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         val dir = File(System.getProperty("screenshots.dir") ?: "build/screenshots").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    private companion object {
+        /** How long a press on Back is given to change the page before it is pressed again. */
+        const val BACK_AGAIN_MS = 5_000L
     }
 }

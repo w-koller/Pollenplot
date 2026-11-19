@@ -289,6 +289,26 @@ fun ComposeContentTestRule.scrollTo(matcher: SemanticsMatcher) {
 }
 
 /**
+ * Opens Settings from the Plot and scrolls to [row]. On a busy machine a press on Settings can land while the Plot is
+ * still changing and open nothing, so Settings is pressed again when [row] cannot be reached five seconds after a
+ * press. Settings has no button of its own named "Settings", so a press never opens it twice.
+ */
+fun ComposeContentTestRule.openSettingsTo(row: SemanticsMatcher) {
+    var pressedAt = 0L
+    waitUntil(WAIT_MS) {
+        val scrollers = onAllNodes(hasScrollToNodeAction())
+        val reached = (0 until scrollers.fetchSemanticsNodes().size).any { runCatching { scrollers[it].performScrollToNode(row) }.isSuccess }
+        val due = System.currentTimeMillis() - pressedAt > 5_000L
+        if (!reached && due && onAllNodes(hasContentDescription("Settings")).fetchSemanticsNodes().isNotEmpty()) {
+            runCatching { onAllNodes(hasContentDescription("Settings")).onFirst().performClick() }
+            waitForIdle()
+            pressedAt = System.currentTimeMillis()
+        }
+        reached
+    }
+}
+
+/**
  * Presses [matcher] once it is on the screen. Right after a press, what it opened, such as a menu, may still be on its
  * way on a busy machine, and pressing too soon finds nothing.
  */
