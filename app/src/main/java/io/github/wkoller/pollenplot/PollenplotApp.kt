@@ -10,6 +10,7 @@ open class PollenplotApp : Application() {
         super.onCreate()
         CrashReporter.install(this)
         container = createContainer()
+        registerActivityLifecycleCallbacks(container.visibility)
     }
 
     /** Tests replace this to give the app a fake identifier and gallery. */

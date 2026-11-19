@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fewer notifications. A model download shows its progress in the notification bar while it downloads and leaves
+  nothing behind when it is done; Settings › Models says when it is on the phone. Plants and animals found in photos,
+  from scans and from photos you add, share one notification that changes without a sound or buzz and counts every
+  find waiting for review, and none is shown while Pollenplot is open, since its screens show the finds.
 - A press on a plant in the plant library opens its page: its picture and names, whether it is native or a weed
   where the garden is, its badges and the same fact cards as a garden plant's page, with Add to garden and Save to my
   library. With Add mode on, a press adds the plant straight away, as before; the library opens in Add mode from a

@@ -76,6 +76,7 @@ import io.github.wkoller.pollenplot.notify.FeedPlanCheck
 import io.github.wkoller.pollenplot.notify.HeatAlertCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderCheck
 import io.github.wkoller.pollenplot.notify.HiveReminderWorker
+import io.github.wkoller.pollenplot.notify.AppVisibility
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.notify.PotCareCheck
 import io.github.wkoller.pollenplot.notify.ProblemCheck
@@ -258,7 +259,10 @@ class AppContainer(
     val analysis = PhotoAnalysis({ this.identifier }, photos, garden, knowledge, clock, ::recordsNearby, ::gardenHemisphere, ::plantNames)
     val gallery: Gallery = gallery ?: MediaStoreGallery(appContext)
     val scanner = PhotoScanner(this.gallery, PhotoAnalysis({ quickIdentifier }, photos, garden, knowledge, clock, ::recordsNearby, ::gardenHemisphere), analysis, garden, clock)
-    val notifications = Notifications(appContext)
+    /** Whether one of the app's screens is on show, counted by [PollenplotApp]. */
+    val visibility = AppVisibility()
+
+    val notifications = Notifications(appContext) { visibility.visible }
     val hiveReminders = HiveReminderCheck(beeViews, settingsStore, notifications)
     val heatAlerts = HeatAlertCheck(nativeBees, settingsStore, this.web, notifications, clock)
     val waterPlan = WaterPlanCheck(water, waterViews, settingsStore, notifications)
