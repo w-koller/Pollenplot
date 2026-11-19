@@ -319,7 +319,9 @@ Scores run from 0 to 3, sizes are in millimetres, months are written as "jan" to
 and forage is `honey [nectar, pollen]`, `stingless [nectar, pollen, resin]`, `solitary [nectar, pollen]`. Leave a
 fact out rather than guess it: the app says "Not recorded yet", and `CareResolver` fills gaps from the genus and family
 only where a fact holds for the whole group. Weed status comes from official sources for the user's area, so species
-records keep only the national Weeds of National Significance flag. `KnowledgeBaseFilesTest` in `:domain` checks
+records keep only the national Weeds of National Significance flag. `species/researched_*.json` hold records written from research, each with
+`sources` (the pages its facts came from, which the app does not read); they keep only what those pages say, so they
+may lack sun or water, and `KnowledgeBaseFilesTest` holds them to having sources and a description instead. `KnowledgeBaseFilesTest` in `:domain` checks
 the real files on every test run. Animals and fungi are in `kb/fauna/*.json`, checked by `FaunaFilesTest`: each
 names its group, family, the states it is native to (or `introduced`), and a hazard only with a note saying what to
 do. A rule names its states and links the official page it comes from; check the number or address on that page

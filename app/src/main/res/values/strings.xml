@@ -936,6 +936,8 @@
     <string name="plant_height">Height: %1$s</string>
     <string name="plant_width">Width: %1$s</string>
     <string name="plant_range_metres">%1$s to %2$s m</string>
+    <string name="plant_up_to_metres">up to %1$s m</string>
+    <string name="plant_about_metres">about %1$s m</string>
     <string name="plant_pruning">Pruning: %1$s</string>
     <string name="plant_zone">In %1$s</string>
     <string name="plant_no_zone">Not in a zone yet</string>
