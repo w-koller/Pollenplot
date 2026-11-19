@@ -5,6 +5,13 @@ import androidx.compose.foundation.layout.Column
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
+import io.github.wkoller.pollenplot.ui.components.ActionNotice
+import io.github.wkoller.pollenplot.ui.components.Segment
+import io.github.wkoller.pollenplot.ui.components.SegmentSurface
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
+import io.github.wkoller.pollenplot.ui.components.listPadding
+import io.github.wkoller.pollenplot.ui.components.rememberNotificationAccess
+import io.github.wkoller.pollenplot.notify.Notifications
 import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
@@ -67,184 +74,209 @@ fun SettingsScreen(
     onOpenBackup: () -> Unit,
     onOpenAbout: () -> Unit,
     onSetUpAgain: () -> Unit = {},
+    onOpenBees: () -> Unit = {},
+    onOpenWater: () -> Unit = {},
+    notifications: Notifications? = null,
 ) {
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = Settings())
     val scope = rememberCoroutineScope()
     val update: ((Settings) -> Settings) -> Unit = { change -> scope.launch { store.update(change) } }
+    val access = notifications?.let { rememberNotificationAccess(it) }
+    // Turning a reminder on asks for notifications, as the Bees and Water tabs do.
+    val remind: ((Settings) -> Settings, Boolean) -> Unit = { change, on ->
+        update(change)
+        if (on && access != null && !access.allowed) access.ask()
+    }
+    val anyReminder = settings.potReminders || settings.feedReminders || settings.problemReminders ||
+        settings.pruneReminders || settings.conditionerBeforeHeat
     DetailScaffold(title = stringResource(R.string.settings_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item { SectionHeading(stringResource(R.string.settings_garden)) }
             item {
-                val place = settings.gardenPlace
-                ListItem(
-                    onClick = onOpenLocation,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_location_on), contentDescription = null) },
-                    supportingContent = {
-                        Text(
+                SegmentedGroup {
+                    row { segment ->
+                        val place = settings.gardenPlace
+                        LinkRow(
+                            segment,
+                            R.drawable.ic_location_on,
+                            stringResource(R.string.settings_location),
                             when {
                                 place != null -> listOfNotNull(placeTitle(place), settings.gardenState?.let { stringResource(it.label) }).joinToString(" · ")
                                 settings.gardenState != null -> stringResource(R.string.settings_location_state_only, stringResource(settings.gardenState.label))
                                 else -> stringResource(R.string.settings_location_not_set)
                             },
+                            onOpenLocation,
                         )
-                    },
-                ) { Text(stringResource(R.string.settings_location)) }
-            }
-            item {
-                ListItem(
-                    checked = settings.petsAtHome,
-                    onCheckedChange = { on -> update { it.copy(petsAtHome = on) } },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_pets), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_pets_body)) },
-                    trailingContent = { Switch(checked = settings.petsAtHome, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.settings_pets)) }
-            }
-            item {
-                val on = settings.libraryPhotos == true
-                ListItem(
-                    checked = on,
-                    onCheckedChange = { choice -> update { it.copy(libraryPhotos = choice) } },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_library_photos_body)) },
-                    trailingContent = { Switch(checked = on, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.settings_library_photos)) }
-            }
-            item {
-                ManyZonesSetting(settings.manyZones, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { choice -> update { it.copy(manyZones = choice) } }
-            }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.settings_photos)) }
-            item {
-                ListItem(
-                    onClick = onOpenScanning,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null) },
-                    supportingContent = { Text(stringResource(if (settings.scanLibrary) R.string.settings_scanning_on else R.string.settings_scanning_off)) },
-                ) { Text(stringResource(R.string.settings_scanning)) }
-            }
-            item {
-                ListItem(
-                    onClick = onOpenModels,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_models_body)) },
-                ) { Text(stringResource(R.string.models_title)) }
-            }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.settings_reminders)) }
-            item {
-                ListItem(
-                    checked = settings.potReminders,
-                    onCheckedChange = { on -> update { it.copy(potReminders = on) } },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_pot_reminders_body)) },
-                    trailingContent = { Switch(checked = settings.potReminders, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.settings_pot_reminders)) }
-            }
-            item {
-                ListItem(
-                    checked = settings.feedReminders,
-                    onCheckedChange = { on -> update { it.copy(feedReminders = on) } },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_compost), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_feed_reminders_body)) },
-                    trailingContent = { Switch(checked = settings.feedReminders, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.settings_feed_reminders)) }
-            }
-            item {
-                ListItem(
-                    checked = settings.problemReminders,
-                    onCheckedChange = { on -> update { it.copy(problemReminders = on) } },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_bug_report), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_problem_reminders_body)) },
-                    trailingContent = { Switch(checked = settings.problemReminders, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.settings_problem_reminders)) }
-            }
-            item {
-                ListItem(
-                    checked = settings.pruneReminders,
-                    onCheckedChange = { on -> update { it.copy(pruneReminders = on) } },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_content_cut), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_prune_reminders_body)) },
-                    trailingContent = { Switch(checked = settings.pruneReminders, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.settings_prune_reminders)) }
-            }
-            item {
-                ListItem(
-                    checked = settings.conditionerBeforeHeat,
-                    onCheckedChange = { on -> update { it.copy(conditionerBeforeHeat = on) } },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_conditioner_body)) },
-                    trailingContent = { Switch(checked = settings.conditionerBeforeHeat, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.settings_conditioner)) }
-            }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.settings_background)) }
-            item { BatteryRow() }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.settings_records)) }
-            item {
-                ListItem(
-                    onClick = onOpenExport,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_download), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.export_body)) },
-                ) { Text(stringResource(R.string.export_title)) }
-            }
-            item {
-                ListItem(
-                    onClick = onOpenBackup,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_settings_backup_restore), contentDescription = null) },
-                    supportingContent = {
-                        Text(
-                            settings.lastBackupAt?.let { stringResource(R.string.settings_backup_last, UiFormat.longDate(Instant.ofEpochMilli(it))) }
-                                ?: stringResource(R.string.settings_backup_never),
-                        )
-                    },
-                ) { Text(stringResource(R.string.backup_title)) }
-            }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
-            item { SectionHeading(stringResource(R.string.settings_appearance)) }
-            item {
-                Text(
-                    stringResource(R.string.settings_theme),
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                )
-            }
-            item {
-                ConnectedChoice(
-                    options = ThemeChoice.entries,
-                    selected = settings.theme,
-                    label = { stringResource(it.label) },
-                    onChoose = { choice -> update { it.copy(theme = choice) } },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                )
-            }
-            item {
-                ListItem(
-                    checked = settings.wallpaperColours,
-                    onCheckedChange = { on -> update { it.copy(wallpaperColours = on) } },
-                    supportingContent = { Text(stringResource(R.string.settings_wallpaper_colours_body)) },
-                    trailingContent = { Switch(checked = settings.wallpaperColours, onCheckedChange = null) },
-                ) {
-                    Text(stringResource(R.string.settings_wallpaper_colours))
+                    }
+                    row { segment ->
+                        SwitchRow(segment, settings.petsAtHome, R.drawable.ic_pets, stringResource(R.string.settings_pets), stringResource(R.string.settings_pets_body)) { on ->
+                            update { it.copy(petsAtHome = on) }
+                        }
+                    }
+                    row { segment ->
+                        SwitchRow(
+                            segment,
+                            settings.libraryPhotos == true,
+                            R.drawable.ic_photo_library,
+                            stringResource(R.string.settings_library_photos),
+                            stringResource(R.string.settings_library_photos_body),
+                        ) { choice -> update { it.copy(libraryPhotos = choice) } }
+                    }
+                    row { segment ->
+                        SegmentSurface(segment) { ManyZonesSetting(settings.manyZones) { choice -> update { it.copy(manyZones = choice) } } }
+                    }
                 }
             }
-            item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+            item { SectionHeading(stringResource(R.string.settings_photos)) }
             item {
-                ListItem(
-                    onClick = onSetUpAgain,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_restart_alt), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.settings_setup_again_body)) },
-                ) { Text(stringResource(R.string.settings_setup_again)) }
+                SegmentedGroup {
+                    row { segment ->
+                        LinkRow(
+                            segment,
+                            R.drawable.ic_photo_library,
+                            stringResource(R.string.settings_scanning),
+                            stringResource(if (settings.scanLibrary) R.string.settings_scanning_on else R.string.settings_scanning_off),
+                            onOpenScanning,
+                        )
+                    }
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_download, stringResource(R.string.models_title), stringResource(R.string.settings_models_body), onOpenModels)
+                    }
+                }
+            }
+            item { SectionHeading(stringResource(R.string.settings_reminders)) }
+            item {
+                Text(
+                    stringResource(R.string.settings_reminders_intro),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                )
+            }
+            if (anyReminder && access != null && !access.allowed) {
+                item { ActionNotice(stringResource(R.string.settings_reminders_off), stringResource(R.string.scan_notifications_allow), access.ask) }
             }
             item {
-                ListItem(
-                    onClick = onOpenAbout,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_info), contentDescription = null) },
-                ) {
-                    Text(stringResource(R.string.settings_about))
+                SegmentedGroup {
+                    row { segment ->
+                        SwitchRow(segment, settings.potReminders, R.drawable.ic_potted_plant, stringResource(R.string.settings_pot_reminders), stringResource(R.string.settings_pot_reminders_body)) { on ->
+                            remind({ it.copy(potReminders = on) }, on)
+                        }
+                    }
+                    row { segment ->
+                        SwitchRow(segment, settings.feedReminders, R.drawable.ic_compost, stringResource(R.string.settings_feed_reminders), stringResource(R.string.settings_feed_reminders_body)) { on ->
+                            remind({ it.copy(feedReminders = on) }, on)
+                        }
+                    }
+                    row { segment ->
+                        SwitchRow(segment, settings.problemReminders, R.drawable.ic_bug_report, stringResource(R.string.settings_problem_reminders), stringResource(R.string.settings_problem_reminders_body)) { on ->
+                            remind({ it.copy(problemReminders = on) }, on)
+                        }
+                    }
+                    row { segment ->
+                        SwitchRow(segment, settings.pruneReminders, R.drawable.ic_content_cut, stringResource(R.string.settings_prune_reminders), stringResource(R.string.settings_prune_reminders_body)) { on ->
+                            remind({ it.copy(pruneReminders = on) }, on)
+                        }
+                    }
+                    row { segment ->
+                        SwitchRow(segment, settings.conditionerBeforeHeat, R.drawable.ic_sunny, stringResource(R.string.settings_conditioner), stringResource(R.string.settings_conditioner_body)) { on ->
+                            remind({ it.copy(conditionerBeforeHeat = on) }, on)
+                        }
+                    }
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_hive, stringResource(R.string.settings_bee_reminders), stringResource(R.string.settings_bee_reminders_body), onOpenBees)
+                    }
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_water_drop, stringResource(R.string.settings_water_reminders), stringResource(R.string.settings_water_reminders_body), onOpenWater)
+                    }
+                }
+            }
+            item { SectionHeading(stringResource(R.string.settings_background)) }
+            item { SegmentedGroup { row { segment -> BatteryRow(segment) } } }
+            item { SectionHeading(stringResource(R.string.settings_records)) }
+            item {
+                SegmentedGroup {
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_download, stringResource(R.string.export_title), stringResource(R.string.export_body), onOpenExport)
+                    }
+                    row { segment ->
+                        LinkRow(
+                            segment,
+                            R.drawable.ic_settings_backup_restore,
+                            stringResource(R.string.backup_title),
+                            settings.lastBackupAt?.let { stringResource(R.string.settings_backup_last, UiFormat.longDate(Instant.ofEpochMilli(it))) }
+                                ?: stringResource(R.string.settings_backup_never),
+                            onOpenBackup,
+                        )
+                    }
+                }
+            }
+            item { SectionHeading(stringResource(R.string.settings_appearance)) }
+            item {
+                SegmentedGroup {
+                    row { segment ->
+                        SegmentSurface(segment) {
+                            Text(
+                                stringResource(R.string.settings_theme),
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(bottom = 8.dp).semantics { heading() },
+                            )
+                            ConnectedChoice(
+                                options = ThemeChoice.entries,
+                                selected = settings.theme,
+                                label = { stringResource(it.label) },
+                                onChoose = { choice -> update { it.copy(theme = choice) } },
+                            )
+                        }
+                    }
+                    row { segment ->
+                        SwitchRow(
+                            segment,
+                            settings.wallpaperColours,
+                            R.drawable.ic_palette,
+                            stringResource(R.string.settings_wallpaper_colours),
+                            stringResource(R.string.settings_wallpaper_colours_body),
+                        ) { on -> update { it.copy(wallpaperColours = on) } }
+                    }
+                }
+            }
+            item { SectionHeading(stringResource(R.string.settings_app)) }
+            item {
+                SegmentedGroup {
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_restart_alt, stringResource(R.string.settings_setup_again), stringResource(R.string.settings_setup_again_body), onSetUpAgain)
+                    }
+                    row { segment -> LinkRow(segment, R.drawable.ic_info, stringResource(R.string.settings_about), null, onOpenAbout) }
                 }
             }
         }
     }
+}
+
+/** A setting that opens another screen, on its group's tile. */
+@Composable
+internal fun LinkRow(segment: Segment, icon: Int, title: String, body: String?, onClick: () -> Unit) {
+    ListItem(
+        onClick = onClick,
+        leadingContent = { Icon(painterResource(icon), contentDescription = null) },
+        supportingContent = body?.let { { Text(it) } },
+        shapes = segment.shapes,
+        colors = segment.colors,
+    ) { Text(title) }
+}
+
+/** A setting that is on or off, on its group's tile. The whole row turns it, and the switch shows which it is. */
+@Composable
+internal fun SwitchRow(segment: Segment, on: Boolean, icon: Int?, title: String, body: String?, onChange: (Boolean) -> Unit) {
+    ListItem(
+        checked = on,
+        onCheckedChange = onChange,
+        leadingContent = icon?.let { { Icon(painterResource(it), contentDescription = null) } },
+        supportingContent = body?.let { { Text(it) } },
+        trailingContent = { Switch(checked = on, onCheckedChange = null) },
+        shapes = segment.shapes,
+        colors = segment.colors,
+    ) { Text(title) }
 }
 
 /**
@@ -252,7 +284,7 @@ fun SettingsScreen(
  * to the phone's own battery settings. The app does not ask to be exempted itself.
  */
 @Composable
-private fun BatteryRow() {
+private fun BatteryRow(segment: Segment) {
     val context = LocalContext.current
     val power = remember(context) { context.getSystemService(PowerManager::class.java) }
     fun unrestricted() = power?.isIgnoringBatteryOptimizations(context.packageName) == true
@@ -271,6 +303,8 @@ private fun BatteryRow() {
         },
         leadingContent = { Icon(painterResource(R.drawable.ic_battery_saver), contentDescription = null) },
         supportingContent = { Text(stringResource(if (unrestricted) R.string.settings_battery_unrestricted else R.string.settings_battery_optimised)) },
+        shapes = segment.shapes,
+        colors = segment.colors,
     ) { Text(stringResource(R.string.settings_battery)) }
 }
 

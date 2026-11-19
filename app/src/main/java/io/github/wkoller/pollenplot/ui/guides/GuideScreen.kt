@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.guides
 
+import io.github.wkoller.pollenplot.ui.components.readableSides
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -62,7 +63,7 @@ fun GuideScreen(library: GuideLibrary, id: String, onBack: () -> Unit) {
         val page = guide
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp),
+            contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp),
         ) {
             items(page.blocks) { block -> Block(block) }
             item {

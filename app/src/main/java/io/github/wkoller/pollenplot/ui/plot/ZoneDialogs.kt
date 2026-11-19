@@ -293,6 +293,8 @@ fun PlotAppearanceSheet(
             ListItem(
                 checked = gridInView,
                 onCheckedChange = onGrid,
+                // The sheet's words start 24 dp in, and a list item insets its own by 16.
+                modifier = Modifier.padding(horizontal = 8.dp),
                 leadingContent = { Icon(painterResource(R.drawable.ic_grid_on), contentDescription = null) },
                 supportingContent = { Text(stringResource(R.string.plot_grid_body)) },
                 trailingContent = { Switch(checked = gridInView, onCheckedChange = null) },
@@ -330,6 +332,8 @@ fun PlotLayersSheet(sunOverlay: Boolean, onDismiss: () -> Unit, onSunOverlay: (B
             ListItem(
                 checked = sunOverlay,
                 onCheckedChange = onSunOverlay,
+                // The sheet's words start 24 dp in, and a list item insets its own by 16.
+                modifier = Modifier.padding(horizontal = 8.dp),
                 leadingContent = { Icon(painterResource(R.drawable.ic_sunny), contentDescription = null) },
                 supportingContent = { Text(stringResource(R.string.plot_sun_overlay_body)) },
                 trailingContent = { Switch(checked = sunOverlay, onCheckedChange = null) },

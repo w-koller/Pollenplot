@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -47,6 +46,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.place.GardenPlace
@@ -187,14 +188,13 @@ fun GardenLocationContent(model: GardenLocationModel, settings: SettingsStore, p
         }
     }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
         top()
         item {
-            Text(stringResource(R.string.location_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
+            Text(stringResource(R.string.location_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
         item { SectionHeading(stringResource(R.string.location_current)) }
         item { CurrentPlace(current, onRemove = model::remove) }
-        item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
         item { SectionHeading(stringResource(R.string.location_search_heading)) }
         item {
             OutlinedTextField(
@@ -248,14 +248,18 @@ fun GardenLocationContent(model: GardenLocationModel, settings: SettingsStore, p
                 }
             }
         }
-        item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
         item { SectionHeading(stringResource(R.string.location_other)) }
         item {
-            ListItem(
-                onClick = { choosingState = true },
-                leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
-                supportingContent = { Text(stringResource(current.gardenState.label) + ". " + stringResource(R.string.location_state_only_body)) },
-            ) { Text(stringResource(R.string.location_state_only)) }
+            SegmentedGroup {
+                row { segment ->
+                    LinkRow(
+                        segment,
+                        R.drawable.ic_map,
+                        stringResource(R.string.location_state_only),
+                        stringResource(current.gardenState.label) + ". " + stringResource(R.string.location_state_only_body),
+                    ) { choosingState = true }
+                }
+            }
         }
     }
     if (choosingState) {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -39,6 +40,18 @@ fun readableSides(): Dp {
 }
 
 private val READABLE_WIDTH = 640.dp
+
+/**
+ * A list's content padding inside a scaffold: the scaffold's top and bottom, [readableSides] on each side, and [bottom]
+ * more at the end so the last row clears the edge of the screen.
+ */
+@Composable
+fun listPadding(padding: PaddingValues, bottom: Dp = 24.dp): PaddingValues = PaddingValues(
+    start = readableSides(),
+    end = readableSides(),
+    top = padding.calculateTopPadding(),
+    bottom = padding.calculateBottomPadding() + bottom,
+)
 
 /** The heading of a part of a list or a form. */
 @Composable

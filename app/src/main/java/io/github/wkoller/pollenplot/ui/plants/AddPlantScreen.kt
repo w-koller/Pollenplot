@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.imePadding
@@ -90,7 +91,7 @@ fun AddPlantScreen(
     }
 
     DetailScaffold(title = stringResource(R.string.add_plant_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 OutlinedTextField(
                     value = query,

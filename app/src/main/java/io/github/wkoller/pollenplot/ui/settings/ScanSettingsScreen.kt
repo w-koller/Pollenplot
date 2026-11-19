@@ -38,6 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.SegmentSurface
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.notify.Notifications
@@ -106,7 +109,7 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
     DetailScaffold(title = stringResource(R.string.scan_title), onBack = onBack) { padding ->
         val current = settings ?: return@DetailScaffold
         val on = current.scanLibrary && access != GalleryAccess.NONE
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Text(
                     stringResource(R.string.scan_intro),
@@ -115,18 +118,31 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                 )
             }
             item {
-                ListItem(
-                    checked = on,
-                    onCheckedChange = { wanted ->
-                        when {
-                            !wanted -> setScanning(false)
-                            access == GalleryAccess.NONE -> requestPhotos()
-                            else -> setScanning(true)
+                SegmentedGroup {
+                    row { segment ->
+                        SwitchRow(segment, on, R.drawable.ic_photo_library, stringResource(R.string.scan_switch), stringResource(R.string.scan_switch_body)) { wanted ->
+                            when {
+                                !wanted -> setScanning(false)
+                                access == GalleryAccess.NONE -> requestPhotos()
+                                else -> setScanning(true)
+                            }
                         }
-                    },
-                    supportingContent = { Text(stringResource(R.string.scan_switch_body)) },
-                    trailingContent = { Switch(checked = on, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.scan_switch)) }
+                    }
+                    if (on) {
+                        row { segment ->
+                            SegmentSurface(segment) {
+                                Text(
+                                    stringResource(if (scanning) R.string.scan_running else R.string.scan_idle),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                OutlinedButton(onClick = { ScanScheduler.scanNow(context) }, enabled = !scanning, modifier = Modifier.padding(top = 8.dp)) {
+                                    Text(stringResource(R.string.scan_now))
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if (refused && access == GalleryAccess.NONE) {
                 item {
@@ -157,46 +173,50 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                 }
             }
             if (on) {
-                item {
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            stringResource(if (scanning) R.string.scan_running else R.string.scan_idle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        OutlinedButton(onClick = { ScanScheduler.scanNow(context) }, enabled = !scanning) { Text(stringResource(R.string.scan_now)) }
-                    }
-                }
                 item { SectionHeading(stringResource(R.string.scan_albums)) }
                 item {
                     Text(
                         stringResource(R.string.scan_albums_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
                     )
                 }
-                items(albums, key = { it.id }) { album ->
-                    val chosen = current.chosenAlbums(albums)
-                    val checked = album.id in chosen
-                    ListItem(
-                        checked = checked,
-                        onCheckedChange = { add ->
-                            val next = if (add) chosen + album.id else chosen - album.id
-                            scope.launch { store.update { it.copy(scanAlbums = next) } }
-                        },
-                        leadingContent = { Checkbox(checked = checked, onCheckedChange = null) },
-                        supportingContent = { Text(pluralStringResource(R.plurals.scan_album_count, album.count, album.count)) },
-                    ) { Text(album.name) }
+                item {
+                    SegmentedGroup {
+                        albums.forEach { album ->
+                            row { segment ->
+                                val chosen = current.chosenAlbums(albums)
+                                val checked = album.id in chosen
+                                ListItem(
+                                    checked = checked,
+                                    onCheckedChange = { add ->
+                                        val next = if (add) chosen + album.id else chosen - album.id
+                                        scope.launch { store.update { it.copy(scanAlbums = next) } }
+                                    },
+                                    leadingContent = { Checkbox(checked = checked, onCheckedChange = null) },
+                                    supportingContent = { Text(pluralStringResource(R.plurals.scan_album_count, album.count, album.count)) },
+                                    shapes = segment.shapes,
+                                    colors = segment.colors,
+                                ) { Text(album.name) }
+                            }
+                        }
+                    }
                 }
                 item { SectionHeading(stringResource(R.string.scan_back)) }
                 item {
-                    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.scan_back_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        ChipGroup(stringResource(R.string.scan_back_choice), BACK_DAYS, current.scanBackDays, { stringResource(backLabel(it)) }) { days ->
-                            scope.launch {
-                                store.update { it.copy(scanBackDays = days) }
-                                ScanScheduler.scanNow(context)
+                    SegmentedGroup {
+                        row { segment ->
+                            SegmentSurface(segment) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(stringResource(R.string.scan_back_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    ChipGroup(stringResource(R.string.scan_back_choice), BACK_DAYS, current.scanBackDays, { stringResource(backLabel(it)) }) { days ->
+                                        scope.launch {
+                                            store.update { it.copy(scanBackDays = days) }
+                                            ScanScheduler.scanNow(context)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -204,12 +224,13 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
             }
             item { SectionHeading(stringResource(R.string.scan_second_opinion_heading)) }
             item {
-                ListItem(
-                    checked = current.secondOpinions,
-                    onCheckedChange = { wanted -> scope.launch { store.update { it.copy(secondOpinions = wanted) } } },
-                    supportingContent = { Text(stringResource(R.string.scan_second_opinion_body)) },
-                    trailingContent = { Switch(checked = current.secondOpinions, onCheckedChange = null) },
-                ) { Text(stringResource(R.string.scan_second_opinion)) }
+                SegmentedGroup {
+                    row { segment ->
+                        SwitchRow(segment, current.secondOpinions, R.drawable.ic_forum, stringResource(R.string.scan_second_opinion), stringResource(R.string.scan_second_opinion_body)) { wanted ->
+                            scope.launch { store.update { it.copy(secondOpinions = wanted) } }
+                        }
+                    }
+                }
             }
         }
     }
