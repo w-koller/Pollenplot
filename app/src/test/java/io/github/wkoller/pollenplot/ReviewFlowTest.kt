@@ -7,7 +7,12 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ComposeTimeoutException
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -22,6 +27,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.printToString
 import androidx.core.app.ActivityOptionsCompat
@@ -189,6 +195,38 @@ class ReviewFlowTest {
         assertEquals(ids.hive, plants.last { it.speciesName == "Melaleuca citrina" }.zoneIds.singleOrNull())
         val seen = runBlocking { plants.sumOf { garden.floweringOf(it.id).size } }
         assertTrue("Finds added several at once take what the In flower switch says, not the models' guess", seen != 1)
+    }
+
+    @Test
+    fun addSeveralPlantsFromAPhoto() {
+        val ids = seedWithScannedPhoto()
+        show(open = MainActivity.OPEN_REVIEW)
+        waitFor(hasText("Taken on", substring = true))
+        // The bottlebrush's card comes first. It goes in two zones as one plant, counted zone by zone.
+        listOf("Front Native Strip", "Hive Corner").forEach { zone ->
+            compose.scrollTo(hasText(zone))
+            val chip = compose.onAllNodesWithText(zone).onFirst()
+            val config = chip.fetchSemanticsNode().config
+            val on = config.getOrNull(SemanticsProperties.Selected) == true || config.getOrNull(SemanticsProperties.ToggleableState) == ToggleableState.On
+            if (!on) chip.performClick()
+        }
+        compose.scrollTo(hasText("In each zone"))
+        compose.onAllNodesWithText("In each zone").onFirst().performClick()
+        waitFor(hasContentDescription("One more"))
+        // Front Native Strip's stepper, then Hive Corner's.
+        repeat(2) {
+            compose.onAllNodesWithContentDescription("One more")[0].performScrollTo().performClick()
+            compose.onAllNodesWithContentDescription("One more")[1].performScrollTo().performClick()
+        }
+        compose.onAllNodesWithText("3 plants").assertCountEquals(2)
+        shot("review_counts")
+        compose.scrollTo(hasText("Add to garden"))
+        compose.onAllNodesWithText("Add to garden").onFirst().performClick()
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.plantList.first() }.any { it.speciesName == "Melaleuca citrina" && it.zoneIds.size == 2 } }
+
+        val added = runBlocking { garden.plantList.first() }.single { it.speciesName == "Melaleuca citrina" && it.zoneIds.size == 2 }
+        assertEquals(6, added.quantity)
+        assertEquals(mapOf(ids.front to 3, ids.hive to 3), added.counts)
     }
 
     @Test

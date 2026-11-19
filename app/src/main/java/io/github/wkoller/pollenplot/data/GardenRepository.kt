@@ -452,7 +452,8 @@ class GardenRepository(
 
     /**
      * Makes a detection a new plant growing in all of [zoneIds], or with [each] a plant of its own in every zone. Each
-     * takes the cut-out as its picture; the photo joins the first, which is returned.
+     * takes the cut-out as its picture; the photo joins the first, which is returned. [quantity] and [counts] are as
+     * for [addPlants]: how many in all, or with [each] in every zone, and how many in each zone when counted zone by zone.
      */
     suspend fun confirmDetectionIn(
         detectionId: String,
@@ -465,9 +466,7 @@ class GardenRepository(
         counts: Map<String, Int>? = null,
     ): GardenPlant = db.withTransaction {
         val detection = detection(detectionId) ?: error("No detection $detectionId")
-        // A find added to several zones as one plant counts one in each, unless the user counted them.
-        val counted = counts ?: zoneIds.takeIf { it.size > 1 && !each }?.associateWith { 1 }
-        val plant = addPlants(speciesName, customName, zoneIds, each, quantity, thumbnail = detection.thumbnail, counts = counted).first()
+        val plant = addPlants(speciesName, customName, zoneIds, each, quantity, thumbnail = detection.thumbnail, counts = counts).first()
         detections.setStatus(detectionId, DetectionStatus.CONFIRMED.name, plant.id, null)
         recordChoice(detection, speciesName, plant.customName)
         if (flowering) recordFlowering(plant.id, detection)

@@ -68,7 +68,7 @@ import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
-import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.AccuratePacks
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.GalleryAccess
@@ -110,7 +110,7 @@ fun SetupScreen(
     location: GardenLocationModel,
     settings: SettingsStore,
     meaning: MeaningSearch,
-    accurate: AccuratePack,
+    accurate: AccuratePacks,
     gemma: GemmaModel,
     garden: GardenRepository,
     gallery: Gallery,
@@ -381,6 +381,19 @@ private fun Permissions(padding: PaddingValues, settings: SettingsStore, gallery
                     ScanScheduler.update(context, true)
                 }
             }
+        }
+        item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+        // The same choice the plant library asks about, so it is not asked again there.
+        permission(
+            icon = R.drawable.ic_image,
+            title = R.string.setup_plant_photos,
+            body = R.string.setup_plant_photos_body,
+            on = current?.libraryPhotos == true,
+            onText = R.string.setup_plant_photos_on,
+            action = R.string.setup_plant_photos_allow,
+            note = null,
+        ) {
+            scope.launch { settings.update { it.copy(libraryPhotos = true) } }
         }
     }
 }
