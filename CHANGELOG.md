@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Going back from a zone's edit screen with changes not saved, by the Back button or the back gesture, asks whether
+  to save them. Save keeps them, Don't save leaves without them, and pressing outside the question stays on the screen.
 - A plant found in a photo can be added as several plants. Its review card asks how many there are, as the Add sheet
   does: one number for one zone, and for several zones a count for each zone or a total. The message after adding it
   names the number when there is more than one. A find added to several zones as one plant used to count one in each
