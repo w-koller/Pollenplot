@@ -242,8 +242,8 @@ private fun describe(field: CareField, care: CareProfile, hemisphere: Hemisphere
         CareField.SOILS -> care.soils?.sortedBy { it.ordinal }?.map { stringResource(it.label) }?.let { UiFormat.joinAnd(it, words) }
         CareField.FERTILISER -> care.fertiliser?.let { stringResource(it.label) }
         CareField.FLOWERING -> care.flowering?.fromSouthern(hemisphere)?.let { UiFormat.months(it, words, locale) }
-        CareField.HEIGHT -> care.height?.let { stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(it.minMm), UiFormat.metresFromMm(it.maxMm)) }
-        CareField.WIDTH -> care.width?.let { stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(it.minMm), UiFormat.metresFromMm(it.maxMm)) }
+        CareField.HEIGHT -> care.height?.let { sizeText(it) }
+        CareField.WIDTH -> care.width?.let { sizeText(it) }
         else -> null
     }
 }

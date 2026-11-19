@@ -98,6 +98,8 @@ STRINGS = {
     "plant_height": "Height: %1$s",
     "plant_width": "Width: %1$s",
     "plant_range_metres": "%1$s to %2$s m",
+    "plant_up_to_metres": "up to %1$s m",
+    "plant_about_metres": "about %1$s m",
     "plant_pruning": "Pruning: %1$s",
     "plant_zone": "In %1$s",
     "plant_no_zone": "Not in a zone yet",

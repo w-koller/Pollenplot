@@ -482,8 +482,8 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.facts(
     item {
         val l = levels(CareField.HEIGHT, CareField.WIDTH, CareField.GROUND_COVER, CareField.PRUNING)
         FactCard(R.drawable.ic_straighten, stringResource(R.string.plant_size), l.card) {
-            care.height?.let { Line(stringResource(R.string.plant_height, stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(it.minMm), UiFormat.metresFromMm(it.maxMm))), level = l.line(CareField.HEIGHT)) }
-            care.width?.let { Line(stringResource(R.string.plant_width, stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(it.minMm), UiFormat.metresFromMm(it.maxMm))), level = l.line(CareField.WIDTH)) }
+            care.height?.let { Line(stringResource(R.string.plant_height, sizeText(it)), level = l.line(CareField.HEIGHT)) }
+            care.width?.let { Line(stringResource(R.string.plant_width, sizeText(it)), level = l.line(CareField.WIDTH)) }
             if (care.groundCover == true) Line(stringResource(R.string.role_ground_cover), level = l.line(CareField.GROUND_COVER))
             care.pruning?.let { Line(stringResource(R.string.plant_pruning, it), level = l.line(CareField.PRUNING)) }
             if (care.height == null && care.width == null && care.pruning == null) Line(null)
@@ -877,4 +877,15 @@ internal fun UnknownPlantNotice(name: String, genus: String?, family: String?, r
         else -> stringResource(R.string.unknown_species_none, name)
     }
     Text(text, style = MaterialTheme.typography.bodyLarge)
+}
+
+/**
+ * A size range in words: "1 to 2 m", or "up to 2 m" when a source gave only the largest, or "about 2 m" when it gave
+ * one figure.
+ */
+@Composable
+internal fun sizeText(range: io.github.wkoller.pollenplot.domain.plants.SizeRange): String = when {
+    range.minMm == 0 -> stringResource(R.string.plant_up_to_metres, UiFormat.metresFromMm(range.maxMm))
+    range.minMm == range.maxMm -> stringResource(R.string.plant_about_metres, UiFormat.metresFromMm(range.maxMm))
+    else -> stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(range.minMm), UiFormat.metresFromMm(range.maxMm))
 }

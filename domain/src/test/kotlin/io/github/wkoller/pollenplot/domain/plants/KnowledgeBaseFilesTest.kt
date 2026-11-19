@@ -1,6 +1,9 @@
 package io.github.wkoller.pollenplot.domain.plants
 
 import io.github.wkoller.pollenplot.domain.season.MonthSet
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -20,15 +23,18 @@ class KnowledgeBaseFilesTest {
     @Test
     fun `it covers a useful number of plants`() {
         val kb = parsed.knowledgeBase
-        assertTrue("Expected at least 400 species, found ${kb.allSpecies.size}", kb.allSpecies.size >= 400)
-        assertTrue(kb.allSpecies.count { it.isAustralianNative } >= 60)
+        assertTrue("Expected at least 780 species, found ${kb.allSpecies.size}", kb.allSpecies.size >= 780)
+        assertTrue(kb.allSpecies.count { it.isAustralianNative } >= 300)
         assertTrue(kb.companions.size >= 20)
     }
 
     @Test
     fun `every species resolves sun, water and a description through its genus or family`() {
         val kb = parsed.knowledgeBase
-        val missing = kb.allSpecies.filter { s ->
+        // Records written from research keep only what their sources said, so they may lack sun or water; the
+        // test below holds them to their sources instead.
+        val researched = researchedRecords().map { it["name"]!!.jsonPrimitive.content }.toSet()
+        val missing = kb.allSpecies.filter { it.name !in researched }.filter { s ->
             val care = CareResolver.resolve(kb, s).care
             care.sun == null || care.water == null || care.description.isNullOrBlank()
         }
@@ -76,7 +82,29 @@ class KnowledgeBaseFilesTest {
         assertEquals(FactLevel.GENUS, care!!.levelOf(CareField.SUN))
     }
 
+    @Test
+    fun `every researched record names the pages it came from and describes the plant`() {
+        val records = researchedRecords()
+        assertTrue("Expected the researched records, found ${records.size}", records.size >= 380)
+        val unsourced = records.filter { record ->
+            val sources = record["sources"]?.jsonArray.orEmpty().map { it.jsonPrimitive.content }
+            sources.isEmpty() || sources.any { !it.startsWith("https://") && !it.startsWith("http://") }
+        }
+        assertTrue("Records without sources: ${unsourced.map { it["name"] }}", unsourced.isEmpty())
+        val kb = parsed.knowledgeBase
+        val bare = records.map { it["name"]!!.jsonPrimitive.content }.filter { kb.species(it)?.care?.description.isNullOrBlank() }
+        assertTrue("Records without a description: $bare", bare.isEmpty())
+    }
+
     companion object {
+        /** The records in the species files written from research, `researched_*.json`, as their JSON. */
+        fun researchedRecords(): List<kotlinx.serialization.json.JsonObject> {
+            val dir = File(System.getProperty("kb.dir") ?: error("kb.dir is set by domain/build.gradle.kts"), "species")
+            return dir.listFiles { f -> f.name.startsWith("researched_") && f.extension == "json" }!!.flatMap { file ->
+                kotlinx.serialization.json.Json.parseToJsonElement(file.readText()).jsonArray.map { it.jsonObject }
+            }
+        }
+
         fun load(): ParseResult {
             val dir = File(System.getProperty("kb.dir") ?: error("kb.dir is set by domain/build.gradle.kts"))
             val species = File(dir, "species").listFiles { f -> f.extension == "json" }!!.sortedBy { it.name }
