@@ -2179,6 +2179,14 @@
         <item quantity="one">Added %d find to your garden.</item>
         <item quantity="other">Added %d finds to your garden.</item>
     </plurals>
+    <plurals name="review_added_plants">
+        <item quantity="one">Added %d plant to your garden.</item>
+        <item quantity="other">Added %d plants to your garden.</item>
+    </plurals>
+    <plurals name="review_added_plants_to_zone">
+        <item quantity="one">Added %1$d plant to %2$s.</item>
+        <item quantity="other">Added %1$d plants to %2$s.</item>
+    </plurals>
     <plurals name="review_added_many_zone">
         <item quantity="one">Added %1$d find to %2$s.</item>
         <item quantity="other">Added %1$d finds to %2$s.</item>

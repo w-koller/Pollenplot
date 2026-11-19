@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A plant found in a photo can be added as several plants. Its review card asks how many there are, as the Add sheet
+  does: one number for one zone, and for several zones a count for each zone or a total. The message after adding it
+  names the number when there is more than one. A find added to several zones as one plant used to count one in each
+  zone; it now keeps the number the card shows.
 - Recording a problem knows six diseases as well as the pests: powdery mildew, downy mildew, grey mould (botrytis),
   anthracnose, late blight and myrtle rust, each from a state government page. Settings › Models has a fourth model,
   Plant problems, offered once accurate identification is on the phone. With it, a photo added to a problem is
