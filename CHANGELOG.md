@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Settings is easier to read. Each section's rows are rounded tiles with a small gap between them, as the phone's own
+  settings draw them, so the five reminder switches no longer run together. The reminder descriptions are shorter, a
+  line says the reminders come at about seven in the morning, and a notice offers to allow notifications when they
+  are off. Bee and watering reminders, which are set on their own tabs, have rows that open those tabs. The theme,
+  scanning, export, backup, location and About screens use the same tiles and headings, and the reminder switches on
+  the Bees and Water tabs match them.
+- On a tablet or a wide window, lists keep to a readable width, as the Plot's and the Bees tab's already did. The
+  Plot's list keeps its zone cards apart and its other rows together, and the More menu has a line between a tab's
+  own choices and the ones every tab has.
+
 - The linked data export says how many of a plant grow in each zone when it was counted zone by zone, as a
   pp:ZonePlanting for each zone beside the plant's total, and whether a recorded problem is a pest, a disease or a
   deficiency (pp:problemKind). Watering lines, with their method, flow and zones, and every watering recorded are in
