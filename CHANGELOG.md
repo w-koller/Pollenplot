@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The last step of the first-launch setup offers photos of plants from the Atlas of Living Australia, beside
+  notifications and photo scanning, so the plant library does not need to ask later.
 - The setting for a plant added to more than one zone is now called “Plants in more than one zone”, and its choices
   are plainer: “Keep as one plant”, “A plant in each zone” and “Ask me each time”, each saying what it makes and what
   it suits.

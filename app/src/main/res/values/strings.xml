@@ -1552,7 +1552,7 @@
     <string name="setup_zones_name">Name of the %1$s</string>
     <string name="setup_zones_have">Your Plot has %1$s.</string>
     <string name="setup_permissions_title">Notifications and photos</string>
-    <string name="setup_permissions_body">Both are optional, and you can change them later in Settings.</string>
+    <string name="setup_permissions_body">All three are optional, and you can change them later in Settings.</string>
     <string name="setup_notifications">Notifications</string>
     <string name="setup_notifications_body">Pollenplot tells you when watering is due, when a hive check is due, when a hot day is coming for stingless bees and what it found in your photos.</string>
     <string name="setup_notifications_allow">Allow notifications</string>
@@ -1562,6 +1562,10 @@
     <string name="setup_scanning_allow">Turn on photo scanning</string>
     <string name="setup_scanning_on">Photo scanning is on.</string>
     <string name="setup_scanning_denied">Pollenplot cannot see your photos. You can allow them later in Settings › Photo scanning.</string>
+    <string name="setup_plant_photos">Photos of plants</string>
+    <string name="setup_plant_photos_body">Pollenplot can show photos of plants from the Atlas of Living Australia in the plant library and the weed lists. It fetches each photo the first time a plant is shown and keeps it on your phone. Only the plant\'s name is sent.</string>
+    <string name="setup_plant_photos_allow">Show photos of plants</string>
+    <string name="setup_plant_photos_on">Pollenplot will show photos of plants.</string>
     <string name="settings_setup_again">Set up again</string>
     <string name="settings_setup_again_body">Go through the first-launch setup again: location, models, zones and permissions.</string>
     <string name="report_summary">Summary</string>

@@ -158,6 +158,11 @@ class SetupFlowTest {
         compose.onNodeWithText("Turn on photo scanning").performClick()
         waitFor(hasText("Photo scanning is on."))
         assertTrue(runBlocking { settings.current() }.scanLibrary)
+        // The plant library's photos are offered here too, so the library need not ask.
+        compose.onAllNodes(androidx.compose.ui.test.hasScrollAction()).onFirst().performScrollToNode(hasText("Show photos of plants"))
+        compose.onNodeWithText("Show photos of plants").performClick()
+        waitFor(hasText("Pollenplot will show photos of plants."))
+        assertEquals(true, runBlocking { settings.current() }.libraryPhotos)
         compose.onNodeWithText("Finish").performClick()
         // Opened from Settings, the setup goes back there.
         waitFor(hasText("Set up again"))
