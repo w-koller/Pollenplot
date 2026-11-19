@@ -11,8 +11,11 @@ STRINGS = {
     "plot_background_paving": "Paving",
     "plot_grid": "Show grid lines",
     "plot_sun_overlay": "Show sun and shade",
-    "plot_sun_overlay_body": "Each zone is washed with a colour for its sun or shade, with a key on the plot. A zone "
-    "without a sun setting stays as it is.",
+    "plot_sun_overlay_body": "The zones turn one plain colour and their sun or shade is laid over them, with a key on "
+    "the plot. Shade is hatched as well as coloured. A zone without a sun setting has a dashed edge.",
+    "plot_layers": "Map layers",
+    "plot_layers_title": "Map layers",
+    "plot_sun_unrecorded": "Not recorded",
     "plot_north": "North is towards the",
     "plot_north_top": "Top",
     "plot_north_right": "Right",

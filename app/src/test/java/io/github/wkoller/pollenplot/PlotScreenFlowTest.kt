@@ -290,10 +290,16 @@ class PlotScreenFlowTest {
         runBlocking {
             // The lemon was seen in flower today, so its zone counts it as in flower now.
             app.container.garden.recordFlowering(ids.lemon, java.time.LocalDate.now())
-            app.container.settingsStore.update { it.copy(sunOverlay = true, plotNorth = NorthSide.RIGHT) }
+            app.container.settingsStore.update { it.copy(plotNorth = NorthSide.RIGHT) }
         }
         show()
         waitFor(hasContentDescription("Back Citrus Patch", substring = true))
+        shot("plot_flowering")
+        // The sun and shade layer is turned on from the Layers button on the plot, as on a map.
+        compose.pressWhenShown(hasContentDescription("Map layers"))
+        compose.pressWhenShown(hasText("Show sun and shade"))
+        compose.pressWhenShown(hasText("Done"))
+        compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.settings.first().sunOverlay } }
         val citrus = compose.onNode(hasContentDescription("Back Citrus Patch", substring = true)).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
         assertTrue("The zone says how many are in flower: $citrus", "in flower" in citrus)
         assertTrue("And its sun, in words: $citrus", "Full sun" in citrus)
