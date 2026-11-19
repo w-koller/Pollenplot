@@ -669,7 +669,13 @@
     <string name="models_accurate_body_short">BioCAP names many more Australian plants, weeds and animals than the built-in models.</string>
     <string name="models_accurate_notification">Downloading BioCAP for accurate identification.</string>
     <string name="models_accurate_ready">On your phone. Pollenplot uses BioCAP to identify photos.</string>
-    <string name="models_accurate_ready_unused">On your phone, but not in use while BioCLIP 2 is. You can delete BioCAP to free space.</string>
+    <string name="models_problems">Plant problems</string>
+    <string name="models_problems_body">Suggests which disease or pest a photo of a sick plant looks like when you record a problem, using BioCAP\'s view of the photo. You still choose what to save. %1$s, downloaded on Wi-Fi.</string>
+    <string name="models_problems_body_short">Suggests which disease or pest a photo of a sick plant looks like when you record a problem.</string>
+    <string name="models_problems_notification">Downloading the plant problems model.</string>
+    <string name="models_problems_ready">On your phone. Pollenplot suggests problems for photos you add when you record one.</string>
+    <string name="models_problems_needs_accurate">This model works with BioCAP. Please download accurate identification first.</string>
+    <string name="models_accurate_ready_unused">On your phone, but not used to identify photos while BioCLIP 2 is. The plant problems model still needs BioCAP, so please keep it if you use that model.</string>
     <string name="models_bioclip2">More accurate identification</string>
     <string name="models_bioclip2_body">BioCLIP 2 names even more than BioCAP and is used in its place. %1$s, downloaded on Wi-Fi.</string>
     <string name="models_bioclip2_body_short">BioCLIP 2 names even more than BioCAP and is used in its place.</string>
@@ -1233,6 +1239,13 @@
     <string name="problem_add_photo">Add a photo</string>
     <string name="problem_change_photo">Choose another photo</string>
     <string name="problem_photo_saved">Photo added.</string>
+    <string name="problem_looks_like">Looks like</string>
+    <string name="problem_looking">Looking at the photo for problems.</string>
+    <string name="problem_looks_like_note">These are suggestions from the plant problems model. Please check them before you choose one.</string>
+    <string name="problem_guess_likely">%1$s, likely</string>
+    <string name="problem_guess_possible">%1$s, possible</string>
+    <string name="problem_none_found">No problem found. The plant problems model sees a healthy plant in this photo.</string>
+    <string name="problem_unsure">The plant problems model is not sure what this photo shows. Please choose from the list.</string>
     <string name="problem_photo_failed">This photo could not be read. Please choose another one.</string>
     <string name="problem_title">Problem</string>
     <string name="problem_on_plant">On %1$s</string>
@@ -1508,6 +1521,8 @@
     <string name="licence_item_litertlm">LiteRT-LM</string>
     <string name="licence_item_litertlm_notices">Libraries included in LiteRT-LM</string>
     <string name="licence_item_gemma">Gemma 4 E2B model, by Google (downloaded for the garden assistant)</string>
+    <string name="licence_item_problem_photos">PlantDoc, PlantVillage and iNaturalist photos (used to train the plant problems model)</string>
+    <string name="licence_creative_commons">Creative Commons licences</string>
     <string name="licence_gpl">GNU General Public License, version 3</string>
     <string name="licence_apache">Apache License 2.0</string>
     <string name="licence_mit">MIT License</string>

@@ -1,0 +1,23 @@
+The plant problems model (downloaded when you ask) was trained on BioCAP's view of the photos below. No photo is
+included in the app or the model. Each photo used is listed, with its credit and licence, in credits.tsv inside the
+downloaded pack.
+
+PlantDoc
+Davinder Singh, Naman Jain, Pranjali Jain, Pratik Kayal, Sudhakar Kumawat and Nipun Batra. PlantDoc: A Dataset for
+Visual Plant Disease Detection. Proceedings of the 7th ACM IKDD CoDS and 25th COMAD (CoDS-COMAD 2020), pages 249 to
+253. https://doi.org/10.1145/3371158.3371196
+https://github.com/pratikkayal/PlantDoc-Dataset
+Licence: Creative Commons Attribution 4.0 International (CC BY 4.0),
+https://creativecommons.org/licenses/by/4.0/
+
+PlantVillage
+Sharada P. Mohanty, David P. Hughes and Marcel Salathé. Using deep learning for image-based plant disease detection.
+Frontiers in Plant Science 7 (2016). https://doi.org/10.3389/fpls.2016.01419
+https://github.com/spMohanty/PlantVillage-Dataset
+Licence: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0), as its dataset card states,
+https://creativecommons.org/licenses/by-sa/3.0/
+
+iNaturalist
+Research-grade observations on iNaturalist (https://www.inaturalist.org) whose photos their observers released under
+CC0 (https://creativecommons.org/publicdomain/zero/1.0/) or Creative Commons Attribution 4.0 (CC BY 4.0). Each
+observer is credited in the pack's credits.tsv.
