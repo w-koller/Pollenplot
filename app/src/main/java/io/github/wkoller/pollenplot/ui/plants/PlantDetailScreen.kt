@@ -288,7 +288,7 @@ fun PlantDetailScreen(
             } else if (resolved == null) {
                 item { Text(stringResource(R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             } else {
-                facts(resolved, loaded, all, kb, locality.hemisphere, onEditFacts, onEditPot.takeIf { pots != null && pot?.potted == false }) {
+                facts(resolved, loaded.species, loaded.plant.id, all, kb, locality.hemisphere, onEditFacts, onEditPot.takeIf { pots != null && pot?.potted == false }) {
                     if (finds.isNotEmpty()) item { PhotoHistoryCard(finds, loaded.plant.speciesName, kb) { onOpenPhoto(it.photoId, it.id) } }
                 }
             }
@@ -395,9 +395,15 @@ private class Levels(private val resolved: ResolvedCare, fields: List<CareField>
     fun line(field: CareField): FactLevel? = if (card != null) null else resolved.levelOf(field)?.takeIf { it != FactLevel.SPECIES }
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.facts(
+/**
+ * A species' fact cards, from its resolved care: light, water, soil, compost, wildlife, forage, flowering, size, safety
+ * and companions. [plantId] is the garden plant they are shown for, left out of its own companions, or null on the
+ * plant library's page for a species.
+ */
+internal fun androidx.compose.foundation.lazy.LazyListScope.facts(
     resolved: ResolvedCare,
-    view: PlantView,
+    species: io.github.wkoller.pollenplot.domain.plants.Species?,
+    plantId: String?,
     all: List<PlantView>,
     kb: KnowledgeBase?,
     hemisphere: Hemisphere,
@@ -494,10 +500,9 @@ private fun androidx.compose.foundation.lazy.LazyListScope.facts(
         }
         care.careNote?.let { note -> Text(note, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 12.dp)) }
     }
-    val species = view.species
     if (species != null && kb != null) {
         item {
-            val gardenSpecies = all.filter { it.isGrowing && it.plant.id != view.plant.id }.mapNotNull { it.species }
+            val gardenSpecies = all.filter { it.isGrowing && it.plant.id != plantId }.mapNotNull { it.species }
             val advice = Companions.forSpecies(kb, species, gardenSpecies)
             FactCard(R.drawable.ic_eco, stringResource(R.string.plant_companions)) {
                 if (advice.isEmpty()) Line(stringResource(R.string.companion_none))

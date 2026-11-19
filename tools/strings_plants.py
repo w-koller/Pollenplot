@@ -172,14 +172,18 @@ STRINGS = {
     "count_each_zone_title": "How many in each zone",
     "count_total_title": "How many in all",
     "count_total_body": "Pollenplot shares a total evenly between the zones when it works out watering for each zone.",
-    "many_zones_title": "In these zones there is",
-    "many_zones_one": "One plant in many zones",
-    "many_zones_each": "One plant in each zone",
-    "many_zones_ask": "Ask each time",
-    "many_zones_one_body": "Pollenplot keeps one record for the plant, growing in every zone you chose. Its care, notes and photos are kept once.",
-    "many_zones_each_body": "Pollenplot keeps a record for the plant in each zone you chose. Each has its own count, pot, pruning and photos.",
-    "many_zones_ask_body": "Pollenplot offers both when you choose more than one zone for a plant.",
-    "settings_many_zones": "A plant added to several zones",
+    "many_zones_title": "Keeping the plant",
+    "many_zones_one": "Keep as one plant",
+    "many_zones_each": "A plant in each zone",
+    "many_zones_ask": "Ask me each time",
+    "many_zones_one_body": "Pollenplot keeps one plant that grows across all the zones you chose. It has one page, "
+    "with one set of notes, photos and care. This suits a hedge or a ground cover that spreads from one zone into the "
+    "next.",
+    "many_zones_each_body": "Pollenplot makes a separate plant for each zone you chose. Each has its own page, count, "
+    "pot, pruning and photos. This suits plants you look after apart, such as a lemon tree in the front yard and "
+    "another in the back.",
+    "many_zones_ask_body": "Pollenplot asks which you want each time you choose more than one zone for a plant.",
+    "settings_many_zones": "Plants in more than one zone",
     "add_sheet_no_zone": "No zone",
     "add_sheet_quantity": "How many",
     "add_sheet_nickname": "Your name for it (optional)",

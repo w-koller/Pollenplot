@@ -23,7 +23,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
-import java.util.zip.ZipInputStream
 
 /** Where the accurate pack is: not published for this version, being fetched, being unpacked, or ready. */
 sealed interface PackState {
@@ -40,28 +39,48 @@ sealed interface PackState {
 }
 
 /**
- * The accurate identification pack: BioCAP and the species it can name, downloaded once when the user asks. The zip
- * is checked against its pinned SHA-256, unpacked, each file checked against the pack's manifest, and then deleted.
+ * One accurate pack as published and pinned in gradle.properties: its files are named [prefix] and its [number], and
+ * [title] and [notification] name it while it downloads.
  */
-class AccuratePack(private val context: Context, scope: CoroutineScope) {
-    val available: Boolean = BuildConfig.BIOCAP_SHA256.isNotBlank()
+data class PackSpec(val prefix: String, val number: Int, val url: String, val sha256: String, val bytes: Long, val title: Int, val notification: Int) {
+    companion object {
+        val BIOCAP = PackSpec(
+            "biocap-pack-", BuildConfig.BIOCAP_PACK, BuildConfig.BIOCAP_URL, BuildConfig.BIOCAP_SHA256, BuildConfig.BIOCAP_BYTES,
+            R.string.models_accurate, R.string.models_accurate_notification,
+        )
+
+        /** BioCLIP 2, a larger model for high-end phones. */
+        val BIOCLIP2 = PackSpec(
+            "bioclip2-pack-", BuildConfig.BIOCLIP2_PACK, BuildConfig.BIOCLIP2_URL, BuildConfig.BIOCLIP2_SHA256, BuildConfig.BIOCLIP2_BYTES,
+            R.string.models_bioclip2, R.string.models_bioclip2_notification,
+        )
+    }
+}
+
+/**
+ * An accurate identification pack: an image encoder (BioCAP or BioCLIP 2) and the species it can name, downloaded
+ * once when the user asks. The zip is checked against its pinned SHA-256, unpacked, each file checked against the
+ * pack's manifest, and then deleted.
+ */
+class AccuratePack(private val context: Context, scope: CoroutineScope, val spec: PackSpec = PackSpec.BIOCAP) {
+    val available: Boolean = spec.sha256.isNotBlank()
 
     val download = VerifiedDownload(
         context,
         DownloadSpec(
-            key = "biocap-pack-${BuildConfig.BIOCAP_PACK}",
-            url = BuildConfig.BIOCAP_URL,
+            key = "${spec.prefix}${spec.number}",
+            url = spec.url,
             directory = "models",
-            fileName = "biocap-pack-${BuildConfig.BIOCAP_PACK}.zip",
-            bytes = BuildConfig.BIOCAP_BYTES,
-            sha256 = BuildConfig.BIOCAP_SHA256,
-            title = context.getString(R.string.models_accurate),
-            description = context.getString(R.string.models_accurate_notification),
+            fileName = "${spec.prefix}${spec.number}.zip",
+            bytes = spec.bytes,
+            sha256 = spec.sha256,
+            title = context.getString(spec.title),
+            description = context.getString(spec.notification),
             // Unpacking needs room for a second copy before the zip is deleted.
-            spaceMargin = BuildConfig.BIOCAP_BYTES + SPACE_MARGIN,
+            spaceMargin = spec.bytes + SPACE_MARGIN,
         ),
     )
-    private val directory = File(context.filesDir, "models/biocap-pack-${BuildConfig.BIOCAP_PACK}")
+    private val directory = File(context.filesDir, "models/${spec.prefix}${spec.number}")
     private val _state = MutableStateFlow<PackState>(if (available) PackState.Fetching(DownloadState.NotDownloaded) else PackState.NotAvailable)
     val state: StateFlow<PackState> = _state.asStateFlow()
     private val lock = Mutex()
@@ -91,7 +110,7 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
 
     val ready: Boolean get() = _state.value == PackState.Ready
 
-    /** BioCAP and its species, opened the first time they are needed; null until the pack is ready. */
+    /** The encoder and its species, opened the first time they are needed; null until the pack is ready. */
     suspend fun open(): AccurateModels? = lock.withLock {
         if (!ready) return@withLock null
         models ?: try {
@@ -111,7 +130,9 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
                 val flowers = manifest.optJSONObject("flowers")?.let { about ->
                     FlowerVectors.read(File(directory, "flowers.f16").readBytes(), manifest.getInt("embedding_dim"), about.getInt("yes_bp"), about.getInt("no_bp"))
                 }
-                AccurateModels(BioCapEncoder(File(directory, "biocap-visual.onnx").path), index, manifest.getDouble("logit_scale").toFloat(), flowers)
+                // BioCLIP 2's pack names its encoder's file; BioCAP's packs hold biocap-visual.onnx.
+                val encoder = File(directory, manifest.optString("encoder", "biocap-visual.onnx"))
+                AccurateModels(BioCapEncoder(encoder.path), index, manifest.getDouble("logit_scale").toFloat(), flowers)
             }.also { models = it }
         } catch (e: CancellationException) {
             throw e
@@ -137,6 +158,12 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
         }
     }
 
+    /** Closes the encoder if it is open, to give its memory back while another pack is used. */
+    suspend fun release() = lock.withLock {
+        models?.close()
+        models = null
+    }
+
     /** Removes the pack from the phone. */
     suspend fun delete() = lock.withLock {
         models?.close()
@@ -149,40 +176,13 @@ class AccuratePack(private val context: Context, scope: CoroutineScope) {
     /** Removes packs this version of the app no longer uses, which would otherwise keep their space on the phone. */
     private fun deleteOlderPacks() {
         val folder = directory.parentFile ?: return
-        folder.listFiles { file -> file.name.startsWith("biocap-pack-") && file.name != directory.name && file.name != download.file.name }
+        folder.listFiles { file -> file.name.startsWith(spec.prefix) && file.name != directory.name && file.name != download.file.name }
             ?.forEach { it.deleteRecursively() }
     }
 
     private suspend fun unpack() {
         _state.value = PackState.Unpacking
-        val ok = withContext(Dispatchers.IO) {
-            val staging = File(directory.path + ".part")
-            staging.deleteRecursively()
-            staging.mkdirs()
-            try {
-                ZipInputStream(download.file.inputStream().buffered()).use { zip ->
-                    while (true) {
-                        val entry = zip.nextEntry ?: break
-                        val target = File(staging, entry.name)
-                        // Entries stay inside the pack's folder.
-                        check(!entry.isDirectory && target.canonicalPath.startsWith(staging.canonicalPath + File.separator)) { "Unexpected entry ${entry.name}" }
-                        target.outputStream().use { zip.copyTo(it) }
-                    }
-                }
-                val files = JSONObject(File(staging, MANIFEST).readText()).getJSONObject("files")
-                val matches = files.keys().asSequence().all { name -> VerifiedDownload.sha256(File(staging, name)) == files.getString(name) }
-                if (matches) {
-                    directory.deleteRecursively()
-                    check(staging.renameTo(directory)) { "The pack could not be moved into place" }
-                }
-                matches
-            } catch (e: Exception) {
-                Log.w(TAG, "The accurate pack could not be unpacked", e)
-                false
-            } finally {
-                staging.deleteRecursively()
-            }
-        }
+        val ok = withContext(Dispatchers.IO) { unpackVerified(download.file, directory, TAG) }
         // The zip is no longer needed either way: unpacked, or to be fetched again.
         download.cancel()
         _state.value = if (ok) PackState.Ready else PackState.Damaged

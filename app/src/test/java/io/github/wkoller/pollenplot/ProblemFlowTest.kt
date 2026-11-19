@@ -3,6 +3,17 @@ package io.github.wkoller.pollenplot
 import android.app.NotificationManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.core.app.ActivityOptionsCompat
+import io.github.wkoller.pollenplot.domain.problems.DiseaseCall
+import io.github.wkoller.pollenplot.domain.problems.ProblemCatalogue
+import io.github.wkoller.pollenplot.ml.PlantProblemModel
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -108,6 +119,83 @@ class ProblemFlowTest {
         val treatment = runBlocking { problems.treatments.first { it.isNotEmpty() } }.single()
         assertEquals(TreatmentMethod.SOAP_SPRAY, treatment.method)
         assertEquals(today.plusDays(7), treatment.followUpOn)
+    }
+
+    /** Stands in for the plant problems pack: it answers every photo with [shares], through the real call's rules. */
+    private class FakeProblemModel(var shares: Map<String, Int>) : PlantProblemModel {
+        var looked = 0
+
+        override suspend fun look(photo: Bitmap, catalogue: ProblemCatalogue): DiseaseCall? {
+            looked++
+            return DiseaseCall.of(shares, yesBp = 7_000, maybeBp = 1_000, catalogue)
+        }
+    }
+
+    /** Hands back a photo whenever the screen opens the photo picker. */
+    private val picker = object : ActivityResultRegistryOwner {
+        override val activityResultRegistry = object : ActivityResultRegistry() {
+            override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>, input: I, options: ActivityOptionsCompat?) {
+                @Suppress("UNCHECKED_CAST")
+                dispatchResult(requestCode, Uri.parse("content://media/external/images/media/7") as O)
+            }
+        }
+    }
+
+    @Test
+    fun aPhotoOffersTheProblemsItLooksLikeAndTheUserChooses() {
+        val ids = seed()
+        val model = FakeProblemModel(mapOf("healthy" to 500, "powdery-mildew" to 7_600, "downy-mildew" to 1_400, "botrytis" to 500))
+        val photo = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888)
+        compose.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides picker) {
+                PollenplotTheme(Settings(gardenState = AuState.QLD)) {
+                    Surface {
+                        LogProblemScreen(
+                            ids.lemon,
+                            app.container.catalogue,
+                            problems,
+                            today,
+                            savePhoto = { "photos/leaf.jpg" },
+                            lookForProblems = { model.look(photo, app.container.catalogue) },
+                        ) {}
+                    }
+                }
+            }
+        }
+        waitFor(hasText("What you saw"))
+        compose.onNodeWithText("Add a photo").performScrollTo().performClick()
+        waitFor(hasText("Looks like"))
+        compose.onNodeWithText("Powdery mildew, likely").assertExists()
+        compose.onNodeWithText("Downy mildew, possible").assertExists()
+        assertEquals("A share below the floor is not offered", 1, compose.onAllNodesWithText(", possible", substring = true).fetchSemanticsNodes().size)
+        shot("problem_looks_like")
+        compose.onNodeWithText("Powdery mildew, likely").performScrollTo().performClick()
+        compose.onNodeWithText("Save").performScrollTo().performClick()
+        val saved = runBlocking { problems.problems.first { it.isNotEmpty() } }.single()
+        assertEquals("The user's choice is saved, not the model's", "powdery-mildew", saved.problemKey)
+        assertEquals("photos/leaf.jpg", saved.photo)
+        assertEquals(1, model.looked)
+    }
+
+    @Test
+    fun aHealthyPhotoSaysNoProblemFound() {
+        val ids = seed()
+        val model = FakeProblemModel(mapOf("healthy" to 9_100, "powdery-mildew" to 900))
+        val photo = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888)
+        compose.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides picker) {
+                PollenplotTheme(Settings(gardenState = AuState.QLD)) {
+                    Surface {
+                        LogProblemScreen(ids.lemon, app.container.catalogue, problems, today, savePhoto = { "photos/leaf.jpg" }, lookForProblems = { model.look(photo, app.container.catalogue) }) {}
+                    }
+                }
+            }
+        }
+        waitFor(hasText("What you saw"))
+        compose.onNodeWithText("Add a photo").performScrollTo().performClick()
+        waitFor(hasText("No problem found", substring = true))
+        compose.onNodeWithText("Looks like").assertDoesNotExist()
+        compose.onNodeWithText("Save").performScrollTo().assertIsNotEnabled()
     }
 
     @Test
