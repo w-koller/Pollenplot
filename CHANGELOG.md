@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A press on a plant in the plant library opens its page: its picture and names, whether it is native or a weed
+  where the garden is, its badges and the same fact cards as a garden plant's page, with Add to garden and Save to my
+  library. With Add mode on, a press adds the plant straight away, as before; the library opens in Add mode from a
+  zone. The list keeps its place when a page or the add screen closes.
 - The last step of the first-launch setup offers photos of plants from the Atlas of Living Australia, beside
   notifications and photo scanning, so the plant library does not need to ask later.
 - The setting for a plant added to more than one zone is now called “Plants in more than one zone”, and its choices

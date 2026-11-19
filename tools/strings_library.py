@@ -10,6 +10,18 @@ STRINGS = {
     "Select to choose several.",
     "library_mine_empty": "Your library is empty. Every plant you add to your garden is kept here, and you can save "
     "plants from All plants.",
+    "library_all_hint_info": "These are the plants Pollenplot knows. Press one to see what it needs and what it "
+    "gives wildlife, or press Select to choose several.",
+    "library_mine_hint_info": "These are the plants you have added or saved. Press one to see what it needs, or press "
+    "Select to choose several.",
+    "library_add_mode": "Add mode",
+    "library_add_mode_body": "A press adds the plant to your garden straight away. With add mode off, a press opens "
+    "the plant's details, where you can add it too.",
+    "library_page_add": "Add to garden",
+    "library_page_save": "Save to my library",
+    "library_family": "Family %1$s",
+    "library_own_name": "This plant is under a name of your own, so Pollenplot has no details for it. You can still "
+    "add it to your garden.",
     "library_select_hint": "Please choose the plants, then use the buttons at the bottom of the screen.",
     "library_in_mine": "In your library",
     "library_photo_credit": "Photo: %1$s",
