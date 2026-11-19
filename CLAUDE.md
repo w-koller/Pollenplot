@@ -113,8 +113,8 @@ is always ready to tag.
     choice), `SprayCheck` (plants likely in flower before a spray, after BeeAware) and `DiseaseCall` (the plant
     problems pack's shares as "Looks like" suggestions, likely or possible at the pack's `yes_bp` and `maybe_bp`, or
     "No problem found"; a class the catalogue does not hold is never offered).
-  - `compost/`: `CompostBin`, `CompostBatch` (one fill, started, filled and emptied), `CompostEvent` (browns, greens,
-    turns, waterings and temperatures) and `CompostStages` (the phase, from the days since filling or a reading from
+  - `compost/`: `CompostBin`, `CompostBatch` (one fill, started, filled and emptied), `CompostEvent` (turns,
+    waterings and temperatures) and `CompostStages` (the phase, from the days since filling or a reading from
     the last three days, and the turns and looks due; its sources and which numbers are Pollenplot's reading are in its
     KDoc). `app/data` has `CompostRepository` and `CompostViews`, `notify/CompostCheck` tells of jobs due, and
     `ui/compost` and `ui/components/CompostAnimation` (which stays still with the phone's animations off, so screen

@@ -33,11 +33,6 @@ data class CompostBatch(
 }
 
 enum class CompostEventKind {
-    /** Browns, such as dry leaves, shredded cardboard or straw. */
-    BROWNS,
-
-    /** Greens, such as food scraps, fresh grass clippings or green prunings. */
-    GREENS,
     TURNED,
     WATERED,
 

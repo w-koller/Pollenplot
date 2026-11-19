@@ -68,9 +68,6 @@ class CompostFlowTest {
         waitFor(hasText("Empty and ready for a new fill"))
         compose.pressWhenShown(hasText("Start a fill"))
         waitFor(hasText("Filling"))
-        compose.pressWhenShown(hasText("Added browns"))
-        compose.pressWhenShown(hasText("Added greens"))
-        waitFor(hasText("Greens added, 28 October 2026"))
         // The steps are told in words, not only by colour.
         waitFor(hasContentDescription("Fill, now"))
         shot("compost_filling")

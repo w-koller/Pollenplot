@@ -126,8 +126,6 @@
     <string name="compost_phase_estimate">Pollenplot estimates the phase from the days since the bin was filled. A thermometer reading in the middle of the heap from the last three days comes first.</string>
     <string name="compost_phase_description">Compost bin, %1$s</string>
     <string name="compost_start">Start a fill</string>
-    <string name="compost_browns">Added browns</string>
-    <string name="compost_greens">Added greens</string>
     <string name="compost_filled">Full, nothing more to add</string>
     <string name="compost_not_filled">Still filling</string>
     <string name="compost_turned">Turned today</string>
@@ -144,8 +142,6 @@
     <string name="compost_started_on">Started on %1$s</string>
     <string name="compost_history">This fill</string>
     <string name="compost_history_none">Nothing is recorded for this fill yet.</string>
-    <string name="compost_event_browns">Browns added</string>
-    <string name="compost_event_greens">Greens added</string>
     <string name="compost_event_turned">Turned</string>
     <string name="compost_event_watered">Watered</string>
     <string name="compost_event_temperature">%1$s °C in the middle</string>

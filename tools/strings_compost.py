@@ -44,8 +44,6 @@ STRINGS = {
     "compost_phase_description": "Compost bin, %1$s",
 
     "compost_start": "Start a fill",
-    "compost_browns": "Added browns",
-    "compost_greens": "Added greens",
     "compost_filled": "Full, nothing more to add",
     "compost_not_filled": "Still filling",
     "compost_turned": "Turned today",
@@ -62,8 +60,6 @@ STRINGS = {
     "compost_started_on": "Started on %1$s",
     "compost_history": "This fill",
     "compost_history_none": "Nothing is recorded for this fill yet.",
-    "compost_event_browns": "Browns added",
-    "compost_event_greens": "Greens added",
     "compost_event_turned": "Turned",
     "compost_event_watered": "Watered",
     "compost_event_temperature": "%1$s °C in the middle",

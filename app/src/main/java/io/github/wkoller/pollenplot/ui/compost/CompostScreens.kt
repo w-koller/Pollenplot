@@ -184,16 +184,12 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    val browns = stringResource(R.string.compost_recorded, stringResource(R.string.compost_event_browns).lowercase())
-                    val greens = stringResource(R.string.compost_recorded, stringResource(R.string.compost_event_greens).lowercase())
                     val turned = stringResource(R.string.compost_recorded, stringResource(R.string.compost_event_turned).lowercase())
                     val watered = stringResource(R.string.compost_recorded, stringResource(R.string.compost_event_watered).lowercase())
                     when {
                         batch == null -> Button(onClick = { scope.launch { repository.startBatch(binId, today) } }) { Text(stringResource(R.string.compost_start)) }
                         phase == CompostPhase.FILLING -> {
                             Button(onClick = { scope.launch { repository.filled(batch.id, today) } }) { Text(stringResource(R.string.compost_filled)) }
-                            OutlinedButton(onClick = { record(CompostEventKind.BROWNS, browns) }) { Text(stringResource(R.string.compost_browns)) }
-                            OutlinedButton(onClick = { record(CompostEventKind.GREENS, greens) }) { Text(stringResource(R.string.compost_greens)) }
                         }
                         else -> {
                             if (phase == CompostPhase.READY) {
@@ -373,8 +369,6 @@ private fun Reading(onSave: (Int) -> Unit) {
 
 @Composable
 private fun eventText(event: CompostEvent): String = when (event.kind) {
-    CompostEventKind.BROWNS -> stringResource(R.string.compost_event_browns)
-    CompostEventKind.GREENS -> stringResource(R.string.compost_event_greens)
     CompostEventKind.TURNED -> stringResource(R.string.compost_event_turned)
     CompostEventKind.WATERED -> stringResource(R.string.compost_event_watered)
     CompostEventKind.TEMPERATURE -> stringResource(R.string.compost_event_temperature, java.math.BigDecimal(event.tenthsC ?: 0).movePointLeft(1).stripTrailingZeros().toPlainString())
