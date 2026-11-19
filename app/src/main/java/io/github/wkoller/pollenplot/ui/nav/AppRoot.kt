@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.nav
 
+import kotlinx.coroutines.flow.first
+import io.github.wkoller.pollenplot.ui.compost.CompostScreen
+import io.github.wkoller.pollenplot.ui.compost.CompostBinScreen
 import io.github.wkoller.pollenplot.ui.plants.GraveyardScreen
 import io.github.wkoller.pollenplot.ui.library.LibraryScreen
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
@@ -217,6 +220,7 @@ fun AppRoot(
             open == MainActivity.OPEN_BEES -> openTab(TopLevelTab.BEES)
             open == MainActivity.OPEN_WATER -> openTab(TopLevelTab.WATER)
             open == MainActivity.OPEN_PLOT -> openTab(TopLevelTab.PLOT)
+            open == MainActivity.OPEN_COMPOST -> navController.navigate(CompostRoute) { launchSingleTop = true }
             open != null && open.startsWith(MainActivity.OPEN_GUIDE) -> navController.navigate(GuideRoute(open.removePrefix(MainActivity.OPEN_GUIDE)))
             else -> return@LaunchedEffect
         }
@@ -276,6 +280,7 @@ fun AppRoot(
                         PlotScreen(
                             onLibrary = { navController.navigate(LibraryRoute()) },
                             onGraveyard = { navController.navigate(GraveyardRoute) },
+                            onCompost = { navController.navigate(CompostRoute) },
                             settings = container.settingsStore,
                             garden = container.garden,
                             views = container.views,
@@ -316,6 +321,14 @@ fun AppRoot(
                                 onHotel = { navController.navigate(HotelRoute(it)) },
                                 onFeedZone = { navController.navigate(FeedRoute(it)) },
                                 onPrune = { navController.navigate(PlantEventRoute(it, pruning = true)) },
+                                onCompost = { navController.navigate(CompostBinRoute(it)) },
+                                onTurned = { item ->
+                                    scope.launch {
+                                        val batch = container.compostViews.bins.first().firstOrNull { it.bin.id == item.binId }?.batch ?: return@launch
+                                        val event = container.compost.addEvent(batch.id, io.github.wkoller.pollenplot.domain.compost.CompostEventKind.TURNED, LocalDate.now(container.clock))
+                                        notices?.show(resources.getString(R.string.today_compost_turned_notice, item.bin)) { container.compost.deleteEvent(event.id) }
+                                    }
+                                },
                                 onWatered = { item ->
                                     scope.launch {
                                         val watering = Watering(container.water.newId(), item.lineId, item.zoneId, LocalDate.now(container.clock))
@@ -384,6 +397,12 @@ fun AppRoot(
                             onOpenNativeHive = { navController.navigate(NativeHiveRoute(it)) },
                             onOpenHotel = { navController.navigate(HotelRoute(it)) },
                         )
+                    }
+                    composable<CompostRoute> {
+                        CompostScreen(container.compostViews, container.compost, onBack = back, onOpenBin = { navController.navigate(CompostBinRoute(it)) })
+                    }
+                    composable<CompostBinRoute> { entry ->
+                        CompostBinScreen(container.compostViews, container.compost, entry.toRoute<CompostBinRoute>().id, onBack = back)
                     }
                     composable<WaterFeatureRoute> { entry ->
                         val route = entry.toRoute<WaterFeatureRoute>()
@@ -544,6 +563,7 @@ fun AppRoot(
                             onOpenWish = { navController.navigate(WishRoute(it)) },
                             onOpenProblem = { navController.navigate(ProblemRoute(it)) },
                             onOpenWaterFeature = { navController.navigate(WaterFeatureRoute(featureId = it)) },
+                            onOpenCompostBin = { navController.navigate(CompostBinRoute(it)) },
                             places = container.searchPlaces.zoneOf,
                         )
                     }

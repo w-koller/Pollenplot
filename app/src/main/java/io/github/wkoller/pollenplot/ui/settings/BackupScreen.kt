@@ -369,6 +369,7 @@ private fun holds(contents: BackupContents): String {
         R.plurals.backup_problems to contents.problems,
         R.plurals.backup_water_features to contents.waterFeatures,
         R.plurals.backup_plant_harvests to contents.plantHarvests,
+        R.plurals.backup_compost_bins to contents.compostBins,
     ).filter { it.second > 0 }.map { (id, count) -> pluralStringResource(id, count, count) }
     if (parts.isEmpty()) return stringResource(R.string.backup_holds_nothing)
     val list = if (parts.size == 1) parts.single() else stringResource(R.string.backup_list_and, parts.dropLast(1).joinToString(", "), parts.last())

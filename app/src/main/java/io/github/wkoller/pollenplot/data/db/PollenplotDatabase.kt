@@ -23,6 +23,7 @@ import io.github.wkoller.pollenplot.BuildConfig
         CareCorrectionEntity::class, PlantPotEntity::class, PlantEventEntity::class, SoilProductEntity::class, SoilFeedEntity::class,
         SoilFeedZoneEntity::class, PlantProblemEntity::class, ProblemTreatmentEntity::class, WaterFeatureEntity::class,
         PlantHarvestEntity::class, StructureEntity::class, LibraryPlantEntity::class,
+        CompostBinEntity::class, CompostBatchEntity::class, CompostEventEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -51,6 +52,8 @@ abstract class PollenplotDatabase : RoomDatabase() {
     abstract fun harvestDao(): HarvestDao
     abstract fun structureDao(): StructureDao
     abstract fun libraryDao(): LibraryDao
+
+    abstract fun compostDao(): CompostDao
 
     companion object {
         const val FILE_NAME = "pollenplot.db"

@@ -79,6 +79,7 @@ fun SearchScreen(
     onOpenWish: (String) -> Unit = {},
     onOpenProblem: (String) -> Unit = {},
     onOpenWaterFeature: (String) -> Unit = {},
+    onOpenCompostBin: (String) -> Unit = {},
     /** The zone each record belongs to, for the zone filter. */
     places: Flow<Map<String, String>> = flowOf(emptyMap()),
 ) {
@@ -149,10 +150,10 @@ fun SearchScreen(
             } else if (shownHits.isEmpty()) {
                 item { Text(stringResource(R.string.search_none_filtered), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
             }
-            items(shownHits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
+            items(shownHits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature, onOpenCompostBin) }
             if (shownRelated.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.search_related)) }
-                items(shownRelated, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature) }
+                items(shownRelated, key = { "related:" + it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature, onOpenCompostBin) }
             }
             // Plants to add are not records in a zone, so a filter leaves them out.
             if (species.isNotEmpty() && !filtered) {
@@ -174,6 +175,7 @@ val SearchKind.label: Int
         SearchKind.WISH -> R.string.search_kind_wishes
         SearchKind.PROBLEM -> R.string.search_kind_problems
         SearchKind.WATER_FEATURE -> R.string.search_kind_water
+        SearchKind.COMPOST_BIN -> R.string.search_kind_compost
     }
 
 /** Chips that narrow the results to one kind of record, or to the records in one zone. Choosing a chip again clears it. */
@@ -219,6 +221,7 @@ private fun HitRow(
     onOpenWish: (String) -> Unit,
     onOpenProblem: (String) -> Unit,
     onOpenWaterFeature: (String) -> Unit,
+    onOpenCompostBin: (String) -> Unit,
 ) {
     val plant = plants.firstOrNull { it.plant.id == hit.recordId }
     val zone = zones.firstOrNull { it.zone.id == hit.recordId }
@@ -236,6 +239,7 @@ private fun HitRow(
                     SearchKind.WISH.name -> onOpenWish(hit.recordId)
                     SearchKind.PROBLEM.name -> onOpenProblem(hit.recordId)
                     SearchKind.WATER_FEATURE.name -> onOpenWaterFeature(hit.recordId)
+                    SearchKind.COMPOST_BIN.name -> onOpenCompostBin(hit.recordId)
                     else -> onOpenPlant(hit.recordId)
                 }
             },
@@ -249,6 +253,7 @@ private fun HitRow(
                     SearchKind.WISH.name -> R.drawable.ic_bookmark
                     SearchKind.PROBLEM.name -> R.drawable.ic_bug_report
                     SearchKind.WATER_FEATURE.name -> R.drawable.ic_water_drop
+                    SearchKind.COMPOST_BIN.name -> R.drawable.ic_compost
                     else -> R.drawable.ic_potted_plant
                 }
                 Icon(painterResource(icon), contentDescription = null)

@@ -21,6 +21,9 @@ import io.github.wkoller.pollenplot.data.FeedRepository
 import io.github.wkoller.pollenplot.data.FeedViews
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.GardenViews
+import io.github.wkoller.pollenplot.data.CompostRepository
+import io.github.wkoller.pollenplot.notify.CompostCheck
+import io.github.wkoller.pollenplot.data.CompostViews
 import io.github.wkoller.pollenplot.data.HabitatRepository
 import io.github.wkoller.pollenplot.data.HabitatViews
 import io.github.wkoller.pollenplot.data.HarvestRepository
@@ -176,6 +179,7 @@ class AppContainer(
     val guides = GuideLibrary(appContext)
     val rhythms = RhythmsViews(garden, views, bees, nativeBees, knowledge, settingsStore, clock)
     val habitat = HabitatRepository(this.database, clock)
+    val compost = CompostRepository(this.database, clock)
     val habitatViews = HabitatViews(views, habitat, beeViews, rhythms)
     val places = PlaceFinder(this.web) { weeds.sources }
     val pots = PotRepository(this.database, clock)
@@ -209,7 +213,7 @@ class AppContainer(
     val wishes = WishRepository(this.database, clock, { knowledge.await() }, photos::delete)
 
     val wishViews = WishViews(wishes, views, knowledge, settingsStore)
-    val searchPlaces = SearchPlaces(views, beeViews, wishes, problems, habitat)
+    val searchPlaces = SearchPlaces(views, beeViews, wishes, problems, habitat, compost)
 
     /** Native plants to grow instead of garden weeds, read from the assets once they are first needed. */
     val weedHelp = WeedHelp(
@@ -274,14 +278,17 @@ class AppContainer(
     val harvests = HarvestRepository(this.database, clock, garden::reindexPlant)
     val harvestViews = HarvestViews(harvests, views, pots, { pruningGuide }, clock)
     val pruneCheck = PruneCheck(harvestViews, settingsStore, notifications)
+    val compostViews = CompostViews(compost, views, clock)
+    val compostCheck = CompostCheck(compostViews, settingsStore, notifications)
     val reports = ReportBuilder(appContext, views, bees, nativeBees, hotels, water, waterViews, rhythms, settingsStore, clock, wishViews, harvests, ::dueTasks)
     val today = TodayViews(
         water, waterViews, beeViews, garden, views, settingsStore, clock,
-        combine(potViews.due, feedViews.due, feedViews.conditioner, problemViews.due, harvestViews.due) { potsDue, feedsDue, conditioner, followUps, prunes ->
+        combine(combine(potViews.due, compostViews.due) { pots, bins -> pots to bins }, feedViews.due, feedViews.conditioner, problemViews.due, harvestViews.due) { (potsDue, binsDue), feedsDue, conditioner, followUps, prunes ->
             potsDue.map { TodayItem.PotCare(it.plantId, it.title, it.task.kind) } +
                 feedsDue.map { TodayItem.Feed(it.due.zoneId, it.zoneName, it.due.plants) } +
                 followUps.map { TodayItem.ProblemFollowUp(it.problemId, it.name, it.plantTitle) } +
                 prunes.map { TodayItem.Prune(it.plantId, it.title) } +
+                binsDue.map { TodayItem.Compost(it.binId, it.binName, turn = it.task.kind == io.github.wkoller.pollenplot.domain.compost.CompostTask.Kind.TURN) } +
                 listOfNotNull(conditioner?.let { TodayItem.Conditioner(it.day == LocalDate.now(clock), it.maxTenthsC) })
         },
     )
@@ -319,8 +326,9 @@ class AppContainer(
         // The hives are looked at each morning for honey bee checks that have fallen due and hot days ahead for native
         // bees, while there is a hive to remind or warn about.
         scope.launch {
-            combine(settingsStore.settings, bees.hives, nativeBees.hives, garden.plantList) { settings, honey, natives, plants ->
-                (settings.hiveReminders && honey.isNotEmpty()) ||
+            combine(settingsStore.settings, bees.hives, nativeBees.hives, garden.plantList, compost.batches) { settings, honey, natives, plants, batches ->
+                (settings.compostReminders && batches.any { it.isOpen && it.filledOn != null }) ||
+                    (settings.hiveReminders && honey.isNotEmpty()) ||
                     (settings.heatAlerts && settings.gardenPlace != null && natives.any { it.status == NativeStatus.ACTIVE }) ||
                     (settings.waterReminders && settings.gardenPlace != null && plants.isNotEmpty()) ||
                     ((settings.potReminders || settings.feedReminders || settings.problemReminders || settings.pruneReminders) && plants.isNotEmpty())
@@ -388,6 +396,7 @@ class AppContainer(
         wishes.reindex()
         problems.reindex()
         habitat.reindex()
+        compost.reindex()
     }
 
     private fun readAsset(path: String): String? =
@@ -401,7 +410,7 @@ class AppContainer(
         if (problems.isNotEmpty()) Log.w("Feeding", problems.joinToString("\n"))
     }
 
-    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples() + habitat.triples() + harvests.triples() + water.triples()).toString()
+    suspend fun exportJsonLd(): String = JsonLd.document(garden.triples() + bees.triples() + nativeBees.triples() + hotels.triples() + wishes.triples() + corrections.triples() + pots.triples() + feeds.triples() + problems.triples() + habitat.triples() + compost.triples() + harvests.triples() + water.triples()).toString()
 
     /** The sightings as a Darwin Core table, with the garden's place as rounded as it is kept, and its state's name. */
     suspend fun exportDarwinCore(stateName: String?): String {

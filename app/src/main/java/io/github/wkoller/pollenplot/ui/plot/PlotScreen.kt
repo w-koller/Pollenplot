@@ -101,6 +101,7 @@ fun PlotScreen(
     onWishlist: () -> Unit = {},
     onLibrary: () -> Unit = {},
     onGraveyard: () -> Unit = {},
+    onCompost: () -> Unit = {},
     today: TodayViews? = null,
     onOpenWater: () -> Unit = {},
     onOpenBees: () -> Unit = {},
@@ -223,6 +224,7 @@ fun PlotScreen(
                 MoreItem(stringResource(R.string.library_title), R.drawable.ic_local_florist, onLibrary),
                 MoreItem(stringResource(R.string.wishlist_title), R.drawable.ic_bookmark, onWishlist),
                 MoreItem(stringResource(R.string.graveyard_title), R.drawable.ic_deceased, onGraveyard),
+                MoreItem(stringResource(R.string.compost_more), R.drawable.ic_compost, onCompost),
                 MoreItem(stringResource(R.string.review_title), R.drawable.ic_rate_review, onReview),
                 MoreItem(stringResource(R.string.weeds_title), R.drawable.ic_grass, onWeeds),
             )
@@ -613,6 +615,8 @@ private fun TodayOnPlot(
         onHotel = actions.onHotel ?: { onBees() },
         onFeedZone = actions.onFeedZone ?: onZone,
         onPrune = actions.onPrune ?: onPlant,
+        onCompost = actions.onCompost ?: {},
+        onTurned = actions.onTurned,
         onWatered = actions.onWatered,
         onFlushed = actions.onFlushed,
     )

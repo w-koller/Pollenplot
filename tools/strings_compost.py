@@ -1,0 +1,106 @@
+# Copy for compost bins: filling, waiting and emptying, and their reminders.
+STRINGS = {
+    "compost_title": "Compost",
+    "compost_more": "Compost",
+    "compost_intro": "Each bin goes through three steps. You fill it with browns and greens, then it waits while it heats "
+    "up, cools and cures, and then you empty it. Pollenplot reminds you to turn it and to look whether it is ready.",
+    "compost_empty_title": "No compost bins yet",
+    "compost_empty_body": "Please add a bin to keep track of when to turn it and when it will be ready.",
+    "compost_add": "Add a compost bin",
+    "compost_new_name": "Compost bin %1$d",
+    "compost_bin_title": "Compost bin",
+    "compost_step_fill": "Fill",
+    "compost_step_wait": "Wait",
+    "compost_step_empty": "Empty",
+    "compost_step_done": "%1$s, done",
+    "compost_step_now": "%1$s, now",
+    "compost_step_later": "%1$s, to come",
+    "compost_steps": "Steps",
+
+    "compost_phase_idle": "Empty and ready for a new fill",
+    "compost_phase_filling": "Filling",
+    "compost_phase_warming": "Warming up",
+    "compost_phase_hot": "Hot",
+    "compost_phase_cooling": "Cooling",
+    "compost_phase_curing": "Curing",
+    "compost_phase_ready": "May be ready",
+    "compost_phase_emptied": "Emptied",
+    "compost_phase_idle_body": "Please start a fill when you put the first scraps in.",
+    "compost_phase_filling_body": "Layer browns, such as dry leaves, shredded cardboard and straw, with greens, such as "
+    "food scraps and fresh grass clippings. Brisbane City Council suggests about two parts browns to one part greens. "
+    "Keep it as damp as a wrung-out sponge. When the bin is full and nothing more will go in, please say so below.",
+    "compost_phase_warming_body": "The first microbes are warming the heap. Within a couple of days it should be warm "
+    "in the middle.",
+    "compost_phase_hot_body": "Above about 40 °C heat-loving microbes take over and break the heap down fastest. Turning "
+    "it lets air in and mixes the outside into the middle.",
+    "compost_phase_cooling_body": "The heat is falling as the easiest food is used up. Keep turning it and keep it damp.",
+    "compost_phase_curing_body": "It is close to the air's temperature and maturing slowly. It needs little from you "
+    "now.",
+    "compost_phase_ready_body": "It is ready when it is no warmer than the air, dark and crumbly, smells of earth and no "
+    "scraps can be recognised. If it is not, please give it another two weeks and look again.",
+    "compost_phase_emptied_body": "This fill is finished.",
+    "compost_phase_estimate": "Pollenplot estimates the phase from the days since the bin was filled. A thermometer "
+    "reading in the middle of the heap from the last three days comes first.",
+    "compost_phase_description": "Compost bin, %1$s",
+
+    "compost_start": "Start a fill",
+    "compost_browns": "Added browns",
+    "compost_greens": "Added greens",
+    "compost_filled": "Full, nothing more to add",
+    "compost_not_filled": "Still filling",
+    "compost_turned": "Turned today",
+    "compost_watered": "Watered today",
+    "compost_emptied": "Emptied today",
+    "compost_reading": "Temperature in the middle (°C)",
+    "compost_reading_save": "Save reading",
+    "compost_reading_bad": "Please enter a temperature between 0 and 90 °C.",
+    "compost_next_turn": "Next turn: %1$s",
+    "compost_turn_due": "A turn is due.",
+    "compost_next_check": "Look whether it is ready from %1$s",
+    "compost_check_due": "It may be ready. Please have a look.",
+    "compost_filled_on": "Filled on %1$s",
+    "compost_started_on": "Started on %1$s",
+    "compost_history": "This fill",
+    "compost_history_none": "Nothing is recorded for this fill yet.",
+    "compost_event_browns": "Browns added",
+    "compost_event_greens": "Greens added",
+    "compost_event_turned": "Turned",
+    "compost_event_watered": "Watered",
+    "compost_event_temperature": "%1$s °C in the middle",
+    "compost_event_line": "%1$s, %2$s",
+    "compost_event_remove": "Remove %1$s",
+    "compost_event_removed": "Removed %1$s.",
+    "compost_recorded": "Recorded %1$s.",
+    "compost_bin_settings": "This bin",
+    "compost_name": "Name",
+    "compost_name_save": "Save name",
+    "compost_turn_every": "Turn it every",
+    "compost_turn_days": "%1$d days",
+    "compost_turn_source": "The Government of South Australia says turning once a week or so is helpful but not "
+    "essential. A fortnight is a good start.",
+    "compost_delete": "Delete this bin",
+    "compost_delete_title": "Delete %1$s?",
+    "compost_delete_body": "The bin and every fill recorded in it will be deleted.",
+    "compost_delete_confirm": "Delete",
+    "compost_deleted": "Deleted %1$s.",
+    "compost_sources": "Sources: Cornell Waste Management Institute, University of Maryland Extension, Government of "
+    "South Australia and Brisbane City Council.",
+
+    "today_compost_turn": "Please turn %1$s.",
+    "today_compost_check": "Please look whether %1$s is ready to empty.",
+    "today_compost_turned": "Turned",
+    "today_compost_turned_for": "Record %1$s as turned today",
+    "today_compost_turned_notice": "Recorded a turn for %1$s today.",
+    "notify_compost_turn_line": "Please turn %1$s.",
+    "notify_compost_check_line": "%1$s may be ready to empty.",
+    "settings_compost_reminders": "Remind me about compost",
+    "settings_compost_reminders_body": "A notification says when a compost bin is due a turn or a look whether it is "
+    "ready.",
+    "search_kind_compost": "Compost",
+}
+
+PLURALS = {
+    "notify_compost_title": {"one": "%d compost job", "other": "%d compost jobs"},
+    "backup_compost_bins": {"one": "%d compost bin", "other": "%d compost bins"},
+    "compost_emptied_count": {"one": "Emptied once before", "other": "Emptied %d times before"},
+}

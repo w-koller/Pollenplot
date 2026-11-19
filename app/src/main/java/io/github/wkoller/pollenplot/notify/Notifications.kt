@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.notify
 
+import io.github.wkoller.pollenplot.domain.compost.CompostTask
+import io.github.wkoller.pollenplot.data.CompostDue
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -245,6 +247,17 @@ class Notifications(
         return true
     }
 
+    /** Compost jobs due: bins to turn and bins to look at, each by its bin's name. */
+    fun showCompost(due: List<CompostDue>): Boolean {
+        if (due.isEmpty() || !allowed) return false
+        val res = context.resources
+        val lines = due.joinToString("\n") { item ->
+            res.getString(if (item.task.kind == CompostTask.Kind.TURN) R.string.notify_compost_turn_line else R.string.notify_compost_check_line, item.binName)
+        }
+        show(COMPOST, res.getQuantityString(R.plurals.notify_compost_title, due.size, due.size), lines, channel = POTS_CHANNEL, open = MainActivity.OPEN_COMPOST, icon = R.drawable.ic_compost)
+        return true
+    }
+
     private fun show(
         id: Int,
         title: String,
@@ -291,6 +304,7 @@ class Notifications(
         const val FEEDS = 8
         const val FOLLOW_UPS = 9
         const val PRUNING = 10
+        const val COMPOST = 11
 
         /** The guide page on caring for a stingless bee hive, which says how to cool one. */
         const val HEAT_GUIDE = "native/hive-care"
