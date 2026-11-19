@@ -534,6 +534,27 @@ class GardenRepository(
         detections.forPlant(plantId).forEach { recordChoice(record(it), speciesName, typed) }
     }
 
+    /**
+     * Gives each plant that was saved under a name the knowledge base did not know, such as a species a model named
+     * before it had a record, that record once the knowledge base has it. Names the user made up are left alone, as
+     * they match no scientific name. Returns how many plants were matched.
+     */
+    suspend fun rematchSpecies(kb: KnowledgeBase): Int = db.withTransaction {
+        var matched = 0
+        plants.all().map { it.full() }.forEach { plant ->
+            val name = plant.customName?.takeIf { plant.speciesName == null } ?: return@forEach
+            val species = kb.species(name) ?: return@forEach
+            if (updatePlant(plant.copy(speciesName = species.name, customName = null))) matched++
+        }
+        val library = db.libraryDao()
+        library.all().forEach { row ->
+            val name = row.customName?.takeIf { row.speciesName == null } ?: return@forEach
+            val species = kb.species(name) ?: return@forEach
+            if (library.bySpecies(species.name) == null) library.upsert(row.copy(speciesName = species.name, customName = null, updatedAt = now()))
+        }
+        matched
+    }
+
     /** Marks a detection as not a plant. */
     suspend fun rejectDetection(detectionId: String) = detections.setStatus(detectionId, DetectionStatus.REJECTED.name, null, null)
 

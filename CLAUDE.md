@@ -56,7 +56,11 @@ is always ready to tag.
   - `season/`: hemispheres, seasons and `MonthSet`.
   - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (the user's
     corrections, then species, then genus, then family), `CareCorrections` (the facts a user may correct, stored as
-    the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges) and `Companions`.
+    the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges), `Companions` and `Taxa`
+    (every plant the models can name with its genus, family and common name, from `assets/kb/taxa.tsv`, which
+    `tools/kb/build_taxa.py` writes from the species index; a garden plant without a record of its own takes its
+    genus's and family's facts through `CareResolver.resolveGroup`, and `GardenRepository.rematchSpecies` gives it its
+    record when the app starts with a knowledge base that has one).
   - `garden/`: zones, garden plants (a plant grows in any number of zones, `zoneIds`, with `quantity` in each;
     `GardenPlant.placings` and the `ManyZones` setting decide whether several zones chosen make one record or one
     in each), `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,

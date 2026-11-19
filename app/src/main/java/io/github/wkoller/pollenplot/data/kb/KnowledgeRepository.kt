@@ -71,6 +71,7 @@ class KnowledgeRepository(
                 genera = read("genera.json"),
                 families = read("families.json"),
                 companions = read("companions.json"),
+                taxa = runCatching { read("taxa.tsv") }.getOrNull(),
             ),
         )
         // The tests stop a faulty knowledge base from shipping, so this only records a problem for the report.

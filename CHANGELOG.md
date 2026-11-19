@@ -13,6 +13,12 @@
   saw them in flower, and "In flower later" does the same for a month you choose, from next month to six months
   ahead, using last year's sightings too. More flowers make a deeper colour with closer dots, each tile says "4 of 6
   in flower", and the key names each step in words. A zone whose plants' flowering is not known has a dashed edge.
+- A plant named by BioCAP or BioCLIP 2 that Pollenplot has no notes of its own for now shows what its genus or family
+  shares, such as a wattle's sun, water and value to bees, and says that these are the genus's or family's notes. It
+  is called by its common name, its weed status in the garden's area is looked up, and Gemma 4 can draft its notes. A
+  table of the 8,041 plants the models can name gives each one's genus, family and common name. When a newer
+  Pollenplot has a record for a plant saved under a name it did not know, the plant gets that record by itself. The
+  plant library shows such plants the same way.
 - On a tablet or a wide window, lists keep to a readable width, as the Plot's and the Bees tab's already did. The
   Plot's list keeps its zone cards apart and its other rows together, and the More menu has a line between a tab's
   own choices and the ones every tab has.

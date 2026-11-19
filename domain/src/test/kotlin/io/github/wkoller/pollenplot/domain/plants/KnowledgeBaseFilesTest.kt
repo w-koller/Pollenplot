@@ -57,6 +57,25 @@ class KnowledgeBaseFilesTest {
         assertTrue(Month.OCTOBER in (tomato.flowering ?: MonthSet.NONE))
     }
 
+    @Test
+    fun `every plant the models can name has its genus and family`() {
+        val kb = parsed.knowledgeBase
+        assertTrue("Expected the models' plants, found ${kb.taxa.size}", kb.taxa.size >= 8_000)
+        val wattle = kb.taxon("Acacia longifolia")
+        assertEquals("Acacia", wattle?.genus)
+        assertEquals("Fabaceae", wattle?.family)
+    }
+
+    @Test
+    fun `a plant without a record of its own takes its genus's facts`() {
+        val kb = parsed.knowledgeBase
+        // A species the knowledge base may never describe, but whose genus it does.
+        val taxon = kb.taxa.all.first { it.genus == "Acacia" && kb.species(it.name) == null }
+        val care = CareResolver.resolveGroup(kb, taxon.genus, taxon.family)
+        assertNotNull(care)
+        assertEquals(FactLevel.GENUS, care!!.levelOf(CareField.SUN))
+    }
+
     companion object {
         fun load(): ParseResult {
             val dir = File(System.getProperty("kb.dir") ?: error("kb.dir is set by domain/build.gradle.kts"))
@@ -69,6 +88,7 @@ class KnowledgeBaseFilesTest {
                     genera = File(dir, "genera.json").readText(),
                     families = File(dir, "families.json").readText(),
                     companions = File(dir, "companions.json").readText(),
+                    taxa = File(dir, "taxa.tsv").readText(),
                 ),
             )
         }
