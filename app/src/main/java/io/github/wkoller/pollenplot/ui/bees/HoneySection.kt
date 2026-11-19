@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.SwitchRow
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
@@ -68,7 +70,7 @@ internal fun LazyListScope.honeySection(
         item(key = "honey-due") { SectionHeading(stringResource(R.string.honey_due)) }
         if (due.isEmpty()) {
             item(key = "honey-due-none") {
-                Text(stringResource(R.string.honey_due_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+                Text(stringResource(R.string.honey_due_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             }
         }
         items(due, key = { (view, task) -> "due-" + view.hive.id + task.kind }) { (view, task) ->
@@ -91,15 +93,14 @@ internal fun LazyListScope.honeySection(
     item(key = "honey-reminders") {
         Column {
             SectionHeading(stringResource(R.string.honey_reminders))
-            ListItem(
-                checked = settings.hiveReminders,
-                onCheckedChange = { on ->
-                    onSettings { it.copy(hiveReminders = on) }
-                    if (on && !notifications.allowed) notifications.ask()
-                },
-                supportingContent = { Text(stringResource(R.string.honey_reminders_body)) },
-                trailingContent = { Switch(checked = settings.hiveReminders, onCheckedChange = null) },
-            ) { Text(stringResource(R.string.honey_reminders_switch)) }
+            SegmentedGroup {
+                row { segment ->
+                    SwitchRow(segment, settings.hiveReminders, R.drawable.ic_notifications, stringResource(R.string.honey_reminders_switch), stringResource(R.string.honey_reminders_body)) { on ->
+                        onSettings { it.copy(hiveReminders = on) }
+                        if (on && !notifications.allowed) notifications.ask()
+                    }
+                }
+            }
             if (settings.hiveReminders && !notifications.allowed) {
                 ActionNotice(stringResource(R.string.honey_reminders_off), stringResource(R.string.scan_notifications_allow), notifications.ask)
             }

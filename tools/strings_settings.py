@@ -20,6 +20,14 @@ STRINGS = {
     "settings_wallpaper_colours_body": "Pollenplot uses its own leaf and pollen colours. You can use the colours of "
     "your phone's wallpaper instead.",
     "settings_about": "About Pollenplot",
+    "settings_app": "Pollenplot",
+    "settings_reminders_intro": "Pollenplot sends these reminders as notifications at about seven in the morning.",
+    "settings_reminders_off": "Notifications are off, so Pollenplot cannot send these reminders. Please allow "
+    "notifications to have them.",
+    "settings_bee_reminders": "Bee reminders",
+    "settings_bee_reminders_body": "Hive checks and hot days for stingless bees are set on the Bees tab.",
+    "settings_water_reminders": "Watering reminders",
+    "settings_water_reminders_body": "Watering reminders are set on the Water tab.",
 
     "about_title": "About Pollenplot",
     "about_version": "Version %1$s",

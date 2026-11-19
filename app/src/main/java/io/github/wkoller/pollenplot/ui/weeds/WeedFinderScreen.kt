@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -73,7 +74,7 @@ fun WeedFinderScreen(
     DetailScaffold(title = stringResource(R.string.finder_title), onBack = onBack) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 32.dp),
+            contentPadding = listPadding(padding, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (council == null || weeds.isEmpty()) {

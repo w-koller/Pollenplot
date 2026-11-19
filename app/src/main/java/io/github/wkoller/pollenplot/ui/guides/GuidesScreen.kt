@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.guides
 
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,7 +34,7 @@ fun GuidesScreen(guides: GuideLibrary, state: AuState?, onOpen: (String) -> Unit
         value = GuideSection.entries.map { section -> section to guides.section(section).filter { it.appliesTo(state) } }.filter { it.second.isNotEmpty() }
     }
     DetailScaffold(title = stringResource(R.string.guides_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             sections.forEach { (section, pages) ->
                 item(key = "section-" + section.name) { SectionHeading(stringResource(section.label)) }
                 items(pages, key = { it.id }) { page ->

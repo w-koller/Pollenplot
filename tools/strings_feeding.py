@@ -47,11 +47,10 @@ STRINGS = {
     "notify_conditioner_title": "A hot day is coming",
     "settings_reminders": "Reminders",
     "settings_feed_reminders": "Remind me about feeding",
-    "settings_feed_reminders_body": "Pollenplot sends a notification in the morning when a zone with citrus is due a "
-    "feed.",
+    "settings_feed_reminders_body": "A notification says when a zone is due a feed.",
     "settings_conditioner": "Remind me about conditioner before hot days",
-    "settings_conditioner_body": "Your own reminder: Pollenplot tells you when a day of 35 °C or more is forecast within "
-    "three days and you have not given a conditioner such as seaweed in the last two weeks.",
+    "settings_conditioner_body": "A notification says when a day of 35 °C or more is forecast within three days and "
+    "no conditioner such as seaweed was given in the last two weeks.",
 }
 
 PLURALS = {

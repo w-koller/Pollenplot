@@ -228,9 +228,9 @@
     <string name="notify_conditioner_title">A hot day is coming</string>
     <string name="settings_reminders">Reminders</string>
     <string name="settings_feed_reminders">Remind me about feeding</string>
-    <string name="settings_feed_reminders_body">Pollenplot sends a notification in the morning when a zone with citrus is due a feed.</string>
+    <string name="settings_feed_reminders_body">A notification says when a zone is due a feed.</string>
     <string name="settings_conditioner">Remind me about conditioner before hot days</string>
-    <string name="settings_conditioner_body">Your own reminder: Pollenplot tells you when a day of 35 °C or more is forecast within three days and you have not given a conditioner such as seaweed in the last two weeks.</string>
+    <string name="settings_conditioner_body">A notification says when a day of 35 °C or more is forecast within three days and no conditioner such as seaweed was given in the last two weeks.</string>
     <string name="graveyard_title">Graveyard</string>
     <string name="graveyard_body">These plants died or were removed. Their photos, flowering, harvests, problems and care stay with them. Please press one to see its history or to bring it back to the garden.</string>
     <string name="graveyard_empty">No plant has died or been removed yet.</string>
@@ -308,7 +308,7 @@
     <string name="facts_pruning_months">Pruning months</string>
     <string name="today_prune">Please prune %1$s.</string>
     <string name="settings_prune_reminders">Remind me to prune</string>
-    <string name="settings_prune_reminders_body">Pollenplot sends a notification in the morning when a plant is in its pruning months and no pruning is recorded yet.</string>
+    <string name="settings_prune_reminders_body">A notification says when a plant is in its pruning months and no pruning is recorded yet.</string>
     <string name="report_part_harvests">Harvests</string>
     <string name="report_harvest_totals">Harvests by plant</string>
     <string name="col_harvests">Harvests</string>
@@ -1236,7 +1236,7 @@
     <string name="notify_pots_channel">Garden care</string>
     <string name="notify_pots_channel_description">Reminders when a pot is due a flush or a look at repotting, or a zone is due a feed.</string>
     <string name="settings_pot_reminders">Remind me about pots</string>
-    <string name="settings_pot_reminders_body">Pollenplot sends a notification in the morning when a pot is due a flush or a look at repotting.</string>
+    <string name="settings_pot_reminders_body">A notification says when a pot is due a flush or a look at repotting.</string>
     <string name="problems_title">Problems</string>
     <string name="problems_none">No problems logged for this plant.</string>
     <string name="problem_log">Record a problem</string>
@@ -1298,7 +1298,7 @@
     <string name="today_follow_up">Please look again at %1$s on %2$s.</string>
     <string name="today_follow_up_no_plant">Please look again at %1$s.</string>
     <string name="settings_problem_reminders">Remind me to look again at problems</string>
-    <string name="settings_problem_reminders_body">Pollenplot sends a notification in the morning when a treated problem is due a second look.</string>
+    <string name="settings_problem_reminders_body">A notification says when a treated problem is due a second look.</string>
     <string name="report_plot">The Plot</string>
     <string name="report_pictures">The plants</string>
     <string name="report_with_pictures">Show the plants\' pictures in the PDF</string>
@@ -1504,6 +1504,13 @@
     <string name="settings_wallpaper_colours">Use colours from your wallpaper</string>
     <string name="settings_wallpaper_colours_body">Pollenplot uses its own leaf and pollen colours. You can use the colours of your phone\'s wallpaper instead.</string>
     <string name="settings_about">About Pollenplot</string>
+    <string name="settings_app">Pollenplot</string>
+    <string name="settings_reminders_intro">Pollenplot sends these reminders as notifications at about seven in the morning.</string>
+    <string name="settings_reminders_off">Notifications are off, so Pollenplot cannot send these reminders. Please allow notifications to have them.</string>
+    <string name="settings_bee_reminders">Bee reminders</string>
+    <string name="settings_bee_reminders_body">Hive checks and hot days for stingless bees are set on the Bees tab.</string>
+    <string name="settings_water_reminders">Watering reminders</string>
+    <string name="settings_water_reminders_body">Watering reminders are set on the Water tab.</string>
     <string name="about_title">About Pollenplot</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_body">Pollenplot records the plants, wildlife, bees and watering in your backyard. Plants and animals are identified on your phone, and your records stay on your phone.</string>

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.library
 
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.clickable
@@ -262,7 +263,7 @@ fun LibraryScreen(
         LazyColumn(
             Modifier.fillMaxSize(),
             state = listState,
-            contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + if (selecting) 112.dp else 24.dp),
+            contentPadding = listPadding(padding, bottom = if (selecting) 112.dp else 24.dp),
         ) {
             item(key = "top") {
                 Column(Modifier.readable().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

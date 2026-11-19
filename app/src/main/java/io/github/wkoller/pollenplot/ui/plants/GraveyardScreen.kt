@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -50,7 +51,7 @@ fun GraveyardScreen(views: GardenViews, garden: GardenRepository, onBack: () -> 
     DetailScaffold(title = stringResource(R.string.graveyard_title), onBack = onBack) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
+            contentPadding = listPadding(padding),
         ) {
             item(key = "top") {
                 Column(Modifier.readable().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

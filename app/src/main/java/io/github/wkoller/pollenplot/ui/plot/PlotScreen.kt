@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
@@ -467,20 +469,20 @@ private fun PlotList(
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
     LazyColumn(
         Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 96.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = listPadding(padding, bottom = 96.dp),
     ) {
         item(key = "today") { header() }
         if (zones.isEmpty()) {
             item {
-                Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.plot_zoned_empty_body), style = MaterialTheme.typography.bodyLarge)
                     Button(onClick = onAddZone) { Text(stringResource(R.string.plot_add_zone)) }
                 }
             }
         }
         items(zones, key = { it.zone.id }) { view ->
-            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = 16.dp), water = water, fed = fed[view.zone.id])
+            // Cards sit 12 dp apart; the rows after them touch as every other list's rows do.
+            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp), water = water, fed = fed[view.zone.id])
         }
         if (unzoned.isNotEmpty()) {
             item { SectionHeading(stringResource(R.string.plot_unzoned)) }
@@ -488,33 +490,49 @@ private fun PlotList(
         }
         if (structures.isNotEmpty()) {
             item { SectionHeading(stringResource(R.string.plot_structures)) }
-            items(structures, key = { it.id }) { structure ->
-                ListItem(
-                    onClick = { onOpenStructure(structure.id) },
-                    leadingContent = { Icon(painterResource(structure.kind.icon), contentDescription = null) },
-                    supportingContent = {
-                        Text(stringResource(R.string.structure_list_size, stringResource(structure.kind.label), UiFormat.metresFromCm(structure.rect.widthCm), UiFormat.metresFromCm(structure.rect.heightCm)))
-                    },
-                ) { Text(structure.name) }
+            item(key = "structures") {
+                SegmentedGroup {
+                    structures.forEach { structure ->
+                        row { segment ->
+                            ListItem(
+                                onClick = { onOpenStructure(structure.id) },
+                                leadingContent = { Icon(painterResource(structure.kind.icon), contentDescription = null) },
+                                supportingContent = {
+                                    Text(stringResource(R.string.structure_list_size, stringResource(structure.kind.label), UiFormat.metresFromCm(structure.rect.widthCm), UiFormat.metresFromCm(structure.rect.heightCm)))
+                                },
+                                shapes = segment.shapes,
+                                colors = segment.colors,
+                            ) { Text(structure.name) }
+                        }
+                    }
+                }
             }
         }
-        if (plants.any { !it.isGrowing }) {
-            item {
-                ListItem(
-                    onClick = onGraveyard,
-                    leadingContent = { Icon(painterResource(R.drawable.ic_deceased), contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.graveyard_list_body)) },
-                ) { Text(stringResource(R.string.graveyard_open)) }
+        item(key = "more") {
+            SegmentedGroup(Modifier.padding(top = 16.dp)) {
+                if (plants.any { !it.isGrowing }) {
+                    row { segment ->
+                        ListItem(
+                            onClick = onGraveyard,
+                            leadingContent = { Icon(painterResource(R.drawable.ic_deceased), contentDescription = null) },
+                            supportingContent = { Text(stringResource(R.string.graveyard_list_body)) },
+                            shapes = segment.shapes,
+                            colors = segment.colors,
+                        ) { Text(stringResource(R.string.graveyard_open)) }
+                    }
+                }
+                row { segment ->
+                    ListItem(
+                        onClick = onWeeds,
+                        leadingContent = { Icon(painterResource(R.drawable.ic_grass), contentDescription = null) },
+                        supportingContent = {
+                            Text(if (weeds > 0) pluralStringResource(R.plurals.plot_weeds_found, weeds, weeds) else stringResource(R.string.plot_weeds_body))
+                        },
+                        shapes = segment.shapes,
+                        colors = segment.colors,
+                    ) { Text(stringResource(R.string.weeds_title)) }
+                }
             }
-        }
-        item {
-            ListItem(
-                onClick = onWeeds,
-                leadingContent = { Icon(painterResource(R.drawable.ic_grass), contentDescription = null) },
-                supportingContent = {
-                    Text(if (weeds > 0) pluralStringResource(R.plurals.plot_weeds_found, weeds, weeds) else stringResource(R.string.plot_weeds_body))
-                },
-            ) { Text(stringResource(R.string.weeds_title)) }
         }
     }
 }

@@ -20,7 +20,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +49,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.backup.BackupContents
 import io.github.wkoller.pollenplot.backup.BackupRead
 import io.github.wkoller.pollenplot.backup.BackupService
@@ -222,13 +222,13 @@ fun BackupScreen(model: BackupModel, lastBackupAt: Long?, zone: ZoneId, onBack: 
     val openFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(model::choose) }
 
     DetailScaffold(title = stringResource(R.string.backup_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Text(stringResource(R.string.backup_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             }
             item { SectionHeading(stringResource(R.string.backup_save_heading)) }
             item {
-                Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     val saving = save is BackupModel.Save.Saving
                     PasswordField(
                         value = model.password,
@@ -264,10 +264,9 @@ fun BackupScreen(model: BackupModel, lastBackupAt: Long?, zone: ZoneId, onBack: 
                     )
                 }
             }
-            item { HorizontalDivider(Modifier.padding(vertical = 16.dp)) }
             item { SectionHeading(stringResource(R.string.backup_restore_heading)) }
             item {
-                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.backup_restore_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     when (val state = restore) {
                         BackupModel.Restore.Reading -> Working(stringResource(R.string.backup_reading), null)

@@ -65,8 +65,7 @@ STRINGS = {
     "today_follow_up": "Please look again at %1$s on %2$s.",
     "today_follow_up_no_plant": "Please look again at %1$s.",
     "settings_problem_reminders": "Remind me to look again at problems",
-    "settings_problem_reminders_body": "Pollenplot sends a notification in the morning when a treated problem is due a "
-    "second look.",
+    "settings_problem_reminders_body": "A notification says when a treated problem is due a second look.",
 }
 
 PLURALS = {

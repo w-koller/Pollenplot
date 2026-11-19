@@ -54,8 +54,8 @@ STRINGS = {
     "facts_pruning_months": "Pruning months",
     "today_prune": "Please prune %1$s.",
     "settings_prune_reminders": "Remind me to prune",
-    "settings_prune_reminders_body": "Pollenplot sends a notification in the morning when a plant is in its pruning "
-    "months and no pruning is recorded yet.",
+    "settings_prune_reminders_body": "A notification says when a plant is in its pruning months and no pruning is "
+    "recorded yet.",
 
     "report_part_harvests": "Harvests",
     "report_harvest_totals": "Harvests by plant",

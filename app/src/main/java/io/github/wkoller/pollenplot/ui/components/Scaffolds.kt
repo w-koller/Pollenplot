@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.components
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -69,14 +72,17 @@ fun TabScaffold(
                 Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.search_title))
             }
         }
-        val menu = more + LocalAppMenu.current
+        val appMenu = LocalAppMenu.current
+        val menu = more + appMenu
         if (menu.isNotEmpty()) {
             Box {
                 IconButton(onClick = { open = true }) {
                     Icon(painterResource(R.drawable.ic_more_vert), contentDescription = stringResource(R.string.more))
                 }
                 DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                    menu.forEach { item ->
+                    menu.forEachIndexed { index, item ->
+                        // The tab's own choices come first, then a line, then the ones every tab has.
+                        if (index == more.size && more.isNotEmpty()) HorizontalDivider(Modifier.padding(vertical = 4.dp))
                         DropdownMenuItem(
                             text = { Text(item.label) },
                             leadingIcon = { Icon(painterResource(item.icon), contentDescription = null) },

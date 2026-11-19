@@ -55,7 +55,7 @@ internal fun LazyListScope.hotelSection(
     item(key = "seal-guide") {
         Column {
             SectionHeading(stringResource(R.string.hotel_seal_guide))
-            Text(stringResource(R.string.hotel_seal_guide_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+            Text(stringResource(R.string.hotel_seal_guide_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
     }
     items(Seal.entries.filter { it != Seal.OTHER }, key = { "seal-" + it.name }) { seal ->

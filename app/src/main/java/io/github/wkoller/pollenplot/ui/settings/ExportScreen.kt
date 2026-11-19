@@ -35,6 +35,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.SectionHeading
+import io.github.wkoller.pollenplot.ui.components.SegmentSurface
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.report.ReportPart
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import kotlinx.coroutines.Dispatchers
@@ -124,13 +128,14 @@ fun ExportScreen(
     }
 
     DetailScaffold(title = stringResource(R.string.export_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Text(stringResource(R.string.export_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             }
+            item { SectionHeading(stringResource(R.string.report)) }
             item {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.report), style = MaterialTheme.typography.titleMedium)
+                SegmentedGroup { row { segment -> SegmentSurface(segment) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.report_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     ChipGroup(stringResource(R.string.report_period), ReportPeriod.entries, period, { stringResource(it.label) }) { period = it }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -168,24 +173,32 @@ fun ExportScreen(
                     reportSaved?.let { Saved(it) }
                     if (shareFailed) StatusLine(false, stringResource(R.string.report_share_failed))
                 }
+                } } }
             }
+            item { SectionHeading(stringResource(R.string.export_jsonld)) }
             item {
-                ExportItem(R.string.export_jsonld, R.string.export_jsonld_body, jsonLdSaved) { saveJsonLd.launch("pollenplot-records-$today.jsonld") }
+                ExportItem(R.string.export_jsonld_body, jsonLdSaved) { saveJsonLd.launch("pollenplot-records-$today.jsonld") }
             }
+            item { SectionHeading(stringResource(R.string.export_dwc)) }
             item {
-                ExportItem(R.string.export_dwc, R.string.export_dwc_body, darwinCoreSaved) { saveDarwinCore.launch("pollenplot-sightings-$today.csv") }
+                ExportItem(R.string.export_dwc_body, darwinCoreSaved) { saveDarwinCore.launch("pollenplot-sightings-$today.csv") }
             }
         }
     }
 }
 
 @Composable
-private fun ExportItem(title: Int, body: Int, saved: Boolean?, onSave: () -> Unit) {
-    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OutlinedButton(onClick = onSave) { Text(stringResource(R.string.export_save)) }
-        saved?.let { Saved(it) }
+private fun ExportItem(body: Int, saved: Boolean?, onSave: () -> Unit) {
+    SegmentedGroup {
+        row { segment ->
+            SegmentSurface(segment) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedButton(onClick = onSave) { Text(stringResource(R.string.export_save)) }
+                    saved?.let { Saved(it) }
+                }
+            }
+        }
     }
 }
 

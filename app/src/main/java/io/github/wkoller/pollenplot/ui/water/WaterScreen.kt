@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.water
 
+import io.github.wkoller.pollenplot.ui.components.SwitchRow
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
 import io.github.wkoller.pollenplot.ui.components.readableSides
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.text.format.DateFormat
@@ -202,15 +204,14 @@ fun WaterScreen(
             current?.let { chosen ->
                 item(key = "reminders") {
                     Column {
-                        ListItem(
-                            checked = chosen.waterReminders,
-                            onCheckedChange = { on ->
-                                scope.launch { settings.update { it.copy(waterReminders = on) } }
-                                if (on && !access.allowed) access.ask()
-                            },
-                            supportingContent = { Text(stringResource(R.string.water_reminders_body)) },
-                            trailingContent = { Switch(checked = chosen.waterReminders, onCheckedChange = null) },
-                        ) { Text(stringResource(R.string.water_reminders)) }
+                        SegmentedGroup {
+                            row { segment ->
+                                SwitchRow(segment, chosen.waterReminders, R.drawable.ic_notifications, stringResource(R.string.water_reminders), stringResource(R.string.water_reminders_body)) { on ->
+                                    scope.launch { settings.update { it.copy(waterReminders = on) } }
+                                    if (on && !access.allowed) access.ask()
+                                }
+                            }
+                        }
                         if (chosen.waterReminders && !access.allowed) {
                             ActionNotice(stringResource(R.string.water_reminders_off), stringResource(R.string.scan_notifications_allow), access.ask)
                         }

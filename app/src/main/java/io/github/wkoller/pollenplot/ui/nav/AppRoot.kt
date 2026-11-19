@@ -820,6 +820,9 @@ fun AppRoot(
                             onOpenBackup = { navController.navigate(BackupRoute) },
                             onOpenAbout = { navController.navigate(AboutRoute) },
                             onSetUpAgain = { navController.navigate(SetupRoute(again = true)) },
+                            onOpenBees = { openTab(TopLevelTab.BEES) },
+                            onOpenWater = { openTab(TopLevelTab.WATER) },
+                            notifications = container.notifications,
                         )
                     }
                     composable<SetupRoute> { entry ->

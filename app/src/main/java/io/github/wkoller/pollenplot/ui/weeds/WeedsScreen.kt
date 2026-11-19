@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
@@ -97,7 +98,7 @@ fun WeedsScreen(
     val growingWeeds = plants.filter { it.isGrowing && it.weed.isWeed }.sortedBy { it.weed.level.ordinal }
 
     DetailScaffold(title = stringResource(R.string.weeds_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     val updated = weeds.updatedAt

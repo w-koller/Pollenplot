@@ -60,8 +60,7 @@ STRINGS = {
     "notify_pots_channel_description": "Reminders when a pot is due a flush or a look at repotting, or a zone is due a "
     "feed.",
     "settings_pot_reminders": "Remind me about pots",
-    "settings_pot_reminders_body": "Pollenplot sends a notification in the morning when a pot is due a flush or a look at "
-    "repotting.",
+    "settings_pot_reminders_body": "A notification says when a pot is due a flush or a look at repotting.",
 }
 
 PLURALS = {

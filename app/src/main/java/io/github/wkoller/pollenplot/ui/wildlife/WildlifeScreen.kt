@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.background
@@ -136,7 +137,7 @@ fun WildlifeScreen(
     ) { padding ->
         when {
             loaded == null -> Unit
-            loaded.isEmpty() -> LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+            loaded.isEmpty() -> LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
                 item {
                     EmptyState(
                         icon = R.drawable.ic_raven,
@@ -172,7 +173,7 @@ fun WildlifeScreen(
                 val missing = if (year == today.year) GardenAdvice.missing(summary) else emptyList()
                 LazyColumn(
                     Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + FAB_ROOM.dp),
+                    contentPadding = listPadding(padding, bottom = FAB_ROOM.dp),
                 ) {
                     val years = (yearsSeen + today.year).distinct().sortedDescending()
                     if (years.size > 1) {

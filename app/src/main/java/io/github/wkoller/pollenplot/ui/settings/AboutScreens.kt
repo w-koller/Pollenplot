@@ -1,6 +1,9 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.LinkRow
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
+import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -45,7 +48,7 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit, onOpenSources: (
     val uri = LocalUriHandler.current
     val context = LocalContext.current
     DetailScaffold(title = stringResource(R.string.about_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Column(
                     Modifier.fillMaxWidth().padding(24.dp),
@@ -70,45 +73,31 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit, onOpenSources: (
                 }
             }
             item {
-                ListItem(
-                    onClick = onOpenLicences,
-                    supportingContent = { Text(stringResource(R.string.about_licences_body)) },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_description), contentDescription = null) },
-                ) {
-                    Text(stringResource(R.string.about_licences))
-                }
-            }
-            item {
-                ListItem(
-                    onClick = onOpenSources,
-                    supportingContent = { Text(stringResource(R.string.about_sources_body)) },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_map), contentDescription = null) },
-                ) {
-                    Text(stringResource(R.string.about_sources))
-                }
-            }
-            item {
-                ListItem(
-                    onClick = { uri.openUri(ProjectLinks.SOURCE) },
-                    supportingContent = { Text(stringResource(R.string.about_source_body)) },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_code), contentDescription = null) },
-                    trailingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
-                ) {
-                    Text(stringResource(R.string.about_source))
-                }
-            }
-            item {
                 val text = stringResource(R.string.about_share_text, ProjectLinks.RELEASES)
                 val title = stringResource(R.string.about_share)
-                ListItem(
-                    onClick = {
-                        val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-                        context.startActivity(Intent.createChooser(send, title))
-                    },
-                    supportingContent = { Text(stringResource(R.string.about_share_body)) },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
-                ) {
-                    Text(title)
+                SegmentedGroup {
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_description, stringResource(R.string.about_licences), stringResource(R.string.about_licences_body), onOpenLicences)
+                    }
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_map, stringResource(R.string.about_sources), stringResource(R.string.about_sources_body), onOpenSources)
+                    }
+                    row { segment ->
+                        ListItem(
+                            onClick = { uri.openUri(ProjectLinks.SOURCE) },
+                            supportingContent = { Text(stringResource(R.string.about_source_body)) },
+                            leadingContent = { Icon(painterResource(R.drawable.ic_code), contentDescription = null) },
+                            trailingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
+                            shapes = segment.shapes,
+                            colors = segment.colors,
+                        ) { Text(stringResource(R.string.about_source)) }
+                    }
+                    row { segment ->
+                        LinkRow(segment, R.drawable.ic_share, title, stringResource(R.string.about_share_body)) {
+                            val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+                            context.startActivity(Intent.createChooser(send, title))
+                        }
+                    }
                 }
             }
         }
@@ -131,7 +120,7 @@ fun DataSourcesScreen(sources: WeedSources, onBack: () -> Unit) {
         SourceItem(R.string.source_gbif, R.string.source_gbif_body, "https://doi.org/10.15468/39omei"),
     )
     DetailScaffold(title = stringResource(R.string.sources_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Text(stringResource(R.string.sources_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
             }
@@ -195,7 +184,7 @@ private val licences = listOf(
 @Composable
 fun LicencesScreen(onBack: () -> Unit, onOpen: (String) -> Unit) {
     DetailScaffold(title = stringResource(R.string.licences_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Text(
                     stringResource(R.string.licences_body),
@@ -234,7 +223,7 @@ fun LicenceTextScreen(file: String, onBack: () -> Unit) {
         }
     }
     DetailScaffold(title = stringResource(R.string.licences_title), onBack = onBack) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             val loaded = paragraphs
             when {
                 loaded == null -> item { Text(stringResource(R.string.licence_loading), modifier = Modifier.padding(16.dp)) }
