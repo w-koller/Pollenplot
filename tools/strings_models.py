@@ -21,8 +21,18 @@ STRINGS = {
     "models_accurate_body": "BioCAP names many more Australian plants, weeds and animals than the built-in models. %1$s, downloaded on Wi-Fi.",
     "models_accurate_body_short": "BioCAP names many more Australian plants, weeds and animals than the built-in models.",
     "models_accurate_notification": "Downloading BioCAP for accurate identification.",
+    "models_accurate_ready": "On your phone. Pollenplot uses BioCAP for every photo it identifies.",
+    "models_problems": "Plant problems",
+    "models_problems_body": "Suggests which disease or pest a photo of a sick plant looks like when you record a "
+    "problem, using BioCAP's view of the photo. You still choose what to save. %1$s, downloaded on Wi-Fi.",
+    "models_problems_body_short": "Suggests which disease or pest a photo of a sick plant looks like when you record "
+    "a problem.",
+    "models_problems_notification": "Downloading the plant problems model.",
+    "models_problems_ready": "On your phone. Pollenplot suggests problems for photos you add when you record one.",
+    "models_problems_needs_accurate": "This model works with BioCAP. Please download accurate identification first.",
     "models_accurate_ready": "On your phone. Pollenplot uses BioCAP to identify photos.",
-    "models_accurate_ready_unused": "On your phone, but not in use while BioCLIP 2 is. You can delete BioCAP to free space.",
+    "models_accurate_ready_unused": "On your phone, but not used to identify photos while BioCLIP 2 is. The plant "
+    "problems model still needs BioCAP, so please keep it if you use that model.",
     "models_bioclip2": "More accurate identification",
     "models_bioclip2_body": "BioCLIP 2 names even more than BioCAP and is used in its place. %1$s, downloaded on Wi-Fi.",
     "models_bioclip2_body_short": "BioCLIP 2 names even more than BioCAP and is used in its place.",

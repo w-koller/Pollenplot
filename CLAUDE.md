@@ -107,9 +107,11 @@ is always ready to tag.
     found by species, genus or family), `FeedPlanner` (zones due a feed; a conditioner does not count),
     `PhosphorusGuard` (more than about 4% P on Proteaceae, after an Australian Native Plants Society article) and
     `ConditionerBeforeHeat` (the user's own reminder; its numbers are Pollenplot's choice).
-  - `problems/`: `ProblemCatalogue` (pests in `assets/kb/problems.json`, each from a state government page),
-    `PlantProblem` and `Treatment` (no amounts), `ProblemTasks` (follow-ups; seven days is Pollenplot's choice) and
-    `SprayCheck` (plants likely in flower before a spray, after BeeAware).
+  - `problems/`: `ProblemCatalogue` (pests and diseases in `assets/kb/problems.json`, each from a state government
+    page), `PlantProblem` and `Treatment` (no amounts), `ProblemTasks` (follow-ups; seven days is Pollenplot's
+    choice), `SprayCheck` (plants likely in flower before a spray, after BeeAware) and `DiseaseCall` (the plant
+    problems pack's shares as "Looks like" suggestions, likely or possible at the pack's `yes_bp` and `maybe_bp`, or
+    "No problem found"; a class the catalogue does not hold is never offered).
   - `hotels/`: `BeeHotels` (hotels, their sections, looks and upkeep), `SealGuide` (who a nest's seal says is likely
     inside) and `HotelCare` (a hotel worth cleaning out in spring).
   - `irrigation/`: `WaterPlanner` (a line's daily soil-water account, after FAO 56: when watering is due and how much,
@@ -162,7 +164,12 @@ is always ready to tag.
   top, limited to the species of the group the user chose), and bitmap helpers. The quick models cannot tell a plant
   from an animal, so the camera's group chips say which to ask. For a photo nobody chose a group for, `groupOf` asks
   BioCAP, whose closest species must clearly agree on a group (`AccurateRegions.GROUP_SHARE_BP`); without the pack,
-  it is a plant.
+  it is a plant. `DiseasePack` is the optional plant problems pack: `DiseaseHead` in `:ml` (logistic regression on
+  BioCAP's vector of the photo's middle square, `AccurateModels.middleVector`), offered in Settings › Models only
+  while the accurate pack it was trained for (`pollenplot.disease.biocap`) is ready. `LogProblemScreen` asks it about
+  a chosen photo through `AppContainer.lookForProblems`; tests give the container's `problemModelOverride` or the
+  screen a fake `PlantProblemModel`. `tools/models/disease_photos.py` and `disease_head.py` build it in the Model
+  pack workflow (`build: disease`).
 - `app/ai`: `GemmaModel` (Gemma 4 E2B through LiteRT-LM, with an image backend, downloaded when the user asks and
   released after two idle minutes) and `GardenAssistant`, behind the `Assistant` interface. `domain/assistant` holds
   `GardenAssistantGuard` (the questions Pollenplot answers itself, and answers that give a chemical amount),

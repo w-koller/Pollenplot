@@ -112,6 +112,12 @@ android {
         buildConfigField("String", "BIOCAP_URL", "\"${providers.gradleProperty("pollenplot.biocap.url").get()}\"")
         buildConfigField("String", "BIOCAP_SHA256", "\"${providers.gradleProperty("pollenplot.biocap.sha256").get()}\"")
         buildConfigField("long", "BIOCAP_BYTES", "${providers.gradleProperty("pollenplot.biocap.bytes").get()}L")
+        // The plant problems pack, a head on the accurate pack's vectors, pinned the same way with the pack it needs.
+        buildConfigField("int", "DISEASE_PACK", providers.gradleProperty("pollenplot.disease.pack").get())
+        buildConfigField("int", "DISEASE_BIOCAP", providers.gradleProperty("pollenplot.disease.biocap").get())
+        buildConfigField("String", "DISEASE_URL", "\"${providers.gradleProperty("pollenplot.disease.url").get()}\"")
+        buildConfigField("String", "DISEASE_SHA256", "\"${providers.gradleProperty("pollenplot.disease.sha256").getOrElse("")}\"")
+        buildConfigField("long", "DISEASE_BYTES", "${providers.gradleProperty("pollenplot.disease.bytes").get()}L")
         // BioCLIP 2's pack for high-end phones, pinned the same way; offered once its SHA-256 is set.
         buildConfigField("int", "BIOCLIP2_PACK", providers.gradleProperty("pollenplot.bioclip2.pack").get())
         buildConfigField("String", "BIOCLIP2_URL", "\"${providers.gradleProperty("pollenplot.bioclip2.url").get()}\"")
