@@ -87,6 +87,31 @@ object FeedPlanner {
             if (dueOn.isAfter(today)) null else FeedDue(zoneId, wanting.map { it.title }.distinct(), dueOn)
         }
 
+    /**
+     * The feeds each zone is due from [from] to [until]: the first on the day [due] would give (or [from] when that is
+     * past), then one every schedule's days on, each moved to the next day in a feeding month. Feeds after [from] are
+     * a forecast that assumes each feed is given on its day.
+     */
+    fun upcoming(plants: List<FeedPlant>, feeds: List<Feed>, kinds: Map<String, ProductKind>, from: LocalDate, until: LocalDate, hemisphere: Hemisphere): List<FeedDue> =
+        plants.filter { it.schedule != null }.groupBy { it.zoneId }.flatMap { (zoneId, inZone) ->
+            val result = mutableListOf<FeedDue>()
+            val last = lastFed(zoneId, feeds, kinds)
+            fun wanting(day: LocalDate) = inZone.filter { day.month in it.schedule!!.months.fromSouthern(hemisphere) }
+            var day = maxOf(last?.plusDays(inZone.minOf { it.schedule!!.everyDays }.toLong()) ?: from.withDayOfMonth(1), from)
+            var guard = 0
+            while (!day.isAfter(until) && guard++ < 400) {
+                val now = wanting(day)
+                if (now.isEmpty()) {
+                    // On to the first day of the next month, which may be a feeding month.
+                    day = day.withDayOfMonth(1).plusMonths(1)
+                    continue
+                }
+                result += FeedDue(zoneId, now.map { it.title }.distinct(), day)
+                day = day.plusDays(now.minOf { it.schedule!!.everyDays }.toLong())
+            }
+            result
+        }
+
     /** The last day a zone got a feed that was not just a conditioner. */
     fun lastFed(zoneId: String, feeds: List<Feed>, kinds: Map<String, ProductKind>): LocalDate? =
         feeds.filter { zoneId in it.zoneIds && kinds[it.productKey] != ProductKind.CONDITIONER }.maxOfOrNull { it.date }

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- A calendar of every reminder, from the calendar button on the Plot or any tab's More menu. The month shows each
+  day's jobs counted and, for the week the forecast covers, its weather with the day's high. A press on a day lists
+  its jobs by kind (watering, hive checks, pots, feeding, follow-ups, pruning, bee hotels and compost), and a press on
+  a job opens its page, so a day due a prune lists the plants to prune. The to-do list shows this week's or this
+  month's jobs. Jobs further ahead are a forecast that assumes each is done on its day.
+- Settings › Reminders has "When to remind". Reminders can come each day as before, at weekends, or on days you
+  choose, gathering the jobs that can wait for the next of them, or as one to-do list on Monday morning or on the
+  first of the month. Watering, hot days for stingless bees and pots before a hot day still come on the day.
 - Compost bins, in the Plot's More menu. Each bin goes through three steps: fill it with browns and greens, wait
   while it heats up, cools and cures, then empty it. You say when it is full and nothing more will go in, and from
   then Pollenplot reminds you to turn it every fortnight (or every week or three weeks) and, eight weeks after it was

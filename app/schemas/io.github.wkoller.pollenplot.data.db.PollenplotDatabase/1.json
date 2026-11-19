@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a1cd1f8960333562faa9250fcef0abf2",
+    "identityHash": "aa31e89c1f6ce9d6e5468cca258ed52d",
     "entities": [
       {
         "tableName": "zones",
@@ -2371,7 +2371,7 @@
       },
       {
         "tableName": "weather_days",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`dateEpochDay` INTEGER NOT NULL, `et0Um` INTEGER NOT NULL, `rainUm` INTEGER NOT NULL, `rainChanceBp` INTEGER, `maxTenthsC` INTEGER, `fetchedAt` INTEGER NOT NULL, PRIMARY KEY(`dateEpochDay`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`dateEpochDay` INTEGER NOT NULL, `et0Um` INTEGER NOT NULL, `rainUm` INTEGER NOT NULL, `rainChanceBp` INTEGER, `maxTenthsC` INTEGER, `fetchedAt` INTEGER NOT NULL, `minTenthsC` INTEGER, `weatherCode` INTEGER, PRIMARY KEY(`dateEpochDay`))",
         "fields": [
           {
             "fieldPath": "dateEpochDay",
@@ -2406,6 +2406,16 @@
             "columnName": "fetchedAt",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "minTenthsC",
+            "columnName": "minTenthsC",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "weatherCode",
+            "columnName": "weatherCode",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -3642,7 +3652,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a1cd1f8960333562faa9250fcef0abf2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'aa31e89c1f6ce9d6e5468cca258ed52d')"
     ]
   }
 }

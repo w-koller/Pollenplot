@@ -100,6 +100,22 @@ object PruneTasks {
         return start
     }
 
+    /**
+     * The days a plant pruned in [months] is due a prune from [from] to [until]: [from] itself when a run is under way
+     * and no prune is recorded since it began, then the first day of each later run of pruning months.
+     */
+    fun upcoming(months: MonthSet?, events: List<PlantEvent>, from: LocalDate, until: LocalDate): List<LocalDate> {
+        if (months == null || months.isEmpty) return emptyList()
+        val days = mutableListOf<LocalDate>()
+        if (due(months, events, from)) days += from
+        var month = from.withDayOfMonth(1).plusMonths(1)
+        while (!month.isAfter(until)) {
+            if (month.month in months && month.month.minus(1) !in months) days += month
+            month = month.plusMonths(1)
+        }
+        return days
+    }
+
     /** Whether a plant pruned in [months] is due today: in a pruning month, with no prune recorded since its run began. */
     fun due(months: MonthSet?, events: List<PlantEvent>, today: LocalDate): Boolean {
         val start = months?.let { runStart(it, today) } ?: return false

@@ -27,7 +27,8 @@ object OpenMeteoForecast {
     /** The last week and the next for the watering plan: ET₀, rain, the chance of rain and the top temperature. */
     fun weatherUrl(place: GardenPlace): String =
         "$FORECAST?latitude=${place.latText}&longitude=${place.lonText}" +
-            "&daily=et0_fao_evapotranspiration,precipitation_sum,precipitation_probability_max,temperature_2m_max&timezone=auto&past_days=7&forecast_days=7"
+            "&daily=et0_fao_evapotranspiration,precipitation_sum,precipitation_probability_max,temperature_2m_max,temperature_2m_min,weather_code" +
+            "&timezone=auto&past_days=7&forecast_days=7"
 
     /** The days in a weather answer, leaving out any day without ET₀; rain not given counts as none. */
     fun parseWeather(json: String): List<WeatherDay> {
@@ -38,6 +39,8 @@ object OpenMeteoForecast {
         val rain = column("precipitation_sum")
         val chance = column("precipitation_probability_max")
         val highs = column("temperature_2m_max")
+        val lows = column("temperature_2m_min")
+        val codes = column("weather_code")
         return days.mapIndexedNotNull { index, day ->
             val evaporation = et0.getOrNull(index)?.takeIf { it !is JsonNull } ?: return@mapIndexedNotNull null
             WeatherDay(
@@ -46,6 +49,8 @@ object OpenMeteoForecast {
                 rainUm = rain?.getOrNull(index)?.takeIf { it !is JsonNull }?.let { scaled(it.jsonPrimitive.content, 3) } ?: 0,
                 rainChanceBp = chance?.getOrNull(index)?.takeIf { it !is JsonNull }?.let { scaled(it.jsonPrimitive.content, 2) },
                 maxTenthsC = highs?.getOrNull(index)?.takeIf { it !is JsonNull }?.let { scaled(it.jsonPrimitive.content, 1) },
+                minTenthsC = lows?.getOrNull(index)?.takeIf { it !is JsonNull }?.let { scaled(it.jsonPrimitive.content, 1) },
+                code = codes?.getOrNull(index)?.takeIf { it !is JsonNull }?.jsonPrimitive?.content?.toBigDecimalOrNull()?.toInt(),
             )
         }
     }

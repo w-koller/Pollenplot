@@ -117,6 +117,12 @@ is always ready to tag.
     choice), `SprayCheck` (plants likely in flower before a spray, after BeeAware) and `DiseaseCall` (the plant
     problems pack's shares as "Looks like" suggestions, likely or possible at the pack's `yes_bp` and `maybe_bp`, or
     "No problem found"; a class the catalogue does not hold is never offered).
+  - `calendar/`: `ReminderSchedule` (each day, weekends, chosen days, or a weekly or monthly to-do list, and the
+    reminder day a job waits for) and `WeatherKind` (WMO weather codes as the calendar's kinds). The projections of
+    jobs ahead sit with their rules: `FeedPlanner.upcoming`, `PruneTasks.upcoming`, `HotelCare.nextClean` and
+    `ProblemTasks.upcoming`. `app/data/CalendarViews` gathers every job from today on, `notify/CalendarListCheck`
+    sends a list schedule's to-do list, and `HiveReminderWorker` runs the checks that can wait only on a reminder
+    day. `ui/calendar` holds the month, the to-do list, a day's page and `CalendarWords`, the words a job is told in.
   - `compost/`: `CompostBin`, `CompostBatch` (one fill, started, filled and emptied), `CompostEvent` (turns,
     waterings and temperatures) and `CompostStages` (the phase, from the days since filling or a reading from
     the last three days, and the turns and looks due; its sources and which numbers are Pollenplot's reading are in its

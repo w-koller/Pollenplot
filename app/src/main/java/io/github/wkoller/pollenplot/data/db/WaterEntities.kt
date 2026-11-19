@@ -42,6 +42,9 @@ data class WeatherDayEntity(
     val rainChanceBp: Int?,
     val maxTenthsC: Int?,
     val fetchedAt: Long,
+    val minTenthsC: Int? = null,
+    /** The day's WMO weather code. */
+    val weatherCode: Int? = null,
 )
 
 @Dao

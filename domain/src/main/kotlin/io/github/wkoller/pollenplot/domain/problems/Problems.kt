@@ -118,6 +118,12 @@ object ProblemTasks {
      */
     const val FOLLOW_UP_DAYS = 7L
 
+    /** Every follow-up still to come or due: the latest treatment of each open problem that has a follow-up day. */
+    fun upcoming(problems: List<PlantProblem>, treatments: List<Treatment>): List<FollowUp> {
+        val latest = treatments.groupBy { it.problemId }.mapValues { (_, list) -> list.maxBy { it.appliedOn } }
+        return problems.filter { it.open }.mapNotNull { problem -> latest[problem.id]?.takeIf { it.followUpOn != null }?.let { FollowUp(problem, it) } }
+    }
+
     /** The follow-ups due: the latest treatment of each open problem, once its follow-up day has come. */
     fun due(problems: List<PlantProblem>, treatments: List<Treatment>, today: LocalDate): List<FollowUp> {
         val latest = treatments.groupBy { it.problemId }.mapValues { (_, list) -> list.maxBy { it.appliedOn } }

@@ -13,6 +13,7 @@ import io.github.wkoller.pollenplot.domain.bees.honey.HiveReminders
 import kotlinx.coroutines.flow.first
 import java.time.Clock
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
@@ -37,14 +38,24 @@ class HiveReminderCheck(private val views: BeeViews, private val settings: Setti
 class HiveReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val container = (applicationContext as PollenplotApp).container
-        container.hiveReminders.run()
+        // Watering and hot days cannot wait for another day, so they are told whatever the schedule.
         container.heatAlerts.run()
         container.waterPlan.run()
-        container.potCare.run()
-        container.feedPlan.run()
-        container.problemCheck.run()
-        container.pruneCheck.run()
-        container.compostCheck.run()
+        val schedule = container.settingsStore.current().reminderSchedule
+        val today = LocalDate.now(container.clock)
+        when {
+            schedule.isList -> container.calendarList.run()
+            schedule.isReminderDay(today) -> {
+                // On a chosen day the checks tell of everything that has fallen due since the last one, as each
+                // remembers only what it has told about.
+                container.hiveReminders.run()
+                container.potCare.run()
+                container.feedPlan.run()
+                container.problemCheck.run()
+                container.pruneCheck.run()
+                container.compostCheck.run()
+            }
+        }
         return Result.success()
     }
 

@@ -71,6 +71,8 @@ import kotlinx.serialization.Serializable
 /** Plants that died or were removed. */
 @Serializable data object GraveyardRoute
 @Serializable data object CompostRoute
+@Serializable data object CalendarRoute
+@Serializable data class CalendarDayRoute(val epochDay: Long)
 @Serializable data class CompostBinRoute(val id: String)
 
 /** The plant library, optionally opened from a zone, which is then offered first for what is added. */

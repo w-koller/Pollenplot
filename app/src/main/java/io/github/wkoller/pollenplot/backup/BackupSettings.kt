@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.backup
 
+import java.time.DayOfWeek
+import io.github.wkoller.pollenplot.domain.calendar.ReminderMode
 import io.github.wkoller.pollenplot.data.prefs.NorthSide
 import io.github.wkoller.pollenplot.data.prefs.PlotLayer
 import io.github.wkoller.pollenplot.data.prefs.PlotBackground
@@ -53,6 +55,8 @@ data class BackupSettings(
     val problemReminders: Boolean? = null,
     val pruneReminders: Boolean? = null,
     val compostReminders: Boolean? = null,
+    val reminderMode: String? = null,
+    val reminderDays: List<String>? = null,
 ) {
     fun json(): String = format.encodeToString(serializer(), this)
 
@@ -86,6 +90,8 @@ data class BackupSettings(
             problemReminders = problemReminders ?: current.problemReminders,
             pruneReminders = pruneReminders ?: current.pruneReminders,
             compostReminders = compostReminders ?: current.compostReminders,
+            reminderMode = ReminderMode.entries.firstOrNull { it.name == reminderMode } ?: current.reminderMode,
+            reminderDays = reminderDays?.mapNotNull { name -> DayOfWeek.entries.firstOrNull { it.name == name } }?.toSet() ?: current.reminderDays,
             wateringWindow = wateringFromMinute?.let { from ->
                 wateringToMinute?.let { to -> runCatching { WateringWindow(from, to) }.getOrNull() }
             } ?: current.wateringWindow,
@@ -133,6 +139,8 @@ data class BackupSettings(
             problemReminders = settings.problemReminders,
             pruneReminders = settings.pruneReminders,
             compostReminders = settings.compostReminders,
+            reminderMode = settings.reminderMode.name,
+            reminderDays = settings.reminderDays.map { it.name }.sorted(),
             wateringFromMinute = settings.wateringWindow.fromMinute,
             wateringToMinute = settings.wateringWindow.toMinute,
             petsAtHome = settings.petsAtHome,

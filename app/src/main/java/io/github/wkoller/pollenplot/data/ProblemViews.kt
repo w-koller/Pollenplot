@@ -48,6 +48,12 @@ class ProblemViews(
         ProblemTasks.due(list, treatments, today()).map { FollowUpDue(it.problem.id, byId[it.problem.id]?.name.orEmpty(), byId[it.problem.id]?.plantTitle, it.treatment.followUpOn!!) }
     }
 
+    /** Every follow-up to come or due, for the calendar. */
+    val upcoming: Flow<List<FollowUpDue>> = combine(problems.problems, problems.treatments, all) { list, treatments, shown ->
+        val byId = shown.associateBy { it.problem.id }
+        ProblemTasks.upcoming(list, treatments).map { FollowUpDue(it.problem.id, byId[it.problem.id]?.name.orEmpty(), byId[it.problem.id]?.plantTitle, it.treatment.followUpOn!!) }
+    }
+
     /** The plants likely in flower now in the zones of [plantId]'s plant, or the plant alone when it has no zone. */
     fun inFlowerNear(plantId: String): Flow<List<String>> = combine(views.plants, garden.floweringList, settings.settings) { plants, seen, current ->
         val plant = plants.firstOrNull { it.plant.id == plantId } ?: return@combine emptyList()

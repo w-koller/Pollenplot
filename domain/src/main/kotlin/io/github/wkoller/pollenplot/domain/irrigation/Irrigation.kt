@@ -33,7 +33,16 @@ data class WateringLine(
 )
 
 /** A day's weather for the garden: reference evapotranspiration (ET₀) and rain, both in µm, and the chance of rain. */
-data class WeatherDay(val date: LocalDate, val et0Um: Int, val rainUm: Int, val rainChanceBp: Int?, val maxTenthsC: Int?)
+data class WeatherDay(
+    val date: LocalDate,
+    val et0Um: Int,
+    val rainUm: Int,
+    val rainChanceBp: Int?,
+    val maxTenthsC: Int?,
+    val minTenthsC: Int? = null,
+    /** The day's WMO weather code, as Open-Meteo gives it, for the calendar's picture of the day. */
+    val code: Int? = null,
+)
 
 /** A plant as the watering plan sees it: how thirsty it is, how big, how many, and the soil of its zone. */
 data class WaterPlant(
