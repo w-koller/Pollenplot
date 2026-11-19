@@ -68,7 +68,7 @@ import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.data.GardenRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
-import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.AccuratePacks
 import io.github.wkoller.pollenplot.notify.Notifications
 import io.github.wkoller.pollenplot.scan.Gallery
 import io.github.wkoller.pollenplot.scan.GalleryAccess
@@ -110,7 +110,7 @@ fun SetupScreen(
     location: GardenLocationModel,
     settings: SettingsStore,
     meaning: MeaningSearch,
-    accurate: AccuratePack,
+    accurate: AccuratePacks,
     gemma: GemmaModel,
     garden: GardenRepository,
     gallery: Gallery,
