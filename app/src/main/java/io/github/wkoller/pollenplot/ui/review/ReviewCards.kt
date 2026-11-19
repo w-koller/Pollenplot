@@ -82,6 +82,8 @@ import io.github.wkoller.pollenplot.ui.components.Badge
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
 import io.github.wkoller.pollenplot.ui.plants.ZoneChooser
+import io.github.wkoller.pollenplot.ui.plants.PlantCount
+import io.github.wkoller.pollenplot.ui.plants.PlantCounts
 import java.io.File
 import java.time.ZoneId
 import java.time.format.TextStyle
@@ -95,8 +97,11 @@ internal const val MAX_SHOWN = 3
 
 /** What a review card does when the user decides. The screen passes these on to the database. */
 class ReviewCallbacks(
-    /** Adds a find as a plant in [zoneIds]: one plant in them all, or with [each] a plant in every zone. */
-    val onAdd: (detection: DetectionRecord, speciesName: String?, customName: String?, zoneIds: List<String>, each: Boolean, flowering: Boolean) -> Unit,
+    /**
+     * Adds a find as a plant in [zoneIds]: one plant in them all, or with [each] a plant in every zone. [quantity] is how
+     * many there are in all, and [counts] how many in each zone when they were counted zone by zone.
+     */
+    val onAdd: (detection: DetectionRecord, speciesName: String?, customName: String?, zoneIds: List<String>, each: Boolean, quantity: Int, counts: Map<String, Int>?, flowering: Boolean) -> Unit,
     val onAttach: (detection: DetectionRecord, plantId: String, flowering: Boolean) -> Unit,
     val onReject: (DetectionRecord) -> Unit,
     val onUndoReject: (DetectionRecord) -> Unit,
@@ -288,6 +293,7 @@ private fun Undecided(
     var zoneChosen by rememberSaveable(detection.id) { mutableStateOf(false) }
     var each by rememberSaveable(detection.id) { mutableStateOf(false) }
     var flowering by rememberSaveable(detection.id) { mutableStateOf(detection.flowering) }
+    var count by rememberSaveable(detection.id, stateSaver = PlantCount.Saver) { mutableStateOf(PlantCount()) }
 
     val choice = chosen(detection, savedChoice)
     val shown = detection.candidates.withIndex()
@@ -386,6 +392,7 @@ private fun Undecided(
             zoneChosen = true
         }
         ManyZonesChoice(zoneIds.size, manyZones, each) { each = it }
+        PlantCounts(zones, zoneIds, eachZone(manyZones, each), count) { count = it }
     }
     if (field) {
         FieldActions(choice != null, isWeed, chosenSpecies?.displayName ?: chosenCandidate?.common ?: chosenCandidate?.label, onSave = {
@@ -411,7 +418,10 @@ private fun Undecided(
 
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val onAdd = {
-            plantPick(detection, choice, kb)?.let { callbacks.onAdd(detection, it.speciesName, it.customName, zoneIds, eachZone(manyZones, each), flowering) }
+            plantPick(detection, choice, kb)?.let { 
+                val split = eachZone(manyZones, each)
+                callbacks.onAdd(detection, it.speciesName, it.customName, zoneIds, split, count.totalFor(zoneIds, split), count.countsFor(zoneIds, split), flowering)
+            }
             Unit
         }
         // With the same species already growing, adding the photo to it is the main choice and a second plant the other.

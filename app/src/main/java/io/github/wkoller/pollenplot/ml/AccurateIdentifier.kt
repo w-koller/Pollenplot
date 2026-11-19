@@ -68,6 +68,16 @@ class AccurateModels(
         return AccurateLook(labelsNear(mean, group), flowering)
     }
 
+    /**
+     * BioCAP's vector for the whole middle square of [photo], prepared as `photos.phone_square` prepares the plant
+     * problems pack's photos, which that pack's head was trained on.
+     */
+    fun middleVector(photo: Bitmap): FloatArray {
+        val square = ThumbnailMath.squareAround(BoxBp.centreSquare(photo.width, photo.height, BoxBp.FULL), photo.width, photo.height, paddingBp = 0)
+        val pixels = Bitmaps.smoothScale(Bitmap.createBitmap(photo, square.left, square.top, square.size, square.size), BioCapEncoder.SIZE, BioCapEncoder.SIZE)
+        return encoder.encode(IntArray(BioCapEncoder.SIZE * BioCapEncoder.SIZE).also { pixels.getPixels(it, 0, BioCapEncoder.SIZE, 0, 0, BioCapEncoder.SIZE, BioCapEncoder.SIZE) })
+    }
+
     /** The closest species of [group] to [vector] as shares, best first, with the index's common names. */
     private fun labelsNear(vector: FloatArray, group: LifeGroup): List<LabelScore> {
         val wanted = group.name.lowercase()

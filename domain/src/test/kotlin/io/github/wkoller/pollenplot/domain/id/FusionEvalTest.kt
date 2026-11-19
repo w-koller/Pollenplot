@@ -11,8 +11,14 @@ import org.junit.Test
  * again by running the Fusion evaluation workflow, which is needed after a change to a model or to how the phone
  * looks at a photo.
  */
-class FusionEvalTest {
-    private val eval = FusionEval.load()
+open class FusionEvalTest {
+    /** The recorded answers, in the test resources' `id` folder. */
+    protected open val resource get() = "eval_outputs.json.gz"
+
+    /** Top 1 and top 5 in basis points with the accurate pack, by group. */
+    protected open val baseline get() = WITH_THE_PACK
+
+    private val eval by lazy { FusionEval.load(resource) }
 
     /** The app's suggestions with the accurate pack: BioCAP's look at the photo, through [CandidateFusion]. */
     private fun withThePack(photo: EvalPhoto) = eval.asTheApp(photo)
@@ -24,7 +30,7 @@ class FusionEvalTest {
     fun `with the accurate pack the app names at least as many photos as when it was last measured`() {
         val scores = eval.measure(::withThePack)
         report("With the accurate pack", scores)
-        for ((group, baseline) in WITH_THE_PACK) {
+        for ((group, baseline) in baseline) {
             val score = scores.getValue(group)
             assertTrue("$group: ${score.top1Bp} bp first, below the baseline of ${baseline.first}", score.top1Bp >= baseline.first)
             assertTrue("$group: ${score.top5Bp} bp in the first five, below the baseline of ${baseline.second}", score.top5Bp >= baseline.second)
@@ -102,15 +108,16 @@ class FusionEvalTest {
     private companion object {
         /**
          * Top 1 and top 5 in basis points, for all the photos and for the groups with the most at stake, when the
-         * steps were last changed: accurate pack 3, whose species have prototypes, on photos by observers whose
-         * photos made no prototype. BioCAP's suggestions stand in place of the quick models', from three looks as
-         * one for a plant.
+         * steps were last changed: accurate pack 4 (pack 3 at ONNX Runtime's accuracy level 4), whose species have
+         * prototypes, on photos by observers whose photos made no prototype. BioCAP's suggestions stand in place of
+         * the quick models', from three looks as one for a plant. Pack 4's photos differ from pack 3's
+         * (eval_fusion.py seeds its choice with the pack's number), so these are not comparable with pack 3's.
          */
         val WITH_THE_PACK = mapOf(
-            FusionEval.ALL to (5_050 to 7_750),
-            FusionEval.PLANT to (4_700 to 7_500),
-            "bird" to (6_250 to 8_900),
-            "insect" to (6_500 to 8_900),
+            FusionEval.ALL to (5_600 to 8_100),
+            FusionEval.PLANT to (5_550 to 8_000),
+            "bird" to (6_500 to 8_250),
+            "insect" to (6_400 to 9_300),
         )
     }
 }

@@ -2,8 +2,7 @@
 # wrong answer could hurt someone. The numbers were checked against each service's official page on 28 October 2026.
 STRINGS = {
     "models_gemma": "Garden assistant",
-    "models_gemma_body": "Gemma 4 answers questions about your plants, animals and garden on your phone, from "
-    "Pollenplot's knowledge and your own records. It is a %1$s download on Wi-Fi.",
+    "models_gemma_body": "Gemma 4 answers your questions about your plants, animals and garden. %1$s, downloaded on Wi-Fi.",
     "models_gemma_notification": "Downloading Gemma 4 for the garden assistant.",
     "models_gemma_ready": "On your phone. Please ask about a plant or animal from its page, or about your garden "
     "from search.",

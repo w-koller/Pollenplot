@@ -8,6 +8,7 @@ import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -18,6 +19,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -83,6 +85,12 @@ class SetupFlowTest {
         compose.onNodeWithText("Next").performClick()
 
         waitFor(hasText("Identification models"))
+        // Both identification packs are offered, BioCLIP 2's for high-end phones.
+        compose.onNodeWithText("Accurate identification (recommended)").assertExists()
+        compose.onNodeWithText("More accurate identification").assertExists()
+        compose.onNodeWithText("For high-end phones").assertExists()
+        // waitFor scrolled the list while it looked for the title, so the picture starts from the top again.
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
         shot("setup_models")
         compose.onNodeWithText("Skip").performClick()
 

@@ -51,3 +51,22 @@ if (providers.gradleProperty("pollenplot.biocap.sha256").getOrElse("").isNotBlan
         systemProperty("biocap.dir", unpackBiocap.get().destinationDir.absolutePath)
     }
 }
+
+// The plant problems pack, once it is published and pinned, so its head is run here on the vectors and shares its
+// reference.json holds. Until then that part of DiseaseHeadTest is skipped.
+if (providers.gradleProperty("pollenplot.disease.sha256").getOrElse("").isNotBlank()) {
+    val downloadDisease = tasks.register<VerifiedDownloadTask>("downloadDisease") {
+        url.set(providers.gradleProperty("pollenplot.disease.url"))
+        sha256.set(providers.gradleProperty("pollenplot.disease.sha256"))
+        output.set(layout.buildDirectory.file("third-party/disease-pack.zip"))
+    }
+    val unpackDisease = tasks.register<Sync>("unpackDisease") {
+        from(zipTree(downloadDisease.flatMap { it.output }))
+        into(layout.buildDirectory.dir("third-party/disease"))
+    }
+    tasks.test {
+        dependsOn(unpackDisease)
+        inputs.dir(unpackDisease.map { it.destinationDir })
+        systemProperty("disease.dir", unpackDisease.get().destinationDir.absolutePath)
+    }
+}
