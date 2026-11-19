@@ -32,6 +32,7 @@ import io.github.wkoller.pollenplot.library.LibraryPhoto
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.RoleBadges
 import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.plants.UnknownPlantNotice
 import io.github.wkoller.pollenplot.ui.plants.facts
 import io.github.wkoller.pollenplot.ui.review.WildStatusLine
 import io.github.wkoller.pollenplot.ui.weeds.WeedNotice
@@ -54,7 +55,15 @@ internal fun LibraryPlantPage(
     onEnlarge: () -> Unit,
 ) {
     val species = row.speciesName?.let { kb?.species(it) }
-    val resolved = species?.let { kb?.let { base -> CareResolver.resolve(base, it) } }
+    // A plant the knowledge base has no record of, but the models can name, shares its genus's and family's facts.
+    val unknown = if (species == null) row.speciesName ?: row.customName else null
+    val taxon = unknown?.let { kb?.taxon(it) }
+    val resolved = when {
+        kb == null -> null
+        species != null -> CareResolver.resolve(kb, species)
+        taxon != null -> CareResolver.resolveGroup(kb, taxon.genus, taxon.family)
+        else -> null
+    }
     val weed = species?.let(locality::weed)
     DetailScaffold(title = row.title, onBack = onBack) { padding ->
         LazyColumn(
@@ -99,6 +108,9 @@ internal fun LibraryPlantPage(
                     }
                 }
                 facts(resolved, species, null, all, kb, locality.hemisphere, onEditFacts = null, onAddPot = null) {}
+            } else if (taxon != null && unknown != null) {
+                item { UnknownPlantNotice(unknown, taxon.genus, taxon.family, resolved) }
+                if (resolved != null) facts(resolved, null, null, all, kb, locality.hemisphere, onEditFacts = null, onAddPot = null) {}
             } else {
                 item { Text(stringResource(if (row.speciesName == null) R.string.library_own_name else R.string.unknown_species), style = MaterialTheme.typography.bodyLarge) }
             }

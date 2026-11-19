@@ -45,6 +45,21 @@ object CareResolver {
         return merge(listOfNotNull(group.care to FactLevel.GENUS, family?.care?.let { it to FactLevel.FAMILY }))
     }
 
+    /**
+     * The facts a plant that has no record of its own shares with its [genus], then its [family], or null when the
+     * knowledge base has neither. A plant the models named, such as *Acacia longifolia*, gets the wattles' facts this
+     * way until a record of its own is written.
+     */
+    fun resolveGroup(kb: KnowledgeBase, genus: String?, family: String?): ResolvedCare? {
+        val group = genus?.let { kb.genus(it) }
+        val familyName = family ?: group?.family
+        val layers = listOfNotNull(
+            group?.care?.let { it to FactLevel.GENUS },
+            familyName?.let { kb.family(it) }?.care?.let { it to FactLevel.FAMILY },
+        )
+        return if (layers.isEmpty()) null else merge(layers)
+    }
+
     private fun merge(layers: List<Pair<CareProfile, FactLevel>>): ResolvedCare {
         val levels = mutableMapOf<CareField, FactLevel>()
 

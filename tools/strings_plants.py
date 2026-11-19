@@ -98,6 +98,8 @@ STRINGS = {
     "plant_height": "Height: %1$s",
     "plant_width": "Width: %1$s",
     "plant_range_metres": "%1$s to %2$s m",
+    "plant_up_to_metres": "up to %1$s m",
+    "plant_about_metres": "about %1$s m",
     "plant_pruning": "Pruning: %1$s",
     "plant_zone": "In %1$s",
     "plant_no_zone": "Not in a zone yet",
@@ -133,6 +135,12 @@ STRINGS = {
     "level_genus": "For the genus",
     "level_family": "For the family",
     "unknown_species": "Pollenplot does not know this plant yet. Its requirements will show once it is matched to a species.",
+    "unknown_species_genus": "Pollenplot has no notes of its own for %1$s yet. The notes below hold for every %2$s, so "
+    "they are a good guide until it has its own.",
+    "unknown_species_family": "Pollenplot has no notes of its own for %1$s yet. The notes below hold for the whole %2$s "
+    "family, so please treat them as a rough guide.",
+    "unknown_species_none": "Pollenplot has no notes for %1$s yet. Its needs will show once Pollenplot has a record of "
+    "it, and you can choose Change what it is if it is a plant Pollenplot knows by another name.",
 
     # Editing and removing a plant
     "plant_edit": "Edit",

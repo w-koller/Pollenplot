@@ -12,6 +12,8 @@ class KnowledgeBase(
     val companions: List<CompanionPair>,
     /** The user's corrections to species' care, by normalised scientific name. See [CareCorrections]. */
     private val corrections: Map<String, CareProfile> = emptyMap(),
+    /** Every plant the models can name, for the genus and family of one the knowledge base does not describe. */
+    val taxa: Taxa = Taxa.EMPTY,
 ) {
     private val speciesList = species
     val allSpecies: List<Species> = species.sortedBy { it.displayName.lowercase() }
@@ -39,7 +41,10 @@ class KnowledgeBase(
 
     /** This knowledge base with the user's [corrections], keyed by scientific name, in place of any it had. */
     fun withCorrections(corrections: Map<String, CareProfile>): KnowledgeBase =
-        KnowledgeBase(version, speciesList, allGenera, allFamilies, companions, corrections.mapKeys { normalise(it.key) })
+        KnowledgeBase(version, speciesList, allGenera, allFamilies, companions, corrections.mapKeys { normalise(it.key) }, taxa)
+
+    /** The genus, family and common name of a plant the models can name, whether or not it has a record here. */
+    fun taxon(name: String): Taxon? = taxa.of(name)
 
     /** Whether [name] is a genus that appears in the knowledge base, as a genus record or through its species. */
     fun isKnownGenus(name: String): Boolean = genus(name) != null || allSpecies.any { normalise(it.genus) == normalise(name) }
@@ -138,7 +143,7 @@ class KnowledgeBase(
                 }
                 if (relation == null || evidence == null) null else CompanionPair(c.a, c.b, relation, c.reason, evidence)
             }
-            return ParseResult(KnowledgeBase(version, species, genera, families, companions), problems)
+            return ParseResult(KnowledgeBase(version, species, genera, families, companions, taxa = files.taxa?.let(Taxa::parse) ?: Taxa.EMPTY), problems)
         }
     }
 }
@@ -150,6 +155,8 @@ data class KbFiles(
     val genera: String,
     val families: String,
     val companions: String,
+    /** `taxa.tsv`, the plants the models can name, or null where it is not needed. */
+    val taxa: String? = null,
 )
 
 data class ParseResult(val knowledgeBase: KnowledgeBase, val problems: List<String>)

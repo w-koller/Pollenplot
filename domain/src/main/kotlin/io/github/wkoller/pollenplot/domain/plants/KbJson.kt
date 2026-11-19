@@ -99,6 +99,8 @@ internal data class SpeciesJson(
     val edible: String? = null,
     val description: String? = null,
     @SerialName("care_note") val careNote: String? = null,
+    /** The pages the record's facts were taken from, for people who check or extend it. The app does not read them. */
+    val sources: List<String> = emptyList(),
 ) {
     fun care() = CareJson(
         sun, water, drought, frost, salt, soil, ph, fertiliser, fertiliserNote, compost, wildlife, forage, groundCover,
@@ -133,6 +135,8 @@ internal data class GroupJson(
     val edible: String? = null,
     val description: String? = null,
     @SerialName("care_note") val careNote: String? = null,
+    /** The pages the record's facts were taken from, for people who check or extend it. The app does not read them. */
+    val sources: List<String> = emptyList(),
 ) {
     fun care() = CareJson(
         sun, water, drought, frost, salt, soil, ph, fertiliser, fertiliserNote, compost, wildlife, forage, groundCover,

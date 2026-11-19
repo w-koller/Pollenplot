@@ -56,7 +56,11 @@ is always ready to tag.
   - `season/`: hemispheres, seasons and `MonthSet`.
   - `plants/`: the plant model, `KnowledgeBase` (parsing and validating the JSON), `CareResolver` (the user's
     corrections, then species, then genus, then family), `CareCorrections` (the facts a user may correct, stored as
-    the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges) and `Companions`.
+    the knowledge base writes them; never toxicity or edibility), `EcoRoles` (the badges), `Companions` and `Taxa`
+    (every plant the models can name with its genus, family and common name, from `assets/kb/taxa.tsv`, which
+    `tools/kb/build_taxa.py` writes from the species index; a garden plant without a record of its own takes its
+    genus's and family's facts through `CareResolver.resolveGroup`, and `GardenRepository.rematchSpecies` gives it its
+    record when the app starts with a knowledge base that has one).
   - `garden/`: zones, garden plants (a plant grows in any number of zones, `zoneIds`, with `quantity` in each;
     `GardenPlant.placings` and the `ManyZones` setting decide whether several zones chosen make one record or one
     in each), `PlotLayout` (the 50 cm grid with no edges, and tidy placement), `ZoneBadges`,
@@ -327,7 +331,9 @@ Scores run from 0 to 3, sizes are in millimetres, months are written as "jan" to
 and forage is `honey [nectar, pollen]`, `stingless [nectar, pollen, resin]`, `solitary [nectar, pollen]`. Leave a
 fact out rather than guess it: the app says "Not recorded yet", and `CareResolver` fills gaps from the genus and family
 only where a fact holds for the whole group. Weed status comes from official sources for the user's area, so species
-records keep only the national Weeds of National Significance flag. `KnowledgeBaseFilesTest` in `:domain` checks
+records keep only the national Weeds of National Significance flag. `species/researched_*.json` hold records written from research, each with
+`sources` (the pages its facts came from, which the app does not read); they keep only what those pages say, so they
+may lack sun or water, and `KnowledgeBaseFilesTest` holds them to having sources and a description instead. `KnowledgeBaseFilesTest` in `:domain` checks
 the real files on every test run. Animals and fungi are in `kb/fauna/*.json`, checked by `FaunaFilesTest`: each
 names its group, family, the states it is native to (or `introduced`), and a hazard only with a note saying what to
 do. A rule names its states and links the official page it comes from; check the number or address on that page
