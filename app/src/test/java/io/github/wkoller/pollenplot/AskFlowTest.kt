@@ -139,7 +139,7 @@ class AskFlowTest {
     @Config(qualifiers = "en-rAU-w411dp-h1600dp-xhdpi")
     fun gemmaDraftsTheCareOfAPlantTheKnowledgeBaseLacks() {
         val ids = seed()
-        val name = "Petalostigma pubescens"
+        val name = "Petalostigma triloculare"
         assertNull("The knowledge base must not have it", runBlocking { container.knowledge.await().species(name) })
         val plant = runBlocking { container.garden.addPlant(name, null, ids.front) }
         app.assistant.draft = DraftedCare(sun = listOf(Sun.FULL_SUN), water = WaterNeed.LOW, drought = 3, heightMm = listOf(3_000, 8_000), note = "It needs little care once established.")
