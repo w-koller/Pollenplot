@@ -9,16 +9,28 @@ name: Model pack
 #   writes the pack, and records the fusion evaluation's answers with it (eval_outputs.json.gz).
 # - "base" exports BioCAP's encoder and text vectors afresh (export_biocap.py), which needs PyTorch.
 # - "candidate" measures a larger model against BioCAP on the evaluation photos, and builds nothing.
+# - "benchmark" exports BioCAP's and BioCLIP 2's image encoders in 8 bits for the phone benchmark
+#   (export_candidate.py), as an artifact kept for a week, and builds no pack.
+# - "levels" scores the evaluation photos with the encoders a "benchmark" run exported (encoders_from_run), to say
+#   whether ONNX Runtime's 8-bit arithmetic (accuracy level 4) names species as well (eval_levels.py).
+# - "level4" writes pack 4, the pinned pack 3 with its encoder at accuracy level 4 (level4_pack.py), measures it
+#   against pack 3 and records the fusion evaluation's answers with it.
+# - "bioclip2" builds the BioCLIP 2 pack offered to high-end phones (export_bioclip2.py), measures it against pack 4,
+#   and records the fusion evaluation's answers with it on pack 4's photos. Published as bioclip2-pack-N.
 on:
   workflow_dispatch:
     inputs:
       build:
         description: "What to build"
         type: choice
-        options: [prototypes, base, candidate, none]
+        options: [prototypes, base, candidate, benchmark, levels, level4, bioclip2, none]
         default: prototypes
       vectors_from_run:
         description: "Reuse the prototype vectors an earlier run made, by its run ID, and only tune and write the pack"
+        type: string
+        default: ""
+      encoders_from_run:
+        description: "For levels: the run ID of a benchmark run whose encoders to evaluate"
         type: string
         default: ""
       publish:
@@ -181,9 +193,162 @@ jobs:
             build/candidate/candidate.json
             pip-freeze.txt
 
+  benchmark:
+    if: inputs.build == 'benchmark'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyTorch for the CPU
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
+          pip install "open_clip_torch>=2.26" "onnx>=1.16" onnx_ir "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
+          pip freeze > pip-freeze.txt
+      - name: Export the image encoders for the phone benchmark
+        run: python tools/models/export_candidate.py --out build/encoders
+      # One artifact for each model, so the phone's computer downloads one at a time (tools/models/run_benchmark.sh).
+      - uses: actions/upload-artifact@v7
+        with:
+          name: encoders-biocap
+          retention-days: 7
+          compression-level: 0
+          path: build/encoders/biocap-*.onnx
+      - uses: actions/upload-artifact@v7
+        with:
+          name: encoders-bioclip2
+          retention-days: 7
+          compression-level: 0
+          path: build/encoders/bioclip2-*.onnx
+      - uses: actions/upload-artifact@v7
+        with:
+          name: encoders-report
+          path: |
+            build/encoders/encoders.json
+            build/encoders/encoders.md
+            pip-freeze.txt
+
+  levels:
+    if: inputs.build == 'levels' && inputs.encoders_from_run != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyTorch for the CPU
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
+          pip install "open_clip_torch>=2.26" "onnx>=1.16" onnx_ir "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy
+          pip freeze > pip-freeze.txt
+      - uses: actions/download-artifact@v7
+        with:
+          name: encoders-biocap
+          run-id: ${{ inputs.encoders_from_run }}
+          github-token: ${{ github.token }}
+          path: build/encoders
+      - uses: actions/download-artifact@v7
+        with:
+          name: encoders-bioclip2
+          run-id: ${{ inputs.encoders_from_run }}
+          github-token: ${{ github.token }}
+          path: build/encoders
+      - uses: actions/download-artifact@v7
+        with:
+          name: encoders-report
+          run-id: ${{ inputs.encoders_from_run }}
+          github-token: ${{ github.token }}
+          path: build/report
+      - name: Score the evaluation photos with each encoder
+        run: |
+          cp "$(find build/report -name encoders.json)" build/encoders/
+          ls -l build/encoders
+          python tools/models/eval_levels.py --encoders build/encoders --out build/levels
+      - uses: actions/upload-artifact@v7
+        with:
+          name: levels
+          path: |
+            build/levels/levels.json
+            build/levels/levels.md
+            pip-freeze.txt
+
+  level4:
+    if: inputs.build == 'level4' && inputs.from_run == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          # onnx edits the encoder's nodes; LiteRT runs the AIY classifiers as the app does, for the fusion evaluation.
+          pip install $RUNTIME "onnx>=1.16" ai-edge-litert
+          pip freeze > pip-freeze.txt
+      - name: Write pack 4 and measure it against pack 3
+        run: python tools/models/level4_pack.py --out build/biocap
+      - name: Record each model's answers with the new pack
+        run: python tools/models/eval_fusion.py --pack build/biocap/biocap-pack-*.zip --out build/eval
+      - uses: actions/upload-artifact@v7
+        with:
+          name: biocap-pack
+          path: |
+            build/biocap/biocap-pack-*.zip
+            build/biocap/biocap-pack-*.zip.sha256
+            build/biocap/manifest.json
+            build/biocap/evaluation.md
+            pip-freeze.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: eval-outputs
+          path: |
+            build/eval/eval_outputs.json.gz
+            build/eval/eval_outputs.md
+
+  bioclip2:
+    if: inputs.build == 'bioclip2' && inputs.from_run == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyTorch for the CPU and the export tools
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.5,<3" torchvision
+          pip install "open_clip_torch>=2.26" "onnx>=1.16" onnx_ir "onnxruntime==1.31.0" "huggingface_hub>=0.23" safetensors pillow numpy ai-edge-litert
+          pip freeze > pip-freeze.txt
+      - name: Export BioCLIP 2 and build its pack
+        run: python tools/models/export_bioclip2.py --out build/biocap
+      - name: Record each model's answers with the new pack, on pack 4's photos
+        run: python tools/models/eval_fusion.py --pack build/biocap/bioclip2-pack-*.zip --seed 4 --out build/eval
+      - uses: actions/upload-artifact@v7
+        with:
+          name: biocap-pack
+          path: |
+            build/biocap/bioclip2-pack-*.zip
+            build/biocap/bioclip2-pack-*.zip.sha256
+            build/biocap/manifest.json
+            build/biocap/evaluation.md
+            build/biocap/reference.json
+            pip-freeze.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: eval-outputs
+          path: |
+            build/eval/eval_outputs.json.gz
+            build/eval/eval_outputs.md
+
   publish:
-    needs: [pack, base]
-    if: ${{ !cancelled() && inputs.publish && (needs.pack.result == 'success' || needs.base.result == 'success' || inputs.from_run != '') }}
+    needs: [pack, base, level4, bioclip2]
+    if: ${{ !cancelled() && inputs.publish && (needs.pack.result == 'success' || needs.base.result == 'success' || needs.level4.result == 'success' || needs.bioclip2.result == 'success' || inputs.from_run != '') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -200,10 +365,10 @@ jobs:
           path: .
       - name: Publish the pack as a release
         run: |
-          pack=$(ls build/biocap/biocap-pack-*.zip)
-          version=$(basename "$pack" .zip | sed 's/^biocap-pack-//')
-          (cd build/biocap && sha256sum --check "biocap-pack-$version.zip.sha256")
+          pack=$(ls build/biocap/*-pack-*.zip)
+          name=$(basename "$pack" .zip)
+          (cd build/biocap && sha256sum --check "$name.zip.sha256")
+          case "$name" in bioclip2-*) title="BioCLIP 2 model pack ${name#bioclip2-pack-}" ;; *) title="BioCAP model pack ${name#biocap-pack-}" ;; esac
           # Not marked as the latest release, which stays the newest app version.
-          gh release create "biocap-pack-$version" \
-            "build/biocap/biocap-pack-$version.zip" "build/biocap/biocap-pack-$version.zip.sha256" \
-            --title "BioCAP model pack $version" --notes-file build/biocap/evaluation.md --latest=false
+          gh release create "$name" "build/biocap/$name.zip" "build/biocap/$name.zip.sha256" \
+            --title "$title" --notes-file build/biocap/evaluation.md --latest=false

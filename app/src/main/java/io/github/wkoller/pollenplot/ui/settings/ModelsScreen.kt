@@ -14,7 +14,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.RichTooltip
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -36,6 +43,7 @@ import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ai.GemmaModel
 import io.github.wkoller.pollenplot.download.DownloadState
 import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.AccuratePacks
 import io.github.wkoller.pollenplot.ml.PackState
 import io.github.wkoller.pollenplot.search.MeaningSearch
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
@@ -44,20 +52,20 @@ import kotlinx.coroutines.launch
 
 /** Settings › Models: the models the app can download, how big they are, and whether they are on the phone. */
 @Composable
-fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePack, gemma: GemmaModel, onBack: () -> Unit) {
+fun ModelsScreen(meaning: MeaningSearch, accurate: AccuratePacks, gemma: GemmaModel, onBack: () -> Unit) {
     DetailScaffold(title = stringResource(R.string.models_title), onBack = onBack) { padding ->
         ModelsContent(meaning, accurate, gemma, padding)
     }
 }
 
 /**
- * A card for each model with its download controls, for Settings and the first-launch setup. [setup] puts accurate
- * identification first and marks it as recommended, and [top] adds items above the cards.
+ * A card for each model with its download controls, for Settings and the first-launch setup. [setup] puts the
+ * identification packs first, with BioCAP's marked as recommended; [top] adds items above the cards.
  */
 @Composable
 fun ModelsContent(
     meaning: MeaningSearch,
-    accurate: AccuratePack,
+    accurate: AccuratePacks,
     gemma: GemmaModel,
     padding: PaddingValues,
     setup: Boolean = false,
@@ -65,7 +73,6 @@ fun ModelsContent(
 ) {
     val context = LocalContext.current
     val state by meaning.state.collectAsStateWithLifecycle()
-    val pack by accurate.state.collectAsStateWithLifecycle()
     val assistant by gemma.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val meaningItem: LazyListScope.() -> Unit = {
@@ -106,45 +113,11 @@ fun ModelsContent(
             }
         }
     }
-    val accurateItem: LazyListScope.() -> Unit = {
-        item {
-            val current = pack
-            ModelCard(
-                icon = R.drawable.ic_local_florist,
-                title = if (setup) stringResource(R.string.setup_recommended_model, stringResource(R.string.models_accurate)) else stringResource(R.string.models_accurate),
-                body = if (accurate.available) {
-                    stringResource(R.string.models_accurate_body, Formatter.formatShortFileSize(context, accurate.download.sizeBytes))
-                } else {
-                    stringResource(R.string.models_accurate_body_short)
-                },
-            ) {
-                val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
-                when (current) {
-                    PackState.NotAvailable -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    PackState.Unpacking -> {
-                        Text(stringResource(R.string.models_unpacking), style = MaterialTheme.typography.bodyMedium, modifier = status)
-                        PollenProgressBar(null, Modifier.fillMaxWidth())
-                    }
-                    PackState.Ready -> {
-                        Text(stringResource(R.string.models_accurate_ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
-                        OutlinedButton(onClick = { scope.launch { accurate.delete() } }) { Text(stringResource(R.string.models_delete)) }
-                    }
-                    PackState.Damaged -> {
-                        Text(stringResource(R.string.models_damaged), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = status)
-                        Button(onClick = { accurate.download.start() }) { Text(stringResource(R.string.models_try_again)) }
-                    }
-                    is PackState.Fetching -> DownloadControls(
-                        state = current.download,
-                        totalBytes = accurate.download.sizeBytes,
-                        ready = R.string.models_unpacking,
-                        onDownload = { accurate.download.start() },
-                        onUseMobileData = { accurate.download.restartWithMobileData() },
-                        onCancel = { accurate.download.cancel() },
-                        onDelete = { scope.launch { accurate.delete() } },
-                    )
-                }
-            }
-        }
+    val biocapItem: LazyListScope.() -> Unit = {
+        item { PackCard(accurate, accurate.biocap, setup) }
+    }
+    val bioclip2Item: LazyListScope.() -> Unit = {
+        item { PackCard(accurate, accurate.bioclip2, setup) }
     }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = padding, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         top()
@@ -156,10 +129,108 @@ fun ModelsContent(
             )
         }
         // Accurate identification matters most to a new garden, so setup offers it first.
-        if (setup) accurateItem()
+        if (setup) {
+            biocapItem()
+            bioclip2Item()
+        }
         meaningItem()
         gemmaItem()
-        if (!setup) accurateItem()
+        if (!setup) {
+            biocapItem()
+            bioclip2Item()
+        }
+    }
+}
+
+/**
+ * An accurate pack's card: BioCAP's for every phone, or BioCLIP 2's, marked for high-end phones with its recommended
+ * requirements in a tooltip and a warning on a phone with less memory than recommended.
+ */
+@Composable
+private fun PackCard(packs: AccuratePacks, accurate: AccuratePack, setup: Boolean) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val current by accurate.state.collectAsStateWithLifecycle()
+    val other by (if (accurate === packs.bioclip2) packs.biocap else packs.bioclip2).state.collectAsStateWithLifecycle()
+    val bioclip2 = accurate === packs.bioclip2
+    val size = Formatter.formatShortFileSize(context, accurate.download.sizeBytes)
+    val title = stringResource(if (bioclip2) R.string.models_bioclip2 else R.string.models_accurate)
+    ModelCard(
+        icon = R.drawable.ic_local_florist,
+        title = if (setup && !bioclip2) stringResource(R.string.setup_recommended_model, title) else title,
+        body = when {
+            bioclip2 && accurate.available -> stringResource(R.string.models_bioclip2_body, size)
+            bioclip2 -> stringResource(R.string.models_bioclip2_body_short)
+            accurate.available -> stringResource(R.string.models_accurate_body, size)
+            else -> stringResource(R.string.models_accurate_body_short)
+        },
+    ) {
+        if (bioclip2) {
+            HighEndRequirements()
+            if (packs.memoryBytes > 0 && !packs.meetsBioclip2Memory) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+                    Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                    Text(
+                        stringResource(R.string.models_bioclip2_low_memory, Formatter.formatShortFileSize(context, packs.memoryBytes)),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+        val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+        when (val state = current) {
+            PackState.NotAvailable -> Text(stringResource(R.string.models_not_ready), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            PackState.Unpacking -> {
+                Text(stringResource(R.string.models_unpacking), style = MaterialTheme.typography.bodyMedium, modifier = status)
+                PollenProgressBar(null, Modifier.fillMaxWidth())
+            }
+            PackState.Ready -> {
+                val ready = when {
+                    bioclip2 -> R.string.models_bioclip2_ready
+                    // BioCLIP 2 identifies while both are on the phone.
+                    other == PackState.Ready -> R.string.models_accurate_ready_unused
+                    else -> R.string.models_accurate_ready
+                }
+                Text(stringResource(ready), style = MaterialTheme.typography.bodyMedium, modifier = status)
+                OutlinedButton(onClick = { scope.launch { accurate.delete() } }) { Text(stringResource(R.string.models_delete)) }
+            }
+            PackState.Damaged -> {
+                Text(stringResource(R.string.models_damaged), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = status)
+                Button(onClick = { accurate.download.start() }) { Text(stringResource(R.string.models_try_again)) }
+            }
+            is PackState.Fetching -> DownloadControls(
+                state = state.download,
+                totalBytes = accurate.download.sizeBytes,
+                ready = R.string.models_unpacking,
+                onDownload = { accurate.download.start() },
+                onUseMobileData = { accurate.download.restartWithMobileData() },
+                onCancel = { accurate.download.cancel() },
+                onDelete = { scope.launch { accurate.delete() } },
+            )
+        }
+    }
+}
+
+/** "For high-end phones", with a button that shows the recommended requirements in a tooltip. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HighEndRequirements() {
+    val scope = rememberCoroutineScope()
+    val tooltip = rememberTooltipState(isPersistent = true)
+    val heading = stringResource(R.string.models_requirements)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.models_high_end), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+            tooltip = {
+                RichTooltip(title = { Text(heading) }) { Text(stringResource(R.string.models_bioclip2_requirements)) }
+            },
+            state = tooltip,
+        ) {
+            IconButton(onClick = { scope.launch { tooltip.show() } }) {
+                Icon(painterResource(R.drawable.ic_info), contentDescription = heading)
+            }
+        }
     }
 }
 

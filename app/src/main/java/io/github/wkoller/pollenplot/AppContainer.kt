@@ -61,7 +61,7 @@ import io.github.wkoller.pollenplot.domain.semantic.DarwinCore
 import io.github.wkoller.pollenplot.domain.semantic.JsonLd
 import io.github.wkoller.pollenplot.domain.weeds.WeedAlternatives
 import io.github.wkoller.pollenplot.download.DownloadState
-import io.github.wkoller.pollenplot.ml.AccuratePack
+import io.github.wkoller.pollenplot.ml.AccuratePacks
 import io.github.wkoller.pollenplot.ml.AiyModel
 import io.github.wkoller.pollenplot.ml.AccuratePlantIdentifier
 import io.github.wkoller.pollenplot.ml.FastPlantIdentifier
@@ -212,7 +212,8 @@ class AppContainer(
         settingsStore,
     )
 
-    val accurate = AccuratePack(appContext, scope)
+    /** BioCAP's pack and BioCLIP 2's; the one on the phone that names the most identifies. */
+    val accurate = AccuratePacks(appContext, scope)
 
     /**
      * The plants the models can name, for the search that corrects a suggestion: the accurate pack's, which have

@@ -49,6 +49,8 @@ STRINGS = {
     "licence_item_onnxruntime_notices": "Libraries included in ONNX Runtime",
     "licence_item_bge": "bge-small-en-v1.5 text model, by BAAI (downloaded for search by meaning)",
     "licence_item_biocap": "BioCAP model, by the Imageomics Institute (downloaded for accurate identification)",
+    "licence_item_bioclip2": "BioCLIP 2 model, by the Imageomics Institute (downloaded for more accurate "
+    "identification)",
     "licence_item_litertlm": "LiteRT-LM",
     "licence_item_litertlm_notices": "Libraries included in LiteRT-LM",
     "licence_item_gemma": "Gemma 4 E2B model, by Google (downloaded for the garden assistant)",
