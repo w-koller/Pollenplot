@@ -42,9 +42,19 @@ class BioCapTest {
                 val vector = encoder.encode(argb)
                 val expected = reference["vector"]!!.jsonArray.map { it.jsonPrimitive.float }
                 val cosine = vector.indices.sumOf { (vector[it] * expected[it]).toDouble() }
-                assertTrue("$file: cosine $cosine", cosine > 0.999)
+                assertTrue("$file: cosine $cosine", cosine > MIN_COSINE)
                 assertEquals(file, reference["best"]!!.jsonPrimitive.content, index.nearest(vector, count = 1).single().species.name)
             }
         }
+    }
+
+    private companion object {
+        /**
+         * How close the phone's vector must be to the export's. Pack 4 computes its 8-bit layers in 8-bit integers
+         * (ONNX Runtime's accuracy level 4), whose kernels round a little differently from one processor to another:
+         * CI machines gave 0.9986 for a reference made on another. The species each image is closest to must still
+         * match exactly.
+         */
+        const val MIN_COSINE = 0.995
     }
 }
