@@ -1,6 +1,5 @@
 package io.github.wkoller.pollenplot.ui.components
 
-import android.provider.Settings
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -25,12 +23,12 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.domain.compost.CompostPhase
+import io.github.wkoller.pollenplot.ui.theme.animationsOn
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -42,10 +40,7 @@ import kotlin.math.sin
  */
 @Composable
 fun CompostAnimation(phase: CompostPhase, description: String, modifier: Modifier = Modifier, size: Dp = 160.dp) {
-    val context = LocalContext.current
-    val still = remember(context) {
-        runCatching { Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) }.getOrDefault(1f) == 0f
-    }
+    val still = !animationsOn()
     val period = when (phase) {
         CompostPhase.HOT -> 1_800
         CompostPhase.COOLING, CompostPhase.WARMING -> 3_200

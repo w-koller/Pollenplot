@@ -16,7 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * One row's place in a [SegmentedGroup]: the shape that rounds the group's outer corners and keeps the inner ones
@@ -45,7 +45,7 @@ fun SegmentedGroup(modifier: Modifier = Modifier, content: SegmentedGroupScope.(
     val colors = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     val count = scope.rows.size
     Column(
-        modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier.fillMaxWidth().padding(horizontal = Spacing.l),
         verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
     ) {
         scope.rows.forEachIndexed { index, row -> row(Segment(ListItemDefaults.segmentedShapes(index, count), colors)) }
@@ -61,7 +61,7 @@ fun SegmentSurface(segment: Segment, modifier: Modifier = Modifier, content: @Co
         color = segment.colors.containerColor,
         contentColor = segment.colors.contentColor,
     ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { content() }
+        Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m)) { content() }
     }
 }
 

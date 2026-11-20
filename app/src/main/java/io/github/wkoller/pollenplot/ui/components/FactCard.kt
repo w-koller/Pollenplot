@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.domain.plants.FactLevel
 
@@ -32,17 +31,17 @@ import io.github.wkoller.pollenplot.domain.plants.FactLevel
 fun FactCard(@DrawableRes icon: Int, title: String, level: FactLevel? = null, content: @Composable ColumnScope.() -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 // The tag goes under the heading when there is no room beside it, rather than squeezing a word apart.
                 FlowRow(
                     Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                     itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
@@ -57,7 +56,7 @@ fun FactCard(@DrawableRes icon: Int, title: String, level: FactLevel? = null, co
 /** Says whose a fact is when it is not the species' own: the genus's, the family's or the user's correction. */
 @Composable
 fun LevelTag(level: FactLevel) {
-    Surface(shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+    Surface(shape = MaterialTheme.shapes.small, border = BorderStroke(Spacing.hairline, MaterialTheme.colorScheme.outline)) {
         Text(
             stringResource(
                 when (level) {
@@ -67,7 +66,7 @@ fun LevelTag(level: FactLevel) {
                 },
             ),
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = Spacing.s, vertical = Spacing.xxs),
         )
     }
 }

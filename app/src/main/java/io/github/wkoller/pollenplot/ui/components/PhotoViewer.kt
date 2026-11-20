@@ -21,14 +21,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
+import io.github.wkoller.pollenplot.ui.theme.PollenTheme
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
@@ -45,10 +45,10 @@ fun PhotoViewer(file: File, title: String, credit: String?, onDismiss: () -> Uni
     var offset by remember { mutableStateOf(Offset.Zero) }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
-            Modifier.fillMaxSize().background(Color.Black).safeDrawingPadding().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            Modifier.fillMaxSize().background(PollenTheme.colors.scrim).safeDrawingPadding().padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = Color.White, modifier = Modifier.semantics { heading() })
+            Text(title, style = MaterialTheme.typography.titleLarge, color = PollenTheme.colors.onScrim, modifier = Modifier.semantics { heading() })
             Box(
                 Modifier
                     .weight(1f)
@@ -73,7 +73,7 @@ fun PhotoViewer(file: File, title: String, credit: String?, onDismiss: () -> Uni
                     },
                 )
             }
-            credit?.let { Text(stringResource(R.string.library_photo_credit, it), style = MaterialTheme.typography.bodyMedium, color = Color.White) }
+            credit?.let { Text(stringResource(R.string.library_photo_credit, it), style = MaterialTheme.typography.bodyMedium, color = PollenTheme.colors.onScrim) }
             Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.photo_close)) }
         }
     }

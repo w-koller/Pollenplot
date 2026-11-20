@@ -7,11 +7,14 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-/** Shows that the app is working on something of unknown length, such as finding the plants in a photo. */
+/**
+ * Shows that the app is working on something of unknown length, such as finding the plants in a photo. Its shape turns
+ * from a flower to a clover, the sun and a cookie, Pollenplot's own loading indicator.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PollenLoadingIndicator(modifier: Modifier = Modifier, contained: Boolean = false) {
-    if (contained) ContainedLoadingIndicator(modifier) else LoadingIndicator(modifier)
+    if (contained) ContainedLoadingIndicator(modifier, polygons = PollenShapes.loading) else LoadingIndicator(modifier, polygons = PollenShapes.loading)
 }
 
 /** Shows how far something has got, such as photos being looked at, or that it has started when [progress] is null. */
