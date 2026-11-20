@@ -25,7 +25,10 @@ Compose under Robolectric), and with text at twice its size it saves each screen
 pictures to `app/build/screenshots/`. Look at them after UI changes: there are light, dark and
 wide-window versions, and `PlotScreenFlowTest` drives a demo yard (`DemoGarden`) through the Plot, zones, plants and
 search. Screens fed by Room flows use the classic `createComposeRule`, because the v2 rule's standard test dispatcher
-does not pick up database emissions while a test waits. Even so, a screen whose first data came only from a Room flow
+did not pick up database emissions while a test waits. The classic rule's unconfined dispatcher has a cost of its own:
+a Room emission resumes the composition on Room's thread, and now and then lays out the screen while the test's main
+thread is doing so ("performMeasureAndLayout called during measure layout"). `AccessibilityFlowTest`, which waits for
+every screen it checks, runs on the v2 rule for that reason, and a test that fails that way can try it too. Even so, a screen whose first data came only from a Room flow
 now and then stayed on its loading state under Robolectric (about one run in ten, more while Gradle was busy), so the
 Identify results are published by `IdentifyModel` as soon as the analysis returns, and the Room flow only brings later
 changes. Prefer that shape when a screen opens on data the app has just written. Press what a press has just opened, such as a
