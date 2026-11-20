@@ -140,7 +140,8 @@ class ReviewFlowTest {
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Add the photo to it"))
         compose.onNodeWithText("Add the photo to it").performClick()
         waitFor(hasText("Added to the photos of Rosemary."))
-        assertEquals(1, runBlocking { garden.pendingReviewCount.first() })
+        // The message shows as the write starts, so wait for the write rather than read the count at once.
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.pendingReviewCount.first() } == 1 }
         assertEquals(ids.hive, runBlocking { garden.plantList.first() }.single { it.speciesName == "Salvia rosmarinus" }.zoneIds.singleOrNull())
         // The decided find has left, and the one still waiting is at hand.
         compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Add the photo to it").fetchSemanticsNodes().isEmpty() }
@@ -151,7 +152,7 @@ class ReviewFlowTest {
         compose.onNodeWithText("Not a plant").performClick()
         waitFor(hasContentDescription("More"))
         waitFor(hasText("Dismissed 1 find."))
-        assertEquals(0, runBlocking { garden.pendingReviewCount.first() })
+        compose.waitUntil(WAIT_MS) { runBlocking { garden.pendingReviewCount.first() } == 0 }
         shot("review_queue_closed")
     }
 
