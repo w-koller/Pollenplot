@@ -26,6 +26,44 @@ STRINGS = {
     "ask_intro_garden": "Please ask about your whole garden, such as which plants feed birds or where frogs were "
     "seen.",
     "ask_open": "Ask Gemma",
+
+    # The questions the Ask screen offers, the greeting, and what it shows while it reads the garden. Every question
+    # is checked against GardenAssistantGuard, so none of them gets the app's own answer instead of Gemma's.
+    "ask_greeting_morning": "Good morning.",
+    "ask_greeting_afternoon": "Good afternoon.",
+    "ask_greeting_evening": "Good evening.",
+    "ask_pulse": "%1$s.",
+    "ask_try": "Try asking",
+    "ask_more_ideas": "More ideas",
+    "ask_next": "Ask next",
+    "ask_reading_garden": "Reading about %1$s in your garden.",
+    "ask_reading_summary": "Looking over your garden.",
+    "ask_reading_about": "Reading about %1$s.",
+    "ask_reading_animal": "Reading about the %1$s.",
+    "ask_group_honey": "honey bees",
+    "ask_group_stingless": "stingless bees",
+    "ask_group_solitary": "solitary native bees",
+    "ask_start_hot_day": "How can I help my stingless bees through the heat on %1$s?",
+    "ask_start_follow_up": "What should I look for when I check the %2$s for %1$s?",
+    "ask_start_visitor_on_plant": "What brings the %1$s to my %2$s?",
+    "ask_start_visitor": "What brings the %1$s to my garden?",
+    "ask_start_fungus": "What does the %1$s growing in my garden tell me?",
+    "ask_start_in_flower_zone": "What is flowering for the bees in the %1$s?",
+    "ask_start_in_flower": "Which of my flowers are feeding the bees this month?",
+    "ask_start_gap": "What could I plant to feed %1$s in %2$s?",
+    "ask_start_unfed": "What could I plant to feed %1$s?",
+    "ask_start_season_bees": "What could I plant this %1$s to bring in more bees?",
+    "ask_start_season_birds": "Which plants would bring birds to my garden this %1$s?",
+    "ask_start_season_jobs": "What should I be doing in the garden this %1$s?",
+    "ask_start_frogs": "How can I make my garden a better home for frogs?",
+    "ask_start_plant_flowering": "When does the %1$s flower?",
+    "ask_start_plant_bees": "Which bees visit the %1$s?",
+    "ask_start_plant_pruning": "When should I prune the %1$s?",
+    "ask_start_plant_spot": "What spot suits the %1$s best?",
+    "ask_start_zone_bees": "What could I plant in the %1$s for the bees?",
+    "ask_start_animal_needs": "What does the %1$s need from a garden?",
+    "ask_start_animal_food": "What does the %1$s feed on?",
+    "ask_start_animal_plants": "Which plants would bring the %1$s back?",
     "draft_heading": "Care",
     "draft_none": "Pollenplot's knowledge base doesn't have this plant yet.",
     "draft_needs_gemma": "Gemma 4 can draft its care once it is on this phone. Please download it in Settings › "
@@ -75,4 +113,12 @@ STRINGS = {
     "fixed_wildlife_care": "Until then, please keep it somewhere warm, dark and quiet, and please don't give it food "
     "or water. Please don't touch a bat or flying-fox at all, because they can carry lyssavirus.",
     "fixed_source": "The official page",
+}
+
+PLURALS = {
+    "ask_pulse_flowering": {"one": "%d plant is in flower", "other": "%d plants are in flower"},
+    "ask_pulse_visitors": {"one": "%d new visitor was seen in the last month", "other": "%d new visitors were seen in the last month"},
+    "ask_reading_plants": {"one": "%d plant", "other": "%d plants"},
+    "ask_reading_zones": {"one": "%d zone", "other": "%d zones"},
+    "ask_reading_sightings": {"one": "%d sighting", "other": "%d sightings"},
 }

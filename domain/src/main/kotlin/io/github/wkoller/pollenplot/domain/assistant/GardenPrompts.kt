@@ -1,5 +1,10 @@
 package io.github.wkoller.pollenplot.domain.assistant
 
+import io.github.wkoller.pollenplot.domain.rhythms.BeeGroup
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
+
 /** A record from the garden the assistant was given for a question about the garden, which its answer may cite. */
 data class CitedRecord(val id: String, val kind: RecordKind, val title: String, val text: String)
 
@@ -24,11 +29,16 @@ object GardenPrompts {
 
     /**
      * A question about the whole garden, with a [summary] of it and the records that seemed to match, numbered so the
-     * answer can cite them.
+     * answer can cite them. [facts] are what is known about the records the question was asked about.
      */
-    fun garden(summary: String, records: List<CitedRecord>, question: String): String = buildString {
+    fun garden(summary: String, records: List<CitedRecord>, question: String, facts: List<String> = emptyList()): String = buildString {
         appendLine("The garden: $summary")
         appendLine()
+        if (facts.isNotEmpty()) {
+            appendLine("Facts about what the question is about:")
+            facts.forEach { appendLine("- $it") }
+            appendLine()
+        }
         if (records.isEmpty()) {
             appendLine("No records in the user's garden matched the question.")
         } else {
@@ -39,6 +49,45 @@ object GardenPrompts {
         }
         append("Question: ${question.trim()}")
     }
+
+    /**
+     * What the garden is doing now, as lines for its summary: the day and season, what is in flower, new visitors, the
+     * months the bees go without, hot days ahead and problems due a second look.
+     */
+    fun pulse(pulse: GardenPulse): List<String> = buildList {
+        add("Today is ${DAY.format(pulse.today)}, in ${pulse.season.name.lowercase()}.")
+        if (pulse.inFlower.isNotEmpty()) {
+            add("In flower this month: " + pulse.inFlower.take(LISTED).joinToString(", ") { plant -> plant.name + (plant.zoneName?.let { " in $it" } ?: "") } + ".")
+        }
+        if (pulse.visitors.isNotEmpty()) {
+            add("Seen in the garden for the first time this year, in the last month: " + pulse.visitors.take(LISTED).joinToString(", ") { visitor -> visitor.name + (visitor.plantName?.let { " on $it" } ?: "") } + ".")
+        }
+        pulse.gaps.forEach { gap ->
+            val bees = beeWords(gap.group)
+            val lack = if (gap.month == null) "Nothing in the garden flowers for $bees yet." else "Nothing in the garden flowers for $bees in ${gap.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}."
+            add(lack + if (gap.plants.isEmpty()) "" else " Plants that would: ${gap.plants.joinToString(", ")}.")
+        }
+        if (pulse.hotDays.isNotEmpty()) {
+            add("Hot days ahead for the stingless bee hives: " + pulse.hotDays.joinToString(", ") { "${DAY.format(it.date)}, ${it.maxTenthsC / 10} °C" } + ".")
+        }
+        if (pulse.followUps.isNotEmpty()) {
+            add("Problems due a second look: " + pulse.followUps.joinToString(", ") { it.problem + (it.plantName?.let { plant -> " on $plant" } ?: "") } + ".")
+        }
+        val hives = listOfNotNull(
+            pulse.honeyHives.takeIf { it > 0 }?.let { "$it honey bee hive" + if (it == 1) "" else "s" },
+            pulse.stinglessHives.takeIf { it > 0 }?.let { "$it stingless bee hive" + if (it == 1) "" else "s" },
+        )
+        if (hives.isNotEmpty()) add("Hives kept: ${hives.joinToString(" and ")}.")
+    }
+
+    private fun beeWords(group: BeeGroup): String = when (group) {
+        BeeGroup.HONEY -> "honey bees"
+        BeeGroup.STINGLESS -> "stingless bees"
+        BeeGroup.SOLITARY -> "solitary native bees"
+    }
+
+    private val DAY = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ENGLISH)
+    private const val LISTED = 12
 
     /** The records an answer cites, by number, in the order it first cites them; numbers with no record are left out. */
     fun citations(answer: String, records: List<CitedRecord>): List<CitedRecord> = CITE.findAll(answer)
