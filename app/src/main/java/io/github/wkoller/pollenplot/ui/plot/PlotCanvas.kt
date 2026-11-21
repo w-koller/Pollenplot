@@ -95,6 +95,7 @@ import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.tone
+import io.github.wkoller.pollenplot.ui.theme.PollenTheme
 import io.github.wkoller.pollenplot.ui.water.byHand
 import io.github.wkoller.pollenplot.ui.water.icon
 import io.github.wkoller.pollenplot.ui.water.nextWateringSentence
@@ -633,7 +634,7 @@ private fun ZoneTile(
             border = when {
                 selected -> BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
                 // A flowering layer says the same in its own way, so the edge would only repeat it.
-                view.inFlower > 0 && layer != PlotLayer.BLOOM_NOW && layer != PlotLayer.BLOOM_LATER -> BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary)
+                view.inFlower > 0 && layer != PlotLayer.BLOOM_NOW && layer != PlotLayer.BLOOM_LATER -> BorderStroke(2.dp, PollenTheme.colors.bloom.colour)
                 else -> null
             },
             modifier = Modifier
@@ -718,7 +719,7 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due
         val flowers = bloomLine ?: view.inFlower.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.zone_tile_in_flower, it, it) }
         if (heightDp >= 64 && flowers != null) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(painterResource(R.drawable.ic_local_florist), contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(14.dp))
+                Icon(painterResource(R.drawable.ic_local_florist), contentDescription = null, tint = PollenTheme.colors.bloom.colour, modifier = Modifier.size(14.dp))
                 Text(flowers, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -974,11 +975,11 @@ private const val LAYER_ALPHA = 0.55f
 
 @Composable
 private fun sunLayer(sun: Sun): LayerPaint {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val colours = PollenTheme.colors
     return when (sun) {
-        Sun.FULL_SUN -> LayerPaint(if (dark) Color(0xFFFFB300) else Color(0xFFFFB000), Color.Transparent, null)
-        Sun.PART_SHADE -> LayerPaint(if (dark) Color(0xFF4DB6AC) else Color(0xFF26A69A), if (dark) Color(0xFFB2DFDB) else Color(0xFF00695C), 14f)
-        Sun.FULL_SHADE -> LayerPaint(if (dark) Color(0xFF5C7CFA) else Color(0xFF3949AB), if (dark) Color(0xFFC5CAE9) else Color(0xFF1A237E), 7f)
+        Sun.FULL_SUN -> LayerPaint(colours.fullSun.fill, colours.fullSun.mark, null)
+        Sun.PART_SHADE -> LayerPaint(colours.partShade.fill, colours.partShade.mark, 14f)
+        Sun.FULL_SHADE -> LayerPaint(colours.fullShade.fill, colours.fullShade.mark, 7f)
     }
 }
 
@@ -989,14 +990,15 @@ private fun sunLayer(sun: Sun): LayerPaint {
  */
 @Composable
 private fun bloomLayer(grade: BloomGrade): LayerPaint {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    val mark = if (dark) Color(0xFFF8E1F4) else Color(0xFF4A0D45)
-    return when (grade) {
-        BloomGrade.NONE -> LayerPaint(if (dark) Color(0xFF4A3B4F) else Color(0xFFEDE0EC), mark, null, dots = true)
-        BloomGrade.FEW -> LayerPaint(if (dark) Color(0xFF7E4C86) else Color(0xFFE1B4DC), mark, 16f, dots = true)
-        BloomGrade.SOME -> LayerPaint(if (dark) Color(0xFFB0549F) else Color(0xFFCB6FBF), mark, 11f, dots = true)
-        BloomGrade.MOST -> LayerPaint(if (dark) Color(0xFFE07BC9) else Color(0xFF9C2A8C), mark, 7f, dots = true)
+    val grades = PollenTheme.colors.bloomGrades
+    val step = when (grade) {
+        BloomGrade.NONE -> null
+        BloomGrade.FEW -> 16f
+        BloomGrade.SOME -> 11f
+        BloomGrade.MOST -> 7f
     }
+    val colours = grades[grade.ordinal.coerceAtMost(grades.lastIndex)]
+    return LayerPaint(colours.fill, colours.mark, step, dots = true)
 }
 
 private fun DrawScope.drawLayer(layer: LayerPaint) {

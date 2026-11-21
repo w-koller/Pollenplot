@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- Pollenplot has a new look, Field Guide, made like a naturalist's notebook.
+  - Leaf green on warm paper, with wattle gold beside it. Banksia rust marks wildlife, and water and flowers keep a
+    blue-green and a pink of their own, even with the wallpaper's colours.
+  - Large headings, such as each tab's name and a dialog's title, are set in Fraunces, a soft serif. Everything else
+    stays in the phone's own font.
+  - Cards and sheets have rounder corners.
+  - A plant's picture is a clover, and turns into a flower while the plant is in flower.
+  - Pages with nothing on them yet show their icon on a cookie in front of a gold sun, and it grows into place as the
+    page opens. It stays still when the phone's animations are off.
+  - The loading indicator turns from a flower to a clover, the sun and a cookie.
+- With large text, a tab's top bar no longer breaks a word in two once it has shrunk. Its title keeps to two lines
+  and its subtitle to one. The Plot's small top bar leaves its subtitle out.
+- The last row of a list now always clears the add button, as on the Wildlife tab before any animal is recorded.
+- About › Licences lists the Fraunces typeface and its licence, the SIL Open Font License.
+
 ## 1.0.0-rc.5
 
 - A calendar of every reminder, from the calendar button on the Plot or any tab's More menu. The month shows each

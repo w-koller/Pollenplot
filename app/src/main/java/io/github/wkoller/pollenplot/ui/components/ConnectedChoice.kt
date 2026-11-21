@@ -20,7 +20,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * A Material 3 Expressive connected button group for choosing one of a few options, such as a section or a theme.
@@ -40,7 +40,7 @@ fun <T> ConnectedChoice(
         val fontScale = LocalDensity.current.fontScale
         var stacked by remember(labels, maxWidth, fontScale) { mutableStateOf(false) }
         if (stacked) {
-            Column(Modifier.fillMaxWidth().selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.fillMaxWidth().selectableGroup(), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 options.forEachIndexed { index, option ->
                     ToggleButton(
                         checked = option == selected,

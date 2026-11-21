@@ -164,6 +164,7 @@ private val licences = listOf(
     LicenceItem(R.string.licence_item_jetpack, R.string.licence_apache, APACHE),
     LicenceItem(R.string.licence_item_kotlin, R.string.licence_apache, APACHE),
     LicenceItem(R.string.licence_item_material_symbols, R.string.licence_apache, APACHE),
+    LicenceItem(R.string.licence_item_fraunces, R.string.licence_ofl, "fraunces-OFL.txt"),
     LicenceItem(R.string.licence_item_aiy_plants, R.string.licence_apache, APACHE),
     LicenceItem(R.string.licence_item_litert, R.string.licence_apache, "litert-LICENSE.txt"),
     LicenceItem(R.string.licence_item_litert_notices, R.string.licence_notices, "litert-THIRD_PARTY_NOTICE.txt"),

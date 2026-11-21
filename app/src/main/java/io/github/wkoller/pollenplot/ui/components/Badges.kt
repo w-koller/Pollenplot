@@ -30,17 +30,22 @@ import io.github.wkoller.pollenplot.ui.plants.BadgeTone
 import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.tone
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.PollenTheme
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 data class ToneColours(val container: Color, val content: Color)
 
 @Composable
 fun toneColours(tone: BadgeTone): ToneColours {
     val scheme = MaterialTheme.colorScheme
+    // Water keeps its own blue-green, whatever colours the theme takes from the wallpaper.
+    val water = PollenTheme.colors.water
     return when (tone) {
         BadgeTone.WARNING -> ToneColours(scheme.errorContainer, scheme.onErrorContainer)
         BadgeTone.WILDLIFE -> ToneColours(scheme.secondaryContainer, scheme.onSecondaryContainer)
         BadgeTone.PLANT -> ToneColours(scheme.primaryContainer, scheme.onPrimaryContainer)
-        BadgeTone.WATER -> ToneColours(scheme.tertiaryContainer, scheme.onTertiaryContainer)
+        BadgeTone.WATER -> ToneColours(water.container, water.onContainer)
     }
 }
 
@@ -50,11 +55,11 @@ fun Badge(@DrawableRes icon: Int, text: String, tone: BadgeTone, modifier: Modif
     val colours = toneColours(tone)
     Surface(shape = CircleShape, color = colours.container, contentColor = colours.content, modifier = modifier) {
         Row(
-            Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            Modifier.padding(horizontal = Spacing.m, vertical = Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {
-            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(IconSize.small))
             Text(text, style = MaterialTheme.typography.labelLarge)
         }
     }
@@ -67,7 +72,7 @@ fun RoleBadge(role: EcoRole, modifier: Modifier = Modifier) = Badge(role.icon, s
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RoleBadges(roles: List<EcoRole>, modifier: Modifier = Modifier) {
-    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         roles.forEach { RoleBadge(it) }
     }
 }
@@ -87,7 +92,7 @@ fun IconBadges(items: List<BadgeItem>, modifier: Modifier = Modifier, max: Int =
     val moreText = if (more > 0) pluralStringResource(R.plurals.role_more, more, more) else null
     Row(
         modifier.semantics(mergeDescendants = true) { contentDescription = items.joinToString(", ") { it.label } },
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         shown.forEach { item ->
