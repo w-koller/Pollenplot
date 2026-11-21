@@ -9,7 +9,6 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.core.app.ActivityOptionsCompat
 import io.github.wkoller.pollenplot.domain.problems.DiseaseCall
 import io.github.wkoller.pollenplot.domain.problems.ProblemCatalogue
@@ -195,7 +194,10 @@ class ProblemFlowTest {
         compose.onNodeWithText("Add a photo").performScrollTo().performClick()
         waitFor(hasText("No problem found", substring = true))
         compose.onNodeWithText("Looks like").assertDoesNotExist()
-        compose.onNodeWithText("Save").performScrollTo().assertIsNotEnabled()
+        // With nothing chosen, Save says what is missing rather than saving.
+        compose.onNodeWithText("Save").performScrollTo().performClick()
+        waitFor(hasText("Please choose what you saw, or choose Other and name it."))
+        assertTrue("Nothing was recorded", runBlocking { problems.problems.first() }.isEmpty())
     }
 
     @Test

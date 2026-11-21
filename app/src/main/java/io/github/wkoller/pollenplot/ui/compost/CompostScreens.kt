@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.compost
 
+import io.github.wkoller.pollenplot.ui.components.ProblemLine
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
@@ -263,6 +266,9 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
             item { SectionHeading(stringResource(R.string.compost_bin_settings)) }
             item {
                 var name by rememberSaveable(view.bin.id) { mutableStateOf(view.bin.name) }
+                val check = rememberFormCheck()
+                val nameProblem = stringResource(R.string.compost_name_needed).takeIf { name.isBlank() }
+                val saved = stringResource(R.string.compost_name_saved)
                 Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         OutlinedTextField(
@@ -270,11 +276,17 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
                             onValueChange = { name = it },
                             label = { Text(stringResource(R.string.compost_name)) },
                             singleLine = true,
-                            modifier = Modifier.weight(1f),
+                            isError = check.isError(nameProblem),
+                            supportingText = check.supporting(nameProblem),
+                            modifier = Modifier.weight(1f).formField(check, NAME, nameProblem),
                         )
                         TextButton(
-                            enabled = name.isNotBlank() && name.trim() != view.bin.name,
-                            onClick = { scope.launch { repository.updateBin(view.bin.copy(name = name)) } },
+                            onClick = save@{
+                                if (!check.passes(NAME to nameProblem)) return@save
+                                // The same name again needs nothing saved, but the press is still answered.
+                                if (name.trim() != view.bin.name) scope.launch { repository.updateBin(view.bin.copy(name = name.trim())) }
+                                notices?.show(saved)
+                            },
                         ) { Text(stringResource(R.string.compost_name_save)) }
                     }
                     ChipGroup(
@@ -347,24 +359,26 @@ private fun Steps(current: CompostStep, finished: Boolean) {
 private fun Reading(onSave: (Int) -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }
     val tenths = text.replace(',', '.').toBigDecimalOrNull()?.movePointRight(1)?.toInt()?.takeIf { it in 0..900 }
+    val check = rememberFormCheck()
+    val problem = stringResource(R.string.compost_reading_bad).takeIf { tenths == null }
+    // A reading that cannot be used says so as it is typed; an empty one says so when Save is pressed.
+    val shown = if (text.isNotBlank()) problem else check.shown(problem)
     Row(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },
             label = { Text(stringResource(R.string.compost_reading)) },
             singleLine = true,
-            isError = text.isNotBlank() && tenths == null,
-            supportingText = if (text.isNotBlank() && tenths == null) {
-                { Text(stringResource(R.string.compost_reading_bad)) }
-            } else {
-                null
-            },
+            isError = shown != null,
+            supportingText = shown?.let { { ProblemLine(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).formField(check, READING, shown, live = true),
         )
-        TextButton(enabled = tenths != null, onClick = {
+        TextButton(onClick = save@{
+            if (!check.passes(READING to problem)) return@save
             tenths?.let(onSave)
             text = ""
+            check.reset()
         }) { Text(stringResource(R.string.compost_reading_save)) }
     }
 }
@@ -397,3 +411,6 @@ private fun phaseBody(phase: CompostPhase?): Int = when (phase) {
     CompostPhase.READY -> R.string.compost_phase_ready_body
     CompostPhase.EMPTIED -> R.string.compost_phase_emptied_body
 }
+
+private const val NAME = "name"
+private const val READING = "reading"

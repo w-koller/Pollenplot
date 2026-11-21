@@ -44,6 +44,7 @@ STRINGS = {
     "review_flowering_not_seen": "No flowers were seen in the photo.",
     "review_flowering_out_of_season": "%1$s does not usually flower in %2$s.",
     "review_add": "Add to garden",
+    "review_choose_plant": "Please choose which plant this is.",
     "review_add_again": "Add as another plant",
     "review_not_plant": "Not a plant",
     "review_added": "Added to your garden.",

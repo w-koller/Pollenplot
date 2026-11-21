@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToNodeAction
@@ -113,7 +112,10 @@ class BackupFlowTest {
         field("Password (optional)").performTextInput("wollemi pine")
         field("Type the password again").performTextInput("wollemi")
         waitFor(hasText("The two passwords are not the same. Please type them again."))
-        button("Save a backup").assertIsNotEnabled()
+        // Save stays pressable, and pressing it while the passwords differ saves nothing.
+        button("Save a backup").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("The backup was saved.").assertDoesNotExist()
         field("Type the password again").performTextInput(" pine")
         button("Save a backup").assertIsEnabled().performClick()
         waitFor(hasText("The backup was saved."))

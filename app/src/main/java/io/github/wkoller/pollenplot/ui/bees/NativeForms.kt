@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.FormCheck
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +81,7 @@ fun NativeHiveEditorScreen(natives: NativeBeeRepository, views: GardenViews, hiv
     var status by rememberSaveable { mutableStateOf(NativeStatus.ACTIVE) }
     var notes by rememberSaveable { mutableStateOf("") }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    val hiveCheck = rememberFormCheck()
 
     LaunchedEffect(hiveId) {
         if (started || hiveId == null) return@LaunchedEffect
@@ -103,11 +107,20 @@ fun NativeHiveEditorScreen(natives: NativeBeeRepository, views: GardenViews, hiv
         },
     ) { padding ->
         if (!started) return@DetailScaffold
+        val nameProblem = stringResource(R.string.native_name_needed).takeIf { name.isBlank() }
         Column(
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.honey_name)) },
+                singleLine = true,
+                isError = hiveCheck.isError(nameProblem),
+                supportingText = hiveCheck.supporting(nameProblem),
+                modifier = Modifier.fillMaxWidth().formField(hiveCheck, NAME, nameProblem),
+            )
             ChipGroup(stringResource(R.string.native_species), StinglessSpecies.entries, species, { stringResource(it.label) }) { species = it }
             ChipGroup(stringResource(R.string.native_box), NativeBox.entries, box, { stringResource(it.label) }) { box = it }
             ChipGroup(stringResource(R.string.native_origin), NativeOrigin.entries, origin, { stringResource(it.label) }) { origin = it }
@@ -121,8 +134,8 @@ fun NativeHiveEditorScreen(natives: NativeBeeRepository, views: GardenViews, hiv
             if (hiveId != null) ChipGroup(stringResource(R.string.native_status), NativeStatus.entries, status, { stringResource(it.label) }) { status = it }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
-                enabled = name.isNotBlank(),
-                onClick = {
+                onClick = save@{
+                    if (!hiveCheck.passes(NAME to nameProblem)) return@save
                     scope.launch {
                         if (hiveId == null) {
                             val hive = natives.addHive(name, species, box, origin, zoneId, facing, today)
@@ -173,11 +186,12 @@ fun NativeLogScreen(initialKind: NativeLogKind, hiveId: String, natives: NativeB
     var notes by rememberSaveable { mutableStateOf("") }
     val date = LocalDate.ofEpochDay(day)
     val grams = weight.toGrams()
-    val valid = when (kind) {
-        NativeLogKind.ACTIVITY -> count.toIntOrNull() != null
-        NativeLogKind.WEIGHT -> grams != null
-        NativeLogKind.HONEY -> honey.toIntOrNull()?.let { it > 0 } == true
-        else -> true
+    val check = rememberFormCheck()
+    val amountProblem = when {
+        kind == NativeLogKind.ACTIVITY && count.toIntOrNull() == null -> stringResource(R.string.native_count_needed)
+        kind == NativeLogKind.WEIGHT && grams == null -> stringResource(R.string.native_weight_needed)
+        kind == NativeLogKind.HONEY && honey.toIntOrNull()?.let { it > 0 } != true -> stringResource(R.string.native_honey_needed)
+        else -> null
     }
 
     DetailScaffold(title = stringResource(R.string.native_log), onBack = onBack) { padding ->
@@ -194,17 +208,17 @@ fun NativeLogScreen(initialKind: NativeLogKind, hiveId: String, natives: NativeB
                 }
             }
             when (kind) {
-                NativeLogKind.ACTIVITY -> NumberField(stringResource(R.string.native_bees_per_minute), count, KeyboardType.Number) { text -> count = text.filter(Char::isDigit).take(4) }
-                NativeLogKind.WEIGHT -> NumberField(stringResource(R.string.native_weight_kg), weight, KeyboardType.Decimal) { weight = it.take(8) }
-                NativeLogKind.HONEY -> NumberField(stringResource(R.string.native_honey_ml), honey, KeyboardType.Number) { text -> honey = text.filter(Char::isDigit).take(5) }
+                NativeLogKind.ACTIVITY -> NumberField(stringResource(R.string.native_bees_per_minute), count, KeyboardType.Number, check, amountProblem) { text -> count = text.filter(Char::isDigit).take(4) }
+                NativeLogKind.WEIGHT -> NumberField(stringResource(R.string.native_weight_kg), weight, KeyboardType.Decimal, check, amountProblem) { weight = it.take(8) }
+                NativeLogKind.HONEY -> NumberField(stringResource(R.string.native_honey_ml), honey, KeyboardType.Number, check, amountProblem) { text -> honey = text.filter(Char::isDigit).take(5) }
                 NativeLogKind.PEST -> ChipGroup(stringResource(R.string.native_pest_kind), NativePest.entries, pest, { stringResource(it.label) }) { pest = it }
                 NativeLogKind.SWARM -> ChipGroup(stringResource(R.string.native_swarm_kind), NativeSwarm.entries, swarm, { stringResource(it.label) }) { swarm = it }
                 else -> Unit
             }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
-                enabled = valid,
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(AMOUNT to amountProblem)) return@save
                     scope.launch {
                         natives.saveLog(
                             NativeLog(
@@ -237,16 +251,21 @@ fun NativeLogScreen(initialKind: NativeLogKind, hiveId: String, natives: NativeB
 }
 
 @Composable
-private fun NumberField(label: String, value: String, keyboard: KeyboardType, onChange: (String) -> Unit) {
+private fun NumberField(label: String, value: String, keyboard: KeyboardType, check: FormCheck, problem: String?, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
         label = { Text(label) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboard),
-        modifier = Modifier.fillMaxWidth(),
+        isError = check.isError(problem),
+        supportingText = check.supporting(problem),
+        modifier = Modifier.fillMaxWidth().formField(check, AMOUNT, problem),
     )
 }
+
+private const val NAME = "name"
+private const val AMOUNT = "amount"
 
 /** Kilograms typed with a point or a comma as whole grams, or null if it is not a positive number. */
 private fun String.toGrams(): Int? {

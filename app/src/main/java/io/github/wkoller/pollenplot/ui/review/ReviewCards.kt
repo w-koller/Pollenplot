@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.components.checkedRowColors
 import io.github.wkoller.pollenplot.ui.plants.eachZone
 import io.github.wkoller.pollenplot.ui.plants.ManyZonesChoice
@@ -421,19 +424,22 @@ private fun Undecided(
         trailingContent = { Switch(checked = flowering, onCheckedChange = null) },
     ) { Text(stringResource(R.string.review_flowering)) }
 
+    val check = rememberFormCheck()
+    val choiceProblem = stringResource(R.string.review_choose_plant).takeIf { choice == null }
+    FieldProblem(check.shown(choiceProblem), Modifier.formField(check, CHOICE, choiceProblem, focus = false))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        val onAdd = {
+        val onAdd: () -> Unit = add@{
+            if (!check.passes(CHOICE to choiceProblem)) return@add
             plantPick(detection, choice, kb)?.let { 
                 val split = eachZone(manyZones, each)
                 callbacks.onAdd(detection, it.speciesName, it.customName, zoneIds, split, count.totalFor(zoneIds, split), count.countsFor(zoneIds, split), flowering)
             }
-            Unit
         }
         // With the same species already growing, adding the photo to it is the main choice and a second plant the other.
         if (existing != null) {
-            OutlinedButton(onClick = onAdd, enabled = choice != null) { Text(stringResource(R.string.review_add_again)) }
+            OutlinedButton(onClick = onAdd) { Text(stringResource(R.string.review_add_again)) }
         } else {
-            Button(onClick = onAdd, enabled = choice != null) { Text(stringResource(R.string.review_add)) }
+            Button(onClick = onAdd) { Text(stringResource(R.string.review_add)) }
         }
         OutlinedButton(onClick = { callbacks.onReject(detection) }) { Text(stringResource(R.string.review_not_plant)) }
     }
@@ -564,3 +570,5 @@ fun confidenceLabel(scoreBp: Int): Int = when (Confidence.of(scoreBp)) {
     Confidence.MEDIUM -> R.string.confidence_medium
     Confidence.LOW -> R.string.confidence_low
 }
+
+private const val CHOICE = "choice"

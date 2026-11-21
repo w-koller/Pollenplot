@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.review.NamesSaver
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.graphics.Shape
@@ -792,6 +794,8 @@ private fun EditPlantSheet(
     var endedOn by rememberSaveable { mutableStateOf(plant.endedOn) }
     var choosingEnd by rememberSaveable { mutableStateOf(false) }
     var choosingDay by rememberSaveable { mutableStateOf(false) }
+    val check = rememberFormCheck()
+    val nameProblem = stringResource(R.string.edit_needs_name).takeIf { plant.speciesName == null && name.isBlank() }
     val today = LocalDate.now()
     // Opened at its full height, and kept above the keyboard, so Save changes at the bottom can always be reached.
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -822,7 +826,9 @@ private fun EditPlantSheet(
                     onValueChange = { name = it },
                     label = { Text(stringResource(R.string.add_sheet_nickname)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    isError = check.isError(nameProblem),
+                    supportingText = check.supporting(nameProblem),
+                    modifier = Modifier.fillMaxWidth().formField(check, NICKNAME, nameProblem),
                 )
             }
             item {
@@ -846,11 +852,11 @@ private fun EditPlantSheet(
                 }
             }
             item {
-                val needsName = plant.speciesName == null && name.isBlank()
-                if (needsName) Text(stringResource(R.string.edit_needs_name), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = Spacing.s))
                 Button(
-                    onClick = { onSave(plant.copy(zoneIds = zoneIds, quantity = count.totalFor(zoneIds, false), counts = count.countsFor(zoneIds, false).orEmpty(), plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status, endedOn = if (status == PlantStatus.GROWING) null else endedOn ?: today)) },
-                    enabled = !needsName,
+                    onClick = save@{
+                        if (!check.passes(NICKNAME to nameProblem)) return@save
+                        onSave(plant.copy(zoneIds = zoneIds, quantity = count.totalFor(zoneIds, false), counts = count.countsFor(zoneIds, false).orEmpty(), plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status, endedOn = if (status == PlantStatus.GROWING) null else endedOn ?: today))
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.edit_save)) }
             }
@@ -930,3 +936,5 @@ internal fun sizeText(range: io.github.wkoller.pollenplot.domain.plants.SizeRang
     range.minMm == range.maxMm -> stringResource(R.string.plant_about_metres, UiFormat.metresFromMm(range.maxMm))
     else -> stringResource(R.string.plant_range_metres, UiFormat.metresFromMm(range.minMm), UiFormat.metresFromMm(range.maxMm))
 }
+
+private const val NICKNAME = "nickname"

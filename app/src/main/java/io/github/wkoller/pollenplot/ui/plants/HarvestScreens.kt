@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.ProblemLine
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.FactCard
@@ -202,12 +205,15 @@ fun HarvestScreen(plantId: String, harvestId: String?, harvests: HarvestReposito
             initialised = true
         }
     }
+    val check = rememberFormCheck()
     if (harvestId != null && original == null) return
     val date = LocalDate.ofEpochDay(day)
     val grams = grams(kilograms)
     val pieces = count.trim().toIntOrNull()?.takeIf { it > 0 }
     val weightError = kilograms.isNotBlank() && grams == null
     val countError = count.isNotBlank() && pieces == null
+    val weightProblem = stringResource(R.string.harvest_weight_error).takeIf { weightError }
+    val countProblem = stringResource(R.string.harvest_count_error).takeIf { countError }
 
     DetailScaffold(title = stringResource(if (harvestId == null) R.string.harvest_record_title else R.string.harvest_edit_title), onBack = onBack) { padding ->
         Column(
@@ -219,25 +225,21 @@ fun HarvestScreen(plantId: String, harvestId: String?, harvests: HarvestReposito
                 value = kilograms,
                 onValueChange = { kilograms = it },
                 label = { Text(stringResource(R.string.harvest_weight)) },
-                supportingText = { Text(stringResource(if (weightError) R.string.harvest_weight_error else R.string.harvest_weight_help)) },
+                supportingText = { if (weightProblem != null) ProblemLine(weightProblem) else Text(stringResource(R.string.harvest_weight_help)) },
                 isError = weightError,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().formField(check, WEIGHT, weightProblem, live = true),
             )
             OutlinedTextField(
                 value = count,
                 onValueChange = { count = it },
                 label = { Text(stringResource(R.string.harvest_how_many)) },
-                supportingText = if (countError) {
-                    { Text(stringResource(R.string.harvest_count_error)) }
-                } else {
-                    null
-                },
+                supportingText = countProblem?.let { { ProblemLine(it) } },
                 isError = countError,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().formField(check, COUNT, countProblem, live = true),
             )
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(stringResource(R.string.harvest_rating), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
@@ -254,7 +256,8 @@ fun HarvestScreen(plantId: String, harvestId: String?, harvests: HarvestReposito
             }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.harvest_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(WEIGHT to weightProblem, COUNT to countProblem)) return@save
                     scope.launch {
                         val stored = original
                         if (stored == null) {
@@ -266,7 +269,6 @@ fun HarvestScreen(plantId: String, harvestId: String?, harvests: HarvestReposito
                         withContext(Dispatchers.Main) { onBack() }
                     }
                 },
-                enabled = !weightError && !countError,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.harvest_save)) }
             if (original != null) {
@@ -310,3 +312,6 @@ internal fun grams(kilograms: String): Int? {
     val grams = value.movePointRight(3).setScale(0, RoundingMode.HALF_UP)
     return grams.toInt().takeIf { grams.signum() > 0 && grams < BigDecimal(1_000_000) }
 }
+
+private const val WEIGHT = "weight"
+private const val COUNT = "count"

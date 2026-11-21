@@ -11,6 +11,7 @@ STRINGS = {
     "report_quarter": "Last 3 months",
     "report_year": "Last 12 months",
     "report_sections": "What it covers",
+    "report_sections_needed": "Please choose at least one part for the report to cover.",
     "report_save_pdf": "Save as a PDF",
     "report_save_xlsx": "Save as a spreadsheet",
     "report_title": "Pollenplot garden report",

@@ -61,6 +61,8 @@
     <string name="backup_password_body">With a password, the backup is encrypted and opens only with that password. Please keep the password somewhere safe, because nobody can recover it.</string>
     <string name="backup_password_repeat">Type the password again</string>
     <string name="backup_password_mismatch">The two passwords are not the same. Please type them again.</string>
+    <string name="backup_password_repeat_needed">Please type the password again, so it can be checked.</string>
+    <string name="backup_unlock_needed">Please enter the backup\'s password.</string>
     <string name="backup_show_password">Show the password</string>
     <string name="backup_hide_password">Hide the password</string>
     <string name="backup_save">Save a backup</string>
@@ -217,6 +219,8 @@
     <string name="compost_bin_settings">This bin</string>
     <string name="compost_name">Name</string>
     <string name="compost_name_save">Save name</string>
+    <string name="compost_name_needed">Please give the bin a name.</string>
+    <string name="compost_name_saved">The bin\'s name is saved.</string>
     <string name="compost_turn_every">Turn it every</string>
     <string name="compost_turn_days">%1$d days</string>
     <string name="compost_turn_source">The Government of South Australia says turning once a week or so is helpful but not essential. A fortnight is a good start.</string>
@@ -533,6 +537,9 @@
     <string name="honey_apiary_name">Apiary name</string>
     <string name="honey_apiary_registration">Registration number</string>
     <string name="honey_save">Save</string>
+    <string name="honey_name_needed">Please give the hive a name.</string>
+    <string name="honey_apiary_name_needed">Please give the new apiary a name.</string>
+    <string name="honey_queen_year_invalid">Please enter a year from 1990 to %1$d, or leave the year empty.</string>
     <string name="honey_delete_hive">Delete hive</string>
     <string name="honey_delete_title">Delete this hive?</string>
     <string name="honey_delete_body">The hive and everything recorded for it will be removed.</string>
@@ -600,11 +607,15 @@
     <string name="honey_sample_bees">Bees in the sample</string>
     <string name="honey_sample_days">Days the mat was in</string>
     <string name="honey_mites">Mites counted</string>
+    <string name="honey_mites_needed">Please enter how many mites you counted.</string>
+    <string name="honey_sample_bees_needed">Please enter how many bees were in the sample.</string>
+    <string name="honey_sample_days_needed">Please enter how many days the mat was in.</string>
     <string name="honey_reported">Reported to my state</string>
     <string name="honey_report_bee123">Report this check on the Bee 123 form</string>
     <string name="honey_check_drone_note">Drone uncapping shows whether there are mites, but not enough to decide on a treatment.</string>
     <string name="honey_treatment">Treatment</string>
     <string name="honey_treatment_product">Product</string>
+    <string name="honey_product_needed">Please enter the product you used.</string>
     <string name="honey_treatment_ingredient">Active ingredient</string>
     <string name="honey_treatment_started">Started</string>
     <string name="honey_treatment_ended">Ended on %1$s</string>
@@ -623,6 +634,7 @@
     <string name="honey_harvest">Harvest</string>
     <string name="honey_harvest_frames">Frames taken</string>
     <string name="honey_harvest_kg">Honey in kilograms</string>
+    <string name="honey_kg_needed">Please enter the honey\'s weight in kilograms, such as 12.5.</string>
     <string name="honey_harvest_kg_only">%1$s kg</string>
     <string name="honey_event">Colony event</string>
     <string name="event_swarmed">Swarmed</string>
@@ -670,6 +682,7 @@
     <string name="hotel_seal_guide">Who sealed it?</string>
     <string name="hotel_seal_guide_body">The seal on a finished nest says who is likely inside, as Aussie Bee\'s Bee Hotel Guide describes. Wasps share bee hotels too.</string>
     <string name="hotel_new">New bee hotel</string>
+    <string name="hotel_name_needed">Please give the hotel a name.</string>
     <string name="hotel">Bee hotel</string>
     <string name="hotel_edit">Edit hotel</string>
     <string name="hotel_height_cm">Height off the ground in centimetres</string>
@@ -680,6 +693,7 @@
     <string name="hotel_hole_mm">Hole width in millimetres</string>
     <string name="hotel_depth_mm">Hole depth in millimetres</string>
     <string name="hotel_holes">Number of holes</string>
+    <string name="hotel_holes_needed">Please enter how many holes this section has.</string>
     <string name="hotel_section_size">%1$d mm wide</string>
     <string name="hotel_section_depth">%1$d mm deep</string>
     <string name="hotel_faces">Faces %1$s</string>
@@ -738,6 +752,7 @@
     <string name="review_flowering_not_seen">No flowers were seen in the photo.</string>
     <string name="review_flowering_out_of_season">%1$s does not usually flower in %2$s.</string>
     <string name="review_add">Add to garden</string>
+    <string name="review_choose_plant">Please choose which plant this is.</string>
     <string name="review_add_again">Add as another plant</string>
     <string name="review_not_plant">Not a plant</string>
     <string name="review_added">Added to your garden.</string>
@@ -897,6 +912,7 @@
     <string name="native_swarm_defending">Defending swarm</string>
     <string name="native_swarm_mating">Mating swarm</string>
     <string name="native_new_hive">New native bee hive</string>
+    <string name="native_name_needed">Please give the hive a name.</string>
     <string name="native_hive">Native bee hive</string>
     <string name="native_edit_hive">Edit hive</string>
     <string name="native_species">Kind of bees</string>
@@ -910,8 +926,11 @@
     <string name="native_log">Record</string>
     <string name="native_log_kind">What you are recording</string>
     <string name="native_bees_per_minute">Bees coming home in a minute</string>
+    <string name="native_count_needed">Please enter how many bees you counted in a minute.</string>
     <string name="native_weight_kg">Weight in kilograms</string>
+    <string name="native_weight_needed">Please enter the hive\'s weight in kilograms, such as 4.2.</string>
     <string name="native_honey_ml">Honey in millilitres</string>
+    <string name="native_honey_needed">Please enter how much honey you took, in millilitres.</string>
     <string name="native_pest_kind">Pest</string>
     <string name="native_swarm_kind">Kind of swarm</string>
     <string name="native_weight_line">%1$s kg</string>
@@ -1418,6 +1437,7 @@
     <string name="problem_seen_on">Seen on %1$s</string>
     <string name="problem_log_title">Record a problem</string>
     <string name="problem_what">What you saw</string>
+    <string name="problem_choose_needed">Please choose what you saw, or choose Other and name it.</string>
     <string name="problem_other">Something else</string>
     <string name="problem_other_name">What it is</string>
     <string name="problem_other_error">Please name what you saw.</string>
@@ -1449,6 +1469,7 @@
     <string name="problem_photo">Photo of the problem</string>
     <string name="treatment_title">Record a treatment</string>
     <string name="treatment_method">What you did</string>
+    <string name="treatment_method_needed">Please choose how you treated it.</string>
     <string name="treatment_product">Product, if any</string>
     <string name="treatment_follow_up">Look again</string>
     <string name="treatment_follow_up_days">In %1$d days</string>
@@ -1483,6 +1504,7 @@
     <string name="report_quarter">Last 3 months</string>
     <string name="report_year">Last 12 months</string>
     <string name="report_sections">What it covers</string>
+    <string name="report_sections_needed">Please choose at least one part for the report to cover.</string>
     <string name="report_save_pdf">Save as a PDF</string>
     <string name="report_save_xlsx">Save as a spreadsheet</string>
     <string name="report_title">Pollenplot garden report</string>
@@ -1830,6 +1852,8 @@
     <string name="water_no_weather">There is no weather yet. Pollenplot will fetch it when the phone is online.</string>
     <string name="water_lines">Watering lines</string>
     <string name="water_add_line">Add a watering line</string>
+    <string name="line_name_needed">Please give the line a name.</string>
+    <string name="line_zones_needed">Please choose at least one zone this line waters.</string>
     <string name="water_by_hand">Watered by hand</string>
     <string name="water_due">Please water today between %1$s and %2$s, about %3$s L in all.</string>
     <string name="water_wait">Watering is due, but %1$s mm of rain is likely tomorrow, so it can wait a day.</string>
@@ -2080,6 +2104,7 @@
     <string name="review_rejected_wildlife_title">Not wildlife</string>
     <string name="review_rejected_wildlife">This part of the photo will not be added to your sightings.</string>
     <string name="review_add_sighting">Add sighting</string>
+    <string name="review_choose_animal">Please choose which animal this is.</string>
     <string name="review_not_wildlife">Not wildlife</string>
     <string name="review_on_plant">On a plant</string>
     <string name="review_on_no_plant">None</string>
@@ -2154,6 +2179,7 @@
     <string name="sighting_new_title">Add a sighting</string>
     <string name="sighting_seen_at">Seen on %1$s at %2$s.</string>
     <string name="sighting_choose_animal">Choose the animal</string>
+    <string name="sighting_animal_needed">Please choose the animal you saw.</string>
     <string name="sighting_change_animal">Change the animal</string>
     <string name="sighting_about_animal">About this animal</string>
     <string name="sighting_when">When</string>
