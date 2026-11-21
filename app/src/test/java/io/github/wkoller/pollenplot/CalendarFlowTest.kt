@@ -121,7 +121,7 @@ class CalendarFlowTest {
         scrollTo(hasText("Weekends"))
         compose.pressWhenShown(hasText("Weekends"))
         compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.settings.first().reminderMode == ReminderMode.WEEKENDS } }
-        waitFor(hasText("Jobs that can wait are gathered for Saturday or Sunday morning."))
+        waitFor(hasText("Pollenplot gathers the jobs that can wait for Saturday or Sunday morning."))
         compose.pressWhenShown(hasText("Chosen days"))
         compose.pressWhenShown(hasText("Tue"))
         compose.waitUntil(WAIT_MS) { runBlocking { app.container.settingsStore.settings.first().reminderDays.isNotEmpty() } }

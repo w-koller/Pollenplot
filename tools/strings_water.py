@@ -85,13 +85,12 @@ STRINGS = {
     "water_pooling": "Minutes before water pools",
     "water_pooling_hint": "Please run the line and time how long it takes for water to start pooling. Pollenplot then "
     "splits longer runs into shorter ones with a break between them.",
-    "water_runoff": "This line puts on about %1$s mm an hour, faster than %2$s soaks it in, which FAO puts at %3$s to "
-    "%4$s mm an hour, so water may pool and run off.",
+    "water_runoff": "This line puts on about %1$s mm an hour. FAO puts how fast %2$s soaks water in at %3$s to %4$s mm an hour, so water may pool and run off.",
     "water_runoff_time_it": "To split each run so the water soaks in, please time how long the line runs before water "
     "starts to pool, and add that to the line.",
-    "water_runoff_whole": "Water takes longer to pool than the line runs, so each run can stay whole.",
+    "water_runoff_whole": "Water takes longer to pool than the line runs, so there is no need to split its runs.",
     "water_delete_title": "Delete this line?",
-    "water_delete_body": "The line and the waterings recorded for it will be removed.",
+    "water_delete_body": "This removes the line and the waterings recorded for it.",
 }
 
 PLURALS = {

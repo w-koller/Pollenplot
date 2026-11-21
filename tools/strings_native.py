@@ -78,11 +78,10 @@ STRINGS = {
     "native_not_weighed": "Not weighed yet",
     "native_count_none": "Bees coming home not counted yet",
     "native_delete_title": "Delete this hive?",
-    "native_delete_body": "The hive and everything recorded for it will be removed.",
+    "native_delete_body": "This removes the hive and everything recorded for it.",
 
     "native_seen": "Native bees seen this year",
-    "native_seen_none": "No native bees have been recorded in your yard this year. Bees you photograph or add on the "
-    "Wildlife tab will be listed here.",
+    "native_seen_none": "No native bees have been recorded in your yard this year. Bees you photograph or add on the Wildlife tab show up here.",
     "native_seen_last": "Last seen on %1$s",
 
     "native_heat": "Hot days",

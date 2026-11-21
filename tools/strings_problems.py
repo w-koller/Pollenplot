@@ -38,7 +38,7 @@ STRINGS = {
     "problem_mark_open": "Mark as open again",
     "problem_delete": "Delete",
     "problem_delete_title": "Delete this problem?",
-    "problem_delete_body": "The problem, its treatments and its photo are removed from Pollenplot.",
+    "problem_delete_body": "This removes the problem, its treatments and its photo from Pollenplot.",
     "problem_photo": "Photo of the problem",
     "treatment_title": "Record a treatment",
     "treatment_method": "What you did",
@@ -47,7 +47,7 @@ STRINGS = {
     "treatment_follow_up": "Look again",
     "treatment_follow_up_days": "In %1$d days",
     "treatment_follow_up_none": "No reminder",
-    "treatment_follow_up_note": "Seven days is Pollenplot's own choice. Please follow the product's label.",
+    "treatment_follow_up_note": "Pollenplot chose the seven days itself. Please follow the product's label.",
     "treatment_line": "%1$s on %2$s",
     "treatment_follow_up_on": "Look again on %1$s",
     "treatment_white_oil": "White oil",
@@ -61,14 +61,12 @@ STRINGS = {
     "treatment_other_spray": "Another spray",
     "treatment_other": "Something else",
     "spray_title": "Plants are in flower",
-    "spray_body": "These plants nearby are likely in flower: %1$s. BeeAware advises not to spray flowers that bees "
-    "visit, except in the evening after bees stop flying, and to let the spray dry before bees touch it. Please spray "
-    "in the evening or wait until flowering ends.",
+    "spray_body": "The plants nearby that are likely in flower are %1$s. BeeAware advises not to spray flowers that bees visit, except in the evening after bees stop flying, and to let the spray dry before bees touch it. Please spray in the evening or wait until flowering ends.",
     "spray_save": "Record anyway",
     "today_follow_up": "Please look again at %1$s on %2$s.",
     "today_follow_up_no_plant": "Please look again at %1$s.",
     "settings_problem_reminders": "Remind me to look again at problems",
-    "settings_problem_reminders_body": "A notification says when a treated problem is due a second look.",
+    "settings_problem_reminders_body": "Pollenplot sends a notification when a treated problem is due a second look.",
 }
 
 PLURALS = {

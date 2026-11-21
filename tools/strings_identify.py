@@ -2,8 +2,7 @@
 STRINGS = {
     "identify_title": "Identify",
     "identify_permission_title": "Pollenplot needs the camera to identify plants.",
-    "identify_permission_body": "Photos are identified on your phone and are not sent anywhere. Please allow the camera "
-    "to continue.",
+    "identify_permission_body": "Pollenplot identifies photos on your phone and never sends them anywhere. Please allow the camera to continue.",
     "identify_permission_allow": "Allow the camera",
     "identify_permission_settings": "Open app settings",
     "identify_capture": "Take a photo",
@@ -65,7 +64,7 @@ STRINGS = {
 
     # Adding plant photos from the phone
     "plant_photos_title": "What do the photos show?",
-    "plant_photos_body": "A photo of one plant gives one card, for the plant in the middle. A photo of a garden bed is looked at for each plant in it.",
+    "plant_photos_body": "A photo of one plant gives one card, for the plant in the middle. Pollenplot looks for each plant in a photo of a garden bed.",
     "plant_photos_one": "One plant in each photo",
     "plant_photos_several": "Garden beds",
     "plant_photos_choose": "Choose photos",

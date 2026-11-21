@@ -8,8 +8,7 @@ STRINGS = {
     "other than this phone, such as a computer or cloud storage.",
     "backup_save_heading": "Saving a backup",
     "backup_password": "Password (optional)",
-    "backup_password_body": "With a password, the backup is encrypted and opens only with that password. Please keep "
-    "the password somewhere safe, because nobody can recover it.",
+    "backup_password_body": "A backup with a password is encrypted and opens only with that password. Please keep the password somewhere safe, because nobody can recover it.",
     "backup_password_repeat": "Type the password again",
     "backup_password_mismatch": "The two passwords are not the same. Please type them again.",
     "backup_password_repeat_needed": "Please type the password again, so it can be checked.",
@@ -35,12 +34,11 @@ STRINGS = {
     "backup_list_and": "%1$s and %2$s",
     "backup_restore": "Restore",
     "backup_confirm_title": "Replace the records on this phone?",
-    "backup_confirm_body": "Everything recorded on this phone will be replaced with the records and photos in this "
-    "backup. This cannot be undone. Please save a backup of this phone first if you want to keep its records.",
+    "backup_confirm_body": "This replaces everything recorded on this phone with the records and photos in this backup, and it cannot be undone. Please save a backup of this phone first if you want to keep its records.",
     "backup_replace": "Replace",
     "backup_restoring": "Restoring the backup.",
     "backup_restored": "The backup was restored.",
-    "backup_restore_failed": "The backup could not be restored. The records on this phone have not changed.",
+    "backup_restore_failed": "Pollenplot couldn't restore the backup. The records on this phone have not changed.",
     "backup_photos_failed": "The records were restored, but some photos could not be put in place. Please restore the "
     "backup again.",
     "backup_not_a_backup": "This file is not a Pollenplot backup. Please choose another file.",

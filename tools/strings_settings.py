@@ -22,17 +22,15 @@ STRINGS = {
     "settings_about": "About Pollenplot",
     "settings_app": "Pollenplot",
     "settings_reminders_intro": "Pollenplot sends these reminders as notifications at about seven in the morning.",
-    "settings_reminders_off": "Notifications are off, so Pollenplot cannot send these reminders. Please allow "
-    "notifications to have them.",
+    "settings_reminders_off": "Notifications are off, so Pollenplot cannot send these reminders. Please allow notifications to get them.",
     "settings_bee_reminders": "Bee reminders",
-    "settings_bee_reminders_body": "Hive checks and hot days for stingless bees are set on the Bees tab.",
+    "settings_bee_reminders_body": "You set hive checks and hot days for stingless bees on the Bees tab.",
     "settings_water_reminders": "Watering reminders",
     "settings_water_reminders_body": "Watering reminders are set on the Water tab.",
 
     "about_title": "About Pollenplot",
     "about_version": "Version %1$s",
-    "about_body": "Pollenplot records the plants, wildlife, bees and watering in your backyard. Plants and animals are "
-    "identified on your phone, and your records stay on your phone.",
+    "about_body": "Pollenplot records the plants, wildlife, bees and watering in your backyard. It identifies plants and animals on your phone, and your records stay there.",
     "about_licences": "Licences",
     "about_licences_body": "The software Pollenplot is built with, and the licence each part comes under.",
     "about_source": "Source code",

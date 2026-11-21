@@ -97,8 +97,7 @@ STRINGS = {
     "wildlife_nearby_body": "The animals recorded most often within %1$d km of your garden since %2$d, from the Atlas of "
     "Living Australia.",
     "wildlife_nearby_no_location": "Please set your garden's location to see the animals recorded near it.",
-    "wildlife_nearby_waiting": "The animals recorded near your garden will be listed here after Pollenplot's next "
-    "update.",
+    "wildlife_nearby_waiting": "The animals recorded near your garden appear here after Pollenplot's next update.",
     "wildlife_seen_in_yard": "Seen in your yard",
 
     "plant_animals": "Animals on this plant",
@@ -111,8 +110,7 @@ STRINGS = {
     "idea_bird": "No birds have been recorded this year. Dense or prickly shrubs give small birds shelter, a shallow "
     "bath out of a cat's reach gives them water, and native plants that flower at different times feed honeyeaters "
     "through the year.",
-    "idea_insect": "No insects have been recorded this year. Flowers through the year, a patch of bare ground or a bee "
-    "hotel to nest in, and no sprays while plants are flowering bring bees, butterflies and hover flies.",
+    "idea_insect": "No insects have been recorded this year. Bees, butterflies and hover flies come for flowers through the year, a patch of bare ground or a bee hotel to nest in, and no sprays while plants are flowering.",
     "idea_frog": "No frogs have been recorded this year. A pond or bog garden that holds water for weeks, with shallow "
     "edges, plants around it and no fish, gives them somewhere to breed. Snail pellets and sprays harm them.",
     "idea_reptile": "No reptiles have been recorded this year. Rocks and logs in a sunny spot to bask on, with leaf "
@@ -137,7 +135,7 @@ STRINGS = {
     "animal_introduced": "Introduced to Australia.",
     "animal_native_everywhere": "Native across Australia.",
     "animal_sightings": "Sightings",
-    "animal_not_in_list": "Pollenplot's animal list doesn't have this one yet, so only your sightings are shown.",
+    "animal_not_in_list": "Pollenplot's animal list doesn't have this one yet, so this page shows only your sightings.",
 
     "sighting_title": "Sighting",
     "sighting_new_title": "Add a sighting",
@@ -154,8 +152,7 @@ STRINGS = {
     "sighting_add": "Add sighting",
     "sighting_delete": "Delete sighting",
     "sighting_delete_title": "Delete this sighting?",
-    "sighting_delete_body": "The sighting will be removed from your wildlife records. The photo it came from stays in the "
-    "app.",
+    "sighting_delete_body": "This removes the sighting from your wildlife records. The photo it came from stays in the app.",
     "sighting_delete_confirm": "Delete",
     "sighting_missing": "This sighting has been deleted.",
 

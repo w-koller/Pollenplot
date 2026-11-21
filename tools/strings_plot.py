@@ -27,12 +27,9 @@ STRINGS = {
     "plot_layer_none_body": "The zones show their own colours.",
     "plot_layer_sun": "Sun and shade",
     "plot_layer_bloom_now": "In flower now",
-    "plot_layer_bloom_now_body": "Each zone is shaded by how much of it is likely in flower now, from its plants' "
-    "flowering months and the days you saw them in flower. More flowers make a deeper colour with closer dots. A zone "
-    "whose plants' flowering is not known has a dashed edge.",
+    "plot_layer_bloom_now_body": "The shading shows how much of each zone is likely to be in flower now, from its plants' flowering months and the days you saw them in flower. More flowers make a deeper colour with closer dots. A zone whose plants' flowering is not known has a dashed edge.",
     "plot_layer_bloom_later": "In flower later",
-    "plot_layer_bloom_later_body": "Each zone is shaded by how much of it is likely to be in flower in the month you "
-    "choose, from its plants' flowering months and the months you saw them in flower last year.",
+    "plot_layer_bloom_later_body": "The shading shows how much of each zone is likely to be in flower in the month you choose, from its plants' flowering months and the months you saw them in flower last year.",
     "plot_layer_month": "Look ahead to",
     "plot_layer_month_next": "Next month",
     "plot_layer_month_ahead": "In %1$d months",
@@ -170,13 +167,13 @@ STRINGS = {
     "zone_save": "Save changes",
     "zone_remove": "Delete zone",
     "zone_remove_title": "Delete %1$s?",
-    "zone_remove_body": "The zone is deleted from your plot. The plants in it stay in your garden without a zone.",
+    "zone_remove_body": "This deletes the zone from your plot. The plants in it stay in your garden without a zone.",
 
     # Search
     "search_title": "Search your garden",
     "search_filter_kind": "Kind of record",
     "search_filter_zone": "Zone",
-    "search_none_filtered": "Nothing found matches these filters. Please choose a chip again to clear it.",
+    "search_none_filtered": "Nothing matches these filters. Please press a chip again to clear it.",
     "search_kind_zones": "Zones",
     "search_kind_plants": "Plants",
     "search_kind_sightings": "Sightings",

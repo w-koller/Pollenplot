@@ -93,7 +93,7 @@ STRINGS = {
     "honey_queen_year_invalid": "Please enter a year from 1990 to %1$d, or leave the year empty.",
     "honey_delete_hive": "Delete hive",
     "honey_delete_title": "Delete this hive?",
-    "honey_delete_body": "The hive and everything recorded for it will be removed.",
+    "honey_delete_body": "This removes the hive and everything recorded for it.",
     "honey_delete_confirm": "Delete",
     "honey_delete_record": "Delete",
     "honey_delete_record_title": "Delete this record?",
@@ -146,10 +146,7 @@ STRINGS = {
     "sign_ants": "Ants",
     "honey_actions": "What you did",
     "honey_notes": "Notes",
-    "honey_foulbrood": "Sunken or perforated cappings, ropy brood and twisted larvae can be signs of American or "
-    "European foulbrood. American foulbrood must be reported in every state and territory, and European foulbrood "
-    "everywhere except Queensland. Please contact your state or territory's department of agriculture, and please "
-    "keep the hive's frames and equipment away from your other hives until you have spoken with them.",
+    "honey_foulbrood": "Sunken or perforated cappings, ropy brood and twisted larvae can be signs of American or European foulbrood. American foulbrood must be reported in every state and territory, and European foulbrood everywhere except Queensland. Please contact your state or territory's department of agriculture, and keep the hive's frames and equipment away from your other hives until you have spoken with them.",
     "honey_inspection_queen": "Queen seen",
     "honey_inspection_eggs": "Eggs seen",
     "honey_inspection_no_queen": "No queen or eggs seen",

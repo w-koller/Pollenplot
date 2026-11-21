@@ -77,41 +77,26 @@ STRINGS = {
     "draft_light": "Light: %1$s",
     "draft_native": "Native to Australia.",
     "draft_not_native": "Not native to Australia.",
-    "draft_kept": "You kept this draft. It is still Gemma 4's, not checked facts.",
+    "draft_kept": "You kept this draft. Its facts are still Gemma 4's and nobody has checked them.",
     "draft_keep": "Keep it",
     "draft_remove": "Remove",
     "scan_second_opinion_heading": "Second opinions",
     "scan_second_opinion": "Second opinions from Gemma 4",
-    "scan_second_opinion_body": "While your phone is charging and not in use, Gemma 4 looks again at finds the other "
-    "models were unsure of. Its choice counts as one vote among theirs. This needs Gemma 4 from Settings › Models.",
+    "scan_second_opinion_body": "Gemma 4 looks again at finds the other models were unsure of while your phone is charging and not in use. Its choice counts as one vote among theirs. This needs Gemma 4 from Settings › Models.",
     "ask_garden_open": "Ask your garden",
 
-    "fixed_bite": "Please call 000 now if someone has been bitten by a snake or a funnel-web spider, or has trouble "
-    "breathing, a swollen face or throat, or has collapsed. For other bites and stings, please call the Poisons "
-    "Information Centre on 13 11 26 for advice, at any time of day. For a pet, please call your vet.",
-    "fixed_poisoning": "Please call the Poisons Information Centre on 13 11 26 now, even if there are no signs yet. It "
-    "answers at any time of day, from anywhere in Australia. Please call 000 if the person is unconscious, has "
-    "trouble breathing or is having a fit. For a pet, please call your vet or an emergency vet straight away, and "
-    "take the plant or a photo of it with you.",
-    "fixed_eating": "Please never eat a plant, fruit, mushroom or animal because of an identification in this app, "
-    "even one it is sure of. Many poisonous plants and mushrooms look like ones that are not. Please ask an expert "
-    "who can see it in person first.",
+    "fixed_bite": "Please call 000 now if someone has been bitten by a snake or a funnel-web spider, or has trouble breathing, a swollen face or throat, or has collapsed. For other bites and stings, call the Poisons Information Centre on 13 11 26 for advice, at any time of day. For a pet, call your vet.",
+    "fixed_poisoning": "Please call the Poisons Information Centre on 13 11 26 now, even if there are no signs yet. It answers at any time of day, from anywhere in Australia. Call 000 if the person is unconscious, has trouble breathing or is having a fit. For a pet, call your vet or an emergency vet straight away, and take the plant or a photo of it with you.",
+    "fixed_eating": "Please never eat a plant, fruit, mushroom or animal because this app identified it, even when it is sure. Many poisonous plants and mushrooms look like safe ones. Ask an expert who can see it in person first.",
     "fixed_chemical": "Please follow the product's label for how much to use and how to mix and apply it. The label "
     "also says what protective gear to wear and how long to wait before harvest. The Australian Pesticides and "
     "Veterinary Medicines Authority (APVMA) registers these products, and its online register lists each one.",
-    "fixed_bee_pest": "Please call the Exotic Plant Pest Hotline on 1800 084 881 if you think your bees have varroa "
-    "mite or another exotic pest. American foulbrood, European foulbrood and other notifiable bee diseases are "
-    "reported to your state's agriculture department. Please don't move hives, bees or equipment until you have "
-    "spoken with them.",
-    "fixed_handling": "Please don't touch, pick up or try to move an animal that may be dangerous, and please keep "
-    "children and pets away from it. An identification in this app never decides whether something is safe to "
-    "handle. For a snake, please call a licensed snake catcher; your council can tell you who is licensed nearby. "
-    "For a wasp nest or a bee swarm, please call a licensed pest controller or a local beekeeper.",
+    "fixed_bee_pest": "Please call the Exotic Plant Pest Hotline on 1800 084 881 if you think your bees have varroa mite or another exotic pest. American foulbrood, European foulbrood and other notifiable bee diseases go to your state's agriculture department. Don't move hives, bees or equipment until you have spoken with them.",
+    "fixed_handling": "Please don't touch, pick up or try to move an animal that may be dangerous, and keep children and pets away from it. An identification in this app never decides whether something is safe to handle. For a snake, call a licensed snake catcher. Your council can tell you who is licensed nearby. For a wasp nest or a bee swarm, call a licensed pest controller or a local beekeeper.",
     "fixed_wildlife": "Please call %1$s on %2$s for advice about the animal.",
     "fixed_wildlife_page": "Please contact %1$s for advice about the animal. The official page lists them by town.",
     "fixed_wildlife_no_state": "Please contact a local wildlife rescue group or a vet for advice about the animal.",
-    "fixed_wildlife_care": "Until then, please keep it somewhere warm, dark and quiet, and please don't give it food "
-    "or water. Please don't touch a bat or flying-fox at all, because they can carry lyssavirus.",
+    "fixed_wildlife_care": "Until then, please keep it somewhere warm, dark and quiet, and don't give it food or water. Don't touch a bat or flying-fox at all, because they can carry lyssavirus.",
     "fixed_source": "The official page",
 }
 

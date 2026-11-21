@@ -226,7 +226,7 @@ class WaterFlowTest {
         show()
         compose.onNodeWithText("Water").performClick()
         waitFor(hasText("This line puts on about 11.2 mm an hour", substring = true))
-        compose.onNodeWithText("which FAO puts at 1 to 5 mm an hour, so water may pool and run off.", substring = true).assertExists()
+        compose.onNodeWithText("soaks water in at 1 to 5 mm an hour, so water may pool and run off.", substring = true).assertExists()
         compose.onNodeWithText("please time how long the line runs before water starts to pool", substring = true).assertExists()
 
         runBlocking { water.saveLine(line.copy(poolingMinutes = 5)) }
