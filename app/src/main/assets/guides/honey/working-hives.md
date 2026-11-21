@@ -10,7 +10,7 @@ sources:
   - The Australian Honey Bee Industry Biosecurity Code of Practice, version 2.1 | https://honeybee.org.au/wp-content/uploads/2026/04/260421-Code-of-Practice.pdf
 ---
 
-A hive opened at a bad time makes for defensive bees, and honey left about draws robbers. Business Queensland's advice and the Code cover when and how to work a hive.
+A hive opened at a bad time makes for defensive bees, and honey left about draws robbers.
 
 ## When to open a hive
 

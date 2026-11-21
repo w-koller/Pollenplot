@@ -22,7 +22,7 @@ Varroa mites are tiny red-brown parasites of honey bees. An adult female is oval
 
 ## How to check
 
-The Code accepts an alcohol wash, a soapy water wash, a sugar shake or drone uncapping. Drone uncapping shows whether there are mites, but it cannot tell you whether a treatment is needed. Business Queensland recommends the alcohol wash, done like this:
+The Code accepts an alcohol wash, a soapy water wash, a sugar shake or drone uncapping. Drone uncapping shows whether there are mites, but it cannot tell you whether a treatment is needed. Business Queensland recommends the alcohol wash, done like this.
 
 1. Pour half a cup, about 125 mL, of methylated spirits or ethanol stronger than 70% into a shake jar.
 2. Choose one or two of the middle three frames of the brood nest.

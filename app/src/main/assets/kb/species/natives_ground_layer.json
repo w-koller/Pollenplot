@@ -5,7 +5,7 @@
     "height": [500, 1000], "width": [500, 1000],
     "flowers": ["sep", "oct", "nov"] },
   { "name": "Lomandra hystrix", "family": "Asparagaceae", "common": ["Creek mat-rush"], "form": "strappy", "native": ["QLD", "NSW"],
-    "description": "A lush mat-rush from creek banks with soft, arching leaves and yellow flower spikes in spring. It suits damp spots and pond edges.",
+    "description": "A mat-rush from creek banks with soft, arching leaves and yellow flower spikes in spring. It suits damp spots and pond edges.",
     "water": "moderate", "drought": 2, "soil": ["loam", "clay", "wet"],
     "wildlife": { "pollinator": 1, "butterflies": 2, "host": true, "birds": 1, "beneficials": 1, "frogs": 3 },
     "height": [800, 1200], "width": [800, 1200],

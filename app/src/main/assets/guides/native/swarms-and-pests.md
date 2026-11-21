@@ -10,11 +10,11 @@ sources:
 
 ## Swarms
 
-A swarm at a stingless bee hive is nothing to be overly concerned about. There are three kinds, and each looks different.
+A swarm at a stingless bee hive is seldom cause for worry. There are three kinds, and each looks different.
 
-- **Fighting swarm.** Bees from another colony try to take the hive over, gripping its bees and fighting to the death, which leaves a mass of dead bees on the ground in front of the entrance. Fighting swarms mostly happen in summer and can last a few weeks. The hive usually survives, even if the other colony takes it over.
-- **Defending swarm.** The hive keeps out bees from another hive trying to get in. It mostly happens when hives are moved or kept close together, leaves no dead bees on the ground, and lasts a few days to a few weeks.
-- **Mating swarm.** The hive needs a new queen. Many males fly gently around it for days or weeks, waiting for her to come out and mate. It is less aggressive than a fighting swarm.
+- In a fighting swarm, bees from another colony try to take the hive over, gripping its bees and fighting to the death, which leaves a mass of dead bees on the ground in front of the entrance. Fighting swarms mostly happen in summer and can last a few weeks. The hive usually survives, even if the other colony takes it over.
+- In a defending swarm, the hive keeps out bees from another hive trying to get in. It mostly happens when hives are moved or kept close together, leaves no dead bees on the ground, and lasts a few days to a few weeks.
+- A mating swarm means the hive needs a new queen. Many males fly gently around it for days or weeks, waiting for her to come out and mate. It is less aggressive than a fighting swarm.
 
 ## Pests in the hive
 
