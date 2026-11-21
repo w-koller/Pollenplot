@@ -23,8 +23,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import io.github.wkoller.pollenplot.ui.components.BadgeRow
+import io.github.wkoller.pollenplot.ui.components.HeroPictureSize
+import io.github.wkoller.pollenplot.ui.components.RecordHero
+import io.github.wkoller.pollenplot.ui.components.heroGone
+import io.github.wkoller.pollenplot.ui.theme.BotanicalSpan
+import io.github.wkoller.pollenplot.ui.theme.Spacing
+import io.github.wkoller.pollenplot.ui.theme.botanical
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenViews
@@ -71,50 +80,47 @@ fun AnimalScreen(
         plants.filter { it.plant.id in ids }.sortedByDescending { ids[it.plant.id] }
     }
 
+    val list = rememberLazyListState()
     DetailScaffold(
         title = title,
         onBack = onBack,
+        titleShown = heroGone(list),
         actions = {
             onAsk?.let { ask -> IconButton(onClick = ask) { Icon(painterResource(R.drawable.ic_forum), contentDescription = stringResource(R.string.ask_open)) } }
         },
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
+        LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = listPadding(padding)) {
             item(key = "header") {
-                Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    val group = animal?.group ?: mine.firstOrNull()?.sighting?.group
+                val group = animal?.group ?: mine.firstOrNull()?.sighting?.group
+                val roles = animal?.roles.orEmpty().sortedBy { it.ordinal }
+                RecordHero(
+                    title = title,
+                    scientific = animal?.name?.takeIf { it != title },
+                    details = listOfNotNull(
+                        listOfNotNull(group?.let { stringResource(it.label) }, animal?.family?.let { stringResource(R.string.animal_family, it) }).joinToString(" · ").ifBlank { null },
+                    ),
+                    tags = if (roles.isEmpty()) null else { { BadgeRow(centred = true) { roles.forEach { role -> Badge(role.icon, stringResource(role.label), role.tone) } } } },
+                ) {
                     PictureAvatar(
                         group?.icon ?: R.drawable.ic_eco,
-                        96.dp,
+                        HeroPictureSize,
                         thumbnail = mine.firstNotNullOfOrNull { it.sighting.thumbnail },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(title, style = MaterialTheme.typography.headlineSmall)
-                        animal?.name?.takeIf { it != title }?.let { Text(it, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic) }
-                        val facts = listOfNotNull(group?.let { stringResource(it.label) }, animal?.family?.let { stringResource(R.string.animal_family, it) })
-                        if (facts.isNotEmpty()) {
-                            Text(facts.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
                 }
             }
             if (animal != null) {
-                item(key = "safety") { SafetyNotice(animal, locality.state, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
+                item(key = "safety") { SafetyNotice(animal, locality.state, Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s)) }
                 item(key = "about") {
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                         Text(origin(animal), style = MaterialTheme.typography.bodyLarge)
                         Text(animal.description, style = MaterialTheme.typography.bodyLarge)
-                        if (animal.roles.isNotEmpty()) {
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                animal.roles.sortedBy { it.ordinal }.forEach { role -> Badge(role.icon, stringResource(role.label), role.tone) }
-                            }
-                        }
                     }
                 }
             } else {
                 item(key = "unknown") {
-                    Text(stringResource(R.string.animal_not_in_list), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    Text(stringResource(R.string.animal_not_in_list), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
                 }
             }
 
@@ -122,7 +128,7 @@ fun AnimalScreen(
                 item(key = "yard") {
                     Column {
                         SectionHeading(stringResource(R.string.animal_in_yard))
-                        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                             Text(pluralStringResource(R.plurals.animal_seen_summary, mine.size, mine.size, UiFormat.longDate(mine.first().sighting.seenAt)), style = MaterialTheme.typography.bodyLarge)
                             if (mine.size > 1) Text(stringResource(R.string.animal_first_seen, UiFormat.longDate(mine.last().sighting.seenAt)), style = MaterialTheme.typography.bodyLarge)
                         }
@@ -137,31 +143,41 @@ fun AnimalScreen(
                 item(key = "uses") {
                     Column {
                         SectionHeading(stringResource(R.string.animal_uses))
-                        animal.plantNote?.let { Text(it, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+                        animal.plantNote?.let { Text(it, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l)) }
                     }
                 }
                 items(animal.plants, key = { "uses-$it" }) { name ->
                     val species = kb?.species(name)
                     val growing = plants.any { it.isGrowing && it.species != null && uses(name, it) }
+                    val growingText = stringResource(R.string.animal_uses_growing)
                     ListItem(
                         supportingContent = if (species != null || growing) {
                             {
+                                // The scientific name in the botanical italic, and whether it grows here in plain words.
                                 Text(
-                                    listOfNotNull(species?.name, if (growing) stringResource(R.string.animal_uses_growing) else null).joinToString(" · "),
-                                    fontStyle = if (species != null && !growing) FontStyle.Italic else FontStyle.Normal,
+                                    buildAnnotatedString {
+                                        species?.name?.let { withStyle(BotanicalSpan) { append(it) } }
+                                        if (growing) {
+                                            if (species != null) append(" · ")
+                                            append(growingText)
+                                        }
+                                    },
                                 )
                             }
                         } else {
                             null
                         },
-                    ) { Text(species?.displayName ?: name, fontStyle = if (species == null) FontStyle.Italic else FontStyle.Normal) }
+                    ) {
+                        // A genus or family the animal uses is a scientific name too.
+                        Text(species?.displayName ?: name, style = if (species == null) LocalTextStyle.current.botanical() else LocalTextStyle.current)
+                    }
                 }
             }
             animal?.habitat?.let { habitat ->
                 item(key = "needs") {
                     Column {
                         SectionHeading(stringResource(R.string.animal_needs))
-                        Text(habitat, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+                        Text(habitat, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
                     }
                 }
             }

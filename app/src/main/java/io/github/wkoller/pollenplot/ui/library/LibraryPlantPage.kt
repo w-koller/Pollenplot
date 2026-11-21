@@ -1,5 +1,12 @@
 package io.github.wkoller.pollenplot.ui.library
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.rememberLazyListState
+import io.github.wkoller.pollenplot.ui.components.HeroPictureSize
+import io.github.wkoller.pollenplot.ui.components.RecordHero
+import io.github.wkoller.pollenplot.ui.components.heroGone
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -65,47 +72,50 @@ internal fun LibraryPlantPage(
         else -> null
     }
     val weed = species?.let(locality::weed)
-    DetailScaffold(title = row.title, onBack = onBack) { padding ->
+    val roles = if (species != null && resolved != null) locality.roles(species, resolved.care) else emptyList()
+    val list = rememberLazyListState()
+    DetailScaffold(title = row.title, onBack = onBack, titleShown = heroGone(list)) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().readable(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            state = list,
+            contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    LibraryPicture(row, photo, size = 112.dp, onEnlarge = onEnlarge)
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(row.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-                        row.speciesName?.takeIf { it != row.title }?.let { Text(it, style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic) }
-                        species?.let { Text(stringResource(R.string.library_family, it.family), style = MaterialTheme.typography.bodyMedium) }
-                        photo?.let { Text(stringResource(R.string.library_photo_credit, it.credit), style = MaterialTheme.typography.labelSmall) }
-                    }
+                RecordHero(
+                    title = row.title,
+                    scientific = row.speciesName?.takeIf { it != row.title },
+                    details = listOfNotNull(
+                        species?.let { stringResource(R.string.library_family, it.family) },
+                        photo?.let { stringResource(R.string.library_photo_credit, it.credit) },
+                    ),
+                    tags = if (roles.isEmpty()) null else { { RoleBadges(roles, centred = true) } },
+                ) {
+                    LibraryPicture(row, photo, size = HeroPictureSize, onEnlarge = onEnlarge)
                 }
             }
             item {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onAdd) {
-                        Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.library_page_add), modifier = Modifier.padding(start = 8.dp))
-                    }
-                    if (onSave != null) {
-                        OutlinedButton(onClick = onSave) {
-                            Icon(painterResource(R.drawable.ic_bookmark), contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.library_page_save), modifier = Modifier.padding(start = 8.dp))
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        Button(onClick = onAdd) {
+                            Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                            Text(stringResource(R.string.library_page_add), modifier = Modifier.padding(start = Spacing.s))
+                        }
+                        if (onSave != null) {
+                            OutlinedButton(onClick = onSave) {
+                                Icon(painterResource(R.drawable.ic_bookmark), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                                Text(stringResource(R.string.library_page_save), modifier = Modifier.padding(start = Spacing.s))
+                            }
                         }
                     }
-                }
-                if (row.libraryId != null) {
-                    Text(stringResource(R.string.library_in_mine), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+                    if (row.libraryId != null) {
+                        Text(stringResource(R.string.library_in_mine), style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
             if (species != null && resolved != null) {
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        if (weed != null && weed.isWeed) WeedNotice(weed, locality) else WildStatusLine(species, resolved.care, locality)
-                        val roles = locality.roles(species, resolved.care)
-                        if (roles.isNotEmpty()) RoleBadges(roles)
-                    }
+                    if (weed != null && weed.isWeed) WeedNotice(weed, locality) else WildStatusLine(species, resolved.care, locality)
                 }
                 facts(resolved, species, null, all, kb, locality.hemisphere, onEditFacts = null, onAddPot = null) {}
             } else if (taxon != null && unknown != null) {

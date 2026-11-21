@@ -67,8 +67,16 @@ import io.github.wkoller.pollenplot.domain.plants.Soil
 import io.github.wkoller.pollenplot.domain.plants.Sun
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.Badge
+import io.github.wkoller.pollenplot.ui.components.BadgeRow
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
+import io.github.wkoller.pollenplot.ui.components.HeroPictureSize
 import io.github.wkoller.pollenplot.ui.components.PollenShapes
+import io.github.wkoller.pollenplot.ui.components.RecordHero
+import io.github.wkoller.pollenplot.ui.components.heroGone
+import io.github.wkoller.pollenplot.ui.components.listPadding
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
+import androidx.compose.foundation.lazy.rememberLazyListState
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
 import io.github.wkoller.pollenplot.ui.plants.PlantRow
 import io.github.wkoller.pollenplot.ui.plants.icon
@@ -139,9 +147,11 @@ fun ZoneDetailScreen(
             },
         )
     }
+    val list = rememberLazyListState()
     DetailScaffold(
         title = loaded?.zone?.name.orEmpty(),
         onBack = onBack,
+        titleShown = heroGone(list),
         actions = {
             IconButton(onClick = onEdit) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.zone_edit)) }
         },
@@ -151,47 +161,46 @@ fun ZoneDetailScreen(
             return@DetailScaffold
         }
         val zone = loaded.zone
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = listPadding(padding)) {
             item {
-                Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                RecordHero(
+                    title = zone.name,
+                    details = listOf(
+                        stringResource(zone.kind.label),
+                        stringResource(R.string.zone_area, UiFormat.squareMetres(zone.areaCm2)),
+                        stringResource(R.string.zone_size, UiFormat.metresFromCm(zone.rect.widthCm), UiFormat.metresFromCm(zone.rect.heightCm)),
+                    ),
+                    tags = {
+                        BadgeRow(centred = true) {
+                            zone.sun?.let { Badge(it.icon, stringResource(it.label), BadgeTone.PLANT) }
+                            zone.soil?.let { Badge(R.drawable.ic_landscape, stringResource(it.label), BadgeTone.PLANT) }
+                            if (zone.mulched) Badge(R.drawable.ic_compost, stringResource(R.string.zone_mulched), BadgeTone.PLANT)
+                            loaded.badges.forEach { Badge(it.icon, stringResource(it.label), it.tone) }
+                        }
+                    },
+                ) {
+                    // A zone is a place in the yard, so its picture is its kind on a cookie in wattle gold, as on the Plot.
                     Box(
-                        Modifier.size(72.dp).clip(PollenShapes.cookie()).background(MaterialTheme.colorScheme.secondaryContainer),
+                        Modifier.size(HeroPictureSize).clip(PollenShapes.cookie()).background(MaterialTheme.colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(painterResource(zone.kind.icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(36.dp))
+                        Icon(painterResource(zone.kind.icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(IconSize.large))
                     }
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(stringResource(zone.kind.label), style = MaterialTheme.typography.titleMedium)
-                        Text(stringResource(R.string.zone_area, UiFormat.squareMetres(zone.areaCm2)), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            stringResource(R.string.zone_size, UiFormat.metresFromCm(zone.rect.widthCm), UiFormat.metresFromCm(zone.rect.heightCm)),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-            item {
-                FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    zone.sun?.let { Badge(it.icon, stringResource(it.label), BadgeTone.PLANT) }
-                    zone.soil?.let { Badge(R.drawable.ic_landscape, stringResource(it.label), BadgeTone.PLANT) }
-                    if (zone.mulched) Badge(R.drawable.ic_compost, stringResource(R.string.zone_mulched), BadgeTone.PLANT)
-                    loaded.badges.forEach { Badge(it.icon, stringResource(it.label), it.tone) }
                 }
             }
             if (zone.notes.isNotBlank()) {
                 item { SectionHeading(stringResource(R.string.zone_notes)) }
-                item { Text(zone.notes, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+                item { Text(zone.notes, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l)) }
             }
             item { SectionHeading(stringResource(R.string.zone_plants_heading)) }
             if (loaded.plants.isEmpty()) {
-                item { Text(stringResource(R.string.zone_no_plants), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+                item { Text(stringResource(R.string.zone_no_plants), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l)) }
             }
             items(loaded.plants, key = { it.plant.id }) { plant -> PlantRow(plant, onClick = { onOpenPlant(plant.plant.id) }, showZone = false, zoneId = zoneId) }
             item {
-                Button(onClick = { if (onAddByPhoto == null && onAddFromGallery == null) onAddPlant() else addingPlant = true }, modifier = Modifier.padding(16.dp)) {
-                    Icon(painterResource(R.drawable.ic_add), contentDescription = null)
-                    Text(stringResource(R.string.zone_add_plant), modifier = Modifier.padding(start = 8.dp))
+                Button(onClick = { if (onAddByPhoto == null && onAddFromGallery == null) onAddPlant() else addingPlant = true }, modifier = Modifier.padding(Spacing.l)) {
+                    Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                    Text(stringResource(R.string.zone_add_plant), modifier = Modifier.padding(start = Spacing.s))
                 }
             }
             val plans = waterState
@@ -199,7 +208,7 @@ fun ZoneDetailScreen(
             if (plans != null && (watering != null || loaded.plants.isNotEmpty())) {
                 item { SectionHeading(stringResource(R.string.zone_watering)) }
                 item {
-                    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Text(watering?.line?.let { stringResource(R.string.zone_on_line, it.name) } ?: stringResource(R.string.zone_by_hand), style = MaterialTheme.typography.bodyLarge)
                         val next = watering?.next
                         if (next != null) {
@@ -220,7 +229,7 @@ fun ZoneDetailScreen(
             if (feeding != null && loaded.plants.isNotEmpty()) {
                 item { SectionHeading(stringResource(R.string.zone_feeding)) }
                 item {
-                    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         fed?.let { LastFedLine(it) } ?: Text(stringResource(R.string.zone_not_fed), style = MaterialTheme.typography.bodyMedium)
                         schedules.forEach { schedule ->
                             Text(stringResource(R.string.feed_schedule_source, schedule.sourceTitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -243,15 +252,15 @@ fun ZoneDetailScreen(
             }
             item { SectionHeading(stringResource(R.string.zone_wildlife_heading)) }
             if (loaded.sightings.isEmpty()) {
-                item { Text(stringResource(R.string.zone_no_wildlife), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+                item { Text(stringResource(R.string.zone_no_wildlife), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l)) }
             }
             items(loaded.sightings.take(ZONE_SIGHTINGS), key = { "sighting-" + it.sighting.id }) { sighting ->
                 SightingRow(sighting, onClick = { onOpenSighting(sighting.sighting.id) }, showZone = false)
             }
             item {
-                OutlinedButton(onClick = onAddSighting, modifier = Modifier.padding(16.dp)) {
-                    Icon(painterResource(R.drawable.ic_add), contentDescription = null)
-                    Text(stringResource(R.string.zone_add_sighting), modifier = Modifier.padding(start = 8.dp))
+                OutlinedButton(onClick = onAddSighting, modifier = Modifier.padding(Spacing.l)) {
+                    Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                    Text(stringResource(R.string.zone_add_sighting), modifier = Modifier.padding(start = Spacing.s))
                 }
             }
         }

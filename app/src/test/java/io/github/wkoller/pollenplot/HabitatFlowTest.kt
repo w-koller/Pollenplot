@@ -90,7 +90,7 @@ class HabitatFlowTest {
         compose.onNodeWithText("wet sand or gravel", substring = true).assertExists()
         shot("water_feature")
         compose.onNodeWithText("Save").performScrollTo().performClick()
-        waitFor(hasText("This zone has water for wildlife."))
+        compose.scrollTo(hasText("This zone has water for wildlife."))
         compose.scrollTo(hasText("Cleaned today"))
         compose.onNodeWithText("Cleaned today").performClick()
         waitFor(hasText("Cleaned on 28 October 2026"))

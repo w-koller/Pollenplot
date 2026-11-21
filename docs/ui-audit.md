@@ -59,7 +59,7 @@ Measured contrast in the current colours:
 |---|---|---|---|---|
 | Navigation bar and rail (`AppRoot`) | Tab names shrink to fit at large text, as intended. Moving from tab to page uses the default transition, with no direction. | Motion | Medium | Fixed in PR 2 |
 | Tab frame (`TabScaffold`) | The title and subtitle use the default type, and at large text the subtitle breaks inside a word (see above). | Typography, large text | High | Fixed in PR 1 |
-| Page frame (`DetailScaffold`) | A small pinned top bar for every page, so a plant, an animal and a hive all open the same way, with the name repeated below the bar. | Hierarchy | Medium | Open |
+| Page frame (`DetailScaffold`) | A small pinned top bar for every page, so a plant, an animal and a hive all open the same way, with the name repeated below the bar. | Hierarchy | Medium | Fixed in PR 3 |
 
 ## Main tabs
 
@@ -83,19 +83,19 @@ Measured contrast in the current colours:
 
 | Screen | Issue | Category | Severity | Status |
 |---|---|---|---|---|
-| Plant | A small avatar, then many fact cards with the same 20 dp corners, colour and weight. The name is in the top bar and again in the header. | Hierarchy | Medium | Open |
-| Plant | The botanical name is italic Roboto, with nothing to mark it as a name from the natural world. | Typography | Low | Open |
-| Zone | A gold avatar and a clear list of plants and wildlife. Corners are written out. | Shape | Low | Open |
-| Zone habitat | Present and Missing each have an icon and a word. Nothing to fix beyond tokens. | Consistency | Low | Open |
-| Honey bee hive | No header picture. The facts are plain lines, and six buttons (two filled and four outlined) wrap into a wall. | Hierarchy, components | Medium | Open |
-| Stingless hive, bee hotel | No header picture. Facts are plain lines. | Hierarchy | Medium | Open |
-| Animal | A large teal avatar and clear sections, with gold role badges. | Colour roles | Low | Colours fixed in PR 2; the page in PR 3 |
-| Sighting | The zone, plant and behaviour choices are long walls of chips. The count stepper has the full touch size. | Hierarchy | Low | Open |
-| Problem | The name is in the top bar and again as a heading. The Open status pill has its icon and word. | Hierarchy | Low | Open |
-| Compost bin | The bin picture is the app's best illustration, and it stays still with animations off. The disabled Save name button is faint, as disabled buttons are. | Feedback | Low | Open |
-| Wish | Delete is a word in the top bar, where other pages use a bin icon. | Consistency | Low | Open |
-| Library plant | A large flower-shaped avatar and clear buttons. Corners are written out. | Shape | Low | Open |
-| Guide | Readable, with headings, steps and notes. Only tokens to change. | Typography | Low | Open |
+| Plant | A small avatar, then many fact cards with the same 20 dp corners, colour and weight. The name is in the top bar and again in the header. | Hierarchy | Medium | Fixed in PR 3 |
+| Plant | The botanical name is italic Roboto, with nothing to mark it as a name from the natural world. | Typography | Low | Fixed in PR 3 |
+| Zone | A gold avatar and a clear list of plants and wildlife. Corners are written out. | Shape | Low | Fixed in PR 3 |
+| Zone habitat | Present and Missing each have an icon and a word. Nothing to fix beyond tokens. | Consistency | Low | Fixed in PR 3 |
+| Honey bee hive | No header picture. The facts are plain lines, and six buttons (two filled and four outlined) wrap into a wall. | Hierarchy, components | Medium | Fixed in PR 3 |
+| Stingless hive, bee hotel | No header picture. Facts are plain lines. | Hierarchy | Medium | Fixed in PR 3 |
+| Animal | A large teal avatar and clear sections, with gold role badges. | Colour roles | Low | Fixed in PRs 2 and 3 |
+| Sighting | The zone, plant and behaviour choices are long walls of chips. The count stepper has the full touch size. | Hierarchy | Low | Tokens in PR 3; the chips with the forms in PR 4 |
+| Problem | The name is in the top bar and again as a heading. The Open status pill has its icon and word. | Hierarchy | Low | Fixed in PR 3 |
+| Compost bin | The bin picture is the app's best illustration, and it stays still with animations off. The disabled Save name button is faint, as disabled buttons are. | Feedback | Low | Tokens in PR 3; nothing else needed |
+| Wish | Delete is a word in the top bar, where other pages use a bin icon. | Consistency | Low | Fixed in PR 3 |
+| Library plant | A large flower-shaped avatar and clear buttons. Corners are written out. | Shape | Low | Fixed in PR 3 |
+| Guide | Readable, with headings, steps and notes. Only tokens to change. | Typography | Low | Fixed in PR 3 |
 
 ## Finding and identifying
 
@@ -256,3 +256,71 @@ pollinators seen rust, and flowering earlier or later neutral.
 - The Plot's empty state still has its three buttons in a column under the picture.
 - Rhythms still opens with its long paragraph.
 - No screen has two panes on a tablet yet.
+
+### PR 3: the record pages
+
+**Shared pieces.**
+
+- **`RecordHero`** (`components/RecordHero.kt`) opens a record's page like a plate in a field guide: the picture
+  large on a sun shape, the name in Fraunces, the scientific name in Fraunces italic, a line or two of what it is and
+  where, and its badges, all centred. The sun grows and turns into place once, on the slow spatial spring, and is still
+  with the phone's animations off.
+- **Top bar title.** `DetailScaffold` takes `titleShown`, from `heroGone` for a list or a scrolling column. On a page
+  with a hero, the bar leaves the name to the hero and fades it in once the hero has scrolled away, on one line or on
+  two with large text. While it is hidden, TalkBack does not read it, because the hero's heading says the same.
+- **`FactGroup`** joins related fact cards under a heading: large corners outside the group, small ones inside, and a
+  2 dp gap, as Material 3 Expressive's grouped lists do. `FactCard` takes the shape it is given.
+- **`GroupedItem`** (`components/GroupedList.kt`) wraps Material's `SegmentedListItem` and
+  `ListItemDefaults.segmentedShapes`, so the Expressive list API is reached in one place. Its rows are on
+  `surfaceContainerLow`, because the segmented colours' own container is the page's paper and the group did not show.
+- **`RecordMenu`** is the add menu's floating button with its own words ("Open the record menu"). It opens into the
+  kinds of record a page can add. `AddMenu` and `RecordMenu` share one `FabMenu`.
+- `RoleBadges` and the new `BadgeRow` can centre their badges under a hero.
+
+**Plant.**
+
+- The hero has the plant's cut-out or growth form, which is a flower while the plant is in flower now and a clover
+  otherwise. "In flower now" is `FloweringSeen.inFlowerNow`, the rule the Plot's zones use, from data the page already
+  loads. Recording "Seen in flower today" gives a confirm vibration, and the picture turns into a flower if it was not
+  one already.
+- The facts are three groups: Growing conditions (light, water, soil and feeding, compost), Wildlife and bees
+  (wildlife, bee forage, flowering) and Size and safety. Companion plants stay a card of their own.
+- The flowering months use the flowering colour the Plot uses (`PollenColors.bloom`), the best months strongest and in
+  bold, and the plant's badges are in the hero.
+- A companion to keep apart has its warning icon in the error colour, with its words as before.
+
+**Library plant.** The same hero and fact groups, with the Add and Save buttons centred under it.
+
+**Animal.** A rust hero with its role badges. Scientific names of the plants it uses are in Fraunces italic.
+
+**Zone.** A hero with the zone's kind on a gold cookie and its conditions and badges centred. Watering, feeding and the
+habitat card use the spacing tokens.
+
+**Honey bee hive, stingless bee hive and bee hotel.**
+
+- A gold hero with what the hive or hotel is, where, and its latest state.
+- The record buttons move into the record menu: six kinds for a honey bee hive, three for a stingless hive and two for
+  a hotel, each with an icon. The tests open the menu with `recordFromMenu` in `TestGarden.kt`.
+- Each kind of record is a grouped list, its delete buttons as before. A hive's due checks, through `TaskRow`'s
+  `group`, and a hotel's sections are grouped the same way. The Bees tab's own rows are unchanged.
+
+**Problem.** A rust hero with the plant and day, and the Open or Resolved status as its badge. The catalogue's card is
+headed "About this problem" rather than repeating the name, and the treatments are one group of joined cards.
+
+**Wish.** A hero with the wish's status and badges, Delete is a bin icon like other pages, and the wish's picture is a
+plant's (leaf green, a clover) in the wishlist too.
+
+**Guide.** The title is large in Fraunces with the page's summary under it, headings are a step larger, bullets and
+step numbers are leaf green, and italic text, which the guides keep for species names, is in Fraunces italic.
+
+**Sighting, compost bin.** Both use the spacing tokens. A sighting's page is mostly its form, so its header stays
+compact, with the scientific name in Fraunces italic. A hero there pushed the zone and behaviour choices below the
+first screen.
+
+**Previews.** `RecordPreviews.kt` has a plant's hero in flower, a hive's hero, a group of fact cards and a grouped list
+of inspections. `ComponentGalleryTest` saves them as `records*.png`.
+
+**Deferred.**
+
+- The sighting's zone, plant and behaviour chips, with the other forms, to PR 4.
+- The plant page's edit sheet, with the other forms, to PR 4.

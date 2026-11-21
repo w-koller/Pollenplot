@@ -1,26 +1,28 @@
 package io.github.wkoller.pollenplot.ui.bees
 
-import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.GroupedItem
+import io.github.wkoller.pollenplot.ui.components.MenuAction
+import io.github.wkoller.pollenplot.ui.components.RecordHero
+import io.github.wkoller.pollenplot.ui.components.RecordMenu
+import io.github.wkoller.pollenplot.ui.components.heroGone
+import io.github.wkoller.pollenplot.ui.components.listPadding
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import kotlinx.coroutines.flow.map
@@ -48,8 +49,9 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 /**
- * One bee hotel: where it is, its sections, the latest look with who the seals say is inside, a note when it is worth
- * cleaning out this spring, buttons to record a look or upkeep, and every record, each with its own delete button.
+ * One bee hotel: a hero with where it is, its sections, the latest look with who the seals say is inside, a note when it
+ * is worth cleaning out this spring, and every record in its group, each with its own delete button. The record menu
+ * adds a look or upkeep.
  */
 @Composable
 fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBack: () -> Unit, onEdit: () -> Unit, onLook: () -> Unit, onUpkeep: () -> Unit) {
@@ -60,11 +62,24 @@ fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBac
     val scope = rememberCoroutineScope()
     var pendingDelete by remember { mutableStateOf<(suspend () -> Unit)?>(null) }
     val loaded = view
+    val list = rememberLazyListState()
+    val resources = LocalResources.current
 
     DetailScaffold(
         title = loaded?.hotel?.name.orEmpty(),
         onBack = onBack,
+        titleShown = heroGone(list),
         actions = { IconButton(onClick = onEdit) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.hotel_edit)) } },
+        floatingActionButton = if (loaded == null) null else {
+            {
+                RecordMenu(
+                    listOf(
+                        MenuAction(resources.getString(R.string.hotel_record_look), R.drawable.ic_visibility, onLook),
+                        MenuAction(resources.getString(R.string.hotel_record_upkeep), R.drawable.ic_handyman, onUpkeep),
+                    ),
+                )
+            }
+        },
     ) { padding ->
         if (loaded == null) {
             if (found != null) MissingRecord(padding)
@@ -72,28 +87,33 @@ fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBac
         }
         val hotel = loaded.hotel
         val latest = loaded.state.latest
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = listPadding(padding)) {
             item(key = "summary") {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(listOfNotNull(pluralStringResource(R.plurals.hotel_hole_count, hotel.holes, hotel.holes), loaded.zoneName).joinToString(" · "), style = MaterialTheme.typography.titleMedium)
-                    hotel.facing?.let { Text(stringResource(R.string.hotel_faces, stringResource(it.label).lowercase()), style = MaterialTheme.typography.bodyLarge) }
-                    hotel.heightMm?.let { Text(stringResource(R.string.hotel_height, BigDecimal(it).movePointLeft(1).stripTrailingZeros().toPlainString()), style = MaterialTheme.typography.bodyLarge) }
-                    hotel.installedOn?.let { Text(stringResource(R.string.hotel_installed, UiFormat.longDate(it)), style = MaterialTheme.typography.bodyLarge) }
-                }
+                RecordHero(
+                    title = hotel.name,
+                    details = listOfNotNull(
+                        listOfNotNull(pluralStringResource(R.plurals.hotel_hole_count, hotel.holes, hotel.holes), loaded.zoneName).joinToString(" · "),
+                        hotel.facing?.let { stringResource(R.string.hotel_faces, stringResource(it.label).lowercase()) },
+                        hotel.heightMm?.let { stringResource(R.string.hotel_height, BigDecimal(it).movePointLeft(1).stripTrailingZeros().toPlainString()) },
+                        hotel.installedOn?.let { stringResource(R.string.hotel_installed, UiFormat.longDate(it)) },
+                    ),
+                ) { BeeHeroPicture(R.drawable.ic_cottage) }
             }
             if (hotel.sections.isNotEmpty()) {
                 item(key = "sections") { SectionHeading(stringResource(R.string.hotel_sections)) }
-                items(hotel.sections.withIndex().toList(), key = { "section-" + it.index }) { (_, section) -> ListItem { Text(sectionLine(section)) } }
+                itemsIndexed(hotel.sections, key = { index, _ -> "section-$index" }) { index, section ->
+                    GroupedItem(index, hotel.sections.size) { Text(sectionLine(section)) }
+                }
             }
             if (loaded.cleanThisSpring) {
                 item(key = "clean") {
                     Surface(
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s),
                     ) {
-                        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                             Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = null)
                             Text(stringResource(R.string.hotel_spring_clean), style = MaterialTheme.typography.bodyLarge)
                         }
@@ -104,7 +124,7 @@ fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBac
                 SectionHeading(latest?.let { stringResource(R.string.hotel_latest, UiFormat.longDate(it.date)) } ?: stringResource(R.string.hotel_latest_none))
             }
             item(key = "latest") {
-                Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     if (latest == null) {
                         Text(stringResource(R.string.hotel_no_looks), style = MaterialTheme.typography.bodyLarge)
                     } else {
@@ -117,19 +137,15 @@ fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBac
                     }
                 }
             }
-            item(key = "record") {
-                FlowRow(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onLook) { Text(stringResource(R.string.hotel_record_look)) }
-                    OutlinedButton(onClick = onUpkeep) { Text(stringResource(R.string.hotel_record_upkeep)) }
-                }
-            }
             val ownLooks = looks.filter { it.hotelId == hotelId }
             item(key = "looks") { SectionHeading(stringResource(R.string.hotel_looks)) }
-            if (ownLooks.isEmpty()) item(key = "looks-none") { NothingYet() }
-            items(ownLooks, key = { "look-" + it.id }) { look ->
+            if (ownLooks.isEmpty()) item(key = "looks-none") { NothingRecorded() }
+            itemsIndexed(ownLooks, key = { _, look -> "look-" + look.id }) { index, look ->
                 val pests = mutableListOf<String>()
                 for (pest in look.pests.sortedBy { it.ordinal }) pests += stringResource(pest.label)
                 Record(
+                    index = index,
+                    count = ownLooks.size,
                     headline = UiFormat.longDate(look.date),
                     details = listOfNotNull(
                         pluralStringResource(R.plurals.hotel_sealed_total, look.sealedHoles, look.sealedHoles),
@@ -142,9 +158,11 @@ fun HotelScreen(views: BeeViews, hotels: HotelRepository, hotelId: String, onBac
             }
             val ownUpkeep = upkeep.filter { it.hotelId == hotelId }
             item(key = "upkeep") { SectionHeading(stringResource(R.string.hotel_upkeep)) }
-            if (ownUpkeep.isEmpty()) item(key = "upkeep-none") { NothingYet() }
-            items(ownUpkeep, key = { "upkeep-" + it.id }) { record ->
+            if (ownUpkeep.isEmpty()) item(key = "upkeep-none") { NothingRecorded() }
+            itemsIndexed(ownUpkeep, key = { _, record -> "upkeep-" + record.id }) { index, record ->
                 Record(
+                    index = index,
+                    count = ownUpkeep.size,
                     headline = UiFormat.longDate(record.date),
                     details = listOf(stringResource(record.kind.label), record.notes).filter { it.isNotBlank() }.joinToString(" · "),
                     onDelete = { pendingDelete = { hotels.deleteUpkeep(record.id) } },
@@ -178,15 +196,12 @@ internal fun sectionLine(section: HotelSection): String = listOfNotNull(
 ).joinToString(" · ")
 
 @Composable
-private fun NothingYet() {
-    Text(stringResource(R.string.honey_nothing_yet), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp))
-}
-
-@Composable
-private fun Record(headline: String, details: String, onDelete: () -> Unit) {
-    ListItem(
-        supportingContent = if (details.isBlank()) null else { { Text(details) } },
-        trailingContent = {
+private fun Record(index: Int, count: Int, headline: String, details: String, onDelete: () -> Unit) {
+    GroupedItem(
+        index = index,
+        count = count,
+        supporting = if (details.isBlank()) null else { { Text(details) } },
+        trailing = {
             IconButton(onClick = onDelete) { Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.honey_delete_record)) }
         },
     ) { Text(headline) }

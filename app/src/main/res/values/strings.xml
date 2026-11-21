@@ -262,6 +262,8 @@
     <string name="add_menu_close">Close the add menu</string>
     <string name="add_menu_expanded">Open</string>
     <string name="add_menu_collapsed">Closed</string>
+    <string name="record_menu_open">Open the record menu</string>
+    <string name="record_menu_close">Close the record menu</string>
     <string name="add_identify_camera">Identify with the camera</string>
     <string name="add_photos">Add plant photos</string>
     <string name="add_animal_photos">Add wildlife photos</string>
@@ -1069,6 +1071,9 @@
     <string name="plant_size">Size</string>
     <string name="plant_safety">Safety</string>
     <string name="plant_companions">Companion plants</string>
+    <string name="plant_group_growing">Growing conditions</string>
+    <string name="plant_group_wildlife">Wildlife and bees</string>
+    <string name="plant_group_size">Size and safety</string>
     <string name="plant_notes">Notes</string>
     <string name="plant_water_need">Water need: %1$s</string>
     <string name="plant_factor">Plant factor: %1$s</string>
@@ -1429,6 +1434,7 @@
     <string name="problem_photo_failed">This photo could not be read. Please choose another one.</string>
     <string name="problem_title">Problem</string>
     <string name="problem_on_plant">On %1$s</string>
+    <string name="problem_info_heading">About this problem</string>
     <string name="problem_source">Source: %1$s</string>
     <string name="problem_open_animal">Open the animal\'s page</string>
     <string name="problem_treatments">Treatments</string>
@@ -2198,6 +2204,7 @@
     <string name="wish_save">Save</string>
     <string name="wish_plant">Plant it</string>
     <string name="wish_delete">Delete</string>
+    <string name="wish_delete_icon">Delete from the wishlist</string>
     <string name="wish_delete_title">Delete this plant from the wishlist?</string>
     <string name="wish_delete_body">The plant and its notes will be removed from your wishlist.</string>
     <string name="alternatives_title">Native alternatives</string>

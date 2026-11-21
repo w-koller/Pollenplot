@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -127,17 +129,17 @@ private fun PresenceRow(@DrawableRes icon: Int, label: String, present: Boolean)
     val colour = if (present) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     val statusIcon = if (present) R.drawable.ic_check_circle else R.drawable.ic_cancel
     val word: @Composable () -> Unit = {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Icon(painterResource(statusIcon), contentDescription = null, tint = colour, modifier = Modifier.size(18.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Icon(painterResource(statusIcon), contentDescription = null, tint = colour, modifier = Modifier.size(IconSize.small))
             Text(status, style = MaterialTheme.typography.labelLarge, color = colour)
         }
     }
     Row(
         Modifier.fillMaxWidth().heightIn(min = 40.dp).clearAndSetSemantics { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
-        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
+        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(IconSize.medium))
         if (largeText()) {
             Column(Modifier.weight(1f)) {
                 Text(label, style = MaterialTheme.typography.bodyLarge)
@@ -168,7 +170,7 @@ private fun LayersAndFeatures(layers: Set<HabitatLayer>, features: Set<GroundFea
 fun HabitatCard(view: ZoneHabitatView, onAddWater: () -> Unit, onOpenWater: (String) -> Unit, onCleaned: (String) -> Unit) {
     val habitat = view.habitat
     val uri = LocalUriHandler.current
-    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(
             pluralStringResource(R.plurals.habitat_count, habitat.present, habitat.present, ZoneHabitat.POSSIBLE),
             style = MaterialTheme.typography.bodyLarge,
@@ -186,7 +188,7 @@ fun HabitatCard(view: ZoneHabitatView, onAddWater: () -> Unit, onOpenWater: (Str
         habitat.water.forEach { feature -> WaterRow(feature, onOpen = { onOpenWater(feature.id) }, onCleaned = { onCleaned(feature.id) }) }
         OutlinedButton(onClick = onAddWater) {
             Icon(painterResource(R.drawable.ic_add), contentDescription = null)
-            Text(stringResource(R.string.habitat_add_water), modifier = Modifier.padding(start = 8.dp))
+            Text(stringResource(R.string.habitat_add_water), modifier = Modifier.padding(start = Spacing.s))
         }
         LinkButton(R.drawable.ic_open_in_new, stringResource(R.string.habitat_source)) { uri.openUri(BACKYARDS_FOR_NATURE) }
     }
@@ -237,7 +239,7 @@ fun ZoneBees(view: ZoneHabitatView, onOpenHive: (String) -> Unit, onOpenNativeHi
             ) { Text(hotel.hotel.name) }
         }
         if (view.beesNeedWater) {
-            Text(stringResource(R.string.zone_bees_need_water), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            Text(stringResource(R.string.zone_bees_need_water), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
         }
     }
 }
@@ -246,7 +248,7 @@ fun ZoneBees(view: ZoneHabitatView, onOpenHive: (String) -> Unit, onOpenNativeHi
 @Composable
 fun ZoneBeeFood(plants: List<RhythmPlant>) {
     val lines = RhythmsEngine.lanes(plants).filter { it.fed }.map { lane -> lane.group to RhythmsEngine.offers(plants, lane.group) }
-    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         if (lines.isEmpty()) Text(stringResource(R.string.zone_bee_food_none), style = MaterialTheme.typography.bodyLarge)
         lines.forEach { (group, offers) ->
             Text(
@@ -261,7 +263,7 @@ fun ZoneBeeFood(plants: List<RhythmPlant>) {
 @Composable
 fun CorridorCard(summary: CorridorSummary) {
     val uri = LocalUriHandler.current
-    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         if (summary.zones == 0) {
             Text(stringResource(R.string.corridor_no_zones), style = MaterialTheme.typography.bodyLarge)
             return@Column

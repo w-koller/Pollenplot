@@ -90,14 +90,14 @@ class ProblemFlowTest {
     fun aProblemIsLoggedAndASprayWarnsWhilePlantsFlower() {
         val ids = seed()
         show(ids.lemon)
-        waitFor(hasText("Light"))
+        compose.scrollTo(hasText("Light"))
         compose.scrollTo(hasText("Record a problem"))
         compose.onNodeWithText("Record a problem").performClick()
         waitFor(hasText("What you saw"))
         compose.onNodeWithText("Aphids").performClick()
         shot("problem_log")
         compose.onNodeWithText("Save").performScrollTo().performClick()
-        waitFor(hasText("Light"))
+        compose.scrollTo(hasText("Light"))
         compose.scrollTo(hasText("Aphids"))
         compose.onNodeWithText("Open").assertExists()
 

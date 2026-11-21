@@ -26,6 +26,7 @@ STRINGS = {
     "problem_photo_failed": "This photo could not be read. Please choose another one.",
     "problem_title": "Problem",
     "problem_on_plant": "On %1$s",
+    "problem_info_heading": "About this problem",
     "problem_source": "Source: %1$s",
     "problem_open_animal": "Open the animal's page",
     "problem_treatments": "Treatments",

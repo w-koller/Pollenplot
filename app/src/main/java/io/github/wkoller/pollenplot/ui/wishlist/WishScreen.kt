@@ -17,6 +17,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import io.github.wkoller.pollenplot.ui.components.HeroPictureSize
+import io.github.wkoller.pollenplot.ui.components.RecordHero
+import io.github.wkoller.pollenplot.ui.components.heroGone
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,11 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenViews
@@ -116,12 +118,14 @@ fun WishScreen(
         )
     }
 
+    val scroll = rememberScrollState()
     DetailScaffold(
         title = current?.title ?: stringResource(R.string.wishlist_title),
         onBack = onBack,
+        titleShown = heroGone(scroll),
         actions = {
             if (current != null) {
-                TextButton(onClick = { deleting = true }) { Text(stringResource(R.string.wish_delete)) }
+                IconButton(onClick = { deleting = true }) { Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.wish_delete_icon)) }
             }
         },
     ) { padding ->
@@ -132,17 +136,19 @@ fun WishScreen(
         val price = Wishlist.parsePrice(priceText)
         val priceError = priceText.isNotBlank() && price == null
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).verticalScroll(scroll).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                WishPicture(current.wish.thumbnail)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(current.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-                    current.scientificName?.let { Text(it, style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic) }
-                    WishStatusLabel(current.wish.status)
-                }
-            }
+            RecordHero(
+                title = current.title,
+                scientific = current.scientificName,
+                tags = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        WishStatusLabel(current.wish.status)
+                        if (current.roles.isNotEmpty()) RoleBadges(current.roles, centred = true)
+                    }
+                },
+            ) { WishPicture(current.wish.thumbnail, HeroPictureSize) }
             val species = current.species
             if (current.weed.isWeed) {
                 WeedNotice(current.weed, locality)
@@ -150,10 +156,9 @@ fun WishScreen(
             } else if (species != null && current.care != null) {
                 WildStatusLine(species, current.care.care, locality)
             }
-            if (current.roles.isNotEmpty()) RoleBadges(current.roles)
             if (current.zoneName != null && current.zoneEffect.isNotEmpty()) {
                 Text(stringResource(R.string.wish_zone_effect, current.zoneName), style = MaterialTheme.typography.bodyMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     current.zoneEffect.forEach { Badge(it.icon, stringResource(it.label), it.tone) }
                 }
             }
@@ -188,7 +193,7 @@ fun WishScreen(
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth(),
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Button(
                     onClick = {
                         val updated = current.wish.copy(placeName = place, priceCents = price, notes = notes, targetZoneId = zoneId, status = status)
@@ -199,8 +204,8 @@ fun WishScreen(
                 ) { Text(stringResource(R.string.wish_save)) }
                 if (current.wish.status != WishStatus.PLANTED && (current.wish.speciesName != null || current.wish.customName != null)) {
                     OutlinedButton(onClick = { onPlant(current.wish.speciesName, zoneId) }) {
-                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.wish_plant), modifier = Modifier.padding(start = 8.dp))
+                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                        Text(stringResource(R.string.wish_plant), modifier = Modifier.padding(start = Spacing.s))
                     }
                 }
             }
