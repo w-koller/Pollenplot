@@ -82,7 +82,7 @@ class HotelFlowTest {
         // Never cleaned, and it is spring.
         compose.onNodeWithText("Spring is the time to clean out old nest material", substring = true).assertExists()
 
-        compose.onNodeWithText("Record what you see").performClick()
+        compose.recordFromMenu("Record what you see")
         waitFor(hasText("Holes sealed with each"))
         val more = compose.onAllNodesWithContentDescription("One more")
         more[Seal.LEAF.ordinal].performClick()
@@ -95,7 +95,7 @@ class HotelFlowTest {
         compose.onNodeWithText("Most likely a potter wasp, which catches caterpillars for its young.").assertExists()
         assertEquals(mapOf(Seal.LEAF to 3, Seal.CLAY to 1), runBlocking { app.container.hotels.observations.first().single().sealed })
 
-        compose.onNodeWithText("Record upkeep").performClick()
+        compose.recordFromMenu("Record upkeep")
         waitFor(hasText("What you did"))
         compose.onNodeWithText("New paper liners").performClick()
         compose.onNodeWithText("Save").performScrollTo().performClick()

@@ -1,7 +1,13 @@
 package io.github.wkoller.pollenplot.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import io.github.wkoller.pollenplot.ui.theme.animationsOn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
@@ -134,7 +140,12 @@ fun TabScaffold(
     ) { padding -> FabRoom(floatingActionButton != null) { content(padding) } }
 }
 
-/** The frame for a screen reached from a tab, with a Back button, a title and optional actions. */
+/**
+ * The frame for a screen reached from a tab, with a Back button, a title and optional actions. A record's page that
+ * opens with a [RecordHero] passes [titleShown], usually from [heroGone]: the bar then leaves the name to the hero, and
+ * fades it in on one line once the hero has scrolled away. While it is hidden TalkBack does not read it, because the
+ * hero's heading says the same.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScaffold(
@@ -142,6 +153,7 @@ fun DetailScaffold(
     onBack: () -> Unit,
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: (@Composable () -> Unit)? = null,
+    titleShown: (() -> Boolean)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -149,7 +161,7 @@ fun DetailScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { if (titleShown == null) Text(title) else HeroBarTitle(title, titleShown) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
@@ -162,6 +174,23 @@ fun DetailScaffold(
         snackbarHost = { NoticeHost() },
         floatingActionButton = floatingActionButton ?: {},
     ) { padding -> FabRoom(floatingActionButton != null) { content(padding) } }
+}
+
+/**
+ * A page's name in the top bar, shown only once the page's hero, which also names it, has scrolled away. It keeps to one
+ * line, or two with large text, so a long name is not cut to its first word.
+ */
+@Composable
+private fun HeroBarTitle(title: String, shown: () -> Boolean) {
+    val visible = shown()
+    val spec = if (animationsOn()) MaterialTheme.motionScheme.fastEffectsSpec<Float>() else snap()
+    val alpha by animateFloatAsState(if (visible) 1f else 0f, spec, label = "title")
+    Text(
+        title,
+        maxLines = if (largeText()) 2 else 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.graphicsLayer { this.alpha = alpha }.then(if (visible) Modifier else Modifier.clearAndSetSemantics { }),
+    )
 }
 
 /** Whether the bar has shrunk more than half way. */

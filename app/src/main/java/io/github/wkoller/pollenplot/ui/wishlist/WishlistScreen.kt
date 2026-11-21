@@ -1,9 +1,10 @@
 package io.github.wkoller.pollenplot.ui.wishlist
 
 import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.components.PictureAvatar
+import androidx.compose.ui.unit.Dp
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -41,7 +40,6 @@ import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.ui.components.RoleIcons
 import io.github.wkoller.pollenplot.ui.plants.BadgeTone
-import io.github.wkoller.pollenplot.ui.review.Cutout
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Currency
@@ -135,18 +133,13 @@ internal fun WishStatusLabel(status: WishStatus) {
 
 /** The find's cut-out, or a plant icon for a wish added by name. */
 @Composable
-internal fun WishPicture(thumbnail: String?) {
-    if (thumbnail != null) {
-        Cutout(thumbnail, 64.dp)
-    } else {
-        Box(
-            Modifier.size(64.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.secondaryContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-        }
-    }
+internal fun WishPicture(thumbnail: String?, size: Dp = WISH_PICTURE) {
+    // A wished-for plant is still a plant, so it has a plant's picture: its cut-out or a pot on leaf green, as a clover.
+    PictureAvatar(R.drawable.ic_potted_plant, size, thumbnail = thumbnail)
 }
+
+/** How large a wish's picture is in the wishlist. */
+private val WISH_PICTURE = 64.dp
 
 /** A price in Australian dollars, such as "$14.95". */
 internal fun price(cents: Long): String =

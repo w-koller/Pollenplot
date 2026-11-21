@@ -1,6 +1,8 @@
 package io.github.wkoller.pollenplot.ui.components
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -34,10 +36,29 @@ fun AddButton(label: String, onClick: () -> Unit) {
 /** The add menu: a floating action button that opens into [actions], the ways of adding from this tab. */
 @Composable
 fun AddMenu(actions: List<AddAction>, onAdd: (AddAction) -> Unit) {
+    val resources = LocalResources.current
+    FabMenu(
+        items = actions.map { action -> MenuAction(resources.getString(action.label), action.icon) { onAdd(action) } },
+        openLabel = stringResource(R.string.add_menu_open),
+        closeLabel = stringResource(R.string.add_menu_close),
+    )
+}
+
+/** One choice in a floating action button's menu: its words, its icon and what it does. */
+class MenuAction(val label: String, @DrawableRes val icon: Int, val onClick: () -> Unit)
+
+/**
+ * The record menu of a page such as a hive's: a floating action button that opens into [items], each a kind of record
+ * to add, so the page is not a wall of buttons.
+ */
+@Composable
+fun RecordMenu(items: List<MenuAction>) = FabMenu(items, stringResource(R.string.record_menu_open), stringResource(R.string.record_menu_close))
+
+/** A floating action button with a plus that opens into [items] and turns into a cross to close them. */
+@Composable
+private fun FabMenu(items: List<MenuAction>, openLabel: String, closeLabel: String) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     BackHandler(expanded) { expanded = false }
-    val openLabel = stringResource(R.string.add_menu_open)
-    val closeLabel = stringResource(R.string.add_menu_close)
     val expandedState = stringResource(R.string.add_menu_expanded)
     val collapsedState = stringResource(R.string.add_menu_collapsed)
     FloatingActionButtonMenu(
@@ -57,14 +78,14 @@ fun AddMenu(actions: List<AddAction>, onAdd: (AddAction) -> Unit) {
             }
         },
     ) {
-        actions.forEach { action ->
+        items.forEach { item ->
             FloatingActionButtonMenuItem(
                 onClick = {
                     expanded = false
-                    onAdd(action)
+                    item.onClick()
                 },
-                icon = { Icon(painterResource(action.icon), contentDescription = null) },
-                text = { Text(stringResource(action.label)) },
+                icon = { Icon(painterResource(item.icon), contentDescription = null) },
+                text = { Text(item.label) },
             )
         }
     }

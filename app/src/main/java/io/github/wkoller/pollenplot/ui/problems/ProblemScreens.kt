@@ -25,8 +25,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import io.github.wkoller.pollenplot.ui.components.HeroPictureSize
+import io.github.wkoller.pollenplot.ui.components.PictureAvatar
+import io.github.wkoller.pollenplot.ui.components.RecordHero
+import io.github.wkoller.pollenplot.ui.components.groupShape
+import io.github.wkoller.pollenplot.ui.components.heroGone
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -112,11 +118,11 @@ fun ProblemsCard(problems: List<ProblemView>, onOpen: (String) -> Unit, onLog: (
         if (problems.isEmpty()) Text(stringResource(R.string.problems_none), style = MaterialTheme.typography.bodyLarge)
         problems.sortedWith(compareBy({ !it.problem.open }, { -it.problem.observedOn.toEpochDay() })).forEach { view ->
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { onOpen(view.problem.id) }.padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { onOpen(view.problem.id) }.padding(vertical = Spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                     Text(view.name, style = MaterialTheme.typography.bodyLarge)
                     Text(stringResource(R.string.problem_seen_on, UiFormat.longDate(view.problem.observedOn)), style = MaterialTheme.typography.bodySmall)
                 }
@@ -303,10 +309,12 @@ fun ProblemScreen(
     val uri = LocalUriHandler.current
     var deleting by rememberSaveable { mutableStateOf(false) }
     val shown = view
+    val scroll = rememberScrollState()
 
     DetailScaffold(
         title = shown?.name ?: stringResource(R.string.problem_title),
         onBack = onBack,
+        titleShown = heroGone(scroll),
         actions = {
             if (shown != null) {
                 IconButton(onClick = { deleting = true }) { Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.problem_delete)) }
@@ -318,35 +326,54 @@ fun ProblemScreen(
             return@DetailScaffold
         }
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            Modifier.fillMaxSize().padding(padding).verticalScroll(scroll).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
-            Text(shown.name, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-            shown.plantTitle?.let { Text(stringResource(R.string.problem_on_plant, it), style = MaterialTheme.typography.bodyLarge) }
-            Text(stringResource(R.string.problem_seen_on, UiFormat.longDate(shown.problem.observedOn)), style = MaterialTheme.typography.bodyMedium)
-            ProblemStatus(shown)
-            shown.problem.photo?.let { Cutout(it, 200.dp) }
+            RecordHero(
+                title = shown.name,
+                details = listOfNotNull(
+                    shown.plantTitle?.let { stringResource(R.string.problem_on_plant, it) },
+                    stringResource(R.string.problem_seen_on, UiFormat.longDate(shown.problem.observedOn)),
+                ),
+                tags = { ProblemStatus(shown) },
+            ) {
+                // A pest or a disease is shown in banksia rust, as follow-ups on problems are on the Today card.
+                PictureAvatar(
+                    R.drawable.ic_bug_report,
+                    HeroPictureSize,
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
+            shown.problem.photo?.let { Cutout(it, PHOTO_SIZE, Modifier.align(Alignment.CenterHorizontally)) }
             if (shown.problem.notes.isNotBlank()) Text(shown.problem.notes, style = MaterialTheme.typography.bodyLarge)
             shown.info?.let { info ->
-                FactCard(R.drawable.ic_info, info.name) {
+                FactCard(R.drawable.ic_info, stringResource(R.string.problem_info_heading)) {
                     Text(info.description, style = MaterialTheme.typography.bodyLarge)
                     Text(info.advice, style = MaterialTheme.typography.bodyLarge)
                     info.fauna?.let { name -> TextButton(onClick = { onOpenAnimal(name) }) { Text(stringResource(R.string.problem_open_animal)) } }
                     LinkButton(R.drawable.ic_open_in_new, stringResource(R.string.problem_source, info.sourceTitle)) { uri.openUri(info.sourceUrl) }
                 }
             }
-            HorizontalDivider()
-            Text(stringResource(R.string.problem_treatments), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
+            Text(
+                stringResource(R.string.problem_treatments),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = Spacing.s).semantics { heading() },
+            )
             if (shown.treatments.isEmpty()) Text(stringResource(R.string.problem_no_treatments), style = MaterialTheme.typography.bodyLarge)
-            shown.treatments.forEach { treatment ->
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(stringResource(R.string.treatment_line, stringResource(treatment.method.label), UiFormat.longDate(treatment.appliedOn)), style = MaterialTheme.typography.bodyLarge)
-                    if (treatment.productText.isNotBlank()) Text(treatment.productText, style = MaterialTheme.typography.bodyMedium)
-                    treatment.followUpOn?.let { Text(stringResource(R.string.treatment_follow_up_on, UiFormat.longDate(it)), style = MaterialTheme.typography.bodyMedium) }
-                    if (treatment.notes.isNotBlank()) Text(treatment.notes, style = MaterialTheme.typography.bodyMedium)
+            shown.treatments.forEachIndexed { index, treatment ->
+                // The treatments as one group of joined cards, the way records are grouped on the hive pages.
+                Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = groupShape(index, shown.treatments.size), modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                        Text(stringResource(R.string.treatment_line, stringResource(treatment.method.label), UiFormat.longDate(treatment.appliedOn)), style = MaterialTheme.typography.bodyLarge)
+                        if (treatment.productText.isNotBlank()) Text(treatment.productText, style = MaterialTheme.typography.bodyMedium)
+                        treatment.followUpOn?.let { Text(stringResource(R.string.treatment_follow_up_on, UiFormat.longDate(it)), style = MaterialTheme.typography.bodyMedium) }
+                        if (treatment.notes.isNotBlank()) Text(treatment.notes, style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 if (shown.problem.open) Button(onClick = onRecordTreatment) { Text(stringResource(R.string.problem_record_treatment)) }
                 OutlinedButton(onClick = {
                     scope.launch {
@@ -381,6 +408,9 @@ fun ProblemScreen(
         )
     }
 }
+
+/** How large a problem's own photo is shown on its page. */
+private val PHOTO_SIZE = 200.dp
 
 /**
  * Records a treatment of a problem and when to look again. A spray asks first when plants nearby are likely in flower,

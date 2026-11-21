@@ -48,6 +48,7 @@ STRINGS = {
     "wish_save": "Save",
     "wish_plant": "Plant it",
     "wish_delete": "Delete",
+    "wish_delete_icon": "Delete from the wishlist",
     "wish_delete_title": "Delete this plant from the wishlist?",
     "wish_delete_body": "The plant and its notes will be removed from your wishlist.",
 

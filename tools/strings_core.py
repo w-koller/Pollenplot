@@ -36,6 +36,9 @@ STRINGS = {
     "add_menu_close": "Close the add menu",
     "add_menu_expanded": "Open",
     "add_menu_collapsed": "Closed",
+    # The record menu on a hive's or a bee hotel's page
+    "record_menu_open": "Open the record menu",
+    "record_menu_close": "Close the record menu",
     "add_identify_camera": "Identify with the camera",
     "add_photos": "Add plant photos",
     "add_animal_photos": "Add wildlife photos",

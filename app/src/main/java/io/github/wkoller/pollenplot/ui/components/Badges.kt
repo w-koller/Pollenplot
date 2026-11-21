@@ -69,13 +69,22 @@ fun Badge(@DrawableRes icon: Int, text: String, tone: BadgeTone, modifier: Modif
 @Composable
 fun RoleBadge(role: EcoRole, modifier: Modifier = Modifier) = Badge(role.icon, stringResource(role.label), role.tone, modifier)
 
-/** Every badge for a plant, wrapping onto new lines. */
+/** Every badge for a plant, wrapping onto new lines, or centred under a [RecordHero] when [centred]. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun RoleBadges(roles: List<EcoRole>, modifier: Modifier = Modifier) {
-    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        roles.forEach { RoleBadge(it) }
-    }
+fun RoleBadges(roles: List<EcoRole>, modifier: Modifier = Modifier, centred: Boolean = false) {
+    BadgeRow(modifier, centred) { roles.forEach { RoleBadge(it) } }
+}
+
+/** Badges wrapping onto new lines, from the start or centred. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun BadgeRow(modifier: Modifier = Modifier, centred: Boolean = false, content: @Composable () -> Unit) {
+    FlowRow(
+        modifier,
+        horizontalArrangement = if (centred) Arrangement.spacedBy(Spacing.s, Alignment.CenterHorizontally) else Arrangement.spacedBy(Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) { content() }
 }
 
 /** One badge for [IconBadges]: its icon, its words and its tone. */

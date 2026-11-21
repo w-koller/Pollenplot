@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.review.behavioursNamed
 import io.github.wkoller.pollenplot.ui.review.NamesSaver
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
@@ -39,8 +40,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.GardenRepository
@@ -54,6 +53,8 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.DetailScaffold
 import io.github.wkoller.pollenplot.ui.components.PastDateDialog
 import io.github.wkoller.pollenplot.ui.components.PictureAvatar
+import io.github.wkoller.pollenplot.ui.theme.botanical
+import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.ui.plants.QuantityStepper
 import io.github.wkoller.pollenplot.ui.review.FaunaSearch
 import kotlinx.coroutines.Dispatchers
@@ -137,32 +138,34 @@ fun SightingScreen(
         },
     ) { padding ->
         if (sightingId != null && sightings != null && existing == null) {
-            Text(stringResource(R.string.sighting_missing), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(padding).padding(16.dp))
+            Text(stringResource(R.string.sighting_missing), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(padding).padding(Spacing.l))
             return@DetailScaffold
         }
         if (!started) return@DetailScaffold
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            // A sighting's page is mostly its form, so its header stays compact rather than a hero, leaving the choices
+            // in view; the animal's own page has the hero.
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.l), verticalAlignment = Alignment.CenterVertically) {
                 PictureAvatar(
                     group.icon,
-                    96.dp,
+                    SIGHTING_PICTURE,
                     thumbnail = existing?.sighting?.thumbnail,
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     val title = animal?.displayName ?: name ?: stringResource(R.string.review_unnamed_animal)
                     Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-                    animal?.name?.takeIf { it != title }?.let { Text(it, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic) }
+                    animal?.name?.takeIf { it != title }?.let { Text(it, style = MaterialTheme.typography.bodyLarge.botanical()) }
                     Text(stringResource(group.label), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             existing?.let { Text(stringResource(R.string.sighting_seen_at, UiFormat.longDate(it.sighting.seenAt), UiFormat.time(it.sighting.seenAt)), style = MaterialTheme.typography.bodyLarge) }
             animal?.let { SafetyNotice(it, locality.state) }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 OutlinedButton(onClick = { searching = true }, enabled = loadedFauna != null) {
                     Text(stringResource(if (name == null) R.string.sighting_choose_animal else R.string.sighting_change_animal))
                 }
@@ -181,9 +184,9 @@ fun SightingScreen(
                 ) { groupName = it.name }
             }
             if (existing == null) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(stringResource(R.string.sighting_when), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                         Text(UiFormat.longDate(LocalDate.ofEpochDay(day)), style = MaterialTheme.typography.bodyLarge)
                         TextButton(onClick = { pickingDate = true }) { Text(stringResource(R.string.sighting_change_date)) }
                     }
@@ -269,3 +272,6 @@ fun SightingScreen(
         )
     }
 }
+
+/** How large the animal's picture is at the top of a sighting's page. */
+private val SIGHTING_PICTURE = 96.dp

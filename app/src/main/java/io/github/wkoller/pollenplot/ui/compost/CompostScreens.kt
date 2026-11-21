@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.compost
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -85,19 +87,19 @@ fun CompostScreen(views: CompostViews, repository: CompostRepository, onBack: ()
         },
     ) { padding ->
         val list = bins ?: return@DetailScaffold
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding, bottom = 96.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Text(
                     stringResource(R.string.compost_intro),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
             }
             if (list.isEmpty()) {
                 item { EmptyState(R.drawable.ic_compost, stringResource(R.string.compost_empty_title), stringResource(R.string.compost_empty_body)) }
             } else {
                 item {
-                    SegmentedGroup(Modifier.padding(top = 8.dp)) {
+                    SegmentedGroup(Modifier.padding(top = Spacing.s)) {
                         list.forEach { view ->
                             row { segment ->
                                 ListItem(
@@ -156,7 +158,7 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
         val phase = view.phase
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
-                Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.fillMaxWidth().padding(Spacing.l), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     val label = stringResource(phaseLabel(phase))
                     CompostAnimation(phase ?: CompostPhase.EMPTIED, stringResource(R.string.compost_phase_description, label))
                     Text(label, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
@@ -167,7 +169,7 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
                 Text(
                     stringResource(phaseBody(phase)),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
             }
             item {
@@ -180,9 +182,9 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
                     }
                 }
                 FlowRow(
-                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.s),
                 ) {
                     val turned = stringResource(R.string.compost_recorded, stringResource(R.string.compost_event_turned).lowercase())
                     val watered = stringResource(R.string.compost_recorded, stringResource(R.string.compost_event_watered).lowercase())
@@ -212,7 +214,7 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
             }
             if (view.due.isNotEmpty() || view.next.isNotEmpty()) {
                 item {
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         view.due.forEach { task ->
                             Text(
                                 stringResource(if (task.kind == CompostTask.Kind.TURN) R.string.compost_turn_due else R.string.compost_check_due),
@@ -226,7 +228,7 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
             if (batch != null) {
                 item { SectionHeading(stringResource(R.string.compost_history)) }
                 item {
-                    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                         Text(stringResource(R.string.compost_started_on, UiFormat.longDate(batch.startedOn)), style = MaterialTheme.typography.bodyMedium)
                         batch.filledOn?.let { Text(stringResource(R.string.compost_filled_on, UiFormat.longDate(it)), style = MaterialTheme.typography.bodyMedium) }
                         if (view.events.isEmpty()) Text(stringResource(R.string.compost_history_none), style = MaterialTheme.typography.bodyMedium)
@@ -254,15 +256,15 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
                     Text(
                         pluralStringResource(R.plurals.compost_emptied_count, view.emptied, view.emptied),
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                     )
                 }
             }
             item { SectionHeading(stringResource(R.string.compost_bin_settings)) }
             item {
                 var name by rememberSaveable(view.bin.id) { mutableStateOf(view.bin.name) }
-                Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
@@ -285,8 +287,8 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
                     Text(stringResource(R.string.compost_phase_estimate), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(stringResource(R.string.compost_sources), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     OutlinedButton(onClick = { deleting = true }) {
-                        Icon(painterResource(R.drawable.ic_delete), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.compost_delete), modifier = Modifier.padding(start = 8.dp))
+                        Icon(painterResource(R.drawable.ic_delete), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                        Text(stringResource(R.string.compost_delete), modifier = Modifier.padding(start = Spacing.s))
                     }
                 }
             }
@@ -316,7 +318,7 @@ fun CompostBinScreen(views: CompostViews, repository: CompostRepository, binId: 
 /** The three steps in a row, each with an icon and words for done, now or to come, so the step does not rest on colour. */
 @Composable
 private fun Steps(current: CompostStep, finished: Boolean) {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.semantics(mergeDescendants = true) {}) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.l), modifier = Modifier.semantics(mergeDescendants = true) {}) {
         CompostStep.entries.forEach { step ->
             val name = stringResource(
                 when (step) {
@@ -345,7 +347,7 @@ private fun Steps(current: CompostStep, finished: Boolean) {
 private fun Reading(onSave: (Int) -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }
     val tenths = text.replace(',', '.').toBigDecimalOrNull()?.movePointRight(1)?.toInt()?.takeIf { it in 0..900 }
-    Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },

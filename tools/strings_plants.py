@@ -87,6 +87,10 @@ STRINGS = {
     "plant_size": "Size",
     "plant_safety": "Safety",
     "plant_companions": "Companion plants",
+    # The headings over the groups of fact cards on a plant's page
+    "plant_group_growing": "Growing conditions",
+    "plant_group_wildlife": "Wildlife and bees",
+    "plant_group_size": "Size and safety",
     "plant_notes": "Notes",
     "plant_water_need": "Water need: %1$s",
     "plant_factor": "Plant factor: %1$s",

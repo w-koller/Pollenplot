@@ -97,7 +97,7 @@ class HoneyFlowTest {
         compose.onAllNodesWithText("Due by 28 October 2026").onFirst().assertExists()
         shot("hive_new")
 
-        compose.onNodeWithText("Record an inspection").performClick()
+        compose.recordFromMenu("Record an inspection")
         waitFor(hasText("Queen seen"))
         compose.onNodeWithText("Queen seen").performClick()
         compose.onNodeWithText("Solid").performClick()
@@ -112,7 +112,7 @@ class HoneyFlowTest {
         assertEquals(setOf(HiveSign.SUNKEN_CAPPINGS), inspection.signs)
         assertEquals(LocalDate.of(2026, 10, 28), inspection.date)
 
-        compose.onNodeWithText("Record a mite check").performClick()
+        compose.recordFromMenu("Record a mite check")
         waitFor(hasText("Mites counted"))
         // The garden is in Queensland, which asks for every check to be reported.
         compose.onNodeWithText("Report this check on the Bee 123 form").assertExists()

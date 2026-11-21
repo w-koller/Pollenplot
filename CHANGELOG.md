@@ -32,6 +32,17 @@
 - Pages slide in a little from the side as they open and back the other way, and moving between tabs fades. With the
   phone's animations off, the next page is simply there.
 - On a tablet or a large unfolded phone, the tabs' rail shows each tab's name beside its icon.
+- The pages of plants, animals, zones, hives, bee hotels, problems, wishes and guides open with their picture large on
+  a sun, their name in Fraunces and their scientific name in italic, like a plate in a field guide. The top bar shows
+  the name again only once that has scrolled away.
+  - A plant's facts are in three groups: Growing conditions, Wildlife and bees, and Size and safety.
+  - A plant's picture is a flower while it is in flower. Recording that it was seen in flower today gives a short
+    vibration, and the picture turns into a flower.
+  - The months a plant flowers are in the pink the Plot uses for flowers.
+  - A hive's or a bee hotel's records are added from one button, which opens into the kinds of record, rather than a
+    wall of buttons. Each kind of record is grouped on the page.
+  - A wish is deleted with a bin icon, as on other pages.
+  - A guide opens with its title large and a sentence on what it covers.
 
 ## 1.0.0-rc.5
 

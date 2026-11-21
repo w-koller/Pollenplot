@@ -79,13 +79,13 @@ class NativeFlowTest {
         compose.onNodeWithText("Entrance faces · North-east").assertExists()
         compose.onNodeWithText("Not weighed yet").assertExists()
 
-        compose.onNodeWithText("Count the bees coming home").performClick()
+        compose.recordFromMenu("Count the bees coming home")
         waitFor(hasText("Bees coming home in a minute"))
         compose.onNodeWithText("Bees coming home in a minute").performTextInput("42")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         waitFor(hasText("42 bees coming home a minute on 28 October 2026"))
 
-        compose.onNodeWithText("Record a weight").performClick()
+        compose.recordFromMenu("Record a weight")
         waitFor(hasText("Weight in kilograms"))
         compose.onNodeWithText("Weight in kilograms").performTextInput("7.2")
         compose.onNodeWithText("Save").performScrollTo().performClick()

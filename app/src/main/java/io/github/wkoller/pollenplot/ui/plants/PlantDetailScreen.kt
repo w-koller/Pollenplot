@@ -1,6 +1,17 @@
 package io.github.wkoller.pollenplot.ui.plants
 
 import io.github.wkoller.pollenplot.ui.review.NamesSaver
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import io.github.wkoller.pollenplot.ui.components.FactGroup
+import io.github.wkoller.pollenplot.ui.components.HeroPictureSize
+import io.github.wkoller.pollenplot.ui.components.RecordHero
+import io.github.wkoller.pollenplot.ui.components.heroGone
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.PollenTheme
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readableSides
 import io.github.wkoller.pollenplot.ui.components.LevelTag
 import io.github.wkoller.pollenplot.ui.components.FactCard
@@ -9,13 +20,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.produceState
 import io.github.wkoller.pollenplot.data.NamedPlant
 import io.github.wkoller.pollenplot.ui.review.SpeciesSearch
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +32,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -58,7 +65,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -172,6 +178,8 @@ fun PlantDetailScreen(
     var changing by rememberSaveable { mutableStateOf(false) }
     var confirmRemove by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val haptics = LocalHapticFeedback.current
+    val list = rememberLazyListState()
     val loaded = view
 
     // Changing what the plant is opens the search over the whole screen.
@@ -190,6 +198,7 @@ fun PlantDetailScreen(
     DetailScaffold(
         title = loaded?.title.orEmpty(),
         onBack = onBack,
+        titleShown = heroGone(list),
         actions = {
             onAsk?.let { ask -> IconButton(onClick = ask) { Icon(painterResource(R.drawable.ic_forum), contentDescription = stringResource(R.string.ask_open)) } }
             IconButton(onClick = { editing = true }) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.plant_edit)) }
@@ -201,12 +210,15 @@ fun PlantDetailScreen(
             return@DetailScaffold
         }
         val resolved = loaded.care
+        // In flower now by its months or by a day seen lately, as the Plot judges it, so the picture is a flower.
+        val inFlower = loaded.isGrowing && FloweringSeen.inFlowerNow(resolved?.care?.flowering?.fromSouthern(locality.hemisphere), flowered.map { it.day }, today)
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp + readableSides(), end = 16.dp + readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            state = list,
+            contentPadding = PaddingValues(start = Spacing.l + readableSides(), end = Spacing.l + readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
-            item { Header(loaded) }
+            item { Header(loaded, inFlower) }
             if (!loaded.isGrowing) {
                 item {
                     GraveyardBanner(loaded) {
@@ -218,7 +230,6 @@ fun PlantDetailScreen(
                     }
                 }
             }
-            if (loaded.roles.isNotEmpty()) item { RoleBadges(loaded.roles) }
             pot?.let { state ->
                 if (state.potted) {
                     item { PotCard(state, today, onEdit = onEditPot, onRecord = onRecordCare) }
@@ -245,6 +256,7 @@ fun PlantDetailScreen(
                         today = today,
                         canRecord = loaded.plant.status == PlantStatus.GROWING,
                         onRecord = { day ->
+                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                             scope.launch {
                                 val made = garden.recordFlowering(plantId, day)
                                 val date = UiFormat.longDate(day)
@@ -299,8 +311,8 @@ fun PlantDetailScreen(
                 // A plant the knowledge base does not have can be in a pot too.
                 item {
                     OutlinedButton(onClick = onEditPot) {
-                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.pot_add), modifier = Modifier.padding(start = 8.dp))
+                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                        Text(stringResource(R.string.pot_add), modifier = Modifier.padding(start = Spacing.s))
                     }
                 }
             }
@@ -361,30 +373,30 @@ fun PlantDetailScreen(
     }
 }
 
+/**
+ * The plant's hero: its cut-out or growth form, a flower while it is [inFlower] and a clover otherwise, its names, what
+ * it is, where it grows and its badges.
+ */
 @Composable
-private fun Header(view: PlantView) {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-        PlantAvatar(view.species?.form, 96.dp, thumbnail = view.plant.thumbnail)
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(view.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-            view.species?.let { species ->
-                if (species.displayName != view.title) Text(species.displayName, style = MaterialTheme.typography.titleMedium)
-                Text(species.name, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic)
-                Text(listOfNotNull(species.form?.let { stringResource(it.label) }, species.family).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text(
-                listOfNotNull(
-                    if (view.plant.quantity > 1) pluralStringResource(R.plurals.plant_count, view.plant.quantity, view.plant.quantity) else null,
-                    view.zoneName?.let { stringResource(R.string.plant_zone, it) } ?: stringResource(R.string.plant_no_zone),
-                ).joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            val planted = view.plant.plantedOn?.let { stringResource(R.string.plant_planted, UiFormat.longDate(it)) }
-            val status = view.plant.status.takeIf { it != PlantStatus.GROWING }?.let { stringResource(it.label) }
-            if (planted != null || status != null) {
-                Text(listOfNotNull(status, planted).joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
-            }
-        }
+private fun Header(view: PlantView, inFlower: Boolean) {
+    val species = view.species
+    val planted = view.plant.plantedOn?.let { stringResource(R.string.plant_planted, UiFormat.longDate(it)) }
+    val status = view.plant.status.takeIf { it != PlantStatus.GROWING }?.let { stringResource(it.label) }
+    RecordHero(
+        title = view.title,
+        subtitle = species?.displayName?.takeIf { it != view.title },
+        scientific = species?.name,
+        details = listOfNotNull(
+            species?.let { listOfNotNull(it.form?.let { form -> stringResource(form.label) }, it.family).joinToString(" · ").ifBlank { null } },
+            listOfNotNull(
+                if (view.plant.quantity > 1) pluralStringResource(R.plurals.plant_count, view.plant.quantity, view.plant.quantity) else null,
+                view.zoneName?.let { stringResource(R.string.plant_zone, it) } ?: stringResource(R.string.plant_no_zone),
+            ).joinToString(" · "),
+            listOfNotNull(status, planted).joinToString(" · ").ifBlank { null },
+        ),
+        tags = if (view.roles.isEmpty()) null else { { RoleBadges(view.roles, centred = true) } },
+    ) {
+        PlantAvatar(species?.form, HeroPictureSize, thumbnail = view.plant.thumbnail, inFlower = inFlower)
     }
 }
 
@@ -418,90 +430,111 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.facts(
     val care = resolved.care
     fun levels(vararg fields: CareField) = Levels(resolved, fields.toList())
 
-    care.description?.let { item { Text(it, style = MaterialTheme.typography.bodyLarge) } }
+    care.description?.let { item { Text(it, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.xs)) } }
     item {
-        val l = levels(CareField.SUN)
-        FactCard(R.drawable.ic_sunny, stringResource(R.string.plant_light), l.card) {
-            Line(care.sun?.let { sun -> sun.sortedBy { it.ordinal }.map { stringResource(it.label) }.joinToString(", ") }, level = l.line(CareField.SUN))
-        }
+        FactGroup(
+            stringResource(R.string.plant_group_growing),
+            listOf<@Composable (Shape) -> Unit>(
+                { shape ->
+                    val l = levels(CareField.SUN)
+                    FactCard(R.drawable.ic_sunny, stringResource(R.string.plant_light), l.card, shape) {
+                        Line(care.sun?.let { sun -> sun.sortedBy { it.ordinal }.map { stringResource(it.label) }.joinToString(", ") }, level = l.line(CareField.SUN))
+                    }
+                },
+                { shape ->
+                    val l = levels(CareField.WATER, CareField.DROUGHT)
+                    FactCard(R.drawable.ic_water_drop, stringResource(R.string.plant_water), l.card, shape) {
+                        Line(care.water?.let { stringResource(R.string.plant_water_need, stringResource(it.label)) }, level = l.line(CareField.WATER))
+                        care.water?.let { Line(stringResource(R.string.plant_factor, UiFormat.fraction(it.plantFactorBp)), level = l.line(CareField.WATER)) }
+                        care.drought?.let { Line(stringResource(R.string.plant_drought, stringResource(toleranceLabel(it))), level = l.line(CareField.DROUGHT)) }
+                    }
+                },
+                { shape ->
+                    val l = levels(CareField.SOILS, CareField.PH, CareField.FROST, CareField.SALT, CareField.FERTILISER)
+                    FactCard(R.drawable.ic_landscape, stringResource(R.string.plant_soil), l.card, shape) {
+                        care.soils?.let { soils -> Line(stringResource(R.string.plant_soils, soils.sortedBy { it.ordinal }.map { stringResource(it.label) }.joinToString(", ")), level = l.line(CareField.SOILS)) }
+                        val phMin = care.phMinTenths
+                        val phMax = care.phMaxTenths
+                        if (phMin != null && phMax != null) Line(stringResource(R.string.plant_ph, UiFormat.ph(phMin), UiFormat.ph(phMax)), level = l.line(CareField.PH))
+                        care.frost?.let { Line(stringResource(R.string.plant_frost, stringResource(toleranceLabel(it))), level = l.line(CareField.FROST)) }
+                        care.salt?.let { Line(stringResource(R.string.plant_salt, stringResource(toleranceLabel(it))), level = l.line(CareField.SALT)) }
+                        care.fertiliser?.let { Line(stringResource(it.label), strong = true, level = l.line(CareField.FERTILISER)) }
+                        care.fertiliserNote?.let { Line(it) }
+                        if (care.soils == null && phMin == null && care.frost == null && care.salt == null && care.fertiliser == null) Line(null)
+                    }
+                },
+                { shape ->
+                    val l = levels(CareField.COMPOST)
+                    FactCard(R.drawable.ic_compost, stringResource(R.string.plant_compost), l.card, shape) {
+                        care.compostLikes?.let { Line(stringResource(it.label), level = l.line(CareField.COMPOST)) }
+                        care.compostSafe?.let { Line(stringResource(it.label), strong = it != CompostSafe.YES, level = l.line(CareField.COMPOST)) }
+                        care.compostNote?.let { Line(it) }
+                        if (care.compostLikes == null && care.compostSafe == null) Line(null)
+                    }
+                },
+            ),
+        )
     }
     item {
-        val l = levels(CareField.WATER, CareField.DROUGHT)
-        FactCard(R.drawable.ic_water_drop, stringResource(R.string.plant_water), l.card) {
-            Line(care.water?.let { stringResource(R.string.plant_water_need, stringResource(it.label)) }, level = l.line(CareField.WATER))
-            care.water?.let { Line(stringResource(R.string.plant_factor, UiFormat.fraction(it.plantFactorBp)), level = l.line(CareField.WATER)) }
-            care.drought?.let { Line(stringResource(R.string.plant_drought, stringResource(toleranceLabel(it))), level = l.line(CareField.DROUGHT)) }
-        }
+        FactGroup(
+            stringResource(R.string.plant_group_wildlife),
+            listOf<@Composable (Shape) -> Unit>(
+                { shape -> WildlifeCard(care, levels(CareField.WILDLIFE).card, shape) },
+                { shape -> ForageCard(care, levels(CareField.FORAGE).card, shape) },
+                { shape ->
+                    val l = levels(CareField.FLOWERING)
+                    FactCard(R.drawable.ic_calendar_month, stringResource(R.string.plant_flowering), l.card, shape) {
+                        // The knowledge base keeps months for the Southern Hemisphere; a northern garden sees them six months on.
+                        val flowering = care.flowering?.fromSouthern(hemisphere)
+                        val peak = care.peakFlowering?.fromSouthern(hemisphere)
+                        val words = listWords()
+                        val locale = LocalConfiguration.current.locales[0]
+                        when {
+                            flowering == null || flowering.isEmpty -> Line(stringResource(R.string.flowering_unknown))
+                            else -> {
+                                MonthStrip(flowering, peak ?: MonthSet.NONE)
+                                Line(
+                                    if (flowering == MonthSet.ALL) stringResource(R.string.flowering_all_year) else stringResource(R.string.flowering_months, UiFormat.months(flowering, words, locale)),
+                                    level = l.line(CareField.FLOWERING),
+                                )
+                                peak?.takeIf { !it.isEmpty && it != flowering }?.let { Line(stringResource(R.string.flowering_peak, UiFormat.months(it, words, locale))) }
+                            }
+                        }
+                    }
+                },
+            ),
+        )
     }
     item {
-        val l = levels(CareField.SOILS, CareField.PH, CareField.FROST, CareField.SALT, CareField.FERTILISER)
-        FactCard(R.drawable.ic_landscape, stringResource(R.string.plant_soil), l.card) {
-            care.soils?.let { soils -> Line(stringResource(R.string.plant_soils, soils.sortedBy { it.ordinal }.map { stringResource(it.label) }.joinToString(", ")), level = l.line(CareField.SOILS)) }
-            val phMin = care.phMinTenths
-            val phMax = care.phMaxTenths
-            if (phMin != null && phMax != null) Line(stringResource(R.string.plant_ph, UiFormat.ph(phMin), UiFormat.ph(phMax)), level = l.line(CareField.PH))
-            care.frost?.let { Line(stringResource(R.string.plant_frost, stringResource(toleranceLabel(it))), level = l.line(CareField.FROST)) }
-            care.salt?.let { Line(stringResource(R.string.plant_salt, stringResource(toleranceLabel(it))), level = l.line(CareField.SALT)) }
-            care.fertiliser?.let { Line(stringResource(it.label), strong = true, level = l.line(CareField.FERTILISER)) }
-            care.fertiliserNote?.let { Line(it) }
-            if (care.soils == null && phMin == null && care.frost == null && care.salt == null && care.fertiliser == null) Line(null)
-        }
-    }
-    item {
-        val l = levels(CareField.COMPOST)
-        FactCard(R.drawable.ic_compost, stringResource(R.string.plant_compost), l.card) {
-            care.compostLikes?.let { Line(stringResource(it.label), level = l.line(CareField.COMPOST)) }
-            care.compostSafe?.let { Line(stringResource(it.label), strong = it != CompostSafe.YES, level = l.line(CareField.COMPOST)) }
-            care.compostNote?.let { Line(it) }
-            if (care.compostLikes == null && care.compostSafe == null) Line(null)
-        }
-    }
-    item { WildlifeCard(care, levels(CareField.WILDLIFE).card) }
-    item { ForageCard(care, levels(CareField.FORAGE).card) }
-    item {
-        val l = levels(CareField.FLOWERING)
-        FactCard(R.drawable.ic_calendar_month, stringResource(R.string.plant_flowering), l.card) {
-            // The knowledge base keeps months for the Southern Hemisphere; a northern garden sees them six months on.
-            val flowering = care.flowering?.fromSouthern(hemisphere)
-            val peak = care.peakFlowering?.fromSouthern(hemisphere)
-            val words = listWords()
-            val locale = LocalConfiguration.current.locales[0]
-            when {
-                flowering == null || flowering.isEmpty -> Line(stringResource(R.string.flowering_unknown))
-                else -> {
-                    MonthStrip(flowering, peak ?: MonthSet.NONE)
-                    Line(
-                        if (flowering == MonthSet.ALL) stringResource(R.string.flowering_all_year) else stringResource(R.string.flowering_months, UiFormat.months(flowering, words, locale)),
-                        level = l.line(CareField.FLOWERING),
-                    )
-                    peak?.takeIf { !it.isEmpty && it != flowering }?.let { Line(stringResource(R.string.flowering_peak, UiFormat.months(it, words, locale))) }
-                }
-            }
-        }
-    }
-    item {
-        val l = levels(CareField.HEIGHT, CareField.WIDTH, CareField.GROUND_COVER, CareField.PRUNING)
-        FactCard(R.drawable.ic_straighten, stringResource(R.string.plant_size), l.card) {
-            care.height?.let { Line(stringResource(R.string.plant_height, sizeText(it)), level = l.line(CareField.HEIGHT)) }
-            care.width?.let { Line(stringResource(R.string.plant_width, sizeText(it)), level = l.line(CareField.WIDTH)) }
-            if (care.groundCover == true) Line(stringResource(R.string.role_ground_cover), level = l.line(CareField.GROUND_COVER))
-            care.pruning?.let { Line(stringResource(R.string.plant_pruning, it), level = l.line(CareField.PRUNING)) }
-            if (care.height == null && care.width == null && care.pruning == null) Line(null)
-        }
-    }
-    item {
-        val l = levels(CareField.TOXICITY, CareField.EDIBLE)
-        FactCard(R.drawable.ic_warning, stringResource(R.string.plant_safety), l.card) {
-            care.toxicPets?.let { Line(stringResource(R.string.safety_pets, stringResource(it.label)), strong = it != Toxicity.NONE, level = l.line(CareField.TOXICITY)) }
-            care.toxicPeople?.let { Line(stringResource(R.string.safety_people, stringResource(it.label)), strong = it != Toxicity.NONE, level = l.line(CareField.TOXICITY)) }
-            care.toxicNote?.let { Line(it) }
-            care.edible?.let {
-                Line(stringResource(R.string.safety_edible, it), level = l.line(CareField.EDIBLE))
-                Line(stringResource(R.string.safety_never_eat))
-            }
-            if (care.toxicPets == null && care.toxicPeople == null && care.edible == null) Line(null)
-        }
-        care.careNote?.let { note -> Text(note, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 12.dp)) }
+        FactGroup(
+            stringResource(R.string.plant_group_size),
+            listOf<@Composable (Shape) -> Unit>(
+                { shape ->
+                    val l = levels(CareField.HEIGHT, CareField.WIDTH, CareField.GROUND_COVER, CareField.PRUNING)
+                    FactCard(R.drawable.ic_straighten, stringResource(R.string.plant_size), l.card, shape) {
+                        care.height?.let { Line(stringResource(R.string.plant_height, sizeText(it)), level = l.line(CareField.HEIGHT)) }
+                        care.width?.let { Line(stringResource(R.string.plant_width, sizeText(it)), level = l.line(CareField.WIDTH)) }
+                        if (care.groundCover == true) Line(stringResource(R.string.role_ground_cover), level = l.line(CareField.GROUND_COVER))
+                        care.pruning?.let { Line(stringResource(R.string.plant_pruning, it), level = l.line(CareField.PRUNING)) }
+                        if (care.height == null && care.width == null && care.pruning == null) Line(null)
+                    }
+                },
+                { shape ->
+                    val l = levels(CareField.TOXICITY, CareField.EDIBLE)
+                    FactCard(R.drawable.ic_warning, stringResource(R.string.plant_safety), l.card, shape) {
+                        care.toxicPets?.let { Line(stringResource(R.string.safety_pets, stringResource(it.label)), strong = it != Toxicity.NONE, level = l.line(CareField.TOXICITY)) }
+                        care.toxicPeople?.let { Line(stringResource(R.string.safety_people, stringResource(it.label)), strong = it != Toxicity.NONE, level = l.line(CareField.TOXICITY)) }
+                        care.toxicNote?.let { Line(it) }
+                        care.edible?.let {
+                            Line(stringResource(R.string.safety_edible, it), level = l.line(CareField.EDIBLE))
+                            Line(stringResource(R.string.safety_never_eat))
+                        }
+                        if (care.toxicPets == null && care.toxicPeople == null && care.edible == null) Line(null)
+                    }
+                },
+            ),
+        )
+        care.careNote?.let { note -> Text(note, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = Spacing.xs, end = Spacing.xs, top = Spacing.m)) }
     }
     if (species != null && kb != null) {
         item {
@@ -511,13 +544,14 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.facts(
                 if (advice.isEmpty()) Line(stringResource(R.string.companion_none))
                 advice.forEach { a ->
                     val other = kb.species(a.otherName)?.displayName ?: a.otherName
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 4.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.padding(vertical = Spacing.xs)) {
                         Icon(
                             painterResource(if (a.pair.relation == CompanionRelation.GOOD) R.drawable.ic_check_circle else R.drawable.ic_warning),
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp),
+                            tint = if (a.pair.relation == CompanionRelation.GOOD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(IconSize.medium),
                         )
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text(
                                 stringResource(if (a.pair.relation == CompanionRelation.GOOD) R.string.companion_good else R.string.companion_avoid, other),
                                 style = MaterialTheme.typography.titleSmall,
@@ -536,23 +570,23 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.facts(
     history()
     onEditFacts?.let { edit ->
         item {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 OutlinedButton(onClick = edit) {
-                    Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(stringResource(R.string.facts_edit), modifier = Modifier.padding(start = 8.dp))
+                    Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                    Text(stringResource(R.string.facts_edit), modifier = Modifier.padding(start = Spacing.s))
                 }
                 // A plant outside a zone of pots can still be in one.
                 onAddPot?.let { add ->
                     OutlinedButton(onClick = add) {
-                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.pot_add), modifier = Modifier.padding(start = 8.dp))
+                        Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                        Text(stringResource(R.string.pot_add), modifier = Modifier.padding(start = Spacing.s))
                     }
                 }
             }
         }
     }
     item {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(horizontal = Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text(stringResource(R.string.source_species), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (resolved.usesFallback && species != null) {
                 Text(stringResource(R.string.source_fallback, species.genus, species.family), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -562,8 +596,8 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.facts(
 }
 
 @Composable
-private fun WildlifeCard(care: CareProfile, level: FactLevel?) {
-    FactCard(R.drawable.ic_raven, stringResource(R.string.plant_wildlife), level) {
+private fun WildlifeCard(care: CareProfile, level: FactLevel?, shape: Shape) {
+    FactCard(R.drawable.ic_raven, stringResource(R.string.plant_wildlife), level, shape) {
         val w = care.wildlife
         if (w == null) {
             Line(null)
@@ -582,8 +616,8 @@ private fun WildlifeCard(care: CareProfile, level: FactLevel?) {
 }
 
 @Composable
-private fun ForageCard(care: CareProfile, level: FactLevel?) {
-    FactCard(R.drawable.ic_emoji_nature, stringResource(R.string.plant_forage), level) {
+private fun ForageCard(care: CareProfile, level: FactLevel?, shape: Shape) {
+    FactCard(R.drawable.ic_emoji_nature, stringResource(R.string.plant_forage), level, shape) {
         val f = care.forage
         if (f == null) {
             Line(null)
@@ -617,8 +651,8 @@ private fun Line(text: String?, strong: Boolean = false, level: FactLevel? = nul
     }
     if (level != null && level != FactLevel.SPECIES) {
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
             content(Modifier)
@@ -670,7 +704,7 @@ private fun SeenInFlowerCard(
                 todayButton()
                 otherDay()
             } else {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), itemVerticalAlignment = Alignment.CenterVertically) {
                     todayButton()
                     otherDay()
                 }
@@ -704,27 +738,31 @@ private fun SeenInFlowerCard(
     }
 }
 
-/** The twelve months with flowering months filled in. TalkBack reads the sentence below it instead. */
+/**
+ * The twelve months with flowering months filled in, in the flowering colour the Plot uses, the best months strongest and
+ * in bold. TalkBack reads the sentence below it instead.
+ */
 @Composable
 private fun MonthStrip(flowering: MonthSet, peak: MonthSet) {
     val locale = LocalConfiguration.current.locales[0]
-    Row(Modifier.fillMaxWidth().clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+    val bloom = PollenTheme.colors.bloom
+    Row(Modifier.fillMaxWidth().clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
         Month.entries.forEach { month ->
             val on = month in flowering
             val best = month in peak
             Surface(
                 color = when {
-                    best -> MaterialTheme.colorScheme.secondary
-                    on -> MaterialTheme.colorScheme.secondaryContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
+                    best -> bloom.colour
+                    on -> bloom.container
+                    else -> MaterialTheme.colorScheme.surfaceContainerHighest
                 },
                 contentColor = when {
-                    best -> MaterialTheme.colorScheme.onSecondary
-                    on -> MaterialTheme.colorScheme.onSecondaryContainer
+                    best -> bloom.onColour
+                    on -> bloom.onContainer
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
-                shape = RoundedCornerShape(6.dp),
-                modifier = Modifier.weight(1f).height(32.dp),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.weight(1f).height(MONTH_HEIGHT),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(month.getDisplayName(TextStyle.NARROW, locale), style = MaterialTheme.typography.labelMedium, fontWeight = if (on) FontWeight.Bold else null)
@@ -842,15 +880,18 @@ private fun EditPlantSheet(
     }
 }
 
+/** How tall each month of a [MonthStrip] is, enough for its letter at large text. */
+private val MONTH_HEIGHT = 32.dp
+
 /** A plant that died or was removed: how it ended, how long it lived, and a way back to the garden. */
 @Composable
-private fun GraveyardBanner(view: io.github.wkoller.pollenplot.data.PlantView, onBringBack: () -> Unit) {
-    androidx.compose.material3.Card(
-        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+private fun GraveyardBanner(view: PlantView, onBringBack: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+        shape = MaterialTheme.shapes.large,
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(R.drawable.ic_deceased), contentDescription = null)
                 Text(
                     view.plant.endedOn?.let { stringResource(R.string.graveyard_since, UiFormat.longDate(it)) } ?: stringResource(R.string.graveyard_banner),

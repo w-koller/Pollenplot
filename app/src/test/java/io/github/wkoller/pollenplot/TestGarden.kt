@@ -343,6 +343,12 @@ fun ComposeContentTestRule.addFromMenu(item: String) {
     pressWhenShown(hasText(item))
 }
 
+/** Opens a hive's or a bee hotel's record menu and presses its [item], each once it is on the screen. */
+fun ComposeContentTestRule.recordFromMenu(item: String) {
+    pressWhenShown(hasContentDescription("Open the record menu"))
+    pressWhenShown(hasText(item))
+}
+
 
 /**
  * Reads every guide page, so the screens that show one find it already kept. A page read while its screen waits comes

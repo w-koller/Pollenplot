@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.GroupedItem
 import io.github.wkoller.pollenplot.data.HiveView
 import io.github.wkoller.pollenplot.data.prefs.Settings
 import io.github.wkoller.pollenplot.domain.bees.honey.BeekeeperRegistration
@@ -152,9 +153,12 @@ internal fun LazyListScope.honeySection(
     }
 }
 
-/** A check a hive is due for, with the day; one that is overdue says so in words and with an icon. */
+/**
+ * A check a hive is due for, with the day; one that is overdue says so in words and with an icon. On a hive's own page
+ * the checks are a group, and [group] gives this one's place in it as its index and the group's size.
+ */
 @Composable
-internal fun TaskRow(task: HiveTask, today: LocalDate, prefix: String?, onClick: (() -> Unit)?) {
+internal fun TaskRow(task: HiveTask, today: LocalDate, prefix: String?, onClick: (() -> Unit)?, group: Pair<Int, Int>? = null) {
     val overdue = task.overdue(today)
     val name = stringResource(task.kind.label)
     val headline = if (prefix != null) stringResource(R.string.honey_task_line, prefix, name) else name
@@ -169,7 +173,9 @@ internal fun TaskRow(task: HiveTask, today: LocalDate, prefix: String?, onClick:
         }
     }
     val leading: @Composable () -> Unit = { Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = null) }
-    if (onClick != null) {
+    if (group != null) {
+        GroupedItem(group.first, group.second, onClick = onClick, leading = leading, supporting = supporting) { Text(headline, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    } else if (onClick != null) {
         ListItem(onClick = onClick, leadingContent = leading, supportingContent = supporting) { Text(headline, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     } else {
         ListItem(leadingContent = leading, supportingContent = supporting) { Text(headline, maxLines = 1, overflow = TextOverflow.Ellipsis) }
