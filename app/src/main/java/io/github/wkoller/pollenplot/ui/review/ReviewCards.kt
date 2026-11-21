@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.components.checkedRowColors
 import io.github.wkoller.pollenplot.ui.plants.eachZone
 import io.github.wkoller.pollenplot.ui.plants.ManyZonesChoice
 import io.github.wkoller.pollenplot.ui.plants.ZonesChooser
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,6 +56,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
+import io.github.wkoller.pollenplot.ui.theme.botanical
+import io.github.wkoller.pollenplot.ui.wildlife.icon
 import io.github.wkoller.pollenplot.data.DetectionRecord
 import io.github.wkoller.pollenplot.data.Locality
 import io.github.wkoller.pollenplot.data.PlantView
@@ -152,10 +156,10 @@ fun DetectionReviewCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = RoundedCornerShape(28.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         modifier = modifier.fillMaxWidth().animateContentSize(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
             if (total > 1) {
                 Text(stringResource(R.string.review_plant_number, number, total), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
@@ -358,17 +362,17 @@ private fun Undecided(
         }
     }
     // Saying what it really is sits with the suggestions, as plain as adding it.
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         OutlinedButton(onClick = { callbacks.onChooseAnother(detection) }, enabled = kb != null) {
-            Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
             Text(stringResource(R.string.review_choose_another))
         }
         callbacks.onRegroup?.let { regroup -> AnimalInstead(onGroup = { regroup(detection, it) }) }
     }
 
     if (existing != null) {
-        Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(20.dp)) {
-            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.large) {
+            Column(Modifier.fillMaxWidth().padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Text(
                     existing.zoneName?.let { stringResource(R.string.review_existing_title, existing.title, it) }
                         ?: stringResource(R.string.review_existing_title_no_zone, existing.title),
@@ -402,12 +406,13 @@ private fun Undecided(
     }
     ListItem(
         checked = flowering,
+        colors = checkedRowColors(),
         onCheckedChange = {
             flowering = it
             callbacks.onFlowering?.invoke(detection, it)
         },
         supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(stringResource(R.string.review_flowering_body))
                 // Why the switch started where it did, until the user changes it.
                 if (flowering == detection.flowering) FlowerNote(detection, chosenSpecies, kb, locality.hemisphere)
@@ -416,7 +421,7 @@ private fun Undecided(
         trailingContent = { Switch(checked = flowering, onCheckedChange = null) },
     ) { Text(stringResource(R.string.review_flowering)) }
 
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         val onAdd = {
             plantPick(detection, choice, kb)?.let { 
                 val split = eachZone(manyZones, each)
@@ -435,7 +440,7 @@ private fun Undecided(
     // The photo may show a plant already in the garden under another name, or a second plant of the same kind.
     callbacks.onChoosePlant?.takeIf { plants.any { it.isGrowing } }?.let { choose ->
         TextButton(onClick = { choose(detection, chosenSpeciesName, flowering) }) {
-            Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Icon(painterResource(R.drawable.ic_potted_plant), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
             Text(stringResource(R.string.review_add_to_other))
         }
     }
@@ -449,8 +454,8 @@ private fun Undecided(
 @Composable
 internal fun GenusNote(candidates: List<Candidate>) {
     val lead = GenusCall.of(candidates) ?: return
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(painterResource(R.drawable.ic_category), contentDescription = null, modifier = Modifier.size(18.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(R.drawable.ic_category), contentDescription = null, modifier = Modifier.size(IconSize.small))
         Text(stringResource(R.string.review_genus, lead.genus), style = MaterialTheme.typography.bodyMedium)
     }
 }
@@ -460,11 +465,16 @@ internal fun GenusNote(candidates: List<Candidate>) {
 private fun AnimalInstead(onGroup: (LifeGroup) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { open = true }) { Text(stringResource(R.string.review_is_animal)) }
+        // The same kind of button as "It is another plant" beside it, since both say what the find really is.
+        OutlinedButton(onClick = { open = true }) {
+            Icon(painterResource(R.drawable.ic_raven), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
+            Text(stringResource(R.string.review_is_animal))
+        }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             CAMERA_GROUPS.filter { it.isWildlife }.forEach { group ->
                 DropdownMenuItem(
                     text = { Text(stringResource(group.label)) },
+                    leadingIcon = { Icon(painterResource(group.icon), contentDescription = null) },
                     onClick = {
                         open = false
                         onGroup(group)
@@ -478,11 +488,11 @@ private fun AnimalInstead(onGroup: (LifeGroup) -> Unit) {
 /** The cut-out and the name of what was found, with extra lines such as the confidence underneath. */
 @Composable
 internal fun Header(thumbnail: String, title: String, subtitle: String?, extra: @Composable () -> Unit = {}) {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.l), verticalAlignment = Alignment.CenterVertically) {
         Cutout(thumbnail, 112.dp)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-            subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic) }
+            subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium.botanical()) }
             extra()
         }
     }
@@ -493,7 +503,7 @@ internal fun Header(thumbnail: String, title: String, subtitle: String?, extra: 
 fun Cutout(thumbnail: String, size: Dp, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val file = remember(thumbnail) { File(context.filesDir, thumbnail) }
-    Box(modifier.size(size).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
+    Box(modifier.size(size).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
         AsyncImage(model = file, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
     }
 }
@@ -521,7 +531,7 @@ internal fun ChoiceRow(title: String, subtitle: String, italic: Boolean, trailin
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
         RadioButton(selected = selected, onClick = null)
         Column(Modifier.weight(1f)) {

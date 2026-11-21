@@ -43,6 +43,13 @@
     wall of buttons. Each kind of record is grouped on the page.
   - A wish is deleted with a bin icon, as on other pages.
   - A guide opens with its title large and a sentence on what it covers.
+- Choices in forms, filters and settings are leaf green once chosen, rather than gold, so gold is kept for bees.
+  - Days with jobs in the calendar are leaf green, and your question in Ask your garden is a leaf-green bubble.
+  - Notes such as the question about photos from the Atlas of Living Australia are on a plain raised card.
+  - A weed the law does not restrict has a plain card, and a restricted one stays in the warning colours.
+  - Pools and water tanks on the Plot are blue-green like the rest of the water.
+- When reviewing a find, "It is an animal" is now a button like "It is another plant" beside it.
+- Setup's welcome shows the four steps ahead as a short list rather than a paragraph.
 
 ## 1.0.0-rc.5
 

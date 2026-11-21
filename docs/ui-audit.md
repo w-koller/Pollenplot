@@ -26,15 +26,15 @@ The Status column says what became of each issue: Open, or the pull request that
 |---|---|---|---|
 | At a font scale of 2, a tab's top bar, once it has shrunk, breaks its subtitle inside a word ("Your backyar / d" on the Plot), because the title shares the row with four or five action buttons. The open bar is fine. | Large text | High | Fixed in PR 1 |
 | Lists that keep the default 24 dp at their end leave their last rows under the floating action button, as on the Wildlife tab before anything is recorded. Bees, Water, the Plot list, Compost and the Wishlist add their own 88 or 96 dp, so there the button only covers rows while they scroll past, as it should. | Touch, layout | High | Fixed in PR 1 |
-| The theme keeps the default `Typography()`. Screens use `bodyLarge` and `bodyMedium` 345 times, headline styles 9 times and display styles never, so pages read as one weight of text. | Typography | Medium | Type scale in PR 1; screens in PRs 2 to 4 |
-| The theme keeps the default `Shapes()`. 97 shapes are written out by hand (corners of 20, 24, 4, 12, 28, 6, 8, 16, 36 and 10 dp), and `MaterialTheme.shapes` is read twice. | Shape, consistency | Medium | Shape scale and shared components in PR 1; screens in PRs 2 to 4 |
-| There are no spacing tokens: `dp` literals use 16 values under 32 dp, among them 3, 6, 10, 14, 18, 22 and 26. | Spacing, consistency | Medium | Tokens and shared components in PR 1; screens in PRs 2 to 4 |
-| The pale gold `secondaryContainer` is the Today card, the Rhythms cards, wildlife badges, the calendar's today, selected chips, the weed photos question and the Ask question bubble, so unrelated things look alike. | Colour roles | Medium | Today card, Rhythms, Wildlife and the Water notice in PR 2; the rest in PR 4 |
-| Colours with a meaning live outside the theme: sun, shade and flowering layers in `PlotCanvas.kt`, the Plot grounds in `Colors.kt`, and camera and photo-viewer scrims as `Color.Black` and `Color.White`. | Colour, consistency | Medium | Plot layers, flowering marks and photo viewer in PR 1; camera in PR 4 |
+| The theme keeps the default `Typography()`. Screens use `bodyLarge` and `bodyMedium` 345 times, headline styles 9 times and display styles never, so pages read as one weight of text. | Typography | Medium | Fixed in PRs 1 to 4 |
+| The theme keeps the default `Shapes()`. 97 shapes are written out by hand (corners of 20, 24, 4, 12, 28, 6, 8, 16, 36 and 10 dp), and `MaterialTheme.shapes` is read twice. | Shape, consistency | Medium | Fixed in PRs 1 to 4; corners left are circles and the Plot's drawing |
+| There are no spacing tokens: `dp` literals use 16 values under 32 dp, among them 3, 6, 10, 14, 18, 22 and 26. | Spacing, consistency | Medium | Fixed in PRs 1 to 4; sizes left are pictures, heights and touch targets |
+| The pale gold `secondaryContainer` is the Today card, the Rhythms cards, wildlife badges, the calendar's today, selected chips, the weed photos question and the Ask question bubble, so unrelated things look alike. | Colour roles | Medium | Fixed in PRs 2 and 4 |
+| Colours with a meaning live outside the theme: sun, shade and flowering layers in `PlotCanvas.kt`, the Plot grounds in `Colors.kt`, and camera and photo-viewer scrims as `Color.Black` and `Color.White`. | Colour, consistency | Medium | Fixed in PRs 1 and 4 |
 | Navigation uses the default transitions, and only `CompostAnimation` checks the phone's "remove animations" setting. | Motion | Medium | Shared check in PR 1; transitions in PR 2 |
 | Every empty state is the same cookie-shaped icon on `primaryContainer` above a long paragraph. | Empty states | Medium | Fixed in PR 1 |
-| There are no `@Preview` functions. | Tooling | Low | Shared components in PR 1; screens in PRs 2 to 4 |
-| Haptics are used only on the Plot canvas and the Today card. | Feedback | Low | Open |
+| There are no `@Preview` functions. | Tooling | Low | Fixed in PRs 1 to 4 |
+| Haptics are used only on the Plot canvas and the Today card. | Feedback | Low | Seen in flower in PR 3; the rest open |
 | The wide layout switches on a hand-made 600 dp test, not `WindowSizeClass`, and no screen has two panes. | Adaptive layout | Low | Size classes in PR 2; no two-pane layouts yet |
 
 What already works and must be kept:
@@ -90,7 +90,7 @@ Measured contrast in the current colours:
 | Honey bee hive | No header picture. The facts are plain lines, and six buttons (two filled and four outlined) wrap into a wall. | Hierarchy, components | Medium | Fixed in PR 3 |
 | Stingless hive, bee hotel | No header picture. Facts are plain lines. | Hierarchy | Medium | Fixed in PR 3 |
 | Animal | A large teal avatar and clear sections, with gold role badges. | Colour roles | Low | Fixed in PRs 2 and 3 |
-| Sighting | The zone, plant and behaviour choices are long walls of chips. The count stepper has the full touch size. | Hierarchy | Low | Tokens in PR 3; the chips with the forms in PR 4 |
+| Sighting | The zone, plant and behaviour choices are long walls of chips. The count stepper has the full touch size. | Hierarchy | Low | Chips in PR 4; each keeps its full touch size, so the walls stay |
 | Problem | The name is in the top bar and again as a heading. The Open status pill has its icon and word. | Hierarchy | Low | Fixed in PR 3 |
 | Compost bin | The bin picture is the app's best illustration, and it stays still with animations off. The disabled Save name button is faint, as disabled buttons are. | Feedback | Low | Tokens in PR 3; nothing else needed |
 | Wish | Delete is a word in the top bar, where other pages use a bin icon. | Consistency | Low | Fixed in PR 3 |
@@ -101,30 +101,30 @@ Measured contrast in the current colours:
 
 | Screen | Issue | Category | Severity | Status |
 |---|---|---|---|---|
-| Identify, camera | The overlay's scrims, frame and chips use `Color.Black` and `Color.White` with alpha. They are right for a camera, which is always dark, but they belong in the theme as scrim colours. | Colour, consistency | Low | Open |
-| Identify and Review results | Each found plant is a card with its picture and suggestions. "It is an animal" is a text button beside an outlined one, so the two read as different kinds of choice. | Components | Low | Open |
+| Identify, camera | The overlay's scrims, frame and chips use `Color.Black` and `Color.White` with alpha. They are right for a camera, which is always dark, but they belong in the theme as scrim colours. | Colour, consistency | Low | Fixed in PR 4 |
+| Identify and Review results | Each found plant is a card with its picture and suggestions. "It is an animal" is a text button beside an outlined one, so the two read as different kinds of choice. | Components | Low | Fixed in PR 4 |
 | Review queue | Uses its own frame, not the shared scaffolds. | Consistency | Low | Open |
-| Search | Clear. The kind and zone filters are chips, and the results group under headings. | Consistency | Low | Open |
-| Weeds | The photo question card is gold, the same as the Today card. | Colour roles | Medium | Open |
-| Weed finder, Compare | Photo grids and facts are clear. Corners are written out. | Shape | Low | Open |
+| Search | Clear. The kind and zone filters are chips, and the results group under headings. | Consistency | Low | Tokens and chips in PR 4; nothing else needed |
+| Weeds | The photo question card is gold, the same as the Today card. | Colour roles | Medium | Fixed in PR 4 |
+| Weed finder, Compare | Photo grids and facts are clear. Corners are written out. | Shape | Low | Fixed in PR 4 |
 
 ## Planning and records over time
 
 | Screen | Issue | Category | Severity | Status |
 |---|---|---|---|---|
-| Calendar, month | Today is gold, and the weather sits in the day cells in small text. | Colour roles | Low | Open |
-| Calendar, to-do list | Jobs are grouped rows, close to the Expressive grouped list already. | Components | Low | Open |
-| Forms: feed, harvest, pot, problem, treatment, hive and hotel records | Radio lists, chips and outlined fields with labels and helper text. They are clear. Spacing and corners are written out. | Consistency | Low | Open |
-| Wishlist | Clear. Its empty state is the shared one. | Empty states | Low | Open |
+| Calendar, month | Today is gold, and the weather sits in the day cells in small text. | Colour roles | Low | Fixed in PR 4 |
+| Calendar, to-do list | Jobs are grouped rows, close to the Expressive grouped list already. | Components | Low | No change needed |
+| Forms: feed, harvest, pot, problem, treatment, hive and hotel records | Radio lists, chips and outlined fields with labels and helper text. They are clear. Spacing and corners are written out. | Consistency | Low | Fixed in PR 4 |
+| Wishlist | Clear. Its empty state is the shared one. | Empty states | Low | No change needed; its pictures in PR 3 |
 
 ## Settings, setup and help
 
 | Screen | Issue | Category | Severity | Status |
 |---|---|---|---|---|
-| Setup | Steps with a wavy progress bar and a clear Start and Skip. The welcome page is a long paragraph. Uses its own frame. | Hierarchy | Low | Open |
-| Settings | Grouped cards of rows, which hold up at large text. | Components | Low | Open |
-| Models, Backup, Export, Garden location, Scan settings, About and Licences | Cards with a download or action button each, and clear words. Only tokens to change. | Consistency | Low | Open |
-| Ask your garden | The question bubble is gold, and the answer is plain text with its sources as chips. | Colour roles | Low | Open |
+| Setup | Steps with a wavy progress bar and a clear Start and Skip. The welcome page is a long paragraph. Uses its own frame. | Hierarchy | Low | Welcome fixed in PR 4; its own frame is open |
+| Settings | Grouped cards of rows, which hold up at large text. | Components | Low | Tokens and notices in PR 4 |
+| Models, Backup, Export, Garden location, Scan settings, About and Licences | Cards with a download or action button each, and clear words. Only tokens to change. | Consistency | Low | Fixed in PR 4 |
+| Ask your garden | The question bubble is gold, and the answer is plain text with its sources as chips. | Colour roles | Low | Fixed in PR 4 |
 
 ## Plan
 
@@ -324,3 +324,106 @@ of inspections. `ComponentGalleryTest` saves them as `records*.png`.
 
 - The sighting's zone, plant and behaviour chips, with the other forms, to PR 4.
 - The plant page's edit sheet, with the other forms, to PR 4.
+
+### PR 4: finding and identifying, forms, settings and setup
+
+**Choices are leaf green.** Material's chosen filter chip and checked list item take `secondaryContainer`, which in
+Field Guide is the bees' wattle gold, so every form, filter and setting lit up gold.
+
+- `ChoiceChip` (`components/Choices.kt`) is `FilterChip` with leaf green for a chosen chip. All 29 filter chips use it,
+  and the Wildlife tab's group chips keep their rust.
+- `ToggleRow` is a form's switch row, leaf green while it is on. It replaces the zone editor's shelter switches and the
+  inspection form's Queen seen and Eggs seen.
+- `checkedRowColors()` gives eight other rows that can be checked the same leaf green: setup's zone ticks and pets, the
+  library's add mode and picks, the review card's In flower switch, monthly mite checks and the Plot's grid. The
+  settings' segmented groups set it in `SegmentedGroup`'s colours, so their switches and album ticks follow.
+
+**The other gold, by meaning.**
+
+- **Neutral notes.** `ActionNotice`, the photos question on the Weeds and Library screens, the review card's offer to
+  add a find to a plant already in the garden, and the progress card while photos are added are on
+  `surfaceContainerHigh`, like a note in the notebook.
+- **Calendar.** Days with jobs are leaf green, and today keeps its outline in leaf green.
+- **Ask.** The question is in a leaf-green bubble, and an answer Pollenplot gives itself is a note unless it is about
+  danger, which stays in the error colours.
+- **Weed card.** A weed the law does not restrict is a note, and a restricted one stays in the error colours.
+  Tertiary is banksia rust, the animals' colour, since PR 1.
+- **Plot.** Pools and water tanks among the structures are in water's blue-green. They were tertiary, which was
+  pond teal before PR 1.
+
+**Camera.** The Identify overlay's scrims, frame, chips and pills use `PollenColors.scrim` and `onScrim` rather than
+`Color.Black` and `Color.White`, and the frame takes the theme's extra-large corners.
+
+**Review.** "It is an animal" is an outlined button with a bird, like "It is another plant" beside it, and its menu
+gives each group its icon. A find's scientific name is in Fraunces italic.
+
+**Setup.** The welcome shows the empty states' picture with a flower: the cookie, the gold sun and the grain of pollen,
+shared as `Vignette`. Under it are the first sentence, the four steps as a grouped list with icons, and a note that every
+step can be skipped. That replaces two long paragraphs.
+
+**Tokens.** The forms, settings, search, calendar, weeds, review, Ask and setup screens use the shape scale and the
+spacing and icon-size tokens. What is left as `dp` is a measurement: a picture, a height, a touch target or the
+Plot's drawing.
+
+**Previews.** The choices preview adds two `ToggleRow`s, one on and one off.
+
+**Deferred.**
+
+- The Review queue and Setup keep their own frames rather than the shared scaffolds.
+- The sighting's choices stay as chips. Each has its full touch size, and a list of the yard's zones and plants is long
+  by nature.
+- The compost picture's pigments stay its own.
+
+## Where it stands
+
+The four pull requests bring every screen onto Field Guide: one theme of colour roles, type, shapes, spacing and motion,
+and components that use only those. Colour says what a thing is about everywhere, and each colour still has its icon
+and words beside it:
+
+- leaf green for plants and for choices made;
+- wattle gold for bees and pollination;
+- banksia rust for animals;
+- water's blue-green;
+- the error colours for warnings.
+
+`ThemeContrastTest` holds every pair to WCAG AA in both schemes. The screen tests draw each screen in the light, in the
+dark, at twice the text size and in a wide window, and `ComponentGalleryTest` draws the shared pieces.
+
+### Before and after, screen by screen
+
+| Screen | Before | After |
+|---|---|---|
+| Top bars | The default type. At large text a shrunken tab bar broke a word in two. | Fraunces titles. At large text the shrunken bar keeps to two lines. A record page leaves its name to its hero until that has scrolled away. |
+| Empty states | A cookie icon and a paragraph, the same on every screen. | The icon on a cookie in front of a gold sun with a grain of pollen, growing into place. |
+| Navigation | The default page transition. A rail without labels. | Pages slide a little on the motion scheme's springs, tabs fade through, and nothing moves with animations off. The rail opens out with labels on an expanded window. |
+| Plot | A gold Today card of lines of the same weight. Zone names cut to "Bac…" at large text. | Today is a page with a coloured dot for each job and urgent jobs on their own tiles. Zone names take two lines. Plants in flower show as flowers. |
+| Rhythms | Three gold cards whatever they said. | Each card in its kind's colour. |
+| Wildlife | Gold group chips, and the last line under the floating button. | Rust counts and ideas, and the list clears the button. |
+| Bees | Lists that the button covered while they scrolled. | The same lists, ending with room for the button. |
+| Water | Plain lines for the weather, and the button over the reminder switch. | A water-coloured weather card and an error-coloured notice for pots before heat. |
+| Plant | A small avatar, then many fact cards alike, and the name twice. | A specimen hero that is a flower while the plant flowers, three groups of joined fact cards, flowering months in the flowering pink, and a vibration when it is seen in flower. |
+| Animal, zone, library plant, problem, wish | A small header under a bar that already named the record. | A hero, with badges centred, and the bar's name only once it has scrolled away. |
+| Hives and bee hotel | No header picture, plain lines and walls of up to six buttons. | A gold hero, a record menu instead of the buttons, and grouped lists of what is due and recorded. |
+| Guide | The title only in the bar. | A Fraunces title with the page's summary, larger headings and species names in Fraunces italic. |
+| Identify and Review | A camera overlay in fixed black and white, and two kinds of button for the same choice. | Scrim colours from the theme, and matching buttons for "another plant" and "an animal". |
+| Forms | Gold chosen chips and switch rows, and spacing written out. | Leaf-green choices and the spacing tokens. |
+| Calendar | Gold days with jobs. | Leaf-green days with jobs, with today outlined. |
+| Settings and its screens | Gold notices. | Notes on the raised surface, and the tokens. |
+| Setup | A welcome of two long paragraphs. | The app's picture, a sentence and the four steps as a grouped list. |
+| Ask | A gold question bubble. | A leaf-green question and neutral notes for Pollenplot's own answers. |
+
+### What comes next
+
+- **Checks on a phone**, which the screen tests cannot make:
+  - animations off;
+  - wallpaper colours on and off;
+  - text at twice its size;
+  - landscape;
+  - a tablet's rail;
+  - the hero's grow-in and title fade;
+  - the vibration;
+  - the record menu with TalkBack.
+- **Two-pane layouts** on expanded windows, such as the Plot's list beside a zone, or a hive beside its records.
+- **The Plot's empty state** groups its three buttons, and **Rhythms** shortens its opening paragraph.
+- **Haptics** beyond the Plot, the Today card and Seen in flower.
+- **Frames.** The Review queue and Setup move onto the shared scaffolds.

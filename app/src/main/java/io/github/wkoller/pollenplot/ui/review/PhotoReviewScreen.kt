@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.material3.OutlinedButton
@@ -30,10 +31,9 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -457,8 +457,8 @@ fun PhotoReviewScreen(
                 Modifier.fillMaxSize(),
                 state = listState,
                 // Room below the last card for the selection toolbar.
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + if (selecting) 112.dp else 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + if (selecting) 112.dp else 32.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.l),
             ) {
                 top()
                 if (selecting) {
@@ -469,7 +469,7 @@ fun PhotoReviewScreen(
                 val zoneIds = zones.map { it.zone.id }.toSet()
                 shown.forEach { review ->
                     item(key = "photo-${review.photo.id}") {
-                        Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                             MarkedPhoto(review)
                             photoHeading(review)
                             // Several cards for one plant are made one here, by the person who can see the photo.
@@ -528,7 +528,7 @@ fun MarkedPhoto(review: PhotoReview) {
     val context = LocalContext.current
     val file = remember(review.photo.path) { File(context.filesDir, review.photo.path) }
     val ratio = if (review.photo.height > 0) review.photo.width.toFloat() / review.photo.height else 4f / 3f
-    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(ratio).clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
+    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(ratio).clip(MaterialTheme.shapes.extraLarge).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
         AsyncImage(model = file, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
         if (review.detections.size > 1) {
             val marker = 32.dp
@@ -555,13 +555,13 @@ fun MarkedPhoto(review: PhotoReview) {
 private fun SelectGroups(pending: List<DetectionRecord>, selection: Set<String>, modifier: Modifier, onSelect: (Set<String>) -> Unit) {
     val plants = pending.filter { it.group == LifeGroup.PLANT }.map { it.id }.toSet()
     val wildlife = pending.filter { it.group.isWildlife }.map { it.id }.toSet()
-    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         listOf(
             plants to stringResource(R.string.review_select_plants, plants.size),
             wildlife to stringResource(R.string.review_select_wildlife, wildlife.size),
         ).filter { (ids, _) -> ids.isNotEmpty() }.forEach { (ids, label) ->
             val all = selection.containsAll(ids)
-            FilterChip(
+            ChoiceChip(
                 selected = all,
                 onClick = { onSelect(if (all) selection - ids else selection + ids) },
                 label = { Text(label) },
@@ -581,7 +581,7 @@ private fun SelectRow(detection: DetectionRecord, checked: Boolean, modifier: Mo
     Row(
         modifier.heightIn(min = 48.dp).toggleable(value = checked, role = Role.Checkbox, onValueChange = onChange),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
         Checkbox(checked = checked, onCheckedChange = null)
         Text(
@@ -619,8 +619,8 @@ private fun AddSelectedScreen(adds: Int, skipped: Int, zones: List<ZoneView>, st
     var zoneId by rememberSaveable { mutableStateOf(startZoneId) }
     DetailScaffold(title = stringResource(R.string.review_add_selected_title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(pluralStringResource(R.plurals.review_add_selected_body, adds, adds), style = MaterialTheme.typography.bodyLarge)
             if (skipped > 0) {

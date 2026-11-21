@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.calendar
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,8 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -122,7 +122,7 @@ fun CalendarScreen(
                     selected = shown,
                     label = { stringResource(if (it == CalendarView.MONTH) R.string.calendar_view_month else R.string.calendar_view_todo) },
                     onChoose = { view = it },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
             }
             val loaded = days ?: return@LazyColumn
@@ -136,19 +136,19 @@ fun CalendarScreen(
                         stringResource(if (current?.gardenPlace == null) R.string.calendar_no_place else R.string.calendar_forecast_note),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(Spacing.l),
                     )
                 }
             } else {
                 item {
-                    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(selected = !todoMonth, onClick = { todoMonth = false }, label = { Text(stringResource(R.string.calendar_todo_week)) })
-                        FilterChip(selected = todoMonth, onClick = { todoMonth = true }, label = { Text(stringResource(R.string.calendar_todo_month)) })
+                    Row(Modifier.padding(horizontal = Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        ChoiceChip(selected = !todoMonth, onClick = { todoMonth = false }, label = { Text(stringResource(R.string.calendar_todo_week)) })
+                        ChoiceChip(selected = todoMonth, onClick = { todoMonth = true }, label = { Text(stringResource(R.string.calendar_todo_month)) })
                     }
                 }
                 val withJobs = loaded.filter { it.items.isNotEmpty() }
                 if (withJobs.isEmpty()) {
-                    item { Text(stringResource(R.string.calendar_todo_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp)) }
+                    item { Text(stringResource(R.string.calendar_todo_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(Spacing.l)) }
                 }
                 withJobs.forEach { day ->
                     item(key = "day-${day.date}") { SectionHeading(dayTitle(day.date, today)) }
@@ -161,7 +161,7 @@ fun CalendarScreen(
 
 @Composable
 private fun MonthHeader(month: YearMonth, onPrevious: () -> Unit, onNext: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.s), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrevious) { Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.calendar_previous)) }
         Text(
             month.month.getDisplayName(TextStyle.FULL, LocalConfiguration.current.locales[0]) + " " + month.year,
@@ -176,7 +176,7 @@ private fun MonthHeader(month: YearMonth, onPrevious: () -> Unit, onNext: () -> 
 /** Seven columns from Monday, each day with its number, its weather when known and how many jobs it has. */
 @Composable
 private fun MonthGrid(month: YearMonth, days: List<CalendarDay>, today: LocalDate, onOpenDay: (LocalDate) -> Unit) {
-    Column(Modifier.readable().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.readable().padding(horizontal = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Row(Modifier.clearAndSetSemantics { }) {
             DayOfWeek.entries.forEach { weekday ->
                 Text(
@@ -188,7 +188,7 @@ private fun MonthGrid(month: YearMonth, days: List<CalendarDay>, today: LocalDat
             }
         }
         days.chunked(7).forEach { week ->
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 week.forEach { day -> DayCell(day, inMonth = YearMonth.from(day.date) == month, today = today, onOpen = { onOpenDay(day.date) }, modifier = Modifier.weight(1f)) }
             }
         }
@@ -208,8 +208,8 @@ private fun DayCell(day: CalendarDay, inMonth: Boolean, today: LocalDate, onOpen
         weatherWords(weather)?.let { add(it) }
     }.joinToString(". ")
     Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = if (jobs > 0) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.medium,
+        color = if (jobs > 0) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
         border = if (isToday) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = modifier
             .heightIn(min = 72.dp)
@@ -219,7 +219,7 @@ private fun DayCell(day: CalendarDay, inMonth: Boolean, today: LocalDate, onOpen
                 role = Role.Button
             },
     ) {
-        Column(Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Text(
                 day.date.dayOfMonth.toString(),
                 style = if (isToday) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
@@ -231,7 +231,7 @@ private fun DayCell(day: CalendarDay, inMonth: Boolean, today: LocalDate, onOpen
                 weather.maxTenthsC?.let { Text(stringResource(R.string.calendar_temp_short, CalendarWords.degrees(it)), style = MaterialTheme.typography.labelSmall) }
             }
             if (jobs > 0) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                     Icon(painterResource(R.drawable.ic_notifications), contentDescription = null, modifier = Modifier.size(12.dp))
                     Text(jobs.toString(), style = MaterialTheme.typography.labelSmall)
                 }
@@ -271,7 +271,7 @@ fun CalendarDayScreen(views: CalendarViews, date: LocalDate, onBack: () -> Unit,
             day.weather?.let { weather ->
                 item { SectionHeading(stringResource(R.string.calendar_day_weather_heading)) }
                 item {
-                    Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(Modifier.padding(horizontal = Spacing.l), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                         WeatherKind.of(weather.code)?.let { Icon(painterResource(CalendarWords.weatherIcon(it)), contentDescription = null) }
                         Column {
                             weatherWords(weather)?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
@@ -281,7 +281,7 @@ fun CalendarDayScreen(views: CalendarViews, date: LocalDate, onBack: () -> Unit,
                 }
             }
             if (day.items.isEmpty()) {
-                item { Text(stringResource(R.string.calendar_day_empty), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp)) }
+                item { Text(stringResource(R.string.calendar_day_empty), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(Spacing.l)) }
             }
             day.items.groupBy { it.kind }.forEach { (kind, items) ->
                 item(key = kind.name) { SectionHeading(stringResource(CalendarWords.kindLabel(kind))) }

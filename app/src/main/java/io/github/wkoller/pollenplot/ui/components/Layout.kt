@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -93,7 +92,7 @@ fun <T> ManyChipGroup(title: String?, options: List<T>, selected: Set<T>, label:
 
 @Composable
 private fun TickChip(text: String, on: Boolean, onClick: () -> Unit) {
-    FilterChip(
+    ChoiceChip(
         selected = on,
         onClick = onClick,
         label = { Text(text) },
@@ -112,7 +111,7 @@ fun <T> ChipGroup(title: String, options: List<T>, selected: T, label: @Composab
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
         FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            options.forEach { option -> FilterChip(selected = option == selected, onClick = { onChoose(option) }, label = { Text(label(option)) }) }
+            options.forEach { option -> ChoiceChip(selected = option == selected, onClick = { onChoose(option) }, label = { Text(label(option)) }) }
         }
     }
 }

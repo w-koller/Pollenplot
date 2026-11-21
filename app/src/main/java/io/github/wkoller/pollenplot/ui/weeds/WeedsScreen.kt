@@ -1,11 +1,12 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.listPadding
 import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Surface
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.BorderStroke
 import kotlinx.coroutines.launch
@@ -100,7 +101,7 @@ fun WeedsScreen(
     DetailScaffold(title = stringResource(R.string.weeds_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     val updated = weeds.updatedAt
                     Text(
                         if (updated != null) stringResource(R.string.weeds_updated, UiFormat.longDate(updated)) else stringResource(R.string.weeds_never_updated),
@@ -110,29 +111,29 @@ fun WeedsScreen(
                         Text(stringResource(R.string.weeds_update_failed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     when (update) {
-                        UpdateState.RUNNING -> Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        UpdateState.RUNNING -> Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                             PollenLoadingIndicator(Modifier.size(32.dp))
                             Text(stringResource(R.string.weeds_updating), style = MaterialTheme.typography.bodyMedium)
                         }
                         UpdateState.WAITING -> Text(stringResource(R.string.weeds_update_waiting), style = MaterialTheme.typography.bodyMedium)
                         UpdateState.IDLE -> OutlinedButton(onClick = { WeedSyncWorker.runNow(context) }) {
-                            Icon(painterResource(R.drawable.ic_refresh), contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.weeds_update_now), modifier = Modifier.padding(start = 8.dp))
+                            Icon(painterResource(R.drawable.ic_refresh), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                            Text(stringResource(R.string.weeds_update_now), modifier = Modifier.padding(start = Spacing.s))
                         }
                     }
                     Button(onClick = onCheckWeed) {
-                        Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.weeds_check), modifier = Modifier.padding(start = 8.dp))
+                        Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                        Text(stringResource(R.string.weeds_check), modifier = Modifier.padding(start = Spacing.s))
                     }
                 }
             }
             if (place?.gardenPlace == null) {
                 item {
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                         Text(stringResource(R.string.weeds_no_location), style = MaterialTheme.typography.bodyLarge)
                         OutlinedButton(onClick = onSetLocation) {
-                            Icon(painterResource(R.drawable.ic_location_on), contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.weeds_set_location), modifier = Modifier.padding(start = 8.dp))
+                            Icon(painterResource(R.drawable.ic_location_on), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                            Text(stringResource(R.string.weeds_set_location), modifier = Modifier.padding(start = Spacing.s))
                         }
                     }
                 }
@@ -144,17 +145,17 @@ fun WeedsScreen(
                     Text(
                         stringResource(if (weeds.hasLists) R.string.weeds_in_garden_none else R.string.weed_lists_missing),
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = Spacing.l),
                     )
                 }
             } else {
                 items(growingWeeds, key = { "plant-" + it.plant.id }) { view ->
                     Column {
                         PlantRow(view, onClick = { onOpenPlant(view.plant.id) })
-                        WeedNotice(view.weed, locality, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
+                        WeedNotice(view.weed, locality, Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s))
                         help?.let { helper ->
                             val names = view.species?.let { listOf(it.name) + it.synonyms } ?: listOfNotNull(view.plant.speciesName)
-                            NativeAlternatives(helper, names, kb, locality, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
+                            NativeAlternatives(helper, names, kb, locality, Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.l))
                         }
                     }
                 }
@@ -171,13 +172,13 @@ fun WeedsScreen(
                             stringResource(R.string.weeds_nearby_body, nearby.radiusKm, nearby.sinceYear)
                         },
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = Spacing.l),
                     )
                 }
                 val showPhotos = photos != null && currentSettings?.libraryPhotos == true
                 if (photos != null && weeds.nearbyWeeds.isNotEmpty()) {
                     item {
-                        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s)) {
                             when (currentSettings?.libraryPhotos) {
                                 null -> PhotosQuestion { on -> photoScope.launch { settings.update { it.copy(libraryPhotos = on) } } }
                                 true -> Text(stringResource(R.string.weeds_photos_credit), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -194,7 +195,7 @@ fun WeedsScreen(
                 }
                 if (nearbyShown.size < weeds.nearbyWeeds.size) {
                     item {
-                        TextButton(onClick = { showAllNearby = true }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                        TextButton(onClick = { showAllNearby = true }, modifier = Modifier.padding(horizontal = Spacing.s)) {
                             Text(pluralStringResource(R.plurals.weeds_nearby_show_all, weeds.nearbyWeeds.size, weeds.nearbyWeeds.size))
                         }
                     }
@@ -231,7 +232,7 @@ fun WeedsScreen(
 
             item { SectionHeading(stringResource(R.string.weeds_sources_heading)) }
             item {
-                Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(Modifier.padding(horizontal = Spacing.l).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     val sources = listOfNotNull(
                         weeds.council?.let { stringResource(R.string.weeds_source_council, it.name) },
                         stringResource(R.string.weeds_source_wons),
@@ -257,7 +258,7 @@ private fun NearbyWeedRow(weed: NearbyWeed, commonName: String?, locality: Local
     ListItem(
         onClick = onClick,
         supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 if (commonName != null) Text(weed.name, fontStyle = FontStyle.Italic, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 weedHeadline(weed.status, locality)?.let { Text(it) }
                 Text(pluralStringResource(R.plurals.weeds_records, weed.records, weed.records), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -278,7 +279,7 @@ private fun PhotoStack(photos: List<LibraryPhoto>) {
     Box(Modifier.size(44.dp + step * (photos.size - 1), 44.dp)) {
         photos.withIndex().reversed().forEach { (i, photo) ->
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = MaterialTheme.shapes.small,
                 border = BorderStroke(2.dp, MaterialTheme.colorScheme.surface),
                 shadowElevation = 1.dp,
                 modifier = Modifier.offset(x = step * i).size(44.dp),

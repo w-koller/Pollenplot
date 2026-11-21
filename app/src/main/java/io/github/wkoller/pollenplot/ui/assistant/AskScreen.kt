@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.assistant
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AssistChip
@@ -93,9 +94,9 @@ fun AskScreen(
 
     DetailScaffold(title = stringResource(if (subject == AskSubject.Garden) R.string.ask_garden_title else R.string.ask_title), onBack = onBack) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).imePadding()) {
-            LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list, contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list, contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
                 item(key = "intro") {
-                    Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                         val name = when (subject) {
                             is AskSubject.Plant -> plant?.title
                             is AskSubject.Animal -> fauna?.animal(subject.key)?.displayName ?: subject.key
@@ -113,15 +114,15 @@ fun AskScreen(
                     }
                 }
                 itemsIndexed(exchanges, key = { i, _ -> "exchange-$i" }) { _, exchange ->
-                    Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Question(exchange.question)
                         Reply(exchange.reply, locality.state, onOpenModels, onOpenRecord)
                     }
                 }
             }
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedTextField(
@@ -146,8 +147,8 @@ fun AskScreen(
 @Composable
 private fun Question(text: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-        Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(20.dp)) {
-            Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+        Surface(color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer, shape = MaterialTheme.shapes.large) {
+            Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = 10.dp))
         }
     }
 }
@@ -155,22 +156,22 @@ private fun Question(text: String) {
 @Composable
 private fun Reply(reply: AssistantReply, state: AuState?, onOpenModels: () -> Unit, onOpenRecord: (CitedRecord) -> Unit) {
     when (reply) {
-        AssistantReply.Loading -> Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        AssistantReply.Loading -> Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
             PollenLoadingIndicator(Modifier.size(32.dp))
             Text(stringResource(R.string.ask_loading), style = MaterialTheme.typography.bodyMedium)
         }
         is AssistantReply.Streaming -> Text(reply.text, style = MaterialTheme.typography.bodyLarge)
-        is AssistantReply.Done -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        is AssistantReply.Done -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Text(reply.text, style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.ask_written_by), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (reply.cited.isNotEmpty()) {
                 Text(stringResource(R.string.ask_sources), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     reply.cited.forEach { record ->
                         AssistChip(
                             onClick = { onOpenRecord(record) },
                             label = { Text(record.title) },
-                            leadingIcon = { Icon(painterResource(record.kind.icon), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            leadingIcon = { Icon(painterResource(record.kind.icon), contentDescription = null, modifier = Modifier.size(IconSize.small)) },
                         )
                     }
                 }
@@ -188,13 +189,14 @@ private fun FixedAnswer(kind: QuestionKind, state: AuState?) {
     val uri = LocalUriHandler.current
     val urgent = kind == QuestionKind.BITE_OR_STING || kind == QuestionKind.POISONING
     Surface(
-        color = if (urgent) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer,
-        contentColor = if (urgent) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer,
-        shape = RoundedCornerShape(20.dp),
+        // Danger is in the error colours; any other answer Pollenplot gives itself is a note on the raised surface.
+        color = if (urgent) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = if (urgent) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.large,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(if (urgent) R.drawable.ic_warning else R.drawable.ic_info), contentDescription = null)
                 Text(stringResource(R.string.ask_app_answer), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
             }
@@ -213,7 +215,7 @@ private fun FixedAnswer(kind: QuestionKind, state: AuState?) {
                     Text(stringResource(R.string.fixed_wildlife_care), style = MaterialTheme.typography.bodyLarge)
                     if (contact != null) {
                         TextButton(onClick = { uri.openUri(contact.source) }) {
-                            Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                            Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = Spacing.s))
                             Text(stringResource(R.string.fixed_source))
                         }
                     }
@@ -226,8 +228,8 @@ private fun FixedAnswer(kind: QuestionKind, state: AuState?) {
 
 @Composable
 private fun NotReady(onOpenModels: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Text(stringResource(R.string.ask_not_ready_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             Text(stringResource(R.string.ask_not_ready_body), style = MaterialTheme.typography.bodyLarge)
             Button(onClick = onOpenModels) { Text(stringResource(R.string.ask_open_models)) }

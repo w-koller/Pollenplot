@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.FactCard
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -210,8 +211,8 @@ fun HarvestScreen(plantId: String, harvestId: String?, harvests: HarvestReposito
 
     DetailScaffold(title = stringResource(if (harvestId == null) R.string.harvest_record_title else R.string.harvest_edit_title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             DateRow(date) { pickingDate = true }
             OutlinedTextField(
@@ -238,12 +239,12 @@ fun HarvestScreen(plantId: String, harvestId: String?, harvests: HarvestReposito
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(stringResource(R.string.harvest_rating), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                 Text(stringResource(R.string.harvest_rating_help), style = MaterialTheme.typography.bodyMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     (1..5).forEach { stars ->
-                        FilterChip(
+                        ChoiceChip(
                             selected = rating == stars,
                             onClick = { rating = if (rating == stars) null else stars },
                             label = { Text(stringResource(R.string.harvest_rating_choice, stars)) },
@@ -271,7 +272,7 @@ fun HarvestScreen(plantId: String, harvestId: String?, harvests: HarvestReposito
             if (original != null) {
                 OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                     Icon(painterResource(R.drawable.ic_delete), contentDescription = null)
-                    Text(stringResource(R.string.harvest_delete), modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.harvest_delete), modifier = Modifier.padding(start = Spacing.s))
                 }
             }
         }

@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,7 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -111,7 +113,7 @@ fun EditFactsScreen(
             return@DetailScaffold
         }
         if (species == null) {
-            Text(stringResource(R.string.facts_unavailable), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(padding).padding(16.dp))
+            Text(stringResource(R.string.facts_unavailable), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(padding).padding(Spacing.l))
             return@DetailScaffold
         }
         val own = CareResolver.resolve(loadedKb, species, corrected = false).care
@@ -123,8 +125,8 @@ fun EditFactsScreen(
         }
 
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.facts_body, species.displayName), style = MaterialTheme.typography.bodyLarge)
             CareCorrections.EDITABLE.forEach { field ->
@@ -215,8 +217,8 @@ private val CareField.title: Int
 /** One correctable fact: its heading, whether the user corrected it, the editor, and the knowledge base's value. */
 @Composable
 private fun FactSection(title: String, corrected: Boolean, kbValue: String?, onUseKb: () -> Unit, editor: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(Spacing.xs), itemVerticalAlignment = Alignment.CenterVertically) {
             Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             if (corrected) Badge(R.drawable.ic_edit, stringResource(R.string.facts_corrected), BadgeTone.WILDLIFE)
         }
@@ -250,22 +252,22 @@ private fun describe(field: CareField, care: CareProfile, hemisphere: Hemisphere
 
 @Composable
 private fun <T> OneChip(options: List<T>, selected: T?, label: @Composable (T) -> String, onChoose: (T) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        options.forEach { option -> FilterChip(selected = option == selected, onClick = { onChoose(option) }, label = { Text(label(option)) }) }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        options.forEach { option -> ChoiceChip(selected = option == selected, onClick = { onChoose(option) }, label = { Text(label(option)) }) }
     }
 }
 
 @Composable
 private fun <T> ManyChips(options: List<T>, selected: Set<T>, label: @Composable (T) -> String, onChange: (Set<T>) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         options.forEach { option ->
             val on = option in selected
-            FilterChip(
+            ChoiceChip(
                 selected = on,
                 onClick = { onChange(if (on) selected - option else selected + option) },
                 label = { Text(label(option)) },
                 leadingIcon = if (on) {
-                    { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(IconSize.small)) }
                 } else {
                     null
                 },
@@ -291,7 +293,7 @@ private fun SizeFields(key: String, range: SizeRange?, error: Boolean, onChange:
             else -> onChange(null, false)
         }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         // With large text the two fields go one above the other, so neither label is cut short.
         val stacked = largeText()
         val fieldModifier = if (stacked) Modifier.fillMaxWidth() else Modifier
@@ -322,9 +324,9 @@ private fun SizeFields(key: String, range: SizeRange?, error: Boolean, onChange:
             )
         }
         if (stacked) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { fields(Modifier) }
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) { fields(Modifier) }
         } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { fields(Modifier.weight(1f)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) { fields(Modifier.weight(1f)) }
         }
         if (error) Text(stringResource(R.string.facts_size_error), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
     }

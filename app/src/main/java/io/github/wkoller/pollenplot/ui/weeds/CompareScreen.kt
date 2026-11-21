@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -108,14 +108,14 @@ fun CompareScreen(
     DetailScaffold(title = stringResource(R.string.compare_title), onBack = onBack) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 32.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
                     if (title != species) Text(entry?.botanical ?: species, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic)
-                    WeedNotice(status, locality, Modifier.padding(top = 4.dp))
+                    WeedNotice(status, locality, Modifier.padding(top = Spacing.xs))
                 }
             }
             yours?.let { thumbnail ->
@@ -125,13 +125,13 @@ fun CompareScreen(
             item { Heading(stringResource(R.string.compare_recorded)) }
             when (val shown = found) {
                 Photos.Loading -> item {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                         PollenLoadingIndicator(Modifier.size(32.dp))
                         Text(stringResource(R.string.compare_loading), style = MaterialTheme.typography.bodyLarge)
                     }
                 }
                 Photos.Failed -> item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
                         Text(stringResource(R.string.compare_failed), style = MaterialTheme.typography.bodyLarge)
                         OutlinedButton(onClick = { attempt++ }) { Text(stringResource(R.string.compare_try_again)) }
                     }
@@ -140,7 +140,7 @@ fun CompareScreen(
                     item { Text(stringResource(R.string.compare_none), style = MaterialTheme.typography.bodyLarge) }
                 } else {
                     items(shown.photos.chunked(2)) { pair ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                             pair.forEach { photo -> PhotoTile(photo, photos, Modifier.weight(1f)) }
                             if (pair.size == 1) Box(Modifier.weight(1f))
                         }
@@ -182,7 +182,7 @@ private fun Heading(text: String) {
         text,
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 12.dp).semantics { heading() },
+        modifier = Modifier.padding(top = Spacing.m).semantics { heading() },
     )
 }
 
@@ -200,7 +200,7 @@ private fun Features(weed: CouncilWeed) {
     )
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         rows.forEach { (label, value) ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Text(stringResource(label), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(0.35f))
                 Text(value, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(0.65f))
             }
@@ -211,9 +211,9 @@ private fun Features(weed: CouncilWeed) {
 @Composable
 private fun PhotoTile(photo: RecordPhoto, photos: WeedPhotos, modifier: Modifier = Modifier) {
     val image by produceState<ImageBitmap?>(null, photo.thumbnail) { value = photos.image(photo.thumbnail) }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Box(
-            Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
             image?.let { Image(it, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }

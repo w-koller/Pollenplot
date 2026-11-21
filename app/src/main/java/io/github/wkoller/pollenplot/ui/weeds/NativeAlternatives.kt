@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -72,7 +73,7 @@ fun NativeAlternatives(help: WeedHelp, weedNames: List<String>, kb: KnowledgeBas
     val scope = rememberCoroutineScope()
     val uri = LocalUriHandler.current
     val stacked = largeText()
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         Text(stringResource(R.string.alternatives_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
         Text(stringResource(R.string.alternatives_body), style = MaterialTheme.typography.bodyMedium)
         suggested.forEach { (species, _) ->
@@ -87,7 +88,7 @@ fun NativeAlternatives(help: WeedHelp, weedNames: List<String>, kb: KnowledgeBas
                 }
             }
             val about = @Composable {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(species.displayName, style = MaterialTheme.typography.bodyLarge)
                     if (species.displayName != species.name) {
                         Text(species.name, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -100,12 +101,12 @@ fun NativeAlternatives(help: WeedHelp, weedNames: List<String>, kb: KnowledgeBas
             }
             // With large text the button goes under the plant's name rather than squeezing it.
             if (stacked) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     about()
                     action()
                 }
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) { about() }
                     action()
                 }

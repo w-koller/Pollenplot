@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -105,9 +107,9 @@ internal fun UndecidedAnimal(
             }
         }
     }
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         OutlinedButton(onClick = { callbacks.onChooseAnother(detection) }, enabled = fauna != null) {
-            Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
             Text(stringResource(R.string.review_choose_another_animal))
         }
         callbacks.onRegroup?.let { regroup ->
@@ -131,7 +133,7 @@ internal fun UndecidedAnimal(
         onBehaviours = { chosen -> behaviours = chosen.map { it.name } },
     )
 
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Button(
             onClick = {
                 val pick = animalPick(detection, choice, fauna) ?: return@Button

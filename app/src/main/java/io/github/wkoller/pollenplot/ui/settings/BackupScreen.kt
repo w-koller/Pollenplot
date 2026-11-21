@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.content.ContentResolver
 import android.net.Uri
@@ -224,11 +226,11 @@ fun BackupScreen(model: BackupModel, lastBackupAt: Long?, zone: ZoneId, onBack: 
     DetailScaffold(title = stringResource(R.string.backup_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
-                Text(stringResource(R.string.backup_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                Text(stringResource(R.string.backup_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
             }
             item { SectionHeading(stringResource(R.string.backup_save_heading)) }
             item {
-                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     val saving = save is BackupModel.Save.Saving
                     PasswordField(
                         value = model.password,
@@ -266,7 +268,7 @@ fun BackupScreen(model: BackupModel, lastBackupAt: Long?, zone: ZoneId, onBack: 
             }
             item { SectionHeading(stringResource(R.string.backup_restore_heading)) }
             item {
-                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     Text(stringResource(R.string.backup_restore_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     when (val state = restore) {
                         BackupModel.Restore.Reading -> Working(stringResource(R.string.backup_reading), null)
@@ -331,7 +333,7 @@ private fun Unlock(model: BackupModel, wrongPassword: Boolean) {
         label = stringResource(R.string.backup_unlock_password),
         onDone = { if (model.unlockPassword.isNotEmpty()) model.unlock() },
     )
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
         Button(enabled = model.unlockPassword.isNotEmpty(), onClick = model::unlock) { Text(stringResource(R.string.backup_open)) }
         TextButton(onClick = model::cancel) { Text(stringResource(R.string.cancel)) }
     }
@@ -340,10 +342,10 @@ private fun Unlock(model: BackupModel, wrongPassword: Boolean) {
 @Composable
 private fun Found(contents: BackupContents, zone: ZoneId, onRestore: () -> Unit, onCancel: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Text(stringResource(R.string.backup_found, UiFormat.longDate(contents.createdAt, zone = zone)), style = MaterialTheme.typography.titleMedium)
             Text(holds(contents), style = MaterialTheme.typography.bodyMedium)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Button(onClick = onRestore) { Text(stringResource(R.string.backup_restore)) }
                 TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
             }
@@ -378,7 +380,7 @@ private fun holds(contents: BackupContents): String {
 
 @Composable
 private fun Working(text: String, progress: Float?) {
-    Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(text, style = MaterialTheme.typography.bodyMedium)
         PollenProgressBar(progress, Modifier.fillMaxWidth())
     }
@@ -417,7 +419,7 @@ private fun PasswordField(
         supportingText = when {
             error != null -> {
                 {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
                         Icon(painterResource(R.drawable.ic_warning), contentDescription = null, modifier = Modifier.size(16.dp))
                         Text(error)
                     }
@@ -440,7 +442,7 @@ internal fun StatusLine(ok: Boolean, text: String) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
     ) {
-        Icon(painterResource(if (ok) R.drawable.ic_check else R.drawable.ic_warning), contentDescription = null, modifier = Modifier.size(18.dp))
+        Icon(painterResource(if (ok) R.drawable.ic_check else R.drawable.ic_warning), contentDescription = null, modifier = Modifier.size(IconSize.small))
         Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }

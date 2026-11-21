@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.feeding
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.annotation.StringRes
@@ -20,7 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -118,25 +120,25 @@ fun FeedScreen(zoneId: String?, feeds: FeedRepository, views: GardenViews, today
 
     DetailScaffold(title = stringResource(R.string.feed_title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.feed_product), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
             Column(Modifier.selectableGroup()) {
                 products.forEach { item -> ProductRow(item, selected = item.key == productKey) { productKey = item.key } }
             }
             TextButton(onClick = onAddProduct) { Text(stringResource(R.string.feed_own_product)) }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Text(stringResource(R.string.feed_zones), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     zones.forEach { view ->
                         val on = view.zone.id in chosenZones
-                        FilterChip(
+                        ChoiceChip(
                             selected = on,
                             onClick = { chosenZones = if (on) chosenZones - view.zone.id else chosenZones + view.zone.id },
                             label = { Text(view.zone.name) },
                             leadingIcon = if (on) {
-                                { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(18.dp)) }
+                                { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(IconSize.small)) }
                             } else {
                                 null
                             },
@@ -194,12 +196,12 @@ fun FeedScreen(zoneId: String?, feeds: FeedRepository, views: GardenViews, today
 @Composable
 private fun ProductRow(product: Product, selected: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).selectable(selected = selected, onClick = onClick, role = Role.RadioButton).padding(vertical = 4.dp),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).selectable(selected = selected, onClick = onClick, role = Role.RadioButton).padding(vertical = Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
         RadioButton(selected = selected, onClick = null)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Text(product.title, style = MaterialTheme.typography.bodyLarge)
             val npk = product.npk
             Text(
@@ -232,8 +234,8 @@ fun OwnProductScreen(feeds: FeedRepository, onBack: () -> Unit) {
 
     DetailScaffold(title = stringResource(R.string.product_title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.product_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(value = maker, onValueChange = { maker = it }, label = { Text(stringResource(R.string.product_maker)) }, singleLine = true, modifier = Modifier.fillMaxWidth())

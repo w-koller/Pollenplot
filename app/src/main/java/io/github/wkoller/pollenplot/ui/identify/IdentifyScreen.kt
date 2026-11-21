@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.identify
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import android.Manifest
 import android.content.Context
@@ -16,7 +17,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.ui.semantics.contentDescription
 import io.github.wkoller.pollenplot.domain.id.PhotoScope
@@ -74,6 +75,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import io.github.wkoller.pollenplot.ui.theme.PollenTheme
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -219,7 +221,7 @@ private fun CameraGate(model: IdentifyModel, knowledge: KnowledgeRepository, tit
         Viewfinder(model, knowledge, hint, onBack, chooseGroup, fromPhotos)
     } else {
         DetailScaffold(title = title, onBack = onBack) { padding ->
-            Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 EmptyState(R.drawable.ic_photo_camera, stringResource(R.string.identify_permission_title), stringResource(R.string.identify_permission_body))
                 if (canAskAgain) {
                     Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) { Text(stringResource(R.string.identify_permission_allow)) }
@@ -254,20 +256,20 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
     val imageCapture = remember { identifyImageCapture() }
     LightSystemBarIcons()
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize().background(PollenTheme.colors.scrim)) {
         CameraPreview(imageCapture, onFrame = model::glance, modifier = Modifier.fillMaxSize())
         // Marks the middle of the view, which the live suggestions look at.
         Box(
             Modifier.align(Alignment.Center).fillMaxWidth(0.7f).aspectRatio(1f)
-                .border(3.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(36.dp)),
+                .border(3.dp, PollenTheme.colors.onScrim.copy(alpha = 0.7f), MaterialTheme.shapes.extraLarge),
         )
         Box(
             Modifier.align(Alignment.TopCenter).fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.55f), Color.Transparent)))
+                .background(Brush.verticalGradient(listOf(PollenTheme.colors.scrim.copy(alpha = 0.55f), Color.Transparent)))
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-                .padding(8.dp),
+                .padding(Spacing.s),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 FilledTonalIconButton(onClick = onBack, colors = IconButtonDefaults.filledTonalIconButtonColors()) {
                     Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
                 }
@@ -277,14 +279,14 @@ private fun Viewfinder(model: IdentifyModel, knowledge: KnowledgeRepository, hin
         }
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))))
+                .background(Brush.verticalGradient(listOf(Color.Transparent, PollenTheme.colors.scrim.copy(alpha = 0.6f))))
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
-                .padding(horizontal = 16.dp, vertical = 24.dp),
+                .padding(horizontal = Spacing.l, vertical = Spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             LiveSuggestions(live, nameOf, hint)
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.l), verticalAlignment = Alignment.CenterVertically) {
                 // A photo already on the phone, or in a cloud album the photo picker shows, can be identified too.
                 FilledTonalIconButton(onClick = fromPhotos, enabled = !capturing, modifier = Modifier.size(56.dp)) {
                     Icon(painterResource(R.drawable.ic_photo_library), contentDescription = stringResource(R.string.identify_from_photos))
@@ -319,16 +321,16 @@ private fun GroupChoice(selected: LifeGroup, scope: PhotoScope, onChoose: (LifeG
     val description = stringResource(R.string.identify_what)
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).semantics { contentDescription = description },
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
         CAMERA_CHOICES.forEach { choice ->
-            FilterChip(
+            ChoiceChip(
                 selected = choice.group == selected && (selected != LifeGroup.PLANT || choice.scope == scope),
                 onClick = { onChoose(choice.group, choice.scope) },
                 label = { Text(if (choice.scope == PhotoScope.SEVERAL) stringResource(R.string.identify_choice_bed) else stringResource(choice.group.label)) },
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = Color.Black.copy(alpha = 0.55f),
-                    labelColor = Color.White,
+                    containerColor = PollenTheme.colors.scrim.copy(alpha = 0.55f),
+                    labelColor = PollenTheme.colors.onScrim,
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
@@ -342,14 +344,14 @@ private fun GroupChoice(selected: LifeGroup, scope: PhotoScope, onChoose: (LifeG
 private fun LiveSuggestions(live: List<Candidate>, nameOf: (Candidate) -> String, hint: String) {
     val pill = Modifier.clip(CircleShape)
     if (live.isEmpty()) {
-        Surface(color = Color.Black.copy(alpha = 0.6f), contentColor = Color.White, modifier = pill) {
-            Text(hint, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+        Surface(color = PollenTheme.colors.scrim.copy(alpha = 0.6f), contentColor = PollenTheme.colors.onScrim, modifier = pill) {
+            Text(hint, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = 10.dp))
         }
         return
     }
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.s),
         modifier = Modifier.fillMaxWidth(),
     ) {
         live.forEachIndexed { i, candidate ->
@@ -364,7 +366,7 @@ private fun LiveSuggestions(live: List<Candidate>, nameOf: (Candidate) -> String
                     label,
                     style = if (i == 0) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
                     fontStyle = if (candidate.speciesName == null) FontStyle.Italic else null,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = 10.dp),
                 )
             }
         }
@@ -394,18 +396,18 @@ private fun LightSystemBarIcons() {
 private fun Analysing(model: IdentifyModel) {
     val captured by model.captured.collectAsStateWithLifecycle()
     LightSystemBarIcons()
-    Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(PollenTheme.colors.scrim), contentAlignment = Alignment.Center) {
         captured?.let { photo ->
             val image = remember(photo) { photo.asImageBitmap() }
             Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)))
+        Box(Modifier.fillMaxSize().background(PollenTheme.colors.scrim.copy(alpha = 0.5f)))
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) {
             PollenLoadingIndicator(Modifier.size(96.dp), contained = true)
             Text(
                 stringResource(R.string.identify_analysing),
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
+                color = PollenTheme.colors.onScrim,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
         }
@@ -478,14 +480,14 @@ private fun Results(
             // Checking a weed: when no suggestion is right, the council's list can be searched by what the plant looks like.
             if (onOpenFinder != null) {
                 item {
-                    Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Text(stringResource(R.string.identify_weed_more), style = MaterialTheme.typography.bodyLarge)
                         OutlinedButton(onClick = { onOpenFinder(result?.detections?.firstOrNull()?.id) }) { Text(stringResource(R.string.finder_title)) }
                     }
                 }
             }
             item {
-                Row(Modifier.readable(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.readable(), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     OutlinedButton(onClick = model::takeAnother) { Text(stringResource(R.string.identify_try_again)) }
                     Button(onClick = onBack) { Text(stringResource(R.string.review_done)) }
                 }
@@ -498,7 +500,7 @@ private fun Results(
 @Composable
 private fun Problem(screenTitle: String, title: String, body: String, onBack: () -> Unit, onTryAgain: () -> Unit, onAddByName: () -> Unit) {
     DetailScaffold(title = screenTitle, onBack = onBack) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
             EmptyState(R.drawable.ic_potted_plant, title, body)
             Button(onClick = onTryAgain) { Text(stringResource(R.string.identify_try_again)) }
             OutlinedButton(onClick = onAddByName) { Text(stringResource(R.string.add_plant_by_name)) }

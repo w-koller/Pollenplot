@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ManyChipGroup
 import io.github.wkoller.pollenplot.domain.calendar.ReminderMode
 import io.github.wkoller.pollenplot.ui.components.SwitchRow
@@ -154,7 +155,7 @@ fun SettingsScreen(
                     stringResource(R.string.settings_reminders_intro),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s),
                 )
             }
             if (anyReminder && access != null && !access.allowed) {
@@ -225,7 +226,7 @@ fun SettingsScreen(
             }
             item { SectionHeading(stringResource(R.string.settings_appearance)) }
             item {
-                Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                     ConnectedChoice(
                         options = ThemeChoice.entries,
@@ -311,11 +312,11 @@ internal fun StateDialog(current: AuState?, onDismiss: () -> Unit, onChoose: (Au
                         Modifier
                             .fillMaxWidth()
                             .selectable(selected = state == current, onClick = { onChoose(state) }, role = Role.RadioButton)
-                            .padding(vertical = 12.dp),
+                            .padding(vertical = Spacing.m),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = state == current, onClick = null)
-                        Text(stringResource(state.label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp))
+                        Text(stringResource(state.label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = Spacing.l))
                     }
                 }
             }
@@ -327,7 +328,7 @@ internal fun StateDialog(current: AuState?, onDismiss: () -> Unit, onChoose: (Au
 /** What adding a plant to several zones makes, as a setting: asked in setup and changed in Settings. */
 @Composable
 fun ManyZonesSetting(choice: ManyZones, modifier: Modifier = Modifier, onChoose: (ManyZones) -> Unit) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         ChipGroup(
             title = stringResource(R.string.settings_many_zones),
             options = listOf(ManyZones.ASK, ManyZones.ONE_PLANT, ManyZones.PLANT_EACH),
@@ -360,7 +361,7 @@ fun ManyZonesSetting(choice: ManyZones, modifier: Modifier = Modifier, onChoose:
 /** When reminders come: each day, at weekends, on chosen days, or as a weekly or monthly to-do list. */
 @Composable
 private fun ReminderWhen(settings: Settings, update: ((Settings) -> Settings) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         ChipGroup(
             title = stringResource(R.string.settings_reminder_when),
             options = ReminderMode.entries,

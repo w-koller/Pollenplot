@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.FactCard
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
@@ -17,7 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -126,8 +128,8 @@ fun PotCard(state: PotState, today: LocalDate, onEdit: () -> Unit, onRecord: () 
                 Badge(R.drawable.ic_warning, stringResource(if (flush) R.string.pot_flush_due else R.string.pot_repot_due), BadgeTone.WARNING)
                 Text(stringResource(if (flush) R.string.pot_flush_why else R.string.pot_repot_why), style = MaterialTheme.typography.bodyMedium)
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = null, modifier = Modifier.size(18.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = null, modifier = Modifier.size(IconSize.small))
                     Text(
                         stringResource(if (flush) R.string.pot_flush_next else R.string.pot_repot_next, UiFormat.longDate(task.due)),
                         style = MaterialTheme.typography.bodyLarge,
@@ -135,7 +137,7 @@ fun PotCard(state: PotState, today: LocalDate, onEdit: () -> Unit, onRecord: () 
                 }
             }
         }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Button(onClick = onRecord) { Text(stringResource(R.string.pot_record)) }
             OutlinedButton(onClick = onEdit) { Text(stringResource(if (pot == null) R.string.pot_add else R.string.pot_edit)) }
         }
@@ -148,7 +150,7 @@ fun PlantEventsCard(events: List<PlantEvent>, onRemove: (PlantEvent) -> Unit) {
     FactCard(R.drawable.ic_history, stringResource(R.string.event_title)) {
         events.forEach { event ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                     Text(stringResource(R.string.event_on, stringResource(event.kind.label), UiFormat.longDate(event.date)), style = MaterialTheme.typography.bodyLarge)
                     if (event.notes.isNotBlank()) Text(event.notes, style = MaterialTheme.typography.bodyMedium)
                 }
@@ -172,8 +174,8 @@ fun PlantEventScreen(plantId: String, pots: PotRepository, today: LocalDate, kin
 
     DetailScaffold(title = stringResource(R.string.event_record_title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             ChipGroup(stringResource(R.string.event_kind), kinds, kind, { stringResource(it.label) }) { kind = it }
             DateRow(date) { pickingDate = true }
@@ -226,15 +228,15 @@ fun PotEditScreen(plantId: String, pots: PotRepository, onBack: () -> Unit) {
     DetailScaffold(title = stringResource(R.string.pot_edit_title), onBack = onBack) { padding ->
         if (!loaded) return@DetailScaffold
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             NumberText(stringResource(R.string.pot_diameter), diameter, diameterError) { diameter = it }
             NumberText(stringResource(R.string.pot_volume), volume, volumeError) { volume = it }
             OptionalChips(stringResource(R.string.pot_material), PotMaterial.entries, material, { stringResource(it.label) }) { material = it }
             OptionalChips(stringResource(R.string.pot_mix), PotMix.entries, mix, { stringResource(it.label) }) { mix = it }
             OutlinedTextField(value = mixNote, onValueChange = { mixNote = it }, label = { Text(stringResource(R.string.pot_mix_note)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Button(
                     onClick = {
                         scope.launch {
@@ -260,11 +262,11 @@ fun PotEditScreen(plantId: String, pots: PotRepository, onBack: () -> Unit) {
 /** Chips for one choice of a few, with Not recorded for none. */
 @Composable
 private fun <T> OptionalChips(title: String, options: List<T>, selected: T?, label: @Composable (T) -> String, onChoose: (T?) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = selected == null, onClick = { onChoose(null) }, label = { Text(stringResource(R.string.pot_not_recorded)) })
-            options.forEach { option -> FilterChip(selected = option == selected, onClick = { onChoose(option) }, label = { Text(label(option)) }) }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            ChoiceChip(selected = selected == null, onClick = { onChoose(null) }, label = { Text(stringResource(R.string.pot_not_recorded)) })
+            options.forEach { option -> ChoiceChip(selected = option == selected, onClick = { onChoose(option) }, label = { Text(label(option)) }) }
         }
     }
 }

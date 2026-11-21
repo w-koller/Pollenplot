@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.assistant
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.FactCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -51,7 +53,7 @@ fun CareDraftCard(
                     Text(stringResource(R.string.draft_needs_gemma), style = MaterialTheme.typography.bodyMedium)
                     OutlinedButton(onClick = onOpenModels) { Text(stringResource(R.string.ask_open_models)) }
                 }
-                state == DraftState.WORKING -> Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                state == DraftState.WORKING -> Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                     PollenLoadingIndicator(Modifier.size(32.dp))
                     Text(stringResource(R.string.draft_working), style = MaterialTheme.typography.bodyMedium)
                 }
@@ -71,11 +73,11 @@ fun CareDraftCard(
     val words = listWords()
     val locale = LocalConfiguration.current.locales[0]
     FactCard(R.drawable.ic_forum, stringResource(R.string.draft_title)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(R.drawable.ic_info), contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
+            Icon(painterResource(R.drawable.ic_info), contentDescription = null, modifier = Modifier.size(IconSize.small), tint = MaterialTheme.colorScheme.primary)
             Text(stringResource(R.string.draft_badge), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             if (sun.isNotEmpty()) Line(stringResource(R.string.draft_light, sun.joinToString(", ")))
             care.water?.let { Line(stringResource(R.string.plant_water_need, stringResource(it.label))) }
             care.drought?.let { Line(stringResource(R.string.plant_drought, stringResource(toleranceLabel(it)))) }
@@ -93,7 +95,7 @@ fun CareDraftCard(
             care.note?.let { Line(it) }
         }
         if (kept) Text(stringResource(R.string.draft_kept), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             if (!kept) Button(onClick = onKeep) { Text(stringResource(R.string.draft_keep)) }
             OutlinedButton(onClick = onRemove) { Text(stringResource(R.string.draft_remove)) }
         }

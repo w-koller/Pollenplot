@@ -301,8 +301,8 @@ fun WaterFeatureScreen(habitat: HabitatRepository, zoneId: String?, featureId: S
 
     DetailScaffold(title = title, onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.water_feature_kind), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
             Column(Modifier.selectableGroup()) {
@@ -310,7 +310,7 @@ fun WaterFeatureScreen(habitat: HabitatRepository, zoneId: String?, featureId: S
                     Row(
                         Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(selected = kind == option, onClick = { kind = option }, role = Role.RadioButton),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
                     ) {
                         RadioButton(selected = kind == option, onClick = null)
                         Icon(painterResource(option.icon), contentDescription = null)
@@ -350,7 +350,7 @@ fun WaterFeatureScreen(habitat: HabitatRepository, zoneId: String?, featureId: S
             if (original != null) {
                 OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                     Icon(painterResource(R.drawable.ic_delete), contentDescription = null)
-                    Text(stringResource(R.string.water_feature_delete), modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.water_feature_delete), modifier = Modifier.padding(start = Spacing.s))
                 }
             }
         }

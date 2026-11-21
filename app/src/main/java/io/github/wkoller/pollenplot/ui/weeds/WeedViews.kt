@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -110,17 +111,18 @@ fun WeedCard(status: WeedStatus, locality: Locality, scientificName: String, mod
     val headline = weedHeadline(status, locality) ?: return
     val uri = LocalUriHandler.current
     val weeds = locality.weeds
-    // Weeds the law restricts stand out in the error colours; the card says why in words as well.
+    // Weeds the law restricts stand out in the error colours; the card says why in words as well. Any other weed is a
+    // note on the page's raised surface, since banksia rust is the animals' colour.
     val serious = status.level == WeedLevel.PROHIBITED || status.level == WeedLevel.RESTRICTED || status.mustReport
-    val container = if (serious) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer
-    val content = if (serious) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer
+    val container = if (serious) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHigh
+    val content = if (serious) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
     Card(
         colors = CardDefaults.cardColors(containerColor = container, contentColor = content),
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(R.drawable.ic_warning), contentDescription = null)
                 Text(stringResource(R.string.weed_card_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             }
@@ -145,7 +147,7 @@ fun WeedCard(status: WeedStatus, locality: Locality, scientificName: String, mod
             // The council writes each method as a label, such as "Foliar spray"; in a sentence only the first keeps its capital.
             val control = status.council?.control.orEmpty().mapIndexed { i, method -> if (i == 0) method else method.replaceFirstChar(Char::lowercaseChar) }
             if (control.isNotEmpty()) {
-                Text(stringResource(R.string.weed_control), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp).semantics { heading() })
+                Text(stringResource(R.string.weed_control), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = Spacing.xs).semantics { heading() })
                 Text(UiFormat.joinAnd(control, listWords()) + ". " + stringResource(R.string.weed_control_label), style = MaterialTheme.typography.bodyLarge)
             }
             Text(stringResource(R.string.weed_disposal), style = MaterialTheme.typography.bodyLarge)
@@ -179,7 +181,7 @@ fun WeedCard(status: WeedStatus, locality: Locality, scientificName: String, mod
 @Composable
 fun WeedNotice(status: WeedStatus, locality: Locality, modifier: Modifier = Modifier) {
     val headline = weedHeadline(status, locality) ?: return
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
         Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
         Text(
             if (status.mustReport) headline + ". " + stringResource(R.string.weed_notice_report) else headline,
@@ -194,7 +196,7 @@ fun WeedNotice(status: WeedStatus, locality: Locality, modifier: Modifier = Modi
 internal fun LinkButton(@DrawableRes icon: Int, label: String, color: Color = Color.Unspecified, onClick: () -> Unit) {
     val colors = if (color == Color.Unspecified) ButtonDefaults.textButtonColors() else ButtonDefaults.textButtonColors(contentColor = color)
     TextButton(onClick = onClick, colors = colors) {
-        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
-        Text(label, modifier = Modifier.padding(start = 8.dp))
+        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(IconSize.small))
+        Text(label, modifier = Modifier.padding(start = Spacing.s))
     }
 }

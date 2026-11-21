@@ -131,7 +131,7 @@ fun MonthStrip(months: List<MonthSeen>, current: Month?, modifier: Modifier = Mo
                     month.month.getDisplayName(TextStyle.NARROW, locale),
                     style = MaterialTheme.typography.labelMedium,
                     color = if (month.month == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = if (month.month == current) Modifier.background(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.extraSmall).padding(horizontal = 4.dp) else Modifier.padding(horizontal = 4.dp),
+                    modifier = if (month.month == current) Modifier.background(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.extraSmall).padding(horizontal = Spacing.xs) else Modifier.padding(horizontal = Spacing.xs),
                 )
             }
         }

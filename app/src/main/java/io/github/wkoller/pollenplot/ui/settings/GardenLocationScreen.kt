@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.LinkRow
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.Manifest
@@ -192,7 +194,7 @@ fun GardenLocationContent(model: GardenLocationModel, settings: SettingsStore, p
     LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
         top()
         item {
-            Text(stringResource(R.string.location_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            Text(stringResource(R.string.location_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
         }
         item { SectionHeading(stringResource(R.string.location_current)) }
         item { CurrentPlace(current, onRemove = model::remove) }
@@ -210,7 +212,7 @@ fun GardenLocationContent(model: GardenLocationModel, settings: SettingsStore, p
                         Icon(painterResource(R.drawable.ic_search), contentDescription = stringResource(R.string.location_search_action))
                     }
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l),
             )
         }
         when (val shown = search) {
@@ -224,13 +226,13 @@ fun GardenLocationContent(model: GardenLocationModel, settings: SettingsStore, p
             }
         }
         item {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 when (busy) {
                     GardenLocationModel.Busy.FINDING -> Working(stringResource(R.string.location_finding))
                     GardenLocationModel.Busy.SAVING -> Working(stringResource(R.string.location_saving))
                     null -> OutlinedButton(onClick = usePhone) {
-                        Icon(painterResource(R.drawable.ic_my_location), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.location_use_phone), modifier = Modifier.padding(start = 8.dp))
+                        Icon(painterResource(R.drawable.ic_my_location), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                        Text(stringResource(R.string.location_use_phone), modifier = Modifier.padding(start = Spacing.s))
                     }
                 }
                 problem?.let { found ->
@@ -281,7 +283,7 @@ fun placeTitle(place: GardenPlace): String = place.name
 private fun CurrentPlace(settings: Settings, onRemove: () -> Unit) {
     val place = settings.gardenPlace
     if (place == null) {
-        Text(stringResource(R.string.location_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+        Text(stringResource(R.string.location_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
         return
     }
     ListItem(
@@ -314,8 +316,8 @@ private fun PlaceRow(match: PlaceMatch, enabled: Boolean, onClick: () -> Unit) {
 @Composable
 private fun Working(text: String) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).semantics { liveRegion = LiveRegionMode.Polite },
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         PollenLoadingIndicator(Modifier.size(32.dp))
@@ -328,6 +330,6 @@ private fun Notice(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).semantics { liveRegion = LiveRegionMode.Polite },
+        modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m).semantics { liveRegion = LiveRegionMode.Polite },
     )
 }

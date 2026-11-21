@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -52,8 +54,8 @@ fun WildStatusLine(species: Species, care: CareProfile, locality: Locality, modi
         WildStatus.UNKNOWN -> R.drawable.ic_info to stringResource(R.string.field_weeds_unknown)
         WildStatus.WEED -> return
     }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(20.dp))
             Text(text, style = MaterialTheme.typography.bodyMedium)
         }
@@ -90,14 +92,14 @@ internal fun FieldActions(canSave: Boolean, weed: Boolean, name: String?, onSave
             dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         val save = { if (weed) confirming = true else onSave() }
         if (weed) {
             OutlinedButton(onClick = save, enabled = canSave) { Text(stringResource(R.string.field_save)) }
         } else {
             Button(onClick = save, enabled = canSave) {
-                Icon(painterResource(R.drawable.ic_bookmark), contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.field_save), modifier = Modifier.padding(start = 8.dp))
+                Icon(painterResource(R.drawable.ic_bookmark), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                Text(stringResource(R.string.field_save), modifier = Modifier.padding(start = Spacing.s))
             }
         }
         OutlinedButton(onClick = onLetGo) { Text(stringResource(R.string.field_let_go_button)) }
@@ -110,7 +112,7 @@ internal fun SavedFind(detection: DetectionRecord, kb: KnowledgeBase?, choice: R
     val pick = plantPick(detection, chosen(detection, choice), kb)
     val species = pick?.speciesName?.let { kb?.species(it) }
     Header(detection.thumbnail, species?.displayName ?: pick?.customName ?: pick?.speciesName ?: stringResource(R.string.field_saved), species?.name?.takeIf { it != species.displayName })
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
         Icon(painterResource(R.drawable.ic_bookmark_filled), contentDescription = null, modifier = Modifier.size(20.dp))
         Text(stringResource(R.string.field_saved), style = MaterialTheme.typography.bodyLarge)
     }

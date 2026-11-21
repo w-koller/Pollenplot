@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.problems
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.FactCard
 import android.net.Uri
@@ -24,7 +25,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import io.github.wkoller.pollenplot.ui.components.HeroPictureSize
@@ -186,8 +187,8 @@ fun LogProblemScreen(
 
     DetailScaffold(title = stringResource(R.string.problem_log_title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.problem_what), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
             Column(Modifier.selectableGroup()) {
@@ -211,8 +212,8 @@ fun LogProblemScreen(
             DateRow(date) { pickingDate = true }
             photo?.let { Cutout(it, 160.dp) }
             OutlinedButton(onClick = { choose.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
-                Icon(painterResource(R.drawable.ic_add_photo_alternate), contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(if (photo == null) R.string.problem_add_photo else R.string.problem_change_photo), modifier = Modifier.padding(start = 8.dp))
+                Icon(painterResource(R.drawable.ic_add_photo_alternate), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                Text(stringResource(if (photo == null) R.string.problem_add_photo else R.string.problem_change_photo), modifier = Modifier.padding(start = Spacing.s))
             }
             if (photoFailed) Text(stringResource(R.string.problem_photo_failed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
             if (looking) {
@@ -250,24 +251,24 @@ fun LogProblemScreen(
 private fun LooksLike(call: DiseaseCall, selectedKey: String?, onChoose: (String) -> Unit) {
     val status = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
     when (call) {
-        is DiseaseCall.NoProblemFound -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, modifier = status) {
+        is DiseaseCall.NoProblemFound -> Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically, modifier = status) {
             Icon(painterResource(R.drawable.ic_check_circle), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Text(stringResource(R.string.problem_none_found), style = MaterialTheme.typography.bodyMedium)
         }
         DiseaseCall.Unsure -> Text(stringResource(R.string.problem_unsure), style = MaterialTheme.typography.bodyMedium, modifier = status)
-        is DiseaseCall.LooksLike -> Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = status) {
+        is DiseaseCall.LooksLike -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs), modifier = status) {
             Text(stringResource(R.string.problem_looks_like), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 call.guesses.forEach { guess ->
                     val label = stringResource(
                         if (guess.confidence == DiseaseConfidence.LIKELY) R.string.problem_guess_likely else R.string.problem_guess_possible,
                         guess.problem.name,
                     )
-                    FilterChip(
+                    ChoiceChip(
                         selected = selectedKey == guess.problem.key,
                         onClick = { onChoose(guess.problem.key) },
                         label = { Text(label) },
-                        leadingIcon = { Icon(painterResource(R.drawable.ic_bug_report), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        leadingIcon = { Icon(painterResource(R.drawable.ic_bug_report), contentDescription = null, modifier = Modifier.size(IconSize.small)) },
                     )
                 }
             }
@@ -281,7 +282,7 @@ private fun ChoiceRow(title: String, selected: Boolean, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
         RadioButton(selected = selected, onClick = null)
         Text(title, style = MaterialTheme.typography.bodyLarge)
@@ -439,24 +440,24 @@ fun TreatmentScreen(problemId: String, plantId: String, views: ProblemViews, pro
 
     DetailScaffold(title = stringResource(R.string.treatment_title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.treatment_method), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 TreatmentMethod.entries.forEach { option ->
-                    FilterChip(selected = option == method, onClick = { method = option }, label = { Text(stringResource(option.label)) })
+                    ChoiceChip(selected = option == method, onClick = { method = option }, label = { Text(stringResource(option.label)) })
                 }
             }
             OutlinedTextField(value = product, onValueChange = { product = it }, label = { Text(stringResource(R.string.treatment_product)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Text(stringResource(R.string.feed_no_amounts), style = MaterialTheme.typography.bodyMedium)
             DateRow(date) { pickingDate = true }
             Text(stringResource(R.string.treatment_follow_up), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 listOf(3L, ProblemTasks.FOLLOW_UP_DAYS, 14L).forEach { days ->
-                    FilterChip(selected = followDays == days, onClick = { followDays = days }, label = { Text(stringResource(R.string.treatment_follow_up_days, days.toInt())) })
+                    ChoiceChip(selected = followDays == days, onClick = { followDays = days }, label = { Text(stringResource(R.string.treatment_follow_up_days, days.toInt())) })
                 }
-                FilterChip(selected = followDays == null, onClick = { followDays = null }, label = { Text(stringResource(R.string.treatment_follow_up_none)) })
+                ChoiceChip(selected = followDays == null, onClick = { followDays = null }, label = { Text(stringResource(R.string.treatment_follow_up_none)) })
             }
             Text(stringResource(R.string.treatment_follow_up_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -112,7 +113,7 @@ fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier,
     ElevatedCard(onClick = onClick, shape = MaterialTheme.shapes.large, modifier = modifier.fillMaxWidth()) {
         Row(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.l), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(48.dp).clip(PollenShapes.cookie()).background(MaterialTheme.colorScheme.secondaryContainer),
+                Modifier.size(IconSize.large).clip(PollenShapes.cookie()).background(MaterialTheme.colorScheme.secondaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(painterResource(view.zone.kind.icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)

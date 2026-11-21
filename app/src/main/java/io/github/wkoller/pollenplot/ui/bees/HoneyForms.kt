@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,11 +13,10 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.ToggleRow
 import io.github.wkoller.pollenplot.data.BeeRepository
 import io.github.wkoller.pollenplot.data.prefs.SettingsStore
 import io.github.wkoller.pollenplot.domain.bees.honey.BroodPattern
@@ -112,12 +114,12 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
 
     DetailScaffold(title = stringResource(kind.title), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(stringResource(if (kind == HoneyRecordKind.TREATMENT) R.string.honey_treatment_started else R.string.honey_date), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                     Text(UiFormat.longDate(date), style = MaterialTheme.typography.bodyLarge)
                     TextButton(onClick = { pickingDate = true }) { Text(stringResource(R.string.honey_change_date)) }
                 }
@@ -131,11 +133,11 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
                     NumberField(stringResource(R.string.honey_frames_bees), framesOfBees) { framesOfBees = it }
                     NumberField(stringResource(R.string.honey_frames_stores), framesOfStores) { framesOfStores = it }
                     ChipGroup(stringResource(R.string.honey_queen_cells), QueenCells.entries, queenCells, { stringResource(it.label) }) { queenCells = it }
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Text(stringResource(R.string.honey_signs), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                             HiveSign.entries.forEach { sign ->
-                                FilterChip(selected = sign in signs, onClick = { signs = if (sign in signs) signs - sign else signs + sign }, label = { Text(stringResource(sign.label)) })
+                                ChoiceChip(selected = sign in signs, onClick = { signs = if (sign in signs) signs - sign else signs + sign }, label = { Text(stringResource(sign.label)) })
                             }
                         }
                     }
@@ -153,7 +155,7 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
                     Toggle(stringResource(R.string.honey_reported), reported) { reported = it }
                     StateMiteChecks.of(current?.gardenState)?.let { rule ->
                         TextButton(onClick = { uri.openUri(rule.reportPage) }) {
-                            Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                            Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
                             Text(stringResource(R.string.honey_report_bee123))
                         }
                     }
@@ -222,10 +224,10 @@ internal fun FoulbroodNotice() {
     Surface(
         color = MaterialTheme.colorScheme.errorContainer,
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
             Icon(painterResource(R.drawable.ic_warning), contentDescription = null)
             Text(stringResource(R.string.honey_foulbrood), style = MaterialTheme.typography.bodyLarge)
         }
@@ -233,9 +235,7 @@ internal fun FoulbroodNotice() {
 }
 
 @Composable
-private fun Toggle(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    ListItem(checked = checked, onCheckedChange = onChange, trailingContent = { Switch(checked = checked, onCheckedChange = null) }) { Text(label) }
-}
+private fun Toggle(label: String, checked: Boolean, onChange: (Boolean) -> Unit) = ToggleRow(label, checked, onChange)
 
 @Composable
 private fun NumberField(label: String, value: String, onChange: (String) -> Unit) {

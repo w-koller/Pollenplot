@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.SwitchRow
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
@@ -115,7 +116,7 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                 Text(
                     stringResource(R.string.scan_intro),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
             }
             item {
@@ -137,7 +138,7 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                OutlinedButton(onClick = { ScanScheduler.scanNow(context) }, enabled = !scanning, modifier = Modifier.padding(top = 8.dp)) {
+                                OutlinedButton(onClick = { ScanScheduler.scanNow(context) }, enabled = !scanning, modifier = Modifier.padding(top = Spacing.s)) {
                                     Text(stringResource(R.string.scan_now))
                                 }
                             }
@@ -180,7 +181,7 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                         stringResource(R.string.scan_albums_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                        modifier = Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s),
                     )
                 }
                 item {
@@ -209,7 +210,7 @@ fun ScanSettingsScreen(store: SettingsStore, gallery: Gallery, notifications: No
                     SegmentedGroup {
                         row { segment ->
                             SegmentSurface(segment) {
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                                     Text(stringResource(R.string.scan_back_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     ChipGroup(stringResource(R.string.scan_back_choice), BACK_DAYS, current.scanBackDays, { stringResource(backLabel(it)) }) { days ->
                                         scope.launch {

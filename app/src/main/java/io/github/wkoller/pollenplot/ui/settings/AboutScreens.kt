@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.LinkRow
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
@@ -51,9 +52,9 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicences: () -> Unit, onOpenSources: (
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 Column(
-                    Modifier.fillMaxWidth().padding(24.dp),
+                    Modifier.fillMaxWidth().padding(Spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m),
                 ) {
                     Box(
                         Modifier.size(96.dp).clip(PollenShapes.flower()).background(MaterialTheme.colorScheme.primary),
@@ -122,7 +123,7 @@ fun DataSourcesScreen(sources: WeedSources, onBack: () -> Unit) {
     DetailScaffold(title = stringResource(R.string.sources_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
-                Text(stringResource(R.string.sources_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
+                Text(stringResource(R.string.sources_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(Spacing.l))
             }
             items(items) { item ->
                 ListItem(
@@ -136,7 +137,7 @@ fun DataSourcesScreen(sources: WeedSources, onBack: () -> Unit) {
                 Text(
                     stringResource(R.string.source_states_body),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.xs),
                 )
             }
             items(sources.states) { state ->
@@ -190,7 +191,7 @@ fun LicencesScreen(onBack: () -> Unit, onOpen: (String) -> Unit) {
                 Text(
                     stringResource(R.string.licences_body),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(Spacing.l),
                 )
             }
             items(licences) { item ->
@@ -227,10 +228,10 @@ fun LicenceTextScreen(file: String, onBack: () -> Unit) {
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             val loaded = paragraphs
             when {
-                loaded == null -> item { Text(stringResource(R.string.licence_loading), modifier = Modifier.padding(16.dp)) }
-                loaded.isEmpty() -> item { Text(stringResource(R.string.licence_missing), modifier = Modifier.padding(16.dp)) }
+                loaded == null -> item { Text(stringResource(R.string.licence_loading), modifier = Modifier.padding(Spacing.l)) }
+                loaded.isEmpty() -> item { Text(stringResource(R.string.licence_missing), modifier = Modifier.padding(Spacing.l)) }
                 else -> items(loaded) { paragraph ->
-                    Text(paragraph, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                    Text(paragraph, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = Spacing.l, vertical = 6.dp))
                 }
             }
         }

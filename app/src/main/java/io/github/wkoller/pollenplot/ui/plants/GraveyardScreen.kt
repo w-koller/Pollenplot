@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.listPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,7 +55,7 @@ fun GraveyardScreen(views: GardenViews, garden: GardenRepository, onBack: () -> 
             contentPadding = listPadding(padding),
         ) {
             item(key = "top") {
-                Column(Modifier.readable().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.readable().padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     Text(stringResource(R.string.graveyard_body), style = MaterialTheme.typography.bodyLarge)
                     ChipGroup(
                         title = stringResource(R.string.graveyard_show),

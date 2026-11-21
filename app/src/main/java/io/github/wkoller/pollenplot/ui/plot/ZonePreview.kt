@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -114,8 +116,8 @@ fun ZonePreviewCard(
     onOpenPlant: ((String) -> Unit)? = null,
 ) {
     val large = largeText()
-    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(20.dp))
             Column(Modifier.weight(1f)) {
                 Text(view.zone.name, style = MaterialTheme.typography.titleMedium)
@@ -132,7 +134,7 @@ fun ZonePreviewCard(
                 view.plants.take(PREVIEW_PLANTS).forEach { plant ->
                     // With somewhere to open it, each plant is a button at least 48 dp tall.
                     val row = onOpenPlant?.let { open -> Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { open(plant.plant.id) } } ?: Modifier
-                    Row(row, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(row, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         PlantAvatar(plant.species?.form, 28.dp, thumbnail = plant.plant.thumbnail)
                         Text(plant.title, style = MaterialTheme.typography.bodyMedium, maxLines = if (large) 3 else 1, overflow = TextOverflow.Ellipsis)
                     }
@@ -143,8 +145,8 @@ fun ZonePreviewCard(
         }
         val watering = water?.zones?.get(view.zone.id)
         watering?.next?.let { next ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(painterResource(R.drawable.ic_water_drop), contentDescription = null, modifier = Modifier.size(18.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                Icon(painterResource(R.drawable.ic_water_drop), contentDescription = null, modifier = Modifier.size(IconSize.small))
                 Text(nextWateringSentence(next, water.today, water.window, watering.byHand), style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -153,13 +155,13 @@ fun ZonePreviewCard(
         }
         val kinds = view.sightings.map { it.key }.distinct().size
         if (kinds > 0) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(painterResource(R.drawable.ic_raven), contentDescription = null, modifier = Modifier.size(18.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                Icon(painterResource(R.drawable.ic_raven), contentDescription = null, modifier = Modifier.size(IconSize.small))
                 Text(pluralStringResource(R.plurals.zone_tile_wildlife, kinds, kinds), style = MaterialTheme.typography.bodyMedium)
             }
         }
         if (onOpen != null || onArrange != null) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 onOpen?.let { Button(onClick = it) { Text(stringResource(R.string.zone_preview_open)) } }
                 onArrange?.let { TextButton(onClick = it) { Text(stringResource(R.string.plot_adjust)) } }
             }

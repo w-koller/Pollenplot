@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import android.content.Intent
 import android.net.Uri
@@ -16,7 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -130,43 +132,43 @@ fun ExportScreen(
     DetailScaffold(title = stringResource(R.string.export_title), onBack = onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
-                Text(stringResource(R.string.export_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                Text(stringResource(R.string.export_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
             }
             item { SectionHeading(stringResource(R.string.report)) }
             item {
                 SegmentedGroup { row { segment -> SegmentSurface(segment) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     Text(stringResource(R.string.report_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     ChipGroup(stringResource(R.string.report_period), ReportPeriod.entries, period, { stringResource(it.label) }) { period = it }
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Text(stringResource(R.string.report_sections), style = MaterialTheme.typography.titleSmall)
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                             ReportPart.entries.forEach { part ->
-                                FilterChip(selected = part in parts, onClick = { parts = if (part in parts) parts - part else parts + part }, label = { Text(stringResource(part.label)) })
+                                ChoiceChip(selected = part in parts, onClick = { parts = if (part in parts) parts - part else parts + part }, label = { Text(stringResource(part.label)) })
                             }
                         }
                     }
                     if (ReportPart.GARDEN in parts) {
                         Row(
-                            Modifier.toggleable(value = pictures, role = Role.Checkbox, onValueChange = { pictures = it }).padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            Modifier.toggleable(value = pictures, role = Role.Checkbox, onValueChange = { pictures = it }).padding(vertical = Spacing.xs),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Checkbox(checked = pictures, onCheckedChange = null)
                             Text(stringResource(R.string.report_with_pictures), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Button(enabled = parts.isNotEmpty(), onClick = { savePdf.launch("pollenplot-report-$today.pdf") }) { Text(stringResource(R.string.report_save_pdf)) }
                         OutlinedButton(enabled = parts.isNotEmpty(), onClick = { saveXlsx.launch("pollenplot-report-$today.xlsx") }) { Text(stringResource(R.string.report_save_xlsx)) }
                         if (share != null) {
                             OutlinedButton(enabled = parts.isNotEmpty(), onClick = { shareReport(pdf = true) }) {
-                                Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(18.dp))
-                                Text(stringResource(R.string.report_share_pdf), modifier = Modifier.padding(start = 8.dp))
+                                Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                                Text(stringResource(R.string.report_share_pdf), modifier = Modifier.padding(start = Spacing.s))
                             }
                             OutlinedButton(enabled = parts.isNotEmpty(), onClick = { shareReport(pdf = false) }) {
-                                Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(18.dp))
-                                Text(stringResource(R.string.report_share_xlsx), modifier = Modifier.padding(start = 8.dp))
+                                Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(IconSize.small))
+                                Text(stringResource(R.string.report_share_xlsx), modifier = Modifier.padding(start = Spacing.s))
                             }
                         }
                     }
@@ -192,7 +194,7 @@ private fun ExportItem(body: Int, saved: Boolean?, onSave: () -> Unit) {
     SegmentedGroup {
         row { segment ->
             SegmentSurface(segment) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     Text(stringResource(body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     OutlinedButton(onClick = onSave) { Text(stringResource(R.string.export_save)) }
                     saved?.let { Saved(it) }

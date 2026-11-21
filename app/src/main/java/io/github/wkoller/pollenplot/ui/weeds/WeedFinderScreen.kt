@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.weeds
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -75,22 +76,22 @@ fun WeedFinderScreen(
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = listPadding(padding, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             if (council == null || weeds.isEmpty()) {
-                item { Text(stringResource(R.string.finder_unavailable), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+                item { Text(stringResource(R.string.finder_unavailable), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l)) }
                 return@LazyColumn
             }
             item {
-                Text(stringResource(R.string.finder_body, council.name), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+                Text(stringResource(R.string.finder_body, council.name), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
             }
-            val chips = Modifier.padding(horizontal = 16.dp)
+            val chips = Modifier.padding(horizontal = Spacing.l)
             item { Column(chips) { ChipGroup(stringResource(R.string.compare_type), listOf<String?>(null) + options.types, type, { it ?: any }) { type = it } } }
             item { Column(chips) { ChipGroup(stringResource(R.string.finder_flower_colour), listOf<String?>(null) + options.flowerColours, colour, { it ?: any }) { colour = it } } }
             item { Column(chips) { ChipGroup(stringResource(R.string.finder_leaf_form), listOf<String?>(null) + options.leafForms, leafForm, { it ?: any }) { leafForm = it } } }
             item { Column(chips) { ChipGroup(stringResource(R.string.finder_leaf_arrangement), listOf<String?>(null) + options.leafArrangements, arrangement, { it ?: any }) { arrangement = it } } }
             item {
-                Row(Modifier.padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.padding(start = Spacing.l, end = Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         pluralStringResource(R.plurals.finder_count, found.size, found.size),
                         style = MaterialTheme.typography.titleMedium,
@@ -124,7 +125,7 @@ private fun FinderRow(weed: CouncilWeed, locality: Locality, suggestedForPhoto: 
     ListItem(
         onClick = onClick,
         supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                 Text(weed.botanical, fontStyle = FontStyle.Italic, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 weedHeadline(status, locality)?.let { Text(it) }
                 if (suggestedForPhoto) Text(stringResource(R.string.finder_suggested), color = MaterialTheme.colorScheme.primary)

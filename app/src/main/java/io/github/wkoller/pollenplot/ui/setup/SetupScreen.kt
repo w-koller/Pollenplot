@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.setup
 
+import io.github.wkoller.pollenplot.ui.components.checkedRowColors
 import io.github.wkoller.pollenplot.ui.settings.ManyZonesSetting
 import io.github.wkoller.pollenplot.domain.garden.ManyZones
 import android.Manifest
@@ -76,6 +77,10 @@ import io.github.wkoller.pollenplot.scan.ScanScheduler
 import io.github.wkoller.pollenplot.search.MeaningSearch
 import io.github.wkoller.pollenplot.ui.components.PollenProgressBar
 import io.github.wkoller.pollenplot.ui.components.PollenShapes
+import io.github.wkoller.pollenplot.ui.components.GroupedItem
+import io.github.wkoller.pollenplot.ui.components.Vignette
+import io.github.wkoller.pollenplot.ui.components.readable
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.settings.GardenLocationContent
@@ -181,7 +186,7 @@ private fun SetupScaffold(
         topBar = {
             // The step and its bar sit on the bar's colour, so the list does not show through them as it scrolls.
             Surface(color = MaterialTheme.colorScheme.surface) {
-                Column(Modifier.padding(bottom = 12.dp)) {
+                Column(Modifier.padding(bottom = Spacing.m)) {
                     TopAppBar(
                         title = { Text(title, modifier = Modifier.semantics { heading() }) },
                         navigationIcon = {
@@ -192,7 +197,7 @@ private fun SetupScaffold(
                             }
                         },
                     )
-                    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Text(stringResource(R.string.setup_step, index + 1, total), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         PollenProgressBar((index + 1).toFloat() / total, Modifier.fillMaxWidth())
                     }
@@ -203,9 +208,9 @@ private fun SetupScaffold(
             Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
                 // With large text the buttons wrap onto two lines rather than squeezing their words.
                 FlowRow(
-                    Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp),
+                    Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Spacing.l, vertical = Spacing.m),
                     horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.s),
                     itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextButton(onClick = onSkip) { Text(skipLabel) }
@@ -217,21 +222,46 @@ private fun SetupScaffold(
     )
 }
 
+/**
+ * The welcome: the app's picture of a flower on a cookie in front of the sun, what Pollenplot does, and the four steps
+ * ahead as a grouped list, so they can be taken in at a glance rather than read out of one long sentence.
+ */
 @Composable
 private fun Welcome(padding: PaddingValues) {
+    val steps = listOf(
+        R.drawable.ic_location_on to R.string.setup_welcome_step_location,
+        R.drawable.ic_photo_camera to R.string.setup_welcome_step_models,
+        R.drawable.ic_grid_on to R.string.setup_welcome_step_zones,
+        R.drawable.ic_notifications to R.string.setup_welcome_step_permissions,
+    )
     Column(
-        Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
+        Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(vertical = Spacing.xl).readable(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l),
     ) {
-        Box(
-            Modifier.size(96.dp).clip(PollenShapes.flower()).background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(painterResource(R.drawable.ic_local_florist_filled), contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(44.dp))
+        Vignette(R.drawable.ic_local_florist_filled)
+        Text(stringResource(R.string.setup_welcome_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.xl))
+        Column(Modifier.fillMaxWidth()) {
+            Text(
+                stringResource(R.string.setup_welcome_steps),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = Spacing.xl, vertical = Spacing.s).semantics { heading() },
+            )
+            steps.forEachIndexed { index, (icon, label) ->
+                GroupedItem(
+                    index = index,
+                    count = steps.size,
+                    leading = { Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                ) { Text(stringResource(label)) }
+            }
         }
-        Text(stringResource(R.string.setup_welcome_body), style = MaterialTheme.typography.bodyLarge)
-        Text(stringResource(R.string.setup_welcome_steps), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            stringResource(R.string.setup_welcome_later),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Spacing.xl),
+        )
     }
 }
 
@@ -269,14 +299,14 @@ private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsSt
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
             item {
-                Text(stringResource(R.string.setup_zones_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
+                Text(stringResource(R.string.setup_zones_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(Spacing.l))
             }
             if (existing.isNotEmpty()) {
                 item {
                     Text(
                         stringResource(R.string.setup_zones_have, existing.joinToString(", ") { it.name }),
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                        modifier = Modifier.padding(horizontal = Spacing.l).padding(bottom = Spacing.s),
                     )
                 }
             }
@@ -285,6 +315,7 @@ private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsSt
                 Column {
                     ListItem(
                         checked = name != null,
+                        colors = checkedRowColors(),
                         onCheckedChange = { on -> ticked = if (on) ticked + (kind to labels.getValue(kind)) else ticked - kind },
                         leadingContent = { Icon(painterResource(kind.icon), contentDescription = null) },
                         trailingContent = { Checkbox(checked = name != null, onCheckedChange = null) },
@@ -295,7 +326,7 @@ private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsSt
                             onValueChange = { ticked = ticked + (kind to it) },
                             label = { Text(stringResource(R.string.setup_zones_name, labels.getValue(kind).lowercase())) },
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.m),
                         )
                     }
                 }
@@ -304,6 +335,7 @@ private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsSt
             item(key = "pets") {
                 ListItem(
                     checked = pets,
+                    colors = checkedRowColors(),
                     onCheckedChange = { on -> scope.launch { settings.update { it.copy(petsAtHome = on) } } },
                     leadingContent = { Icon(painterResource(R.drawable.ic_pets), contentDescription = null) },
                     supportingContent = { Text(stringResource(R.string.settings_pets_body)) },
@@ -312,7 +344,7 @@ private fun ZonesStep(index: Int, garden: GardenRepository, settings: SettingsSt
             }
             // The same plant often grows in several zones, so how that is kept is asked once here.
             item(key = "many-zones") {
-                ManyZonesSetting(manyZones, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { choice -> scope.launch { settings.update { it.copy(manyZones = choice) } } }
+                ManyZonesSetting(manyZones, Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s)) { choice -> scope.launch { settings.update { it.copy(manyZones = choice) } } }
             }
         }
     }
@@ -350,7 +382,7 @@ private fun Permissions(padding: PaddingValues, settings: SettingsStore, gallery
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
         item {
-            Text(stringResource(R.string.setup_permissions_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
+            Text(stringResource(R.string.setup_permissions_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(Spacing.l))
         }
         permission(
             icon = R.drawable.ic_notifications,
@@ -363,7 +395,7 @@ private fun Permissions(padding: PaddingValues, settings: SettingsStore, gallery
         ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) askForNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+        item { HorizontalDivider(Modifier.padding(vertical = Spacing.s)) }
         permission(
             icon = R.drawable.ic_photo_library,
             title = R.string.setup_scanning,
@@ -382,7 +414,7 @@ private fun Permissions(padding: PaddingValues, settings: SettingsStore, gallery
                 }
             }
         }
-        item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+        item { HorizontalDivider(Modifier.padding(vertical = Spacing.s)) }
         // The same choice the plant library asks about, so it is not asked again there.
         permission(
             icon = R.drawable.ic_image,
@@ -400,8 +432,8 @@ private fun Permissions(padding: PaddingValues, settings: SettingsStore, gallery
 
 private fun LazyListScope.permission(icon: Int, title: Int, body: Int, on: Boolean, onText: Int, action: Int, note: Int?, onAllow: () -> Unit) {
     item {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(stringResource(title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             }
@@ -409,7 +441,7 @@ private fun LazyListScope.permission(icon: Int, title: Int, body: Int, on: Boole
             if (on) {
                 Row(
                     Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(painterResource(R.drawable.ic_check_circle), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
