@@ -194,7 +194,14 @@ is always ready to tag.
   released after two idle minutes) and `GardenAssistant`, behind the `Assistant` interface. `domain/assistant` holds
   `GardenAssistantGuard` (the questions Pollenplot answers itself, and answers that give a chemical amount),
   `GardenPrompts`, `AssistantFacts` (a plant's or animal's facts as plain lines for the model; nothing about eating)
-  and `WildlifeRescue` (each state's rescue service, checked against its official page). The model cannot run on the
+  and `WildlifeRescue` (each state's rescue service, checked against its official page). Ask opens on questions to
+  start with: `GardenPulse` is what the garden is doing now (in flower, new visitors, the bees' gaps, hot days, problems
+  due), which `data/AskViews` reads once when asked, `AskStarters` turns it into questions, the most pressing first,
+  and `AskFollowUps` offers the next question about each record an answer cited; each question carries the records it
+  is about, which `GardenAssistant` gives the model first with their facts, and the pulse goes into every garden
+  summary. A question's words are in `strings_assistant.py`, and `AskFlowTest` checks every one with every name it
+  could hold against the guard. `MidSentence` lowers a common name's capital unless it starts with a place or a person.
+  The reply starts as `AssistantReply.Reading`, so the screen says what it reads before the first words. The model cannot run on the
   JVM, so screen tests use `AskTestApp` and its `FakeAssistant`; the guard, the not-downloaded reply and the search for
   a question's records run for real. `SecondOpinionWorker` asks Gemma about unsure finds while the phone charges and is
   idle; its choice is one vote at Gemma's weight (`CandidateFusion.withSecondOpinion`). A plant waits for BioCAP's

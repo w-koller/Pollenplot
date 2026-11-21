@@ -22,6 +22,41 @@
     <string name="ask_intro_animal">Please ask anything about the %1$s, such as what it eats or how to help it.</string>
     <string name="ask_intro_garden">Please ask about your whole garden, such as which plants feed birds or where frogs were seen.</string>
     <string name="ask_open">Ask Gemma</string>
+    <string name="ask_greeting_morning">Good morning.</string>
+    <string name="ask_greeting_afternoon">Good afternoon.</string>
+    <string name="ask_greeting_evening">Good evening.</string>
+    <string name="ask_pulse">%1$s.</string>
+    <string name="ask_try">Try asking</string>
+    <string name="ask_more_ideas">More ideas</string>
+    <string name="ask_next">Ask next</string>
+    <string name="ask_reading_garden">Reading about %1$s in your garden.</string>
+    <string name="ask_reading_summary">Looking over your garden.</string>
+    <string name="ask_reading_about">Reading about %1$s.</string>
+    <string name="ask_reading_animal">Reading about the %1$s.</string>
+    <string name="ask_group_honey">honey bees</string>
+    <string name="ask_group_stingless">stingless bees</string>
+    <string name="ask_group_solitary">solitary native bees</string>
+    <string name="ask_start_hot_day">How can I help my stingless bees through the heat on %1$s?</string>
+    <string name="ask_start_follow_up">What should I look for when I check the %2$s for %1$s?</string>
+    <string name="ask_start_visitor_on_plant">What brings the %1$s to my %2$s?</string>
+    <string name="ask_start_visitor">What brings the %1$s to my garden?</string>
+    <string name="ask_start_fungus">What does the %1$s growing in my garden tell me?</string>
+    <string name="ask_start_in_flower_zone">What is flowering for the bees in the %1$s?</string>
+    <string name="ask_start_in_flower">Which of my flowers are feeding the bees this month?</string>
+    <string name="ask_start_gap">What could I plant to feed %1$s in %2$s?</string>
+    <string name="ask_start_unfed">What could I plant to feed %1$s?</string>
+    <string name="ask_start_season_bees">What could I plant this %1$s to bring in more bees?</string>
+    <string name="ask_start_season_birds">Which plants would bring birds to my garden this %1$s?</string>
+    <string name="ask_start_season_jobs">What should I be doing in the garden this %1$s?</string>
+    <string name="ask_start_frogs">How can I make my garden a better home for frogs?</string>
+    <string name="ask_start_plant_flowering">When does the %1$s flower?</string>
+    <string name="ask_start_plant_bees">Which bees visit the %1$s?</string>
+    <string name="ask_start_plant_pruning">When should I prune the %1$s?</string>
+    <string name="ask_start_plant_spot">What spot suits the %1$s best?</string>
+    <string name="ask_start_zone_bees">What could I plant in the %1$s for the bees?</string>
+    <string name="ask_start_animal_needs">What does the %1$s need from a garden?</string>
+    <string name="ask_start_animal_food">What does the %1$s feed on?</string>
+    <string name="ask_start_animal_plants">Which plants would bring the %1$s back?</string>
     <string name="draft_heading">Care</string>
     <string name="draft_none">Pollenplot\'s knowledge base doesn\'t have this plant yet.</string>
     <string name="draft_needs_gemma">Gemma 4 can draft its care once it is on this phone. Please download it in Settings › Models.</string>
@@ -2249,6 +2284,26 @@
     <string name="alternatives_source">Source: %1$s</string>
     <string name="settings_pets">Cats or dogs live here</string>
     <string name="settings_pets_body">Pollenplot shows plants that are toxic to pets first, and leaves them out of its suggestions.</string>
+    <plurals name="ask_pulse_flowering">
+        <item quantity="one">%d plant is in flower</item>
+        <item quantity="other">%d plants are in flower</item>
+    </plurals>
+    <plurals name="ask_pulse_visitors">
+        <item quantity="one">%d new visitor was seen in the last month</item>
+        <item quantity="other">%d new visitors were seen in the last month</item>
+    </plurals>
+    <plurals name="ask_reading_plants">
+        <item quantity="one">%d plant</item>
+        <item quantity="other">%d plants</item>
+    </plurals>
+    <plurals name="ask_reading_zones">
+        <item quantity="one">%d zone</item>
+        <item quantity="other">%d zones</item>
+    </plurals>
+    <plurals name="ask_reading_sightings">
+        <item quantity="one">%d sighting</item>
+        <item quantity="other">%d sightings</item>
+    </plurals>
     <plurals name="backup_zones">
         <item quantity="one">%d zone</item>
         <item quantity="other">%d zones</item>

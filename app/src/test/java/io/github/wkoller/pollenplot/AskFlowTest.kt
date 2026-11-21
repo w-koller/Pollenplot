@@ -1,5 +1,22 @@
 package io.github.wkoller.pollenplot
 
+import java.time.Month
+import java.time.LocalDate
+import kotlinx.coroutines.CompletableDeferred
+import io.github.wkoller.pollenplot.ui.assistant.starterText
+import io.github.wkoller.pollenplot.domain.wildlife.LifeGroup
+import io.github.wkoller.pollenplot.domain.season.Season
+import io.github.wkoller.pollenplot.domain.rhythms.BeeGroup
+import io.github.wkoller.pollenplot.domain.assistant.StarterKind
+import io.github.wkoller.pollenplot.domain.assistant.Starter
+import io.github.wkoller.pollenplot.domain.assistant.QuestionKind
+import io.github.wkoller.pollenplot.domain.assistant.PulseVisitor
+import io.github.wkoller.pollenplot.domain.assistant.PulsePlant
+import io.github.wkoller.pollenplot.domain.assistant.PartOfDay
+import io.github.wkoller.pollenplot.domain.assistant.GardenPulse
+import io.github.wkoller.pollenplot.domain.assistant.GardenAssistantGuard
+import io.github.wkoller.pollenplot.data.prefs.ThemeChoice
+import io.github.wkoller.pollenplot.ai.AssistantReply
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -161,6 +178,151 @@ class AskFlowTest {
         waitFor(hasText("Draft its care"))
     }
 
+    @Test
+    fun startersAskWhatTheGardenIsDoingAndFollowUpsAskWhatIsNext() {
+        val (rosemary, miner) = rosemaryAndMiner()
+        app.assistant.answer = "Noisy miners feed on the rosemary [1]."
+        app.assistant.cited = listOf(CitedRecord(rosemary, RecordKind.PLANT, "Rosemary", "Plant: Rosemary"))
+        app.assistant.reading = AssistantReply.Reading(plants = 1, sightings = 1)
+        val hold = CompletableDeferred<Unit>()
+        app.assistant.hold = hold
+        show(app.assistant, AskSubject.Garden, pulse = { pulse(rosemary, miner) })
+        waitFor(hasText("Good morning."))
+        compose.onNodeWithText("1 plant is in flower and 1 new visitor was seen in the last month.").assertExists()
+        compose.onNodeWithText("What brings the noisy miner to my rosemary?").assertExists()
+        compose.onNodeWithText("What is flowering for the bees in the Hive Corner?").assertExists()
+        compose.onNodeWithText("What could I plant this spring to bring in more bees?").assertExists()
+        shot("ask_starters")
+
+        // More ideas shows the next three, and comes round to the first again.
+        compose.onNodeWithText("More ideas").performClick()
+        waitFor(hasText("Which plants would bring birds to my garden this spring?"))
+        compose.onNodeWithText("How can I make my garden a better home for frogs?").assertExists()
+        compose.onNodeWithText("What brings the noisy miner to my rosemary?").assertDoesNotExist()
+        compose.onNodeWithText("More ideas").performClick()
+        waitFor(hasText("What brings the noisy miner to my rosemary?"))
+
+        // A press asks at once, about the sighting and the plant, and says what it is reading.
+        compose.onNodeWithText("What brings the noisy miner to my rosemary?").performClick()
+        waitFor(hasText("Reading about 1 plant and 1 sighting in your garden."))
+        assertEquals("What brings the noisy miner to my rosemary?", app.assistant.asked.single().first)
+        assertEquals(listOf(miner, rosemary), app.assistant.about.single())
+        shot("ask_reading")
+        app.assistant.hold = null
+        hold.complete(Unit)
+
+        waitFor(hasText("Ask next"))
+        compose.onNodeWithText("Which bees visit the rosemary?").assertExists()
+        compose.onNodeWithText("When does the rosemary flower?").assertExists()
+        compose.onNodeWithText("Try asking").assertDoesNotExist()
+        shot("ask_follow_ups")
+        compose.onNodeWithText("Which bees visit the rosemary?").performClick()
+        compose.waitUntil(WAIT_MS) { app.assistant.asked.size == 2 }
+        assertEquals("Which bees visit the rosemary?", app.assistant.asked.last().first)
+        assertEquals(listOf(rosemary), app.assistant.about.last())
+    }
+
+    @Test
+    fun startersInTheDark() {
+        val (rosemary, miner) = rosemaryAndMiner()
+        show(app.assistant, AskSubject.Garden, pulse = { pulse(rosemary, miner) }, settings = Settings(theme = ThemeChoice.DARK))
+        waitFor(hasText("Try asking"))
+        shot("ask_starters_dark")
+    }
+
+    @Test
+    @Config(fontScale = 2.0f, qualifiers = "en-rAU-w411dp-h2400dp-xhdpi")
+    fun startersAtTwiceTheSize() {
+        val (rosemary, miner) = rosemaryAndMiner()
+        show(app.assistant, AskSubject.Garden, pulse = { pulse(rosemary, miner) })
+        waitFor(hasText("Try asking"))
+        shot("large_ask_starters")
+    }
+
+    @Test
+    fun aPlantsStartersAreAboutIt() {
+        val (rosemary, _) = rosemaryAndMiner()
+        show(app.assistant, AskSubject.Plant(rosemary))
+        waitFor(hasText("Which bees visit the rosemary?"))
+        compose.onNodeWithText("When does the rosemary flower?").assertExists()
+        compose.onNodeWithText("Good morning.").assertDoesNotExist()
+    }
+
+    @Test
+    fun whatTheGardenIsDoingIsReadFromItsRecords() {
+        val (rosemary, _) = rosemaryAndMiner()
+        val pulse = runBlocking { container.askViews.current() }
+        assertEquals(LocalDate.of(2026, 10, 28), pulse.today)
+        assertEquals(Season.SPRING, pulse.season)
+        assertEquals(PartOfDay.MORNING, pulse.partOfDay)
+        val plants = runBlocking { container.garden.plantList.first() }.map { it.id }.toSet()
+        assertTrue("Only the garden's own plants are in flower: ${pulse.inFlower}", pulse.inFlower.all { it.id in plants })
+        assertTrue("Solitary bees are always counted: ${pulse.gaps}", pulse.gaps.none { it.group == BeeGroup.STINGLESS })
+        // A question offered about a record is given that record first, whatever its words match.
+        val records = runBlocking { real.records("What is happening?", listOf(rosemary)) }
+        assertEquals(rosemary, records.first().id)
+    }
+
+    @Test
+    fun noOfferedQuestionIsOneTheAppAnswersItself() {
+        seed()
+        val kb = runBlocking { container.knowledge.awaitFauna() }
+        val plants = runBlocking { container.garden.plantList.first() }.mapNotNull { it.customName ?: it.speciesName }
+        val zones = runBlocking { container.garden.zoneList.first() }.map { it.name }
+        val animals = kb.all.map { it.displayName }
+        val problems = container.catalogue.problems.map { it.name }
+        // Each question with every name it could hold, and the name, so a name the guard catches on its own is allowed.
+        val starters = buildList {
+            animals.forEach { animal ->
+                add(Starter(StarterKind.VISITOR, listOf(animal)) to animal)
+                add(Starter(StarterKind.VISITOR_ON_PLANT, listOf(animal, plants.first())) to animal)
+                add(Starter(StarterKind.FUNGUS, listOf(animal)) to animal)
+                listOf(StarterKind.ANIMAL_NEEDS, StarterKind.ANIMAL_FOOD, StarterKind.ANIMAL_PLANTS).forEach { add(Starter(it, listOf(animal)) to animal) }
+            }
+            problems.forEach { problem -> plants.forEach { plant -> add(Starter(StarterKind.FOLLOW_UP, listOf(problem, plant)) to problem) } }
+            plants.forEach { plant ->
+                listOf(StarterKind.PLANT_FLOWERING, StarterKind.PLANT_BEES, StarterKind.PLANT_PRUNING, StarterKind.PLANT_SPOT).forEach { add(Starter(it, listOf(plant)) to plant) }
+            }
+            zones.forEach { zone ->
+                add(Starter(StarterKind.IN_FLOWER_ZONE, listOf(zone)) to zone)
+                add(Starter(StarterKind.ZONE_BEES, listOf(zone)) to zone)
+            }
+            BeeGroup.entries.forEach { group ->
+                add(Starter(StarterKind.UNFED, group = group) to "")
+                Month.entries.forEach { add(Starter(StarterKind.GAP, group = group, month = it) to "") }
+            }
+            Season.entries.forEach { season ->
+                listOf(StarterKind.SEASON_BEES, StarterKind.SEASON_BIRDS, StarterKind.SEASON_JOBS).forEach { add(Starter(it, season = season) to "") }
+            }
+            add(Starter(StarterKind.HOT_DAY, date = LocalDate.of(2026, 10, 30)) to "")
+            add(Starter(StarterKind.IN_FLOWER) to "")
+            add(Starter(StarterKind.FROGS) to "")
+        }
+        assertTrue("Every kind is checked", StarterKind.entries.all { kind -> starters.any { it.first.kind == kind } })
+        val texts = mutableListOf<String>()
+        compose.setContent { starters.forEach { (starter, _) -> texts += starterText(starter) } }
+        compose.waitForIdle()
+        val caught = texts.zip(starters).filter { (text, pair) ->
+            GardenAssistantGuard.classify(text) != QuestionKind.GENERAL && GardenAssistantGuard.classify(pair.second) == QuestionKind.GENERAL
+        }
+        assertTrue("Questions the guard would answer itself: ${caught.map { it.first }}", caught.isEmpty())
+    }
+
+    private fun rosemaryAndMiner(): Pair<String, String> {
+        seed()
+        val rosemary = runBlocking { container.garden.plantList.first().single { it.speciesName == "Salvia rosmarinus" } }.id
+        val miner = runBlocking { container.views.sightings.first() }.first { it.sighting.label == "Noisy miner" && rosemary in it.sighting.plantIds }.sighting.id
+        return rosemary to miner
+    }
+
+    private fun pulse(rosemary: String, miner: String) = GardenPulse(
+        LocalDate.of(2026, 10, 28),
+        Season.SPRING,
+        PartOfDay.MORNING,
+        inFlower = listOf(PulsePlant(rosemary, "Rosemary", "Hive Corner")),
+        visitors = listOf(PulseVisitor("noisy miner", LifeGroup.BIRD, miner, rosemary, "Rosemary")),
+    )
+
     private fun seed(): DemoGarden.Ids = runBlocking {
         container.knowledge.await()
         container.knowledge.awaitFauna()
@@ -168,12 +330,18 @@ class AskFlowTest {
         DemoGarden.seed(container.garden).also { DemoWildlife.seed(container.garden, it) }
     }
 
-    private fun show(assistant: Assistant, subject: AskSubject, onOpenRecord: (CitedRecord) -> Unit = {}) {
+    private fun show(
+        assistant: Assistant,
+        subject: AskSubject,
+        onOpenRecord: (CitedRecord) -> Unit = {},
+        pulse: (suspend () -> GardenPulse)? = null,
+        settings: Settings = Settings(),
+    ) {
         val model = AskModel(assistant, subject)
         compose.setContent {
-            PollenplotTheme(Settings()) {
+            PollenplotTheme(settings) {
                 Surface {
-                    AskScreen(model, assistant, container.views, container.knowledge, onBack = {}, onOpenModels = {}, onOpenRecord = onOpenRecord)
+                    AskScreen(model, assistant, container.views, container.knowledge, onBack = {}, onOpenModels = {}, onOpenRecord = onOpenRecord, pulse = pulse)
                 }
             }
         }
