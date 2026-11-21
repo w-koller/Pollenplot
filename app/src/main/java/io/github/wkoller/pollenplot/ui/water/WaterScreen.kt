@@ -28,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -40,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -50,7 +52,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +62,7 @@ import androidx.compose.ui.platform.LocalResources
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ui.components.AddButton
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
+import io.github.wkoller.pollenplot.ui.components.PollenLoadingIndicator
 import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.data.WaterViews
 import io.github.wkoller.pollenplot.data.Watering
@@ -116,11 +121,28 @@ fun WaterScreen(
         water.recordWatering(watering)
         notices?.show(resources.getString(R.string.water_watered_notice, name)) { water.deleteWatering(watering.id) }
     }
-    fun refresh() = scope.launch { settings.current().gardenPlace?.let { water.refreshWeather(it) } }
+    var update by remember { mutableStateOf(WeatherUpdate.IDLE) }
+
+    /**
+     * Brings the weather up to date. A press of the button is answered when it is done, with a message or a line
+     * saying it could not be reached; the update when the tab opens only shows that it is running.
+     */
+    fun refresh(pressed: Boolean) {
+        if (update == WeatherUpdate.UPDATING) return
+        update = WeatherUpdate.UPDATING
+        // A message left from the last press would contradict what this one finds.
+        if (pressed) notices?.host?.currentSnackbarData?.dismiss()
+        scope.launch {
+            val place = settings.current().gardenPlace
+            val updated = place != null && water.refreshWeather(place)
+            update = if (!updated && pressed) WeatherUpdate.FAILED else WeatherUpdate.IDLE
+            if (updated && pressed) notices?.show(resources.getString(R.string.water_updated_notice))
+        }
+    }
     // The weather is brought up to date when the tab opens, unless it was fetched in the last three hours.
     LaunchedEffect(Unit) {
         val fetchedAt = water.weatherFetchedAt.first()
-        if (fetchedAt == null || Instant.ofEpochMilli(fetchedAt).isBefore(Instant.now().minus(REFRESH_HOURS, ChronoUnit.HOURS))) refresh()
+        if (fetchedAt == null || Instant.ofEpochMilli(fetchedAt).isBefore(Instant.now().minus(REFRESH_HOURS, ChronoUnit.HOURS))) refresh(pressed = false)
     }
 
     TabScaffold(
@@ -169,11 +191,7 @@ fun WaterScreen(
                                 Text(stringResource(R.string.water_weather_updated, UiFormat.time(Instant.ofEpochMilli(it))), style = MaterialTheme.typography.bodySmall)
                                 Text(stringResource(R.string.water_weather_credit), style = MaterialTheme.typography.bodySmall)
                             }
-                            if (loaded.hasPlace) {
-                                TextButton(onClick = { refresh() }, colors = ButtonDefaults.textButtonColors(contentColor = water.onContainer)) {
-                                    Text(stringResource(R.string.water_update))
-                                }
-                            }
+                            if (loaded.hasPlace) WeatherUpdateRow(update) { refresh(pressed = true) }
                         }
                     }
                 }
@@ -457,6 +475,38 @@ internal fun millimetres(um: Int): String = BigDecimal(um).movePointLeft(3).setS
 internal fun litres(ml: Long): String = BigDecimal(ml).movePointLeft(3).setScale(0, RoundingMode.HALF_UP).toPlainString()
 
 private const val REFRESH_HOURS = 3L
+
+/** Where bringing the weather up to date has got to. */
+private enum class WeatherUpdate { IDLE, UPDATING, FAILED }
+
+/**
+ * The button that brings the weather up to date, with what happened to the last press: a loading indicator while it
+ * runs, and a line with a warning when the weather service could not be reached. Both are read out as they appear. It
+ * sits on the weather card and takes the card's colour for its words and icons.
+ */
+@Composable
+private fun WeatherUpdateRow(update: WeatherUpdate, onUpdate: () -> Unit) {
+    val colour = LocalContentColor.current
+    Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        if (update == WeatherUpdate.FAILED) {
+            Row(Modifier.padding(top = Spacing.xs), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                Icon(painterResource(R.drawable.ic_warning), contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.water_update_failed), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        if (update == WeatherUpdate.UPDATING) {
+            Row(Modifier.padding(vertical = Spacing.xs), horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
+                PollenLoadingIndicator(Modifier.size(32.dp))
+                Text(stringResource(R.string.water_updating), style = MaterialTheme.typography.bodyMedium)
+            }
+        } else {
+            TextButton(onClick = onUpdate, colors = ButtonDefaults.textButtonColors(contentColor = colour)) {
+                Icon(painterResource(R.drawable.ic_refresh), contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(R.string.water_update), modifier = Modifier.padding(start = Spacing.s))
+            }
+        }
+    }
+}
 
 /** The guide page that explains the plan. */
 private const val HOW_IT_WORKS = "water/how-it-works"

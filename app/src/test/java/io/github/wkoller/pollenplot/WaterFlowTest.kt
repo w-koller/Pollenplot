@@ -137,6 +137,27 @@ class WaterFlowTest {
     }
 
     @Test
+    fun updatingTheWeatherSaysHowItWent() {
+        show()
+        compose.onNodeWithText("Water").performClick()
+        waitFor(hasText("Today's reference evapotranspiration (ET₀) is 5.1 mm."))
+        // The update when the tab opened has finished, so the button is back.
+        waitFor(hasText("Update the weather"))
+        val before = app.web.asked.size
+
+        compose.onNodeWithText("Update the weather").performClick()
+        waitFor(hasText("The weather is up to date."))
+        assertEquals("One request for the press", before + 1, app.web.asked.size)
+
+        app.web.offline = true
+        compose.onNodeWithText("Update the weather").performClick()
+        waitFor(hasText("The weather could not be updated. Please check your internet connection and try again."))
+        // The button stays, so the update can be tried again.
+        compose.onNodeWithText("Update the weather").assertExists()
+        shot("water_update_failed")
+    }
+
+    @Test
     fun theDaysAheadAndTheHoursToWaterIn() {
         val veg = runBlocking {
             // Tomatoes in sand hold little water, so they are due today and again within the forecast.

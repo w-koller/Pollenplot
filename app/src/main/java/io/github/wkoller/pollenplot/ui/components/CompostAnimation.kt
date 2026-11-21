@@ -14,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -21,10 +23,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.domain.compost.CompostPhase
@@ -52,13 +55,13 @@ fun CompostAnimation(phase: CompostPhase, description: String, modifier: Modifie
     val outline = MaterialTheme.colorScheme.onSurfaceVariant
     val paints = CompostPaints(dark)
     Canvas(modifier.size(size).semantics { contentDescription = description }) {
-        val binLeft = this.size.width * 0.18f
-        val binRight = this.size.width * 0.82f
-        val binTop = this.size.height * 0.30f
-        val binBottom = this.size.height * 0.92f
-        val inside = Size(binRight - binLeft, binBottom - binTop)
-        val radius = CornerRadius(10.dp.toPx())
-        clipRect(binLeft, binTop, binRight, binBottom) {
+        val bin = binBox(this.size, this)
+        val binLeft = bin.outline.left
+        val binTop = bin.outline.top
+        val binBottom = bin.outline.bottom
+        val inside = bin.outline.size
+        // What is in the bin stays within the outline's inner edge, rounded corners and all.
+        clipPath(Path().apply { addRoundRect(bin.inner) }) {
             when (phase) {
                 CompostPhase.FILLING -> drawFilling(binLeft, binTop, inside, t, paints)
                 CompostPhase.WARMING, CompostPhase.HOT, CompostPhase.COOLING -> drawLayers(binLeft, binBottom, inside, 1f, paints, darkening = if (phase == CompostPhase.COOLING) 0.35f else 0f)
@@ -75,13 +78,28 @@ fun CompostAnimation(phase: CompostPhase, description: String, modifier: Modifie
             else -> Unit
         }
         // The bin over what is in it: an open box with slats, so the heap shows through.
-        drawRoundRect(outline, Offset(binLeft, binTop), inside, radius, style = Stroke(width = 3.dp.toPx()))
+        drawRoundRect(outline, Offset(binLeft, binTop), inside, bin.radius, style = Stroke(width = bin.stroke))
         val slat = Stroke(width = 1.dp.toPx())
         for (i in 1..2) {
             val x = binLeft + inside.width * i / 3f
             drawLine(outline.copy(alpha = 0.35f), Offset(x, binTop + 4.dp.toPx()), Offset(x, binBottom - 4.dp.toPx()), strokeWidth = slat.width)
         }
     }
+}
+
+/**
+ * Where the bin is drawn in a picture of [size]: the outline's rectangle and corners, its stroke, and [inner], the
+ * outline's inner edge, which what is in the bin is clipped to.
+ */
+internal class BinBox(val outline: Rect, val radius: CornerRadius, val stroke: Float, val inner: RoundRect)
+
+internal fun binBox(size: Size, density: Density): BinBox = with(density) {
+    val outline = Rect(size.width * 0.18f, size.height * 0.30f, size.width * 0.82f, size.height * 0.92f)
+    val radius = 10.dp.toPx()
+    val stroke = 3.dp.toPx()
+    val half = stroke / 2
+    val innerRadius = CornerRadius(radius - half)
+    BinBox(outline, CornerRadius(radius), stroke, RoundRect(outline.deflate(half), innerRadius))
 }
 
 @Composable
