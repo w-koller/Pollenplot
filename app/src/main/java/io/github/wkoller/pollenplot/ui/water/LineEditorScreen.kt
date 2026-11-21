@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.water
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -86,17 +87,17 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
     ) { padding ->
         if (!started) return@DetailScaffold
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             ChipGroup(stringResource(R.string.water_method), WaterMethod.entries, method, { stringResource(it.label) }) { method = it }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Text(stringResource(R.string.water_zones), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     zones.forEach { view ->
                         val id = view.zone.id
-                        FilterChip(selected = id in zoneIds, onClick = { zoneIds = if (id in zoneIds) zoneIds - id else zoneIds + id }, label = { Text(view.zone.name) })
+                        ChoiceChip(selected = id in zoneIds, onClick = { zoneIds = if (id in zoneIds) zoneIds - id else zoneIds + id }, label = { Text(view.zone.name) })
                     }
                 }
             }

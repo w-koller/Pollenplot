@@ -42,7 +42,12 @@ class SegmentedGroupScope internal constructor() {
 fun SegmentedGroup(modifier: Modifier = Modifier, content: SegmentedGroupScope.() -> Unit) {
     val scope = SegmentedGroupScope().apply(content)
     // The tiles stand out from the page in the theme's container colour, as the phone's own settings draw them.
-    val colors = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    // A switch that is on is leaf green, like a chosen chip, rather than Material's default, the bees' wattle gold.
+    val colors = ListItemDefaults.segmentedColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+        selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    )
     val count = scope.rows.size
     Column(
         modifier.fillMaxWidth().padding(horizontal = Spacing.l),

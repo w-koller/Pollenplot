@@ -46,7 +46,7 @@ fun EmptyState(@DrawableRes icon: Int, title: String, body: String, modifier: Mo
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.l),
     ) {
-        EmptyVignette(icon)
+        Vignette(icon)
         Text(
             title,
             style = MaterialTheme.typography.headlineSmall,
@@ -62,9 +62,9 @@ fun EmptyState(@DrawableRes icon: Int, title: String, body: String, modifier: Mo
     }
 }
 
-/** The empty state's picture: the icon on a cookie, a sun behind it and a grain of pollen. */
+/** The empty state's picture, which the setup's welcome shares: the icon on a cookie, a sun behind it and a grain of pollen. */
 @Composable
-private fun EmptyVignette(@DrawableRes icon: Int) {
+internal fun Vignette(@DrawableRes icon: Int) {
     val animate = animationsOn()
     val grow = remember { Animatable(if (animate) 0.7f else 1f) }
     val turn = remember { Animatable(if (animate) -40f else 0f) }

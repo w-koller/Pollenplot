@@ -795,22 +795,22 @@ private fun EditPlantSheet(
     val today = LocalDate.now()
     // Opened at its full height, and kept above the keyboard, so Save changes at the bottom can always be reached.
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        LazyColumn(Modifier.fillMaxWidth().imePadding(), contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyColumn(Modifier.fillMaxWidth().imePadding(), contentPadding = PaddingValues(start = Spacing.xl, end = Spacing.xl, bottom = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
             item { Text(stringResource(R.string.edit_plant_title, view.title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() }) }
             item {
                 // A plant added under the wrong name is given the right one here; its photos and notes stay with it.
                 OutlinedButton(onClick = onChangeSpecies) {
-                    Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                    Icon(painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
                     Text(stringResource(R.string.plant_change))
                 }
             }
             item { ZonesChooser(zones, zoneIds) { zoneIds = it } }
             item { PlantCounts(zones, zoneIds, each = false, count) { count = it } }
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(stringResource(R.string.planted_on), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                     Text(plantedOn?.let { UiFormat.longDate(it) } ?: stringResource(R.string.planted_unknown), style = MaterialTheme.typography.bodyLarge)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         TextButton(onClick = { choosingDay = true }) { Text(stringResource(R.string.planted_choose)) }
                         if (plantedOn != null) TextButton(onClick = { plantedOn = null }) { Text(stringResource(R.string.planted_clear)) }
                     }
@@ -838,7 +838,7 @@ private fun EditPlantSheet(
             if (status != PlantStatus.GROWING) {
                 // The day it died or was removed, today unless the user chooses another.
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                         Text(stringResource(if (status == PlantStatus.DIED) R.string.ended_died else R.string.ended_removed), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                         Text(UiFormat.longDate(endedOn ?: today), style = MaterialTheme.typography.bodyLarge)
                         TextButton(onClick = { choosingEnd = true }) { Text(stringResource(R.string.planted_choose)) }
@@ -847,7 +847,7 @@ private fun EditPlantSheet(
             }
             item {
                 val needsName = plant.speciesName == null && name.isBlank()
-                if (needsName) Text(stringResource(R.string.edit_needs_name), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
+                if (needsName) Text(stringResource(R.string.edit_needs_name), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = Spacing.s))
                 Button(
                     onClick = { onSave(plant.copy(zoneIds = zoneIds, quantity = count.totalFor(zoneIds, false), counts = count.countsFor(zoneIds, false).orEmpty(), plantedOn = plantedOn, customName = name.trim().ifBlank { null }, notes = notes.trim(), status = status, endedOn = if (status == PlantStatus.GROWING) null else endedOn ?: today)) },
                     enabled = !needsName,

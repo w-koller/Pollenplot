@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -130,13 +130,13 @@ fun ReviewScreen(
         },
         empty = { padding ->
             Column(
-                Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = Spacing.l),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m),
             ) {
                 val progress = adding
                 if (progress != null) {
-                    AddingCard(progress, Modifier.readable().padding(top = 8.dp))
+                    AddingCard(progress, Modifier.readable().padding(top = Spacing.s))
                 } else {
                     EmptyState(R.drawable.ic_rate_review, stringResource(R.string.review_empty_title), stringResource(R.string.review_empty_body))
                     Button(onClick = onAddPhotos) { Text(stringResource(R.string.add_photos)) }
@@ -151,11 +151,11 @@ fun ReviewScreen(
 @Composable
 private fun AddingCard(progress: AddProgress, modifier: Modifier = Modifier) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        shape = MaterialTheme.shapes.large,
         modifier = modifier,
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.fillMaxWidth().padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
             Text(
                 if (progress.total > 0) {
                     stringResource(R.string.review_adding_progress, progress.done + 1, progress.total)

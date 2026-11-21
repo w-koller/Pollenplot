@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.ToggleRow
 import kotlinx.coroutines.flow.map
 import io.github.wkoller.pollenplot.ui.components.MissingRecord
 import io.github.wkoller.pollenplot.ui.components.Found
@@ -347,7 +348,7 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
     }
 
     DetailScaffold(title = stringResource(R.string.zone_edit_title, zone.name), onBack = leave) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
             item {
                 OutlinedTextField(
                     value = name,
@@ -370,18 +371,12 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
             item { ChipGroup(stringResource(R.string.zone_sun), listOf(null) + Sun.entries, sun, { it?.let { s -> stringResource(s.label) } ?: stringResource(R.string.zone_not_set) }) { sun = it } }
             item { ChipGroup(stringResource(R.string.zone_soil), listOf(null) + Soil.entries, soil, { it?.let { s -> stringResource(s.label) } ?: stringResource(R.string.zone_not_set) }) { soil = it } }
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     Text(stringResource(R.string.zone_shelter), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                     Text(stringResource(R.string.zone_shelter_help), style = MaterialTheme.typography.bodyMedium)
-                    ListItem(checked = mulched, onCheckedChange = { mulched = it }, trailingContent = { Switch(checked = mulched, onCheckedChange = null) }) {
-                        Text(stringResource(R.string.zone_mulched))
-                    }
-                    ListItem(checked = rocksAndLogs, onCheckedChange = { rocksAndLogs = it }, trailingContent = { Switch(checked = rocksAndLogs, onCheckedChange = null) }) {
-                        Text(stringResource(R.string.zone_rocks_logs))
-                    }
-                    ListItem(checked = denseShrubs, onCheckedChange = { denseShrubs = it }, trailingContent = { Switch(checked = denseShrubs, onCheckedChange = null) }) {
-                        Text(stringResource(R.string.zone_dense_shrubs))
-                    }
+                    ToggleRow(stringResource(R.string.zone_mulched), mulched, { mulched = it })
+                    ToggleRow(stringResource(R.string.zone_rocks_logs), rocksAndLogs, { rocksAndLogs = it })
+                    ToggleRow(stringResource(R.string.zone_dense_shrubs), denseShrubs, { denseShrubs = it })
                 }
             }
             item {
@@ -414,7 +409,7 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
             item {
                 OutlinedButton(onClick = { confirmRemove = true }, modifier = Modifier.fillMaxWidth()) {
                     Icon(painterResource(R.drawable.ic_delete), contentDescription = null)
-                    Text(stringResource(R.string.zone_remove), modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.zone_remove), modifier = Modifier.padding(start = Spacing.s))
                 }
             }
         }
@@ -444,11 +439,11 @@ fun ZoneEditorScreen(garden: GardenRepository, zoneId: String, onBack: () -> Uni
 @Composable
 private fun AddPlantToZoneSheet(zoneName: String, onDismiss: () -> Unit, onLibrary: () -> Unit, onPhoto: (() -> Unit)?, onGallery: (() -> Unit)?) {
     androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+        Column(Modifier.fillMaxWidth().padding(bottom = Spacing.xl)) {
             Text(
                 stringResource(R.string.zone_add_plant_title, zoneName),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).semantics { heading() },
+                modifier = Modifier.padding(horizontal = Spacing.xl, vertical = Spacing.s).semantics { heading() },
             )
             ListItem(
                 onClick = onLibrary,

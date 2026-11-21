@@ -1,11 +1,11 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,10 +35,10 @@ fun SafetyNotice(animal: Animal, state: AuState?, modifier: Modifier = Modifier)
     val hazard = animal.hazard
     if (hazard == null && rules.isEmpty()) return
     val uri = LocalUriHandler.current
-    Surface(color = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer, shape = RoundedCornerShape(20.dp), modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Surface(color = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer, shape = MaterialTheme.shapes.large, modifier = modifier.fillMaxWidth()) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             if (hazard != null) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                     Icon(painterResource(R.drawable.ic_warning), contentDescription = null)
                     Text(stringResource(hazard.label), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                 }
@@ -47,7 +47,7 @@ fun SafetyNotice(animal: Animal, state: AuState?, modifier: Modifier = Modifier)
             rules.forEach { rule ->
                 Text(rule.text, style = MaterialTheme.typography.bodyLarge)
                 TextButton(onClick = { uri.openUri(rule.source) }) {
-                    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = Spacing.s))
                     Text(stringResource(R.string.animal_rule_source))
                 }
             }

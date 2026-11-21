@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -103,8 +104,8 @@ fun NativeHiveEditorScreen(natives: NativeBeeRepository, views: GardenViews, hiv
     ) { padding ->
         if (!started) return@DetailScaffold
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             ChipGroup(stringResource(R.string.native_species), StinglessSpecies.entries, species, { stringResource(it.label) }) { species = it }
@@ -181,13 +182,13 @@ fun NativeLogScreen(initialKind: NativeLogKind, hiveId: String, natives: NativeB
 
     DetailScaffold(title = stringResource(R.string.native_log), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             ChipGroup(stringResource(R.string.native_log_kind), NativeLogKind.entries, kind, { stringResource(it.label) }) { kind = it }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(stringResource(R.string.honey_date), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                     Text(UiFormat.longDate(date), style = MaterialTheme.typography.bodyLarge)
                     TextButton(onClick = { pickingDate = true }) { Text(stringResource(R.string.honey_change_date)) }
                 }

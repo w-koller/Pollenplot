@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -123,8 +124,8 @@ fun HotelEditorScreen(hotels: HotelRepository, views: GardenViews, hotelId: Stri
     ) { padding ->
         if (!started) return@DetailScaffold
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             ZoneChooser(zones, zoneId) { zoneId = it }
@@ -217,8 +218,8 @@ fun HotelLookScreen(hotelId: String, hotels: HotelRepository, today: LocalDate, 
 
     DetailScaffold(title = stringResource(R.string.hotel_look), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             DateRow(date) { pickingDate = true }
             Text(stringResource(R.string.hotel_sealed_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
@@ -229,11 +230,11 @@ fun HotelLookScreen(hotelId: String, hotels: HotelRepository, today: LocalDate, 
             }
             NumberField(stringResource(R.string.hotel_busy), busy) { busy = it }
             NumberField(stringResource(R.string.hotel_emerged), emerged) { emerged = it }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Text(stringResource(R.string.hotel_pests), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     HotelPest.entries.forEach { pest ->
-                        FilterChip(selected = pest in pests, onClick = { pests = if (pest in pests) pests - pest else pests + pest }, label = { Text(stringResource(pest.label)) })
+                        ChoiceChip(selected = pest in pests, onClick = { pests = if (pest in pests) pests - pest else pests + pest }, label = { Text(stringResource(pest.label)) })
                     }
                 }
             }
@@ -278,8 +279,8 @@ fun HotelUpkeepScreen(hotelId: String, hotels: HotelRepository, today: LocalDate
 
     DetailScaffold(title = stringResource(R.string.hotel_upkeep), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             DateRow(date) { pickingDate = true }
             ChipGroup(stringResource(R.string.hotel_upkeep_kind), UpkeepKind.entries, kind, { stringResource(it.label) }) { kind = it }
@@ -302,7 +303,7 @@ fun HotelUpkeepScreen(hotelId: String, hotels: HotelRepository, today: LocalDate
 
 @Composable
 internal fun DateRow(date: LocalDate, onChange: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Text(stringResource(R.string.honey_date), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
         val day: @Composable () -> Unit = { Text(UiFormat.longDate(date), style = MaterialTheme.typography.bodyLarge) }
         val change: @Composable () -> Unit = { TextButton(onClick = onChange) { Text(stringResource(R.string.honey_change_date)) } }
@@ -311,7 +312,7 @@ internal fun DateRow(date: LocalDate, onChange: () -> Unit) {
             day()
             change()
         } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                 day()
                 change()
             }

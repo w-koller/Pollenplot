@@ -1,10 +1,11 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,11 +30,11 @@ fun AnimalPhotosDialog(onDismiss: () -> Unit, onChoose: (LifeGroup) -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.animal_photos_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
                 Text(stringResource(R.string.animal_photos_body), style = MaterialTheme.typography.bodyMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     CAMERA_GROUPS.filter { it.isWildlife }.forEach { choice ->
-                        FilterChip(selected = choice == group, onClick = { group = choice }, label = { Text(stringResource(choice.label)) })
+                        ChoiceChip(selected = choice == group, onClick = { group = choice }, label = { Text(stringResource(choice.label)) })
                     }
                 }
             }

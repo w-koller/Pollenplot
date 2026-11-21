@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.library
 
+import io.github.wkoller.pollenplot.ui.components.checkedRowColors
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.listPadding
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
@@ -22,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -266,7 +267,7 @@ fun LibraryScreen(
             contentPadding = listPadding(padding, bottom = if (selecting) 112.dp else 24.dp),
         ) {
             item(key = "top") {
-                Column(Modifier.readable().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.readable().padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     ChipGroup(
                         title = stringResource(R.string.library_show),
                         options = listOf(false, true),
@@ -287,6 +288,7 @@ fun LibraryScreen(
                     )
                     ListItem(
                         checked = addMode,
+                        colors = checkedRowColors(),
                         onCheckedChange = { addMode = it },
                         leadingContent = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
                         supportingContent = { Text(stringResource(R.string.library_add_mode_body)) },
@@ -326,6 +328,7 @@ fun LibraryScreen(
                 if (selecting) {
                     ListItem(
                         checked = picked,
+                        colors = checkedRowColors(),
                         onCheckedChange = { on -> selection = if (on) selection + row.key else selection - row.key },
                         leadingContent = { LibraryPicture(row, photo) },
                         supportingContent = details,
@@ -385,11 +388,11 @@ fun LibraryScreen(
 internal fun LibraryPicture(row: LibraryRow, photo: LibraryPhoto?, size: Dp = 56.dp, onEnlarge: (() -> Unit)? = null) {
     val enlarge = onEnlarge?.takeIf { row.thumbnail != null || photo != null }
     val label = stringResource(R.string.library_enlarge, row.title)
-    val press = if (enlarge != null) Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = label, role = Role.Button) { enlarge() }.semantics { contentDescription = label } else Modifier
+    val press = if (enlarge != null) Modifier.clip(MaterialTheme.shapes.medium).clickable(onClickLabel = label, role = Role.Button) { enlarge() }.semantics { contentDescription = label } else Modifier
     if (row.thumbnail != null || photo == null) {
         PlantAvatar(row.form, size, modifier = press, thumbnail = row.thumbnail)
     } else {
-        Box(Modifier.size(size).then(press).clip(RoundedCornerShape(12.dp))) {
+        Box(Modifier.size(size).then(press).clip(MaterialTheme.shapes.medium)) {
             AsyncImage(model = photo.file, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
     }
@@ -398,11 +401,11 @@ internal fun LibraryPicture(row: LibraryRow, photo: LibraryPhoto?, size: Dp = 56
 /** Asks once whether photos of plants may be fetched, for the library and the weed lists, and says what is sent. */
 @Composable
 fun PhotosQuestion(onAnswer: (Boolean) -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer), shape = RoundedCornerShape(24.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh), shape = MaterialTheme.shapes.large) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Text(stringResource(R.string.library_photos_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             Text(stringResource(R.string.library_photos_body), style = MaterialTheme.typography.bodyMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Button(onClick = { onAnswer(true) }) { Text(stringResource(R.string.library_photos_yes)) }
                 OutlinedButton(onClick = { onAnswer(false) }) { Text(stringResource(R.string.library_photos_no)) }
             }
@@ -436,8 +439,8 @@ private fun AddManyScreen(
     var howMany by rememberSaveable(stateSaver = PlantCount.Saver) { mutableStateOf(PlantCount()) }
     DetailScaffold(title = pluralStringResource(R.plurals.library_add_title, count, count), onBack = onBack) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp).readable(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             ZonesChooser(zones, zoneIds) { zoneIds = it }
             ManyZonesChoice(zoneIds.size, settings.manyZones, each) { each = it }

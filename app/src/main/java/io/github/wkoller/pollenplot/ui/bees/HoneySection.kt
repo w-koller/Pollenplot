@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.checkedRowColors
+import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.components.SwitchRow
 import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
@@ -120,6 +122,7 @@ internal fun LazyListScope.honeySection(
             SectionHeading(stringResource(R.string.honey_varroa))
             ListItem(
                 checked = monthly,
+                colors = checkedRowColors(),
                 onCheckedChange = { on -> onSettings { it.copy(monthlyMiteChecks = on) } },
                 supportingContent = { Text(stringResource(R.string.honey_varroa_body)) },
                 trailingContent = { Switch(checked = monthly, onCheckedChange = null) },
@@ -127,12 +130,12 @@ internal fun LazyListScope.honeySection(
             if (rule != null) {
                 Text(stringResource(R.string.honey_mites_qld), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
                 TextButton(onClick = { onOpenLink(rule.page) }, modifier = Modifier.padding(horizontal = Spacing.s)) {
-                    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
                     Text(stringResource(R.string.honey_mites_qld_open))
                 }
             }
             TextButton(onClick = { onOpenLink(BeekeeperRegistration.CODE_OF_PRACTICE) }, modifier = Modifier.padding(horizontal = Spacing.s)) {
-                Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
                 Text(stringResource(R.string.honey_code_open))
             }
         }
@@ -145,7 +148,7 @@ internal fun LazyListScope.honeySection(
             } else {
                 Text(stringResource(R.string.honey_registration_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
                 TextButton(onClick = { onOpenLink(BeekeeperRegistration.page(state)) }, modifier = Modifier.padding(horizontal = Spacing.s)) {
-                    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
                     Text(stringResource(R.string.honey_registration_open))
                 }
             }

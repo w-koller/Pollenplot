@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -147,13 +147,13 @@ fun ModelsContent(
     val bioclip2Item: LazyListScope.() -> Unit = {
         item { PackCard(accurate, accurate.bioclip2, setup) }
     }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = padding, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = padding, verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         top()
         item {
             Text(
                 stringResource(if (setup) R.string.setup_models_intro else R.string.models_intro),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
             )
         }
         // Accurate identification matters most to a new garden, so setup offers it first.
@@ -228,7 +228,7 @@ private fun PackCard(packs: AccuratePacks, accurate: AccuratePack, setup: Boolea
         if (bioclip2) {
             HighEndRequirements()
             if (packs.memoryBytes > 0 && !packs.meetsBioclip2Memory) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.Top) {
                     Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     Text(
                         stringResource(R.string.models_bioclip2_low_memory, Formatter.formatShortFileSize(context, packs.memoryBytes)),
@@ -311,7 +311,7 @@ private fun DownloadControls(
         DownloadState.NotDownloaded -> Button(onClick = onDownload) { Text(stringResource(R.string.models_download)) }
         DownloadState.WaitingForWifi -> {
             Text(stringResource(R.string.models_waiting_wifi), style = MaterialTheme.typography.bodyMedium, modifier = status)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Button(onClick = onUseMobileData) { Text(stringResource(R.string.models_use_mobile_data)) }
                 OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
             }
@@ -356,11 +356,11 @@ private fun DownloadControls(
 private fun ModelCard(icon: Int, title: String, body: String, content: @Composable () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             }

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -53,10 +54,10 @@ internal fun LazyListScope.nearbyAnimals(
     item(key = "nearby") { SectionHeading(stringResource(R.string.wildlife_nearby)) }
     if (!hasPlace) {
         item(key = "nearby-place") {
-            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(horizontal = Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Text(stringResource(R.string.wildlife_nearby_no_location), style = MaterialTheme.typography.bodyLarge)
                 OutlinedButton(onClick = onSetLocation) {
-                    Icon(painterResource(R.drawable.ic_location_on), contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Icon(painterResource(R.drawable.ic_location_on), contentDescription = null, modifier = Modifier.padding(end = Spacing.s))
                     Text(stringResource(R.string.weeds_set_location))
                 }
             }
@@ -65,7 +66,7 @@ internal fun LazyListScope.nearbyAnimals(
     }
     if (nearby == null || nearby.animals.isEmpty()) {
         item(key = "nearby-waiting") {
-            Text(stringResource(R.string.wildlife_nearby_waiting), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+            Text(stringResource(R.string.wildlife_nearby_waiting), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
         }
         return
     }
@@ -76,15 +77,15 @@ internal fun LazyListScope.nearbyAnimals(
             Text(
                 stringResource(R.string.wildlife_nearby_body, nearby.radiusKm, nearby.sinceYear),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = Spacing.l),
             )
-            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.l, vertical = Spacing.s), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 nearby.groups.forEach { g ->
-                    FilterChip(
+                    ChoiceChip(
                         selected = g == chosen,
                         onClick = { onGroup(g) },
                         label = { Text(stringResource(g.plural)) },
-                        leadingIcon = { Icon(painterResource(g.icon), contentDescription = null, modifier = Modifier.padding(start = 4.dp)) },
+                        leadingIcon = { Icon(painterResource(g.icon), contentDescription = null, modifier = Modifier.padding(start = Spacing.xs)) },
                     )
                 }
             }
@@ -98,7 +99,7 @@ internal fun LazyListScope.nearbyAnimals(
     }
     if (!showAll && animals.size > NEARBY_SHOWN) {
         item(key = "nearby-all") {
-            TextButton(onClick = onShowAll, modifier = Modifier.padding(horizontal = 8.dp)) {
+            TextButton(onClick = onShowAll, modifier = Modifier.padding(horizontal = Spacing.s)) {
                 Text(pluralStringResource(R.plurals.wildlife_nearby_show_all, animals.size, animals.size))
             }
         }

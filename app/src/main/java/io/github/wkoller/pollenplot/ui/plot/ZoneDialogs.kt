@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.plot
 
+import io.github.wkoller.pollenplot.ui.components.checkedRowColors
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.RadioButton
 import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
@@ -32,7 +35,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -71,7 +74,7 @@ fun AddZoneDialog(onDismiss: () -> Unit, onAdd: (String, ZoneKind) -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.zone_add_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = {
@@ -90,13 +93,13 @@ fun AddZoneDialog(onDismiss: () -> Unit, onAdd: (String, ZoneKind) -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(stringResource(R.string.zone_kind_label), style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     ZoneKind.entries.forEach { k ->
-                        FilterChip(
+                        ChoiceChip(
                             selected = kind == k,
                             onClick = { kind = k },
                             label = { Text(stringResource(k.label)) },
-                            leadingIcon = { Icon(painterResource(k.icon), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            leadingIcon = { Icon(painterResource(k.icon), contentDescription = null, modifier = Modifier.size(IconSize.small)) },
                         )
                     }
                 }
@@ -116,10 +119,10 @@ fun AddZoneDialog(onDismiss: () -> Unit, onAdd: (String, ZoneKind) -> Unit) {
 @Composable
 fun AdjustZoneSheet(name: String, rect: ZoneRect, onDismiss: () -> Unit, onAdjust: ((ZoneRect) -> ZoneRect) -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = Spacing.xl).padding(bottom = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
             Text(stringResource(R.string.adjust_title, name), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
             Text(stringResource(R.string.adjust_move), style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 ArrowButton(R.drawable.ic_arrow_back, R.string.move_left) { onAdjust { PlotLayout.nudged(it, -1, 0) } }
                 ArrowButton(R.drawable.ic_arrow_upward, R.string.move_up) { onAdjust { PlotLayout.nudged(it, 0, -1) } }
                 ArrowButton(R.drawable.ic_arrow_downward, R.string.move_down) { onAdjust { PlotLayout.nudged(it, 0, 1) } }
@@ -168,7 +171,7 @@ private fun ArrowButton(@DrawableRes icon: Int, label: Int, onClick: () -> Unit)
 
 @Composable
 private fun Stepper(label: String, less: String, more: String, onLess: () -> Unit, onMore: () -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         FilledTonalButton(onClick = onLess) { Text(less) }
         FilledTonalButton(onClick = onMore) { Text(more) }
@@ -186,7 +189,7 @@ fun AddStructureDialog(onDismiss: () -> Unit, onAdd: (String, StructureKind) -> 
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.structure_add_title)) },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Text(stringResource(R.string.structure_add_body), style = MaterialTheme.typography.bodyMedium)
                 StructureKindChips(kind) { kind = it }
                 OutlinedTextField(
@@ -214,7 +217,7 @@ fun StructureDialog(structure: Structure, onDismiss: () -> Unit, onSave: (Struct
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.structure_details_title, structure.name)) },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -231,7 +234,7 @@ fun StructureDialog(structure: Structure, onDismiss: () -> Unit, onSave: (Struct
                     onChoose = { shape = it },
                 )
                 OutlinedButton(onClick = onDelete) {
-                    Icon(painterResource(R.drawable.ic_delete), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+                    Icon(painterResource(R.drawable.ic_delete), contentDescription = null, modifier = Modifier.padding(end = Spacing.s).size(IconSize.small))
                     Text(stringResource(R.string.structure_delete))
                 }
             }
@@ -246,15 +249,15 @@ fun StructureDialog(structure: Structure, onDismiss: () -> Unit, onSave: (Struct
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StructureKindChips(kind: StructureKind, onChoose: (StructureKind) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(stringResource(R.string.structure_kind_label), style = MaterialTheme.typography.labelLarge)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             StructureKind.entries.forEach { k ->
-                FilterChip(
+                ChoiceChip(
                     selected = kind == k,
                     onClick = { onChoose(k) },
                     label = { Text(stringResource(k.label)) },
-                    leadingIcon = { Icon(painterResource(k.icon), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    leadingIcon = { Icon(painterResource(k.icon), contentDescription = null, modifier = Modifier.size(IconSize.small)) },
                 )
             }
         }
@@ -274,9 +277,9 @@ fun PlotAppearanceSheet(
     onNorth: (NorthSide) -> Unit = {},
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.plot_appearance), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp).semantics { heading() })
-            Column(Modifier.padding(horizontal = 24.dp)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
+            Text(stringResource(R.string.plot_appearance), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = Spacing.xl).semantics { heading() })
+            Column(Modifier.padding(horizontal = Spacing.xl)) {
                 ChipGroup(
                     title = stringResource(R.string.plot_background),
                     options = PlotBackground.entries,
@@ -297,14 +300,15 @@ fun PlotAppearanceSheet(
             }
             ListItem(
                 checked = gridInView,
+                colors = checkedRowColors(),
                 onCheckedChange = onGrid,
                 // The sheet's words start 24 dp in, and a list item insets its own by 16.
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier.padding(horizontal = Spacing.s),
                 leadingContent = { Icon(painterResource(R.drawable.ic_grid_on), contentDescription = null) },
                 supportingContent = { Text(stringResource(R.string.plot_grid_body)) },
                 trailingContent = { Switch(checked = gridInView, onCheckedChange = null) },
             ) { Text(stringResource(R.string.plot_grid)) }
-            Column(Modifier.padding(horizontal = 24.dp)) {
+            Column(Modifier.padding(horizontal = Spacing.xl)) {
                 ChipGroup(
                     title = stringResource(R.string.plot_north),
                     options = NorthSide.entries,
@@ -322,7 +326,7 @@ fun PlotAppearanceSheet(
                     onChoose = onNorth,
                 )
             }
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text(stringResource(R.string.plot_done)) }
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.xl)) { Text(stringResource(R.string.plot_done)) }
         }
     }
 }
@@ -341,10 +345,10 @@ fun PlotLayersSheet(
     onLaterMonths: (Int) -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.plot_layers_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp).semantics { heading() })
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
+            Text(stringResource(R.string.plot_layers_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = Spacing.xl).semantics { heading() })
             // The sheet's words start 24 dp in, and a group's tiles 16 dp in with their own inset inside.
-            SegmentedGroup(Modifier.padding(horizontal = 8.dp).selectableGroup()) {
+            SegmentedGroup(Modifier.padding(horizontal = Spacing.s).selectableGroup()) {
                 listOf<PlotLayer?>(null, PlotLayer.SUN, PlotLayer.BLOOM_NOW, PlotLayer.BLOOM_LATER).forEach { choice ->
                     row { segment ->
                         ListItem(
@@ -360,7 +364,7 @@ fun PlotLayersSheet(
                 }
             }
             if (layer == PlotLayer.BLOOM_LATER) {
-                Column(Modifier.padding(horizontal = 24.dp)) {
+                Column(Modifier.padding(horizontal = Spacing.xl)) {
                     ChipGroup(
                         title = stringResource(R.string.plot_layer_month),
                         options = (1..Settings.BLOOM_LATER_MOST).toList(),
@@ -370,7 +374,7 @@ fun PlotLayersSheet(
                     )
                 }
             }
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text(stringResource(R.string.plot_done)) }
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.xl)) { Text(stringResource(R.string.plot_done)) }
         }
     }
 }

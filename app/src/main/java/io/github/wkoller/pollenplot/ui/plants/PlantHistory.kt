@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.FactCard
 import androidx.compose.foundation.background
@@ -20,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.MaterialTheme
@@ -84,13 +84,13 @@ private fun Candidate.title(kb: KnowledgeBase?) = speciesName?.let { kb?.species
 fun PhotoHistoryCard(finds: List<DetectionRecord>, speciesName: String?, kb: KnowledgeBase?, onOpen: (DetectionRecord) -> Unit) {
     FactCard(R.drawable.ic_photo_library, stringResource(R.string.history_title)) {
         Text(stringResource(R.string.history_body), style = MaterialTheme.typography.bodyMedium)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), contentPadding = PaddingValues(vertical = Spacing.xs)) {
             items(finds, key = { it.id }) { find ->
                 val match = find.matched(speciesName)
                 val others = find.candidates.filter { it != match }.take(2).map { it.title(kb) }
                 Column(
                     Modifier.width(120.dp).clickable(onClickLabel = stringResource(R.string.history_open), role = Role.Button) { onOpen(find) },
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                 ) {
                     Cutout(find.thumbnail, 120.dp)
                     Text(stringResource(R.string.history_item, UiFormat.shortDate(find.takenAt)), style = MaterialTheme.typography.labelLarge)
@@ -152,8 +152,8 @@ fun PlantPhotoScreen(
     DetailScaffold(title = stringResource(R.string.photo_title), onBack = onBack) { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             val shown = photo
             if (shown == null) {
@@ -165,9 +165,9 @@ fun PlantPhotoScreen(
                 item { Text(stringResource(R.string.photo_taken, UiFormat.longDate(record.takenAt)), style = MaterialTheme.typography.bodyLarge) }
                 if (owner != null) {
                     item {
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                             if (owner.plant.thumbnail == record.thumbnail) {
-                                Text(stringResource(R.string.photo_is_picture), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 12.dp))
+                                Text(stringResource(R.string.photo_is_picture), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = Spacing.m))
                             } else {
                                 OutlinedButton(onClick = {
                                     scope.launch {
@@ -184,7 +184,7 @@ fun PlantPhotoScreen(
                     item { Text(stringResource(R.string.photo_suggestions), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() }) }
                     items(record.candidates) { candidate ->
                         val species = candidate.speciesName?.let { kb?.species(it) }
-                        Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(Modifier.fillMaxWidth().padding(vertical = Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
                             Text(candidate.title(kb), style = MaterialTheme.typography.bodyLarge)
                             (species?.name ?: candidate.label.takeIf { candidate.common != null })?.let {
                                 Text(it, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -204,7 +204,7 @@ private fun OutlinedPhoto(photo: StoredPhoto, box: BoxBp?, modifier: Modifier) {
     val context = LocalContext.current
     val file = remember(photo.path) { File(context.filesDir, photo.path) }
     val ratio = if (photo.height > 0) photo.width.toFloat() / photo.height else 4f / 3f
-    BoxWithConstraints(modifier.aspectRatio(ratio).clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
+    BoxWithConstraints(modifier.aspectRatio(ratio).clip(MaterialTheme.shapes.extraLarge).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
         AsyncImage(model = file, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
         if (box != null) {
             val full = BoxBp.FULL.toFloat()
@@ -212,7 +212,7 @@ private fun OutlinedPhoto(photo: StoredPhoto, box: BoxBp?, modifier: Modifier) {
                 Modifier
                     .offset(maxWidth * (box.left / full), maxHeight * (box.top / full))
                     .size(maxWidth * ((box.right - box.left) / full), maxHeight * ((box.bottom - box.top) / full))
-                    .border(3.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
+                    .border(3.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium),
             )
         }
     }

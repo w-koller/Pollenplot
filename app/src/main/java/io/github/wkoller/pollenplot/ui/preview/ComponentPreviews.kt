@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
+import io.github.wkoller.pollenplot.ui.components.ToggleRow
 import io.github.wkoller.pollenplot.domain.plants.EcoRole
 import io.github.wkoller.pollenplot.domain.plants.FactLevel
 import io.github.wkoller.pollenplot.domain.plants.GrowthForm
@@ -104,6 +105,11 @@ internal fun ChoicesPreview() = PreviewTheme {
         ConnectedChoice(Sun.entries, Sun.FULL_SUN, { stringResource(it.label) }, {})
         ChipGroup(stringResource(R.string.plant_light), Sun.entries, Sun.PART_SHADE, { stringResource(it.label) }, {})
         ManyChipGroup(stringResource(R.string.plant_light), Sun.entries, setOf(Sun.FULL_SUN), { stringResource(it.label) }, onChange = {})
+        // A form's switches, one on and one off.
+        Column {
+            ToggleRow(stringResource(R.string.zone_mulched), checked = true, onChange = {})
+            ToggleRow(stringResource(R.string.zone_rocks_logs), checked = false, onChange = {})
+        }
     }
 }
 

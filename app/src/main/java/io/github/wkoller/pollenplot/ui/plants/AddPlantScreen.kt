@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.listPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -99,7 +100,7 @@ fun AddPlantScreen(
                     label = { Text(stringResource(R.string.add_plant_search_label)) },
                     leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(16.dp).focusRequester(focus),
+                    modifier = Modifier.fillMaxWidth().padding(Spacing.l).focusRequester(focus),
                 )
             }
             when {
@@ -149,7 +150,7 @@ fun AddPlantScreen(
 
 @Composable
 private fun Hint(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+    Text(text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
 }
 
 /** Asks which zone a new plant goes in, how many there are, and the user's own name for it. */
@@ -170,8 +171,8 @@ fun AddToGardenSheet(
     var nickname by rememberSaveable { mutableStateOf("") }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
-            Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.xl).padding(bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.add_sheet_title, title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
             ZonesChooser(zones, zoneIds) { zoneIds = it }
@@ -239,7 +240,7 @@ fun eachZone(setting: ManyZones, each: Boolean): Boolean = when (setting) {
 @Composable
 fun ManyZonesChoice(count: Int, setting: ManyZones, each: Boolean, onEach: (Boolean) -> Unit) {
     if (count < 2 || setting != ManyZones.ASK) return
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         ChipGroup(
             title = stringResource(R.string.many_zones_title),
             options = listOf(false, true),
@@ -263,7 +264,7 @@ fun QuantityStepper(
     countText: @Composable (Int) -> String = { pluralStringResource(R.plurals.plant_count, it, it) },
     onChange: (Int) -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
         Text(title ?: stringResource(R.string.add_sheet_quantity), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         FilledTonalIconButton(onClick = { onChange(quantity - 1) }, enabled = quantity > min) {
             Icon(painterResource(R.drawable.ic_remove), contentDescription = stringResource(R.string.quantity_less))

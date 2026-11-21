@@ -22,7 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -153,7 +153,7 @@ fun WildlifeScreen(
                         verticalArrangement = Arrangement.spacedBy(Spacing.s),
                     ) {
                         Button(onClick = { onAdd(AddAction.IDENTIFY) }) {
-                            Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                            Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.padding(end = Spacing.s))
                             Text(stringResource(R.string.add_identify_camera))
                         }
                         OutlinedButton(onClick = { onAdd(AddAction.ANIMAL_PHOTOS) }) { Text(stringResource(R.string.add_animal_photos)) }
@@ -181,7 +181,7 @@ fun WildlifeScreen(
                         item(key = "years") {
                             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.l, vertical = Spacing.s), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                                 years.forEach { y ->
-                                    FilterChip(selected = y == year, onClick = { year = y; showAll = false }, label = { Text(y.toString()) })
+                                    ChoiceChip(selected = y == year, onClick = { year = y; showAll = false }, label = { Text(y.toString()) })
                                 }
                             }
                         }
@@ -192,7 +192,7 @@ fun WildlifeScreen(
                         items(notices, key = { "notice-" + it.species.key }) { notice ->
                             Column {
                                 SeenSpeciesRow(notice.species, onClick = { onOpenAnimal(notice.species.key) })
-                                notice.species.animal?.let { SafetyNotice(it, locality.state, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) }
+                                notice.species.animal?.let { SafetyNotice(it, locality.state, Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s)) }
                             }
                         }
                     }
@@ -201,7 +201,7 @@ fun WildlifeScreen(
                         items(pests, key = { "pest-" + it.pest.key }) { advice ->
                             Column {
                                 SeenSpeciesRow(advice.pest, onClick = { onOpenAnimal(advice.pest.key) })
-                                PestNote(advice, onOpenAnimal, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
+                                PestNote(advice, onOpenAnimal, Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s))
                             }
                         }
                     }
@@ -288,7 +288,7 @@ private fun PestNote(advice: PestAdvice, onOpenAnimal: (String) -> Unit, modifie
                         AssistChip(
                             onClick = { onOpenAnimal(predator.name) },
                             label = { Text(predator.displayName) },
-                            leadingIcon = { Icon(painterResource(predator.group.icon), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            leadingIcon = { Icon(painterResource(predator.group.icon), contentDescription = null, modifier = Modifier.size(IconSize.small)) },
                         )
                     }
                 }

@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -97,8 +98,8 @@ fun HiveEditorScreen(bees: BeeRepository, views: GardenViews, hiveId: String?, t
     ) { padding ->
         if (!started) return@DetailScaffold
         Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             ChipGroup(stringResource(R.string.honey_type), HiveType.entries, type, { stringResource(it.label) }) { type = it }

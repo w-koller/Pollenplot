@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.wishlist
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.PictureAvatar
 import androidx.compose.ui.unit.Dp
@@ -58,7 +59,7 @@ fun WishlistScreen(views: WishViews, onBack: () -> Unit, onOpenWish: (String) ->
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = onFindPlant) {
                 Icon(painterResource(R.drawable.ic_travel_explore), contentDescription = null)
-                Text(stringResource(R.string.wishlist_find), modifier = Modifier.padding(start = 12.dp))
+                Text(stringResource(R.string.wishlist_find), modifier = Modifier.padding(start = Spacing.m))
             }
         },
     ) { padding ->
@@ -89,7 +90,7 @@ private fun WishRow(view: WishView, modifier: Modifier, onClick: () -> Unit) {
         leadingContent = { WishPicture(wish.thumbnail) },
         overlineContent = { WishStatusLabel(wish.status) },
         supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 view.scientificName?.let { Text(it, fontStyle = FontStyle.Italic) }
                 val details = listOfNotNull(
                     wish.placeName.ifBlank { null }?.let { stringResource(R.string.wishlist_seen_at, it) },
@@ -125,7 +126,7 @@ private val WishStatus.icon: Int
 /** A wish's status, as an icon and a word. */
 @Composable
 internal fun WishStatusLabel(status: WishStatus) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
         Icon(painterResource(status.icon), contentDescription = null, modifier = Modifier.size(16.dp))
         Text(stringResource(status.label))
     }

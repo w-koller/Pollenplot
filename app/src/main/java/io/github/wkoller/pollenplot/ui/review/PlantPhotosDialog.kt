@@ -1,10 +1,11 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,11 +31,11 @@ fun PlantPhotosDialog(onDismiss: () -> Unit, onChoose: (PhotoScope) -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.plant_photos_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
                 Text(stringResource(R.string.plant_photos_body), style = MaterialTheme.typography.bodyMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = one, onClick = { one = true }, label = { Text(stringResource(R.string.plant_photos_one)) })
-                    FilterChip(selected = !one, onClick = { one = false }, label = { Text(stringResource(R.string.plant_photos_several)) })
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    ChoiceChip(selected = one, onClick = { one = true }, label = { Text(stringResource(R.string.plant_photos_one)) })
+                    ChoiceChip(selected = !one, onClick = { one = false }, label = { Text(stringResource(R.string.plant_photos_several)) })
                 }
             }
         },

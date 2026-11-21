@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.search
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.listPadding
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.compose.foundation.horizontalScroll
@@ -13,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
+import io.github.wkoller.pollenplot.ui.components.ChoiceChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -116,12 +117,12 @@ fun SearchScreen(
                     label = { Text(stringResource(R.string.search_label)) },
                     leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(16.dp).focusRequester(focus),
+                    modifier = Modifier.fillMaxWidth().padding(Spacing.l).focusRequester(focus),
                 )
             }
             if (query.isBlank()) {
                 item {
-                    Text(stringResource(R.string.search_hint), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp))
+                    Text(stringResource(R.string.search_hint), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Spacing.l))
                 }
                 return@LazyColumn
             }
@@ -146,9 +147,9 @@ fun SearchScreen(
             val shownRelated = related.filter(::shown)
             item { SectionHeading(stringResource(R.string.search_in_garden)) }
             if (hits.isEmpty()) {
-                item { Text(stringResource(R.string.search_none, query.trim()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+                item { Text(stringResource(R.string.search_none, query.trim()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l)) }
             } else if (shownHits.isEmpty()) {
-                item { Text(stringResource(R.string.search_none_filtered), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+                item { Text(stringResource(R.string.search_none_filtered), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l)) }
             }
             items(shownHits, key = { it.recordId }) { hit -> HitRow(hit, plants, zones, onOpenZone, onOpenPlant, onOpenSighting, onOpenHive, onOpenNativeHive, onOpenHotel, onOpenWish, onOpenProblem, onOpenWaterFeature, onOpenCompostBin) }
             if (shownRelated.isNotEmpty()) {
@@ -188,18 +189,18 @@ private fun SearchFilters(
     zone: String?,
     onZone: (String?) -> Unit,
 ) {
-    Column(Modifier.padding(bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(R.string.search_filter_kind), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 16.dp).semantics { heading() })
-        Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(bottom = Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(stringResource(R.string.search_filter_kind), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.l).semantics { heading() })
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
             kinds.forEach { option ->
-                FilterChip(selected = kind == option.name, onClick = { onKind(if (kind == option.name) null else option.name) }, label = { Text(stringResource(option.label)) })
+                ChoiceChip(selected = kind == option.name, onClick = { onKind(if (kind == option.name) null else option.name) }, label = { Text(stringResource(option.label)) })
             }
         }
         if (zones.isNotEmpty() || zone != null) {
-            Text(stringResource(R.string.search_filter_zone), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 16.dp).semantics { heading() })
-            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.search_filter_zone), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.l).semantics { heading() })
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 zones.forEach { (id, name) ->
-                    FilterChip(selected = zone == id, onClick = { onZone(if (zone == id) null else id) }, label = { Text(name) })
+                    ChoiceChip(selected = zone == id, onClick = { onZone(if (zone == id) null else id) }, label = { Text(name) })
                 }
             }
         }
@@ -227,7 +228,7 @@ private fun HitRow(
     val zone = zones.firstOrNull { it.zone.id == hit.recordId }
     when {
         plant != null -> PlantRow(plant, onClick = { onOpenPlant(hit.recordId) })
-        zone != null -> ZoneCard(zone, onClick = { onOpenZone(hit.recordId) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+        zone != null -> ZoneCard(zone, onClick = { onOpenZone(hit.recordId) }, modifier = Modifier.padding(horizontal = Spacing.l, vertical = 6.dp))
         else -> ListItem(
             onClick = {
                 when (hit.kind) {

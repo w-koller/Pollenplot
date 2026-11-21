@@ -1731,7 +1731,12 @@
     <string name="setup_back">Previous step</string>
     <string name="setup_welcome_title">Welcome to Pollenplot</string>
     <string name="setup_welcome_body">Pollenplot keeps the plants, wildlife, bees and watering in your backyard, and explains how they fit together. Plants and animals are identified on your phone, and your records stay on your phone.</string>
-    <string name="setup_welcome_steps">Setup takes a few minutes. It sets where your garden is, offers the models that identify plants and animals, sketches your first zones and asks for notifications. Every step can be skipped and changed later in Settings.</string>
+    <string name="setup_welcome_steps">Setup takes a few minutes, in four steps.</string>
+    <string name="setup_welcome_step_location">Where your garden is</string>
+    <string name="setup_welcome_step_models">The models that identify plants and animals</string>
+    <string name="setup_welcome_step_zones">Your first zones</string>
+    <string name="setup_welcome_step_permissions">Notifications and photos</string>
+    <string name="setup_welcome_later">Every step can be skipped and changed later in Settings.</string>
     <string name="setup_welcome_start">Start</string>
     <string name="setup_welcome_skip">Skip setup</string>
     <string name="setup_location_title">Where is your garden?</string>

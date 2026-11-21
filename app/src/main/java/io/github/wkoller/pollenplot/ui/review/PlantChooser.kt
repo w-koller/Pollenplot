@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,13 +36,13 @@ fun PlantChooser(plants: List<PlantView>, speciesName: String?, onBack: () -> Un
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
             item {
                 Text(
                     stringResource(if (growing.isEmpty()) R.string.plant_chooser_empty else R.string.plant_chooser_body),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.readable().padding(16.dp),
+                    modifier = Modifier.readable().padding(Spacing.l),
                 )
             }
             listOf(R.string.plant_chooser_same to same, R.string.plant_chooser_others to others).filter { it.second.isNotEmpty() }.forEach { (heading, list) ->
@@ -51,7 +52,7 @@ fun PlantChooser(plants: List<PlantView>, speciesName: String?, onBack: () -> Un
                         Text(
                             stringResource(heading),
                             style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.readable().padding(horizontal = 16.dp, vertical = 8.dp).semantics { heading() },
+                            modifier = Modifier.readable().padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
                         )
                     }
                 }

@@ -879,8 +879,9 @@ private fun StructureTile(
     Box(Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }.size(widthDp, heightDp)) {
         Surface(
             shape = shape,
-            color = if (wet) colours.tertiaryContainer else colours.surfaceDim,
-            contentColor = if (wet) colours.onTertiaryContainer else colours.onSurfaceVariant,
+            // A pool or a tank holds water, so it is in water's blue-green, as watering is everywhere else.
+            color = if (wet) PollenTheme.colors.water.container else colours.surfaceDim,
+            contentColor = if (wet) PollenTheme.colors.water.onContainer else colours.onSurfaceVariant,
             border = BorderStroke(if (selected) 3.dp else 1.dp, if (selected) colours.primary else colours.outline),
             modifier = Modifier
                 .fillMaxSize()
