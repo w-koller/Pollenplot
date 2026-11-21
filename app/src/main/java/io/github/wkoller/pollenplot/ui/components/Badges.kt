@@ -46,6 +46,7 @@ fun toneColours(tone: BadgeTone): ToneColours {
         BadgeTone.WILDLIFE -> ToneColours(scheme.secondaryContainer, scheme.onSecondaryContainer)
         BadgeTone.PLANT -> ToneColours(scheme.primaryContainer, scheme.onPrimaryContainer)
         BadgeTone.WATER -> ToneColours(water.container, water.onContainer)
+        BadgeTone.ANIMAL -> ToneColours(scheme.tertiaryContainer, scheme.onTertiaryContainer)
     }
 }
 

@@ -16,6 +16,22 @@
   and its subtitle to one. The Plot's small top bar leaves its subtitle out.
 - The last row of a list now always clears the add button, as on the Wildlife tab before any animal is recorded.
 - About › Licences lists the Fraunces typeface and its licence, the SIL Open Font License.
+- The five tabs take on the new look, and colour now says what a thing is about. Plants are leaf green, bees and
+  pollination wattle gold, animals banksia rust and water blue-green.
+  - The Today card is a page of its own rather than a gold block. Each job has its icon on a dot in its colour, and an
+    overdue hive check or a hot day stands out on its own tile in the warning colours.
+  - Plants in flower show as flowers on the Plot's zones and in the zone list.
+  - Rhythms' cards for the month each take their own colour: honey bees' nectar gold, stingless bees' flowers green,
+    pollinators seen rust.
+  - The Wildlife tab's counts of birds, insects and the rest are rust, like the animals themselves.
+  - The Water tab shows the day's weather on a card of its own, and the warning to water pots before a hot day is in
+    the warning colours.
+  - Scientific names in lists of plants are set in Fraunces italic.
+- With large text, a zone's name on the Plot can take two lines and shrinks to fit, never below its usual size, so
+  short zones no longer show only their first letters.
+- Pages slide in a little from the side as they open and back the other way, and moving between tabs fades. With the
+  phone's animations off, the next page is simply there.
+- On a tablet or a large unfolded phone, the tabs' rail shows each tab's name beside its icon.
 
 ## 1.0.0-rc.5
 

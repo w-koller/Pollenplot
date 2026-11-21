@@ -29,13 +29,13 @@ The Status column says what became of each issue: Open, or the pull request that
 | The theme keeps the default `Typography()`. Screens use `bodyLarge` and `bodyMedium` 345 times, headline styles 9 times and display styles never, so pages read as one weight of text. | Typography | Medium | Type scale in PR 1; screens in PRs 2 to 4 |
 | The theme keeps the default `Shapes()`. 97 shapes are written out by hand (corners of 20, 24, 4, 12, 28, 6, 8, 16, 36 and 10 dp), and `MaterialTheme.shapes` is read twice. | Shape, consistency | Medium | Shape scale and shared components in PR 1; screens in PRs 2 to 4 |
 | There are no spacing tokens: `dp` literals use 16 values under 32 dp, among them 3, 6, 10, 14, 18, 22 and 26. | Spacing, consistency | Medium | Tokens and shared components in PR 1; screens in PRs 2 to 4 |
-| The pale gold `secondaryContainer` is the Today card, the Rhythms cards, wildlife badges, the calendar's today, selected chips, the weed photos question and the Ask question bubble, so unrelated things look alike. | Colour roles | Medium | Open (PRs 2 to 4) |
+| The pale gold `secondaryContainer` is the Today card, the Rhythms cards, wildlife badges, the calendar's today, selected chips, the weed photos question and the Ask question bubble, so unrelated things look alike. | Colour roles | Medium | Today card, Rhythms, Wildlife and the Water notice in PR 2; the rest in PR 4 |
 | Colours with a meaning live outside the theme: sun, shade and flowering layers in `PlotCanvas.kt`, the Plot grounds in `Colors.kt`, and camera and photo-viewer scrims as `Color.Black` and `Color.White`. | Colour, consistency | Medium | Plot layers, flowering marks and photo viewer in PR 1; camera in PR 4 |
 | Navigation uses the default transitions, and only `CompostAnimation` checks the phone's "remove animations" setting. | Motion | Medium | Shared check in PR 1; transitions in PR 2 |
 | Every empty state is the same cookie-shaped icon on `primaryContainer` above a long paragraph. | Empty states | Medium | Fixed in PR 1 |
 | There are no `@Preview` functions. | Tooling | Low | Shared components in PR 1; screens in PRs 2 to 4 |
 | Haptics are used only on the Plot canvas and the Today card. | Feedback | Low | Open |
-| The wide layout switches on a hand-made 600 dp test, not `WindowSizeClass`, and no screen has two panes. | Adaptive layout | Low | Open |
+| The wide layout switches on a hand-made 600 dp test, not `WindowSizeClass`, and no screen has two panes. | Adaptive layout | Low | Size classes in PR 2; no two-pane layouts yet |
 
 What already works and must be kept:
 
@@ -57,7 +57,7 @@ Measured contrast in the current colours:
 
 | Screen | Issue | Category | Severity | Status |
 |---|---|---|---|---|
-| Navigation bar and rail (`AppRoot`) | Tab names shrink to fit at large text, as intended. Moving from tab to page uses the default transition, with no direction. | Motion | Medium | Open |
+| Navigation bar and rail (`AppRoot`) | Tab names shrink to fit at large text, as intended. Moving from tab to page uses the default transition, with no direction. | Motion | Medium | Fixed in PR 2 |
 | Tab frame (`TabScaffold`) | The title and subtitle use the default type, and at large text the subtitle breaks inside a word (see above). | Typography, large text | High | Fixed in PR 1 |
 | Page frame (`DetailScaffold`) | A small pinned top bar for every page, so a plant, an animal and a hive all open the same way, with the name repeated below the bar. | Hierarchy | Medium | Open |
 
@@ -65,19 +65,19 @@ Measured contrast in the current colours:
 
 | Screen | Issue | Category | Severity | Status |
 |---|---|---|---|---|
-| Plot, canvas | At large text, zone names on the canvas are cut to "Bac…", "H…" and "V…". | Large text | High | Open |
+| Plot, canvas | At large text, zone names on the canvas are cut to "Bac…", "H…" and "V…". | Large text | High | Fixed in PR 2 |
 | Plot, canvas | Zone fills are 1.24:1 against the ground, so a zone's edge rests on its outline alone. The outline is clear, so this holds, but it should stay a theme role. | Contrast | Low | Open |
 | Plot, canvas | The sun, shade and flowering layer colours are written out in `PlotCanvas.kt` rather than taken from the theme. | Colour, consistency | Medium | Fixed in PR 1 |
-| Plot, Today card | A gold card of lines with the same weight. Overdue is an icon and a word inside the line, with no surface of its own. | Hierarchy, colour roles | Medium | Open |
-| Plot, list | Rows are cards with corners written out by hand, and the eco badges are 26 dp icons, which is fine because they are not pressable and are read as one description. | Shape | Low | Open |
+| Plot, Today card | A gold card of lines with the same weight. Overdue is an icon and a word inside the line, with no surface of its own. | Hierarchy, colour roles | Medium | Fixed in PR 2 |
+| Plot, list | Rows are cards with corners written out by hand, and the eco badges are 26 dp icons, which is fine because they are not pressable and are read as one description. | Shape | Low | Fixed in PR 2 |
 | Plot, empty | The Add a plant by name button and the Weeds near your garden link sit close to the add button and are not grouped. | Hierarchy | Low | Open |
-| Rhythms | All three "This month" cards are gold whatever they say. The lane grid has a pattern for each level as well as colour, which is good. Ten shapes are written out. | Colour roles | Medium | Open |
+| Rhythms | All three "This month" cards are gold whatever they say. The lane grid has a pattern for each level as well as colour, which is good. Ten shapes are written out. | Colour roles | Medium | Fixed in PR 2 |
 | Rhythms | A long paragraph comes before the first card. | Hierarchy | Low | Open |
 | Wildlife | Before anything is recorded, the floating button covers the last line of the Recorded near you section, because that list ends with 24 dp. | Touch, layout | High | Fixed in PR 1 |
-| Wildlife | The year's summary card, the month bars and the Stings notice on `errorContainer` are clear. The group chips are gold like everything else. | Colour roles | Low | Open |
+| Wildlife | The year's summary card, the month bars and the Stings notice on `errorContainer` are clear. The group chips are gold like everything else. | Colour roles | Low | Fixed in PR 2 |
 | Bees (honey, native, hotels) | The floating button covers guide rows while they scroll past, and the list ends with room for it. The empty state is the shared one. | Empty states | Low | Fixed in PR 1 |
-| Water | The floating button covers the "Remind me when watering is due" switch until the list is scrolled, and the list ends with room for it. | Touch, layout | Low | Open (PR 2) |
-| Water | The reference evapotranspiration (ET₀) and rain lines are plain body text with no figure to hold the eye. | Hierarchy | Low | Open |
+| Water | The floating button covers the "Remind me when watering is due" switch until the list is scrolled, and the list ends with room for it. | Touch, layout | Low | No change needed |
+| Water | The reference evapotranspiration (ET₀) and rain lines are plain body text with no figure to hold the eye. | Hierarchy | Low | Fixed in PR 2 |
 
 ## Records
 
@@ -89,7 +89,7 @@ Measured contrast in the current colours:
 | Zone habitat | Present and Missing each have an icon and a word. Nothing to fix beyond tokens. | Consistency | Low | Open |
 | Honey bee hive | No header picture. The facts are plain lines, and six buttons (two filled and four outlined) wrap into a wall. | Hierarchy, components | Medium | Open |
 | Stingless hive, bee hotel | No header picture. Facts are plain lines. | Hierarchy | Medium | Open |
-| Animal | A large teal avatar and clear sections, with gold role badges. | Colour roles | Low | Open |
+| Animal | A large teal avatar and clear sections, with gold role badges. | Colour roles | Low | Colours fixed in PR 2; the page in PR 3 |
 | Sighting | The zone, plant and behaviour choices are long walls of chips. The count stepper has the full touch size. | Hierarchy | Low | Open |
 | Problem | The name is in the top bar and again as a heading. The Open status pill has its icon and word. | Hierarchy | Low | Open |
 | Compost bin | The bin picture is the app's best illustration, and it stays still with animations off. The disabled Save name button is faint, as disabled buttons are. | Feedback | Low | Open |
@@ -202,3 +202,57 @@ expressive springs. The work lands in four pull requests:
 - The compost picture's browns, greens and soil are pigments of a drawing, so they stay in `CompostAnimation`.
 - Screens still write out 90 or so shapes and their own spacing. Pull requests 2 to 4 move them to the tokens one
   screen at a time, along with botanical names in Fraunces italic and the flair moments that need a screen.
+
+### PR 2: the frame and the five tabs
+
+**Colour by meaning.** Across the tabs, colour now says what a thing is about. Plants are leaf green (primary), bees
+and pollination wattle gold (secondary), animals banksia rust (tertiary), water blue-green (`PollenColors.water`), and
+warnings use the error colours. Every one of these also has its icon and its words. A new `BadgeTone.ANIMAL` carries
+the rust for animals' roles, the Wildlife tab's group counts and a zone's Frogs seen. A plant's worth to wildlife,
+such as Pollinator magnet, stays gold.
+
+**Frame.**
+
+- `components/WindowSize.kt` reads Material's window size classes from `androidx.window`, which `material3` already
+  brings at 1.5.0 and is now declared, as `graphics-shapes` is.
+- A medium window has the tabs in the rail as before. An expanded one, 840 dp and wider, opens the rail out with each
+  label beside its icon.
+- `nav/Transitions.kt` gives the navigation host the motion scheme's springs:
+  - A page opened from another slides in an eighth of the width as it fades in, and Back reverses it.
+  - Moving between tabs fades through.
+  - With animations off there is no transition.
+
+**Plot.**
+
+- **Today card.** It is a neutral page with "Today" in Fraunces, and each job's icon sits on a dot in its kind's
+  colour. An overdue hive check, a hot day or pots before heat stands on its own tile in the error colours, and the
+  word Overdue or the heat warning is still in its line. It closes up on the spatial spring when a job is done.
+- **Zone tiles.** At large text a name takes up to two lines and shrinks only as far as its standard size, and the
+  zone kind's icon gives way. Plants in flower show as flowers, from `ZoneView.flowering`. That is the one data
+  addition: the ids `GardenViews` already worked out for the in-flower count.
+- **Zone cards.** They use the theme's card shape, and their plants also show in flower.
+- **Lists.** Scientific names in `PlantRow` and `SpeciesRow` are in Fraunces italic.
+- **Spacing.** The canvas and the screen use the shape and spacing tokens, and the empty Plot and the list use
+  `listPadding`.
+
+**Rhythms.** This month's cards each take their kind's colour: honey bees' nectar gold, stingless bees' flowers green,
+pollinators seen rust, and flowering earlier or later neutral.
+
+**Wildlife.** The group counts and the ideas for groups not seen are rust.
+
+**Bees.** These use spacing tokens and `listPadding`.
+
+**Water.**
+
+- The day's weather is a card in water's colours, with the reference evapotranspiration (ET₀) line as its title.
+- The pots-before-heat notice is in the error colours.
+- The list uses `listPadding`.
+
+**Previews.** `TabPreviews.kt` adds the Today card with a job of every kind, and the four Rhythms cards. Both are in
+`ComponentGalleryTest`'s pictures.
+
+**Deferred.**
+
+- The Plot's empty state still has its three buttons in a column under the picture.
+- Rhythms still opens with its long paragraph.
+- No screen has two panes on a tablet yet.

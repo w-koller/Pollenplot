@@ -2,6 +2,7 @@ package io.github.wkoller.pollenplot.ui.theme
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -97,3 +98,6 @@ internal val PollenTypography = Typography(
 
 /** This style for the scientific name of a plant or an animal: Fraunces italic, at the same size. */
 fun TextStyle.botanical(): TextStyle = copy(fontFamily = FrauncesText, fontStyle = FontStyle.Italic)
+
+/** A scientific name inside a line of other words, in Fraunces italic. */
+val BotanicalSpan = SpanStyle(fontFamily = FrauncesText, fontStyle = FontStyle.Italic)

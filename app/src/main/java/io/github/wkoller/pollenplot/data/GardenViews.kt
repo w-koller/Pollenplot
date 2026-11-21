@@ -111,6 +111,8 @@ data class ZoneView(
     val sightings: List<SightingView> = emptyList(),
     /** How many of the zone's plants are likely in flower now. */
     val inFlower: Int = 0,
+    /** Which of the zone's plants are likely in flower now, by id, so each can be shown in flower. */
+    val flowering: Set<String> = emptySet(),
     /** How many of the zone's plants something says the flowering of, which the flowering layers grade against. */
     val floweringKnown: Int = 0,
     /** How many of the zone's plants are likely in flower in [laterMonth], for the "In flower later" layer. */
@@ -196,6 +198,7 @@ class GardenViews(
                 ZoneBadges.of(inZone.map { PlantFacts(it.care?.care?.water, it.roles, it.species?.form) }, groups),
                 seen,
                 inFlower = inZone.count { it.plant.id in flowering },
+                flowering = inZone.map { it.plant.id }.filter { it in flowering }.toSet(),
                 floweringKnown = inZone.count { it.plant.id in known },
                 inFlowerLater = inZone.count { it.plant.id in floweringLater },
                 laterMonth = later,

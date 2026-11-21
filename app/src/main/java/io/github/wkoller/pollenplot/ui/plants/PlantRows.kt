@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,8 +21,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import io.github.wkoller.pollenplot.ui.theme.BotanicalSpan
+import io.github.wkoller.pollenplot.ui.theme.Spacing
+import io.github.wkoller.pollenplot.ui.theme.botanical
 import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.PlantView
@@ -45,22 +50,33 @@ import io.github.wkoller.pollenplot.ui.water.byHand
 fun PlantRow(view: PlantView, onClick: () -> Unit, showZone: Boolean = true, zoneId: String? = null) {
     // In a zone's own list, a plant growing in several zones counts the plants in that zone.
     val count = zoneId?.let(view.plant::countIn) ?: view.plant.quantity
-    val details = listOfNotNull(
-        view.scientificName,
+    val rest = listOfNotNull(
         if (count > 1) pluralStringResource(R.plurals.plant_count, count, count) else null,
         if (showZone) view.zoneName?.let { stringResource(R.string.plant_zone, it) } else null,
     )
+    val details = if (view.scientificName == null && rest.isEmpty()) {
+        null
+    } else {
+        // The scientific name is set in Fraunces italic, as a field guide sets it, and the rest in the row's own type.
+        buildAnnotatedString {
+            view.scientificName?.let { withStyle(BotanicalSpan) { append(it) } }
+            rest.forEachIndexed { index, part ->
+                if (index > 0 || view.scientificName != null) append(" · ")
+                append(part)
+            }
+        }
+    }
     // With large text, badges beside the name would leave it a few letters, so they go under the details.
     val large = largeText()
     ListItem(
         onClick = onClick,
         leadingContent = { PlantAvatar(view.species?.form, 48.dp, thumbnail = view.plant.thumbnail) },
-        supportingContent = if (details.isEmpty() && !(large && view.roles.isNotEmpty())) {
+        supportingContent = if (details == null && !(large && view.roles.isNotEmpty())) {
             null
         } else {
             {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (details.isNotEmpty()) Text(details.joinToString(" · "), maxLines = if (large) 4 else 2, overflow = TextOverflow.Ellipsis)
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    if (details != null) Text(details, maxLines = if (large) 4 else 2, overflow = TextOverflow.Ellipsis)
                     if (large) RoleIcons(view.roles, max = 2, size = 24.dp)
                 }
             }
@@ -79,8 +95,8 @@ fun SpeciesRow(species: Species, roles: List<io.github.wkoller.pollenplot.domain
         onClick = onClick,
         leadingContent = { PlantAvatar(species.form, 44.dp) },
         supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(species.name, fontStyle = FontStyle.Italic, maxLines = if (large) 3 else 1, overflow = TextOverflow.Ellipsis)
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(species.name, style = LocalTextStyle.current.botanical(), maxLines = if (large) 3 else 1, overflow = TextOverflow.Ellipsis)
                 if (large) RoleIcons(roles, max = 2, size = 24.dp)
             }
         },
@@ -93,15 +109,15 @@ fun SpeciesRow(species: Species, roles: List<io.github.wkoller.pollenplot.domain
 /** A zone in the list view of the Plot: its kind, size, plants and badges, its next watering and its last feed. */
 @Composable
 fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier, water: WaterState? = null, fed: LastFed? = null) {
-    ElevatedCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+    ElevatedCard(onClick = onClick, shape = MaterialTheme.shapes.large, modifier = modifier.fillMaxWidth()) {
+        Row(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.l), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(48.dp).clip(PollenShapes.cookie()).background(MaterialTheme.colorScheme.secondaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(painterResource(view.zone.kind.icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(view.zone.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     listOf(
@@ -113,10 +129,10 @@ fun ZoneCard(view: ZoneView, onClick: () -> Unit, modifier: Modifier = Modifier,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (view.plants.isNotEmpty() || view.badges.isNotEmpty()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        view.plants.take(5).forEach { PlantAvatar(it.species?.form, 28.dp, thumbnail = it.plant.thumbnail) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+                        view.plants.take(5).forEach { PlantAvatar(it.species?.form, 28.dp, thumbnail = it.plant.thumbnail, inFlower = it.plant.id in view.flowering) }
                         if (view.badges.isNotEmpty()) {
-                            Box(Modifier.padding(start = 8.dp)) {
+                            Box(Modifier.padding(start = Spacing.s)) {
                                 IconBadges(view.badges.map { BadgeItem(it.icon, stringResource(it.label), it.tone) }, size = 24.dp)
                             }
                         }

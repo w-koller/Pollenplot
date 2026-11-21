@@ -30,6 +30,7 @@ import io.github.wkoller.pollenplot.domain.hotels.SealGuide
 import io.github.wkoller.pollenplot.domain.plants.AuState
 import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.EmptyState
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /** The bee hotel section of the Bees tab: the hotels, the guide to who sealed a nest, and the guide's pages. */
 internal fun LazyListScope.hotelSection(
@@ -44,7 +45,7 @@ internal fun LazyListScope.hotelSection(
         item(key = "hotel-empty") {
             Column {
                 EmptyState(icon = R.drawable.ic_cottage, title = stringResource(R.string.bees_hotels_empty_title), body = stringResource(R.string.bees_hotels_empty_body))
-                Button(onClick = onAddHotel, modifier = Modifier.padding(horizontal = 16.dp)) { Text(stringResource(R.string.hotel_add)) }
+                Button(onClick = onAddHotel, modifier = Modifier.padding(horizontal = Spacing.l)) { Text(stringResource(R.string.hotel_add)) }
             }
         }
     } else {
@@ -55,7 +56,7 @@ internal fun LazyListScope.hotelSection(
     item(key = "seal-guide") {
         Column {
             SectionHeading(stringResource(R.string.hotel_seal_guide))
-            Text(stringResource(R.string.hotel_seal_guide_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            Text(stringResource(R.string.hotel_seal_guide_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
         }
     }
     items(Seal.entries.filter { it != Seal.OTHER }, key = { "seal-" + it.name }) { seal ->
@@ -103,7 +104,7 @@ private fun HotelRow(view: HotelView, onClick: () -> Unit) {
             Column {
                 Text(lines.joinToString("\n"), maxLines = 3)
                 if (view.cleanThisSpring) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                         Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.hotel_clean_due), color = MaterialTheme.colorScheme.primary)
                     }

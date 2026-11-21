@@ -230,6 +230,8 @@ dependencies {
     implementation(libs.compose.material3)
     // MaterialShapes are RoundedPolygons; material3 lists this library for run time only.
     implementation(libs.graphics.shapes)
+    // Material's window size classes; material3 lists this library for run time only, at this version.
+    implementation(libs.window.core)
     debugImplementation(libs.compose.ui.tooling)
 
     implementation(libs.camera.core)

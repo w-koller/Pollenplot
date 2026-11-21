@@ -1,6 +1,6 @@
 package io.github.wkoller.pollenplot.ui.bees
 
-import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.listPadding
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,12 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ui.nav.AddAction
 import io.github.wkoller.pollenplot.ui.components.AddMenu
-import androidx.compose.foundation.layout.PaddingValues
 import io.github.wkoller.pollenplot.data.BeeViews
 import io.github.wkoller.pollenplot.data.GardenViews
 import io.github.wkoller.pollenplot.data.guides.GuideLibrary
@@ -36,6 +34,7 @@ import io.github.wkoller.pollenplot.ui.components.ConnectedChoice
 import io.github.wkoller.pollenplot.ui.components.TabScaffold
 import io.github.wkoller.pollenplot.ui.components.rememberNotificationAccess
 import kotlinx.coroutines.launch
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * The three bee sections. European honey bees, Australian native bees and bee hotels each keep their own records,
@@ -101,14 +100,14 @@ fun BeesScreen(
         },
     ) { padding ->
         // The list ends clear of the add button.
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 88.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             item {
                 ConnectedChoice(
                     options = BeeSection.entries,
                     selected = section,
                     label = { stringResource(it.label) },
                     onChoose = { section = it },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
             }
             val loaded = hives
