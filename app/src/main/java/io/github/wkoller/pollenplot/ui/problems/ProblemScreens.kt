@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.problems
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.FactCard
@@ -169,7 +172,9 @@ fun LogProblemScreen(
             }
         }
     }
-    val ready = (key != null && !other) || (other && otherName.isNotBlank())
+    val check = rememberFormCheck()
+    val chooseProblem = stringResource(R.string.problem_choose_needed).takeIf { key == null && !other }
+    val otherProblem = stringResource(R.string.problem_other_error).takeIf { other && otherName.isBlank() }
     var call by remember { mutableStateOf<DiseaseCall?>(null) }
     var looking by remember { mutableStateOf(false) }
     LaunchedEffect(photo, lookForProblems) {
@@ -191,7 +196,7 @@ fun LogProblemScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.problem_what), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-            Column(Modifier.selectableGroup()) {
+            Column(Modifier.selectableGroup().formField(check, CHOOSE, chooseProblem, focus = false)) {
                 catalogue.problems.forEach { info ->
                     ChoiceRow(info.name, selected = !other && key == info.key) {
                         key = info.key
@@ -199,6 +204,7 @@ fun LogProblemScreen(
                     }
                 }
                 ChoiceRow(stringResource(R.string.problem_other), selected = other) { other = true }
+                FieldProblem(check.shown(chooseProblem))
             }
             if (other) {
                 OutlinedTextField(
@@ -206,7 +212,9 @@ fun LogProblemScreen(
                     onValueChange = { otherName = it },
                     label = { Text(stringResource(R.string.problem_other_name)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    isError = check.isError(otherProblem),
+                    supportingText = check.supporting(otherProblem),
+                    modifier = Modifier.fillMaxWidth().formField(check, OTHER, otherProblem),
                 )
             }
             DateRow(date) { pickingDate = true }
@@ -227,14 +235,14 @@ fun LogProblemScreen(
             }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(CHOOSE to chooseProblem, OTHER to otherProblem)) return@save
                     scope.launch {
                         problems.add(plantId, key.takeIf { !other }, otherName.takeIf { other }, date, photo, notes)
                         // The database finishes on its own thread; going back has to happen on the main one.
                         withContext(Dispatchers.Main) { onBack() }
                     }
                 },
-                enabled = ready,
             ) { Text(stringResource(R.string.honey_save)) }
         }
     }
@@ -429,6 +437,8 @@ fun TreatmentScreen(problemId: String, plantId: String, views: ProblemViews, pro
     var notes by rememberSaveable { mutableStateOf("") }
     var warning by rememberSaveable { mutableStateOf(false) }
     val date = LocalDate.ofEpochDay(day)
+    val check = rememberFormCheck()
+    val methodProblem = stringResource(R.string.treatment_method_needed).takeIf { method == null }
 
     fun save() {
         val chosen = method ?: return
@@ -443,11 +453,14 @@ fun TreatmentScreen(problemId: String, plantId: String, views: ProblemViews, pro
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            Text(stringResource(R.string.treatment_method), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                TreatmentMethod.entries.forEach { option ->
-                    ChoiceChip(selected = option == method, onClick = { method = option }, label = { Text(stringResource(option.label)) })
+            Column(Modifier.formField(check, METHOD, methodProblem, focus = false), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                Text(stringResource(R.string.treatment_method), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    TreatmentMethod.entries.forEach { option ->
+                        ChoiceChip(selected = option == method, onClick = { method = option }, label = { Text(stringResource(option.label)) })
+                    }
                 }
+                FieldProblem(check.shown(methodProblem))
             }
             OutlinedTextField(value = product, onValueChange = { product = it }, label = { Text(stringResource(R.string.treatment_product)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Text(stringResource(R.string.feed_no_amounts), style = MaterialTheme.typography.bodyMedium)
@@ -462,8 +475,10 @@ fun TreatmentScreen(problemId: String, plantId: String, views: ProblemViews, pro
             Text(stringResource(R.string.treatment_follow_up_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
-                onClick = { if (method?.spray == true && inFlower.isNotEmpty()) warning = true else save() },
-                enabled = method != null,
+                onClick = save@{
+                    if (!check.passes(METHOD to methodProblem)) return@save
+                    if (method?.spray == true && inFlower.isNotEmpty()) warning = true else save()
+                },
             ) { Text(stringResource(R.string.honey_save)) }
         }
     }
@@ -488,3 +503,7 @@ fun TreatmentScreen(problemId: String, plantId: String, views: ProblemViews, pro
         }
     }
 }
+
+private const val CHOOSE = "choose"
+private const val OTHER = "other"
+private const val METHOD = "method"

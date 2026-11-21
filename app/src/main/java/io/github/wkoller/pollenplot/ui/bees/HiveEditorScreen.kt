@@ -2,6 +2,8 @@ package io.github.wkoller.pollenplot.ui.bees
 
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -71,6 +73,7 @@ fun HiveEditorScreen(bees: BeeRepository, views: GardenViews, hiveId: String?, t
     var supers by rememberSaveable { mutableIntStateOf(0) }
     var notes by rememberSaveable { mutableStateOf("") }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    val check = rememberFormCheck()
 
     LaunchedEffect(hiveId) {
         if (started || hiveId == null) return@LaunchedEffect
@@ -97,11 +100,23 @@ fun HiveEditorScreen(bees: BeeRepository, views: GardenViews, hiveId: String?, t
         },
     ) { padding ->
         if (!started) return@DetailScaffold
+        val year = queenYear.toIntOrNull()?.takeIf { it in 1990..today.year }
+        val nameProblem = stringResource(R.string.honey_name_needed).takeIf { name.isBlank() }
+        val apiaryProblem = stringResource(R.string.honey_apiary_name_needed).takeIf { apiaryChoice == NEW_APIARY && apiaryName.isBlank() }
+        val yearProblem = stringResource(R.string.honey_queen_year_invalid, today.year).takeIf { queenYear.isNotEmpty() && year == null }
         Column(
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.honey_name)) },
+                singleLine = true,
+                isError = check.isError(nameProblem),
+                supportingText = check.supporting(nameProblem),
+                modifier = Modifier.fillMaxWidth().formField(check, NAME, nameProblem),
+            )
             ChipGroup(stringResource(R.string.honey_type), HiveType.entries, type, { stringResource(it.label) }) { type = it }
             ZoneChooser(zones, zoneId) { zoneId = it }
             val apiaryNames = apiaries.associate { it.id to it.name }
@@ -118,7 +133,15 @@ fun HiveEditorScreen(bees: BeeRepository, views: GardenViews, hiveId: String?, t
                 },
             ) { apiaryChoice = it }
             if (apiaryChoice == NEW_APIARY) {
-                OutlinedTextField(value = apiaryName, onValueChange = { apiaryName = it }, label = { Text(stringResource(R.string.honey_apiary_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = apiaryName,
+                    onValueChange = { apiaryName = it },
+                    label = { Text(stringResource(R.string.honey_apiary_name)) },
+                    singleLine = true,
+                    isError = check.isError(apiaryProblem),
+                    supportingText = check.supporting(apiaryProblem),
+                    modifier = Modifier.fillMaxWidth().formField(check, APIARY, apiaryProblem),
+                )
                 OutlinedTextField(value = registration, onValueChange = { registration = it }, label = { Text(stringResource(R.string.honey_apiary_registration)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             }
             OutlinedTextField(
@@ -127,26 +150,28 @@ fun HiveEditorScreen(bees: BeeRepository, views: GardenViews, hiveId: String?, t
                 label = { Text(stringResource(R.string.honey_queen_year)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
+                isError = check.isError(yearProblem),
+                supportingText = check.supporting(yearProblem),
+                modifier = Modifier.fillMaxWidth().formField(check, QUEEN_YEAR, yearProblem),
             )
             if (hiveId != null) ChipGroup(stringResource(R.string.honey_status), HiveStatus.entries, status, { stringResource(it.label) }) { status = it }
             QuantityStepper(broodBoxes, title = stringResource(R.string.honey_brood_boxes), countText = { it.toString() }) { broodBoxes = it }
             QuantityStepper(supers, title = stringResource(R.string.honey_supers), min = 0, countText = { it.toString() }) { supers = it }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
-            val year = queenYear.toIntOrNull()?.takeIf { it in 1990..today.year }
             Button(
-                enabled = name.isNotBlank() && (queenYear.isEmpty() || year != null) && (apiaryChoice != NEW_APIARY || apiaryName.isNotBlank()),
                 onClick = {
-                    scope.launch {
-                        val apiaryId = if (apiaryChoice == NEW_APIARY) bees.addApiary(apiaryName, registration).id else apiaryChoice
-                        if (hiveId == null) {
-                            val hive = bees.addHive(name, type, zoneId, apiaryId, year, today)
-                            bees.updateHive(hive.copy(broodBoxes = broodBoxes, supers = supers, notes = notes.trim()))
-                            withContext(Dispatchers.Main) { onCreated(hive.id) }
-                        } else {
-                            val hive = bees.hives.first().firstOrNull { it.id == hiveId } ?: return@launch
-                            bees.updateHive(hive.copy(name = name, type = type, zoneId = zoneId, apiaryId = apiaryId, queenYear = year, status = status, broodBoxes = broodBoxes, supers = supers, notes = notes.trim()))
-                            withContext(Dispatchers.Main) { onBack() }
+                    check.submit(NAME to nameProblem, APIARY to apiaryProblem, QUEEN_YEAR to yearProblem) {
+                        scope.launch {
+                            val apiaryId = if (apiaryChoice == NEW_APIARY) bees.addApiary(apiaryName, registration).id else apiaryChoice
+                            if (hiveId == null) {
+                                val hive = bees.addHive(name, type, zoneId, apiaryId, year, today)
+                                bees.updateHive(hive.copy(broodBoxes = broodBoxes, supers = supers, notes = notes.trim()))
+                                withContext(Dispatchers.Main) { onCreated(hive.id) }
+                            } else {
+                                val hive = bees.hives.first().firstOrNull { it.id == hiveId } ?: return@launch
+                                bees.updateHive(hive.copy(name = name, type = type, zoneId = zoneId, apiaryId = apiaryId, queenYear = year, status = status, broodBoxes = broodBoxes, supers = supers, notes = notes.trim()))
+                                withContext(Dispatchers.Main) { onBack() }
+                            }
                         }
                     }
                 },
@@ -172,3 +197,7 @@ fun HiveEditorScreen(bees: BeeRepository, views: GardenViews, hiveId: String?, t
         )
     }
 }
+
+private const val NAME = "name"
+private const val APIARY = "apiary"
+private const val QUEEN_YEAR = "queenYear"

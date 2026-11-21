@@ -222,7 +222,13 @@ is always ready to tag.
   host, given through `LocalNotices` by `AppRoot` and shown by both scaffolds: `notices.show(message) { undo }`, or with `action = "Open"` for a button that does something else; a
   screen test that wants its messages provides `rememberNotices()` itself; and `TabScaffold`'s More menu, which holds
   a tab's own `more` choices and then `LocalAppMenu`'s, pressed in tests with `fromMore` in `TestGarden.kt`; `Layout.kt`
-  has `SectionHeading`, `ChipGroup`, `readable()` and `readableSides()` for a list's sides on a wide screen; a page
+  has `SectionHeading`, `ChipGroup`, `readable()` and `readableSides()` for a list's sides on a wide screen;
+  `FormCheck.kt` is how every form checks itself: Save is never greyed out for something missing or wrong. Each form
+  works out a "Please …" message for each field that needs one, marks the field with `Modifier.formField`, gives it
+  `check.isError` and `check.supporting` (or `FieldProblem` under a group of chips), and starts Save's `onClick` with
+  `if (!check.passes(key to problem, …)) return@save`, which shows every message and takes the reader to the first;
+  a number that cannot be read can say so as it is typed (`live = true`), and fields marked "(optional)" are the only
+  ones that may be left empty; a page
   reads its record as a `Found` and shows `MissingRecord` when it is gone), `ui/nav` the routes and the app frame,
   `ui/plot` the canvas and zones (its layers are `PlotLayer` in the settings: sun and shade, in flower now and in flower
   later, one at a time), `ui/plants` plant pages and labels, `ui/search` search, `ui/identify` the camera

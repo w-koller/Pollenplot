@@ -88,6 +88,9 @@ STRINGS = {
     "honey_apiary_name": "Apiary name",
     "honey_apiary_registration": "Registration number",
     "honey_save": "Save",
+    "honey_name_needed": "Please give the hive a name.",
+    "honey_apiary_name_needed": "Please give the new apiary a name.",
+    "honey_queen_year_invalid": "Please enter a year from 1990 to %1$d, or leave the year empty.",
     "honey_delete_hive": "Delete hive",
     "honey_delete_title": "Delete this hive?",
     "honey_delete_body": "The hive and everything recorded for it will be removed.",
@@ -161,6 +164,9 @@ STRINGS = {
     "honey_sample_bees": "Bees in the sample",
     "honey_sample_days": "Days the mat was in",
     "honey_mites": "Mites counted",
+    "honey_mites_needed": "Please enter how many mites you counted.",
+    "honey_sample_bees_needed": "Please enter how many bees were in the sample.",
+    "honey_sample_days_needed": "Please enter how many days the mat was in.",
     "honey_reported": "Reported to my state",
     "honey_report_bee123": "Report this check on the Bee 123 form",
     "honey_check_drone_note": "Drone uncapping shows whether there are mites, but not enough to decide on a "
@@ -168,6 +174,7 @@ STRINGS = {
 
     "honey_treatment": "Treatment",
     "honey_treatment_product": "Product",
+    "honey_product_needed": "Please enter the product you used.",
     "honey_treatment_ingredient": "Active ingredient",
     "honey_treatment_started": "Started",
     "honey_treatment_ended": "Ended on %1$s",
@@ -189,6 +196,7 @@ STRINGS = {
     "honey_harvest": "Harvest",
     "honey_harvest_frames": "Frames taken",
     "honey_harvest_kg": "Honey in kilograms",
+    "honey_kg_needed": "Please enter the honey's weight in kilograms, such as 12.5.",
     "honey_harvest_kg_only": "%1$s kg",
 
     "honey_event": "Colony event",

@@ -70,6 +70,8 @@ STRINGS = {
     "compost_bin_settings": "This bin",
     "compost_name": "Name",
     "compost_name_save": "Save name",
+    "compost_name_needed": "Please give the bin a name.",
+    "compost_name_saved": "The bin's name is saved.",
     "compost_turn_every": "Turn it every",
     "compost_turn_days": "%1$d days",
     "compost_turn_source": "The Government of South Australia says turning once a week or so is helpful but not "

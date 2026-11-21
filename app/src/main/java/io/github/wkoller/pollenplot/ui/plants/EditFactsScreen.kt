@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
@@ -104,6 +107,8 @@ fun EditFactsScreen(
     var sizeError by rememberSaveable { mutableStateOf(setOf<CareField>()) }
     // Counts the times a size went back to the knowledge base, so its typed text starts afresh.
     var resets by rememberSaveable { mutableStateOf(0) }
+    val check = rememberFormCheck()
+    val sizeProblem = stringResource(R.string.facts_size_error)
 
     val loadedKb = kb
     val species = view?.species
@@ -173,6 +178,7 @@ fun EditFactsScreen(
                             key = "${field.name}:$resets",
                             range = if (field == CareField.HEIGHT) care.height else care.width,
                             error = field in sizeError,
+                            modifier = Modifier.formField(check, field.name, sizeProblem.takeIf { field in sizeError }, focus = false, live = true),
                         ) { range, valid ->
                             sizeError = if (valid) sizeError - field else sizeError + field
                             if (valid) change(field, if (field == CareField.HEIGHT) CareProfile(height = range) else CareProfile(width = range))
@@ -182,7 +188,9 @@ fun EditFactsScreen(
                 }
             }
             Button(
-                onClick = {
+                onClick = save@{
+                    val sizes = listOf(CareField.HEIGHT, CareField.WIDTH).map { it.name to sizeProblem.takeIf { _ -> it in sizeError } }
+                    if (!check.passes(*sizes.toTypedArray())) return@save
                     scope.launch {
                         CareCorrections.EDITABLE.forEach { field ->
                             val target = values[field]
@@ -195,7 +203,6 @@ fun EditFactsScreen(
                         onBack()
                     }
                 },
-                enabled = sizeError.isEmpty(),
             ) { Text(stringResource(R.string.facts_save)) }
         }
     }
@@ -281,7 +288,7 @@ private fun <T> ManyChips(options: List<T>, selected: Set<T>, label: @Composable
  * new [key] (the knowledge base's value chosen again) starts them afresh from [range].
  */
 @Composable
-private fun SizeFields(key: String, range: SizeRange?, error: Boolean, onChange: (SizeRange?, valid: Boolean) -> Unit) {
+private fun SizeFields(key: String, range: SizeRange?, error: Boolean, modifier: Modifier = Modifier, onChange: (SizeRange?, valid: Boolean) -> Unit) {
     var from by rememberSaveable(key) { mutableStateOf(range?.let { UiFormat.metresFromMm(it.minMm) }.orEmpty()) }
     var to by rememberSaveable(key) { mutableStateOf(range?.let { UiFormat.metresFromMm(it.maxMm) }.orEmpty()) }
     fun report() {
@@ -293,7 +300,7 @@ private fun SizeFields(key: String, range: SizeRange?, error: Boolean, onChange:
             else -> onChange(null, false)
         }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         // With large text the two fields go one above the other, so neither label is cut short.
         val stacked = largeText()
         val fieldModifier = if (stacked) Modifier.fillMaxWidth() else Modifier
@@ -328,7 +335,7 @@ private fun SizeFields(key: String, range: SizeRange?, error: Boolean, onChange:
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) { fields(Modifier.weight(1f)) }
         }
-        if (error) Text(stringResource(R.string.facts_size_error), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+        FieldProblem(stringResource(R.string.facts_size_error).takeIf { error })
     }
 }
 

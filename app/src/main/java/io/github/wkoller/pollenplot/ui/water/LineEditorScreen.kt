@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.water
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +66,7 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
     var pooling by rememberSaveable { mutableStateOf("") }
     var notes by rememberSaveable { mutableStateOf("") }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    val check = rememberFormCheck()
 
     LaunchedEffect(lineId) {
         if (started || lineId == null) return@LaunchedEffect
@@ -86,13 +90,23 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
         },
     ) { padding ->
         if (!started) return@DetailScaffold
+        val nameProblem = stringResource(R.string.line_name_needed).takeIf { name.isBlank() }
+        val zonesProblem = stringResource(R.string.line_zones_needed).takeIf { zoneIds.isEmpty() }
         Column(
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.honey_name)) },
+                singleLine = true,
+                isError = check.isError(nameProblem),
+                supportingText = check.supporting(nameProblem),
+                modifier = Modifier.fillMaxWidth().formField(check, NAME, nameProblem),
+            )
             ChipGroup(stringResource(R.string.water_method), WaterMethod.entries, method, { stringResource(it.label) }) { method = it }
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Column(Modifier.formField(check, ZONES, zonesProblem, focus = false), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Text(stringResource(R.string.water_zones), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     zones.forEach { view ->
@@ -100,6 +114,7 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
                         ChoiceChip(selected = id in zoneIds, onClick = { zoneIds = if (id in zoneIds) zoneIds - id else zoneIds + id }, label = { Text(view.zone.name) })
                     }
                 }
+                FieldProblem(check.shown(zonesProblem))
             }
             if (!method.byHand) {
                 OutlinedTextField(
@@ -125,8 +140,8 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
             }
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
-                enabled = name.isNotBlank() && zoneIds.isNotEmpty(),
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(NAME to nameProblem, ZONES to zonesProblem)) return@save
                     scope.launch {
                         val flowMl = if (method.byHand) null else flow.toIntOrNull()?.times(1000)
                         val poolingMinutes = if (method.spreads) pooling.toIntOrNull()?.takeIf { it > 0 } else null
@@ -156,3 +171,6 @@ fun LineEditorScreen(water: WaterRepository, views: GardenViews, lineId: String?
         )
     }
 }
+
+private const val NAME = "name"
+private const val ZONES = "zones"

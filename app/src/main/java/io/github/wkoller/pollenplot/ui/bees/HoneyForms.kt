@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.FormCheck
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
@@ -105,12 +108,16 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
     var event by rememberSaveable { mutableStateOf(ColonyEventKind.SWARMED) }
     val date = LocalDate.ofEpochDay(day)
 
-    val valid = when (kind) {
-        HoneyRecordKind.MITE_CHECK -> mites.toIntOrNull() != null && (method == VarroaMethod.DRONE_UNCAPPING || (sample.toIntOrNull() ?: 0) > 0)
-        HoneyRecordKind.TREATMENT -> product.isNotBlank()
-        HoneyRecordKind.HARVEST -> kilograms.toGrams() != null
-        else -> true
+    val check = rememberFormCheck()
+    // What still needs entering for this kind of record, each in the order the form shows it.
+    val sampleProblem = when {
+        kind != HoneyRecordKind.MITE_CHECK || method == VarroaMethod.DRONE_UNCAPPING || (sample.toIntOrNull() ?: 0) > 0 -> null
+        method == VarroaMethod.STICKY_MAT -> stringResource(R.string.honey_sample_days_needed)
+        else -> stringResource(R.string.honey_sample_bees_needed)
     }
+    val mitesProblem = stringResource(R.string.honey_mites_needed).takeIf { kind == HoneyRecordKind.MITE_CHECK && mites.toIntOrNull() == null }
+    val productProblem = stringResource(R.string.honey_product_needed).takeIf { kind == HoneyRecordKind.TREATMENT && product.isBlank() }
+    val kgProblem = stringResource(R.string.honey_kg_needed).takeIf { kind == HoneyRecordKind.HARVEST && kilograms.toGrams() == null }
 
     DetailScaffold(title = stringResource(kind.title), onBack = onBack) { padding ->
         Column(
@@ -147,11 +154,11 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
                 HoneyRecordKind.MITE_CHECK -> {
                     ChipGroup(stringResource(R.string.honey_check_method), VarroaMethod.entries, method, { stringResource(it.label) }) { method = it }
                     when (method) {
-                        VarroaMethod.STICKY_MAT -> NumberField(stringResource(R.string.honey_sample_days), sample) { sample = it }
+                        VarroaMethod.STICKY_MAT -> NumberField(stringResource(R.string.honey_sample_days), sample, check, SAMPLE, sampleProblem) { sample = it }
                         VarroaMethod.DRONE_UNCAPPING -> Text(stringResource(R.string.honey_check_drone_note), style = MaterialTheme.typography.bodyMedium)
-                        else -> NumberField(stringResource(R.string.honey_sample_bees), sample) { sample = it }
+                        else -> NumberField(stringResource(R.string.honey_sample_bees), sample, check, SAMPLE, sampleProblem) { sample = it }
                     }
-                    NumberField(stringResource(R.string.honey_mites), mites) { mites = it }
+                    NumberField(stringResource(R.string.honey_mites), mites, check, MITES, mitesProblem) { mites = it }
                     Toggle(stringResource(R.string.honey_reported), reported) { reported = it }
                     StateMiteChecks.of(current?.gardenState)?.let { rule ->
                         TextButton(onClick = { uri.openUri(rule.reportPage) }) {
@@ -162,7 +169,7 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
                 }
                 HoneyRecordKind.TREATMENT -> {
                     Text(stringResource(R.string.honey_treatment_label), style = MaterialTheme.typography.bodyLarge)
-                    TextLine(stringResource(R.string.honey_treatment_product), product) { product = it }
+                    TextLine(stringResource(R.string.honey_treatment_product), product, check, PRODUCT, productProblem) { product = it }
                     TextLine(stringResource(R.string.honey_treatment_ingredient), ingredient) { ingredient = it }
                     Toggle(stringResource(R.string.honey_supers_removed), supersRemoved) { supersRemoved = it }
                 }
@@ -179,15 +186,17 @@ fun HoneyRecordScreen(kind: HoneyRecordKind, hiveId: String, bees: BeeRepository
                         label = { Text(stringResource(R.string.honey_harvest_kg)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
+                        isError = check.isError(kgProblem),
+                        supportingText = check.supporting(kgProblem),
+                        modifier = Modifier.fillMaxWidth().formField(check, KILOGRAMS, kgProblem),
                     )
                 }
                 HoneyRecordKind.EVENT -> ChipGroup(stringResource(R.string.honey_event_kind), ColonyEventKind.entries, event, { stringResource(it.label) }) { event = it }
             }
             TextArea(stringResource(R.string.honey_notes), notes) { notes = it }
             Button(
-                enabled = valid,
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(SAMPLE to sampleProblem, MITES to mitesProblem, PRODUCT to productProblem, KILOGRAMS to kgProblem)) return@save
                     scope.launch {
                         val id = bees.newRecordId()
                         when (kind) {
@@ -238,21 +247,36 @@ internal fun FoulbroodNotice() {
 private fun Toggle(label: String, checked: Boolean, onChange: (Boolean) -> Unit) = ToggleRow(label, checked, onChange)
 
 @Composable
-private fun NumberField(label: String, value: String, onChange: (String) -> Unit) {
+private fun NumberField(label: String, value: String, check: FormCheck? = null, key: String = "", problem: String? = null, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = { text -> onChange(text.filter(Char::isDigit).take(6)) },
         label = { Text(label) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier.fillMaxWidth(),
+        isError = check?.isError(problem) == true,
+        supportingText = check?.supporting(problem),
+        modifier = Modifier.fillMaxWidth().then(if (check != null) Modifier.formField(check, key, problem) else Modifier),
     )
 }
 
 @Composable
-private fun TextLine(label: String, value: String, onChange: (String) -> Unit) {
-    OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+private fun TextLine(label: String, value: String, check: FormCheck? = null, key: String = "", problem: String? = null, onChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label) },
+        singleLine = true,
+        isError = check?.isError(problem) == true,
+        supportingText = check?.supporting(problem),
+        modifier = Modifier.fillMaxWidth().then(if (check != null) Modifier.formField(check, key, problem) else Modifier),
+    )
 }
+
+private const val SAMPLE = "sample"
+private const val MITES = "mites"
+private const val PRODUCT = "product"
+private const val KILOGRAMS = "kilograms"
 
 @Composable
 private fun TextArea(label: String, value: String, onChange: (String) -> Unit) {

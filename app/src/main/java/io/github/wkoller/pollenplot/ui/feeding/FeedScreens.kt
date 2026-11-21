@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.feeding
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
@@ -108,6 +111,9 @@ fun FeedScreen(zoneId: String?, feeds: FeedRepository, views: GardenViews, today
     var warning by rememberSaveable { mutableStateOf<List<String>?>(null) }
     val date = LocalDate.ofEpochDay(day)
     val product = products.firstOrNull { it.key == productKey }
+    val check = rememberFormCheck()
+    val productProblem = stringResource(R.string.feed_choose_product).takeIf { product == null }
+    val zonesProblem = stringResource(R.string.feed_choose_zone).takeIf { chosenZones.isEmpty() }
 
     fun save() {
         val key = productKey ?: return
@@ -124,11 +130,12 @@ fun FeedScreen(zoneId: String?, feeds: FeedRepository, views: GardenViews, today
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             Text(stringResource(R.string.feed_product), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-            Column(Modifier.selectableGroup()) {
+            Column(Modifier.selectableGroup().formField(check, PRODUCT, productProblem, focus = false)) {
                 products.forEach { item -> ProductRow(item, selected = item.key == productKey) { productKey = item.key } }
+                FieldProblem(check.shown(productProblem))
             }
             TextButton(onClick = onAddProduct) { Text(stringResource(R.string.feed_own_product)) }
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Column(Modifier.formField(check, ZONES, zonesProblem, focus = false), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Text(stringResource(R.string.feed_zones), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     zones.forEach { view ->
@@ -145,6 +152,7 @@ fun FeedScreen(zoneId: String?, feeds: FeedRepository, views: GardenViews, today
                         )
                     }
                 }
+                FieldProblem(check.shown(zonesProblem))
             }
             DateRow(date) { pickingDate = true }
             OutlinedTextField(
@@ -157,17 +165,13 @@ fun FeedScreen(zoneId: String?, feeds: FeedRepository, views: GardenViews, today
             )
             Text(stringResource(R.string.feed_no_amounts), style = MaterialTheme.typography.bodyMedium)
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
-            when {
-                product == null -> Text(stringResource(R.string.feed_choose_product), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                chosenZones.isEmpty() -> Text(stringResource(R.string.feed_choose_zone), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
             Button(
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(PRODUCT to productProblem, ZONES to zonesProblem)) return@save
                     val plants = zones.filter { it.zone.id in chosenZones }.flatMap { it.plants }.map { it.title to it.care?.care?.fertiliser }
                     val sensitive = PhosphorusGuard.sensitive(product?.npk, plants)
                     if (sensitive.isEmpty()) save() else warning = sensitive
                 },
-                enabled = product != null && chosenZones.isNotEmpty(),
             ) { Text(stringResource(R.string.honey_save)) }
         }
     }
@@ -231,13 +235,25 @@ fun OwnProductScreen(feeds: FeedRepository, onBack: () -> Unit) {
     val anyTyped = listOf(n, p, k).any { it.isNotBlank() }
     val npkError = anyTyped && values.any { it == null }
     val npk = if (anyTyped && !npkError) values.map { it!!.movePointRight(2).toInt() }.let { Npk(it[0], it[1], it[2]) } else null
+    val check = rememberFormCheck()
+    val nameProblem = stringResource(R.string.product_name_error).takeIf { name.isBlank() }
+    // The analysis is checked as it is typed, so its message shows straight away.
+    val npkProblem = stringResource(R.string.product_npk_error).takeIf { npkError }
 
     DetailScaffold(title = stringResource(R.string.product_title), onBack = onBack) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.product_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.product_name)) },
+                singleLine = true,
+                isError = check.isError(nameProblem),
+                supportingText = check.supporting(nameProblem),
+                modifier = Modifier.fillMaxWidth().formField(check, NAME, nameProblem),
+            )
             OutlinedTextField(value = maker, onValueChange = { maker = it }, label = { Text(stringResource(R.string.product_maker)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             ChipGroup(stringResource(R.string.product_kind), ProductKind.entries, kind, { stringResource(it.label) }) { kind = it }
             Text(stringResource(R.string.product_npk_body), style = MaterialTheme.typography.bodyMedium)
@@ -245,7 +261,7 @@ fun OwnProductScreen(feeds: FeedRepository, onBack: () -> Unit) {
                 Triple(R.string.product_n, n) { v: String -> n = v },
                 Triple(R.string.product_p, p) { v: String -> p = v },
                 Triple(R.string.product_k, k) { v: String -> k = v },
-            ).forEach { (label, value, change) ->
+            ).forEachIndexed { index, (label, value, change) ->
                 OutlinedTextField(
                     value = value,
                     onValueChange = change,
@@ -253,19 +269,25 @@ fun OwnProductScreen(feeds: FeedRepository, onBack: () -> Unit) {
                     singleLine = true,
                     isError = npkError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
+                    // Save takes the reader to the first of the three.
+                    modifier = Modifier.fillMaxWidth().then(if (index == 0) Modifier.formField(check, NPK, npkProblem) else Modifier),
                 )
             }
-            if (npkError) Text(stringResource(R.string.product_npk_error), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            FieldProblem(npkProblem)
             Button(
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(NAME to nameProblem, NPK to npkProblem)) return@save
                     scope.launch {
                         feeds.addProduct(name, maker, kind, npk)
                         withContext(Dispatchers.Main) { onBack() }
                     }
                 },
-                enabled = name.isNotBlank() && !npkError,
             ) { Text(stringResource(R.string.honey_save)) }
         }
     }
 }
+
+private const val PRODUCT = "product"
+private const val ZONES = "zones"
+private const val NAME = "name"
+private const val NPK = "npk"

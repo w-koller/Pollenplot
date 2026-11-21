@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.wildlife
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.review.behavioursNamed
 import io.github.wkoller.pollenplot.ui.review.NamesSaver
@@ -85,6 +88,7 @@ fun SightingScreen(
     val fauna by knowledge.fauna.collectAsStateWithLifecycle()
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     val scope = rememberCoroutineScope()
+    val check = rememberFormCheck()
     val today = remember(clock) { LocalDate.now(clock) }
     val existing = sightingId?.let { id -> sightings?.firstOrNull { it.sighting.id == id } }
 
@@ -142,6 +146,7 @@ fun SightingScreen(
             return@DetailScaffold
         }
         if (!started) return@DetailScaffold
+        val animalProblem = stringResource(R.string.sighting_animal_needed).takeIf { name == null }
         Column(
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
@@ -165,7 +170,11 @@ fun SightingScreen(
             }
             existing?.let { Text(stringResource(R.string.sighting_seen_at, UiFormat.longDate(it.sighting.seenAt), UiFormat.time(it.sighting.seenAt)), style = MaterialTheme.typography.bodyLarge) }
             animal?.let { SafetyNotice(it, locality.state) }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            FlowRow(
+                Modifier.formField(check, ANIMAL, animalProblem, focus = false),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                verticalArrangement = Arrangement.spacedBy(Spacing.s),
+            ) {
                 OutlinedButton(onClick = { searching = true }, enabled = loadedFauna != null) {
                     Text(stringResource(if (name == null) R.string.sighting_choose_animal else R.string.sighting_change_animal))
                 }
@@ -174,6 +183,7 @@ fun SightingScreen(
                     TextButton(onClick = { onOpenAnimal(animal?.name ?: KnowledgeBase.normalise(chosen)) }) { Text(stringResource(R.string.sighting_about_animal)) }
                 }
             }
+            FieldProblem(check.shown(animalProblem))
             if (name != null && animal == null) {
                 // Pollenplot doesn't know this animal, so the user says which group to file it under.
                 ChipGroup(
@@ -215,6 +225,7 @@ fun SightingScreen(
             )
             Button(
                 onClick = {
+                    if (!check.passes(ANIMAL to animalProblem)) return@Button
                     val chosen = name ?: return@Button
                     val behaviours = behavioursNamed(behaviourNames)
                     scope.launch {
@@ -243,7 +254,6 @@ fun SightingScreen(
                         withContext(Dispatchers.Main) { onBack() }
                     }
                 },
-                enabled = name != null,
             ) { Text(stringResource(if (existing == null) R.string.sighting_add else R.string.sighting_save)) }
         }
     }
@@ -275,3 +285,5 @@ fun SightingScreen(
 
 /** How large the animal's picture is at the top of a sighting's page. */
 private val SIGHTING_PICTURE = 96.dp
+
+private const val ANIMAL = "animal"

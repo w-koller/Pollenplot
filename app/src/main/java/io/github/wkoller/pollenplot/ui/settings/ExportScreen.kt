@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
@@ -138,15 +141,20 @@ fun ExportScreen(
             item {
                 SegmentedGroup { row { segment -> SegmentSurface(segment) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                    val check = rememberFormCheck()
+                    val partsProblem = stringResource(R.string.report_sections_needed).takeIf { parts.isEmpty() }
+                    // Each way of making the report needs a part chosen first.
+                    fun ready() = check.passes(PARTS to partsProblem)
                     Text(stringResource(R.string.report_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     ChipGroup(stringResource(R.string.report_period), ReportPeriod.entries, period, { stringResource(it.label) }) { period = it }
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    Column(Modifier.formField(check, PARTS, partsProblem, focus = false), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Text(stringResource(R.string.report_sections), style = MaterialTheme.typography.titleSmall)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                             ReportPart.entries.forEach { part ->
                                 ChoiceChip(selected = part in parts, onClick = { parts = if (part in parts) parts - part else parts + part }, label = { Text(stringResource(part.label)) })
                             }
                         }
+                        FieldProblem(check.shown(partsProblem))
                     }
                     if (ReportPart.GARDEN in parts) {
                         Row(
@@ -159,14 +167,14 @@ fun ExportScreen(
                         }
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                        Button(enabled = parts.isNotEmpty(), onClick = { savePdf.launch("pollenplot-report-$today.pdf") }) { Text(stringResource(R.string.report_save_pdf)) }
-                        OutlinedButton(enabled = parts.isNotEmpty(), onClick = { saveXlsx.launch("pollenplot-report-$today.xlsx") }) { Text(stringResource(R.string.report_save_xlsx)) }
+                        Button(onClick = { if (ready()) savePdf.launch("pollenplot-report-$today.pdf") }) { Text(stringResource(R.string.report_save_pdf)) }
+                        OutlinedButton(onClick = { if (ready()) saveXlsx.launch("pollenplot-report-$today.xlsx") }) { Text(stringResource(R.string.report_save_xlsx)) }
                         if (share != null) {
-                            OutlinedButton(enabled = parts.isNotEmpty(), onClick = { shareReport(pdf = true) }) {
+                            OutlinedButton(onClick = { if (ready()) shareReport(pdf = true) }) {
                                 Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(IconSize.small))
                                 Text(stringResource(R.string.report_share_pdf), modifier = Modifier.padding(start = Spacing.s))
                             }
-                            OutlinedButton(enabled = parts.isNotEmpty(), onClick = { shareReport(pdf = false) }) {
+                            OutlinedButton(onClick = { if (ready()) shareReport(pdf = false) }) {
                                 Icon(painterResource(R.drawable.ic_share), contentDescription = null, modifier = Modifier.size(IconSize.small))
                                 Text(stringResource(R.string.report_share_xlsx), modifier = Modifier.padding(start = Spacing.s))
                             }
@@ -209,3 +217,5 @@ private fun ExportItem(body: Int, saved: Boolean?, onSave: () -> Unit) {
 private fun Saved(ok: Boolean) = StatusLine(ok, stringResource(if (ok) R.string.export_saved else R.string.export_failed))
 
 private const val XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+private const val PARTS = "parts"
