@@ -21,7 +21,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.data.NativeHiveView
 import io.github.wkoller.pollenplot.data.prefs.Settings
@@ -34,6 +33,7 @@ import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.NotificationAccess
 import java.math.BigDecimal
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * The native bee section of the Bees tab: the stingless bee hives, the native bees seen in the yard this year, the
@@ -55,7 +55,7 @@ internal fun LazyListScope.nativeSection(
         item(key = "native-empty") {
             Column {
                 EmptyState(icon = R.drawable.ic_emoji_nature, title = stringResource(R.string.bees_native_empty_title), body = stringResource(R.string.bees_native_empty_body))
-                Button(onClick = onAddHive, modifier = Modifier.padding(horizontal = 16.dp)) { Text(stringResource(R.string.honey_add_hive)) }
+                Button(onClick = onAddHive, modifier = Modifier.padding(horizontal = Spacing.l)) { Text(stringResource(R.string.honey_add_hive)) }
             }
         }
     } else {
@@ -66,7 +66,7 @@ internal fun LazyListScope.nativeSection(
     item(key = "native-seen") { SectionHeading(stringResource(R.string.native_seen)) }
     if (seen.isEmpty()) {
         item(key = "native-seen-none") {
-            Text(stringResource(R.string.native_seen_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            Text(stringResource(R.string.native_seen_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
         }
     }
     items(seen, key = { "seen-" + it.key }) { bee ->
@@ -103,12 +103,12 @@ internal fun LazyListScope.nativeSection(
                 }
             }
             if (settings.heatAlerts && settings.gardenPlace == null) {
-                Text(stringResource(R.string.native_heat_no_place), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                Text(stringResource(R.string.native_heat_no_place), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
             }
             if (settings.heatAlerts && !notifications.allowed) {
                 ActionNotice(stringResource(R.string.native_heat_off), stringResource(R.string.scan_notifications_allow), notifications.ask)
             }
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s)) {
                 ChipGroup(stringResource(R.string.native_heat_at), HeatAlerts.CHOICES, settings.heatAlertTenthsC, { stringResource(R.string.native_heat_choice, degrees(it)) }) { tenths ->
                     onSettings { it.copy(heatAlertTenthsC = tenths) }
                 }

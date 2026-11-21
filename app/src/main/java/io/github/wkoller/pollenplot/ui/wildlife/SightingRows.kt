@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,6 +34,7 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import io.github.wkoller.pollenplot.ui.components.PictureAvatar
 import java.time.Month
 import java.time.format.TextStyle
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /** An animal's cut-out from a photo, or its group's icon. */
 @Composable
@@ -121,17 +121,17 @@ fun MonthStrip(months: List<MonthSeen>, current: Month?, modifier: Modifier = Mo
         verticalAlignment = Alignment.Bottom,
     ) {
         months.forEach { month ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 val colour = if (month.species > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outlineVariant
                 Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.height(BAR_HEIGHT.dp)) {
                     val height = if (month.species == 0) 4 else (BAR_HEIGHT * month.species / most).coerceAtLeast(8)
-                    Box(Modifier.width(16.dp).height(height.dp).clip(RoundedCornerShape(8.dp)).background(colour))
+                    Box(Modifier.width(16.dp).height(height.dp).clip(MaterialTheme.shapes.small).background(colour))
                 }
                 Text(
                     month.month.getDisplayName(TextStyle.NARROW, locale),
                     style = MaterialTheme.typography.labelMedium,
                     color = if (month.month == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = if (month.month == current) Modifier.background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp)).padding(horizontal = 4.dp) else Modifier.padding(horizontal = 4.dp),
+                    modifier = if (month.month == current) Modifier.background(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.extraSmall).padding(horizontal = 4.dp) else Modifier.padding(horizontal = 4.dp),
                 )
             }
         }

@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -68,6 +67,8 @@ import kotlinx.coroutines.flow.flowOf
 import java.time.Clock
 import java.time.LocalDate
 import java.time.Month
+import io.github.wkoller.pollenplot.ui.theme.IconSize
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * The animals and fungi seen in the yard, a year at a time: how many kinds and how many of them are native, when in
@@ -147,9 +148,9 @@ fun WildlifeScreen(
                 }
                 item {
                     FlowRow(
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = Spacing.l),
                         horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s),
                     ) {
                         Button(onClick = { onAdd(AddAction.IDENTIFY) }) {
                             Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.padding(end = 8.dp))
@@ -178,7 +179,7 @@ fun WildlifeScreen(
                     val years = (yearsSeen + today.year).distinct().sortedDescending()
                     if (years.size > 1) {
                         item(key = "years") {
-                            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.l, vertical = Spacing.s), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                                 years.forEach { y ->
                                     FilterChip(selected = y == year, onClick = { year = y; showAll = false }, label = { Text(y.toString()) })
                                 }
@@ -213,7 +214,7 @@ fun WildlifeScreen(
                         items(shown, key = { "sighting-" + it.sighting.id }) { view -> SightingRow(view, onClick = { onOpenSighting(view.sighting.id) }) }
                         if (!showAll && inYear.size > RECENT) {
                             item(key = "all") {
-                                TextButton(onClick = { showAll = true }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                                TextButton(onClick = { showAll = true }, modifier = Modifier.padding(horizontal = Spacing.s)) {
                                     Text(pluralStringResource(R.plurals.wildlife_show_all, inYear.size, inYear.size))
                                 }
                             }
@@ -237,10 +238,10 @@ private fun Summary(summary: Biodiversity, isThisYear: Boolean, firstYear: Int?,
     val count = summary.species.size
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(28.dp),
-        modifier = Modifier.readable().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        modifier = Modifier.readable().padding(horizontal = Spacing.l, vertical = Spacing.s),
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(Spacing.l + Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
             val title = when {
                 count == 0 -> stringResource(R.string.wildlife_none_in_year, summary.year)
                 isThisYear -> pluralStringResource(R.plurals.wildlife_species_this_year, count, count)
@@ -256,9 +257,9 @@ private fun Summary(summary: Biodiversity, isThisYear: Boolean, firstYear: Int?,
                 if (summary.newCount > 0 && firstYear != null && summary.year > firstYear) {
                     Text(pluralStringResource(R.plurals.wildlife_new, summary.newCount, summary.newCount), style = MaterialTheme.typography.bodyLarge)
                 }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     summary.byGroup.forEach { (group, kinds) ->
-                        Badge(group.icon, stringResource(R.string.wildlife_group_chip, stringResource(group.plural), kinds.size), BadgeTone.WILDLIFE)
+                        Badge(group.icon, stringResource(R.string.wildlife_group_chip, stringResource(group.plural), kinds.size), BadgeTone.ANIMAL)
                     }
                 }
                 Text(stringResource(R.string.wildlife_by_month), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
@@ -277,12 +278,12 @@ private const val FAB_ROOM = 96
 /** What a garden pest does and what helps, with the animals in the knowledge base that eat it. */
 @Composable
 private fun PestNote(advice: PestAdvice, onOpenAnimal: (String) -> Unit, modifier: Modifier = Modifier) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(20.dp), modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.large, modifier = modifier.fillMaxWidth()) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             advice.animal.plantNote?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
             if (advice.predators.isNotEmpty()) {
                 Text(stringResource(R.string.wildlife_pest_eaten_by), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     advice.predators.forEach { predator ->
                         AssistChip(
                             onClick = { onOpenAnimal(predator.name) },
@@ -300,9 +301,9 @@ private fun PestNote(advice: PestAdvice, onOpenAnimal: (String) -> Unit, modifie
 @Composable
 private fun IdeaRow(group: LifeGroup) {
     val idea = group.idea ?: return
-    Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Box(Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
-            Icon(painterResource(group.icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp))
+    Row(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), horizontalArrangement = Arrangement.spacedBy(Spacing.l)) {
+        Box(Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.tertiaryContainer), contentAlignment = Alignment.Center) {
+            Icon(painterResource(group.icon), contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer, modifier = Modifier.size(IconSize.medium))
         }
         Text(stringResource(idea), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
     }

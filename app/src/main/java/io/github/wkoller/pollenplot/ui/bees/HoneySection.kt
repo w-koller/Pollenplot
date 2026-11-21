@@ -39,6 +39,7 @@ import io.github.wkoller.pollenplot.ui.components.ActionNotice
 import io.github.wkoller.pollenplot.ui.components.EmptyState
 import io.github.wkoller.pollenplot.ui.components.NotificationAccess
 import java.time.LocalDate
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * The honey bee section of the Bees tab: the checks due across the hives, soonest first, the hives, the guide's pages,
@@ -62,7 +63,7 @@ internal fun LazyListScope.honeySection(
         item(key = "honey-empty") {
             Column {
                 EmptyState(icon = R.drawable.ic_hive, title = stringResource(R.string.bees_honey_empty_title), body = stringResource(R.string.bees_honey_empty_body))
-                Button(onClick = onAddHive, modifier = Modifier.padding(horizontal = 16.dp)) { Text(stringResource(R.string.honey_add_hive)) }
+                Button(onClick = onAddHive, modifier = Modifier.padding(horizontal = Spacing.l)) { Text(stringResource(R.string.honey_add_hive)) }
             }
         }
     } else {
@@ -70,7 +71,7 @@ internal fun LazyListScope.honeySection(
         item(key = "honey-due") { SectionHeading(stringResource(R.string.honey_due)) }
         if (due.isEmpty()) {
             item(key = "honey-due-none") {
-                Text(stringResource(R.string.honey_due_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                Text(stringResource(R.string.honey_due_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
             }
         }
         items(due, key = { (view, task) -> "due-" + view.hive.id + task.kind }) { (view, task) ->
@@ -104,7 +105,7 @@ internal fun LazyListScope.honeySection(
             if (settings.hiveReminders && !notifications.allowed) {
                 ActionNotice(stringResource(R.string.honey_reminders_off), stringResource(R.string.scan_notifications_allow), notifications.ask)
             }
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s)) {
                 ChipGroup(stringResource(R.string.honey_inspect_every), Settings.INSPECT_EVERY_CHOICES, settings.inspectEveryDays, { stringResource(inspectEveryLabel(it)) }) { days ->
                     onSettings { it.copy(inspectEveryDays = days) }
                 }
@@ -123,26 +124,26 @@ internal fun LazyListScope.honeySection(
                 trailingContent = { Switch(checked = monthly, onCheckedChange = null) },
             ) { Text(stringResource(R.string.honey_varroa_switch)) }
             if (rule != null) {
-                Text(stringResource(R.string.honey_mites_qld), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-                TextButton(onClick = { onOpenLink(rule.page) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                Text(stringResource(R.string.honey_mites_qld), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
+                TextButton(onClick = { onOpenLink(rule.page) }, modifier = Modifier.padding(horizontal = Spacing.s)) {
                     Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
                     Text(stringResource(R.string.honey_mites_qld_open))
                 }
             }
-            TextButton(onClick = { onOpenLink(BeekeeperRegistration.CODE_OF_PRACTICE) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+            TextButton(onClick = { onOpenLink(BeekeeperRegistration.CODE_OF_PRACTICE) }, modifier = Modifier.padding(horizontal = Spacing.s)) {
                 Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
                 Text(stringResource(R.string.honey_code_open))
             }
         }
     }
     item(key = "honey-registration") {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             SectionHeading(stringResource(R.string.honey_registration))
             if (state == null) {
-                Text(stringResource(R.string.honey_registration_no_state), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+                Text(stringResource(R.string.honey_registration_no_state), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
             } else {
-                Text(stringResource(R.string.honey_registration_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
-                TextButton(onClick = { onOpenLink(BeekeeperRegistration.page(state)) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                Text(stringResource(R.string.honey_registration_body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
+                TextButton(onClick = { onOpenLink(BeekeeperRegistration.page(state)) }, modifier = Modifier.padding(horizontal = Spacing.s)) {
                     Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
                     Text(stringResource(R.string.honey_registration_open))
                 }
@@ -159,7 +160,7 @@ internal fun TaskRow(task: HiveTask, today: LocalDate, prefix: String?, onClick:
     val headline = if (prefix != null) stringResource(R.string.honey_task_line, prefix, name) else name
     val date = UiFormat.longDate(task.due)
     val supporting: @Composable () -> Unit = {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
             if (overdue) Icon(painterResource(R.drawable.ic_warning), contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
             Text(
                 stringResource(if (overdue) R.string.honey_overdue else R.string.honey_due_by, date),

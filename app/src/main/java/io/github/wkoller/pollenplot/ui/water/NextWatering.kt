@@ -22,6 +22,7 @@ import io.github.wkoller.pollenplot.ui.UiFormat
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /** The day a watering falls on, as part of a sentence: "today", "tomorrow", "on Thursday" or, further off, the date. */
 @Composable
@@ -71,7 +72,7 @@ fun PlannedWatering.icon(): Int = if (rainLikely) R.drawable.ic_cloud else R.dra
 /** A zone's next watering as a sentence beside its icon. */
 @Composable
 fun NextWateringLine(next: PlannedWatering, today: LocalDate, window: WateringWindow, byHand: Boolean, modifier: Modifier = Modifier) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
         Icon(painterResource(next.icon()), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         Text(nextWateringSentence(next, today, window, byHand), style = MaterialTheme.typography.bodyMedium)
     }

@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -61,6 +60,8 @@ import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.listWords
 import java.time.Month
 import java.time.format.TextStyle
+import io.github.wkoller.pollenplot.ui.components.ToneColours
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * Pollen Rhythms: what the garden's flowers offer honey bees, stingless bees and solitary bees through the year, the
@@ -84,7 +85,7 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
                 return@LazyColumn
             }
             item(key = "intro") {
-                Text(stringResource(R.string.rhythms_intro), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                Text(stringResource(R.string.rhythms_intro), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
             }
             feed(loaded)
             item(key = "calendar") { Calendar(loaded) }
@@ -93,14 +94,14 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
                     stringResource(R.string.rhythms_how),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
             }
             if (loaded.lanes.any { it.fed }) {
                 item(key = "offers") {
                     val words = listWords()
                     val locale = locale()
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         SectionHeading(stringResource(R.string.rhythms_offers))
                         loaded.lanes.filter { it.fed }.forEach { lane ->
                             val group = stringResource(lane.group.label)
@@ -108,13 +109,13 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
                             Text(
                                 stringResource(R.string.rhythms_offers_line, group, offerMonths(offers.nectar), offerMonths(offers.pollen)),
                                 style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(horizontal = 16.dp),
+                                modifier = Modifier.padding(horizontal = Spacing.l),
                             )
                             if (lane.lean.isNotEmpty()) {
                                 Text(
                                     stringResource(R.string.rhythms_lean, group.lowercase(), UiFormat.months(MonthSet.of(lane.lean), words, locale)),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    modifier = Modifier.padding(horizontal = Spacing.l),
                                 )
                             }
                         }
@@ -132,10 +133,10 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
                         Text(
                             stringResource(R.string.rhythms_gap_months, UiFormat.months(MonthSet.of(lane.gaps), words, locale())),
                             style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier.padding(horizontal = Spacing.l),
                         )
                         if (suggestions.isEmpty()) {
-                            Text(stringResource(R.string.rhythms_gap_none), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(16.dp))
+                            Text(stringResource(R.string.rhythms_gap_none), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(Spacing.l))
                         }
                     }
                 }
@@ -156,7 +157,7 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
             item(key = "now") { SectionHeading(stringResource(R.string.rhythms_now)) }
             if (loaded.nowFlowering.isEmpty()) {
                 item(key = "now-none") {
-                    Text(stringResource(R.string.rhythms_now_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
+                    Text(stringResource(R.string.rhythms_now_none), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.l))
                 }
             }
             items(loaded.nowFlowering, key = { "now-" + it.id }) { plant ->
@@ -173,7 +174,7 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
                 }
             }
             item(key = "plants") { SectionHeading(stringResource(R.string.rhythms_plants)) }
-            item(key = "plants-head") { MonthHeader(loaded.month, Modifier.padding(horizontal = 16.dp)) }
+            item(key = "plants-head") { MonthHeader(loaded.month, Modifier.padding(horizontal = Spacing.l)) }
             items(loaded.plants, key = { "row-" + it.id }) { plant -> PlantRow(plant, loaded.month) }
             item(key = "plants-key") { PlantKey() }
         }
@@ -191,6 +192,7 @@ private fun LazyListScope.feed(state: RhythmsState) {
             val words = listWords()
             val names = nectar.map { it.title }
             FeedCard(
+                FeedKind.HONEY,
                 R.drawable.ic_hive,
                 stringResource(R.string.rhythms_nectar),
                 if (names.size == 1) stringResource(R.string.rhythms_nectar_body, names[0]) else stringResource(R.string.rhythms_nectar_body_many, UiFormat.joinAnd(names, words)),
@@ -202,6 +204,7 @@ private fun LazyListScope.feed(state: RhythmsState) {
             val words = listWords()
             val names = stingless.map { it.title }
             FeedCard(
+                FeedKind.STINGLESS,
                 R.drawable.ic_emoji_nature,
                 stringResource(R.string.rhythms_stingless),
                 if (names.size == 1) stringResource(R.string.rhythms_stingless_body, names[0]) else stringResource(R.string.rhythms_stingless_body_many, UiFormat.joinAnd(names, words)),
@@ -215,7 +218,7 @@ private fun LazyListScope.feed(state: RhythmsState) {
                 val name = visit.animal?.displayName ?: visit.sighting.label
                 lines += stringResource(R.string.rhythms_visit, name, visit.plantTitle.orEmpty()) + " · " + UiFormat.shortDate(visit.sighting.seenAt)
             }
-            FeedCard(R.drawable.ic_raven, stringResource(R.string.rhythms_visits), lines.joinToString("\n"))
+            FeedCard(FeedKind.VISITS, R.drawable.ic_raven, stringResource(R.string.rhythms_visits), lines.joinToString("\n"))
         }
     }
     if (state.shifts.isNotEmpty()) {
@@ -226,22 +229,42 @@ private fun LazyListScope.feed(state: RhythmsState) {
                 val days = kotlin.math.abs(shift.days)
                 lines += stringResource(if (shift.days < 0) R.string.rhythms_earlier else R.string.rhythms_later, title, pluralStringResource(R.plurals.rhythms_days, days, days))
             }
-            if (lines.isNotEmpty()) FeedCard(R.drawable.ic_calendar_month, stringResource(R.string.rhythms_timing), lines.joinToString("\n"))
+            if (lines.isNotEmpty()) FeedCard(FeedKind.TIMING, R.drawable.ic_calendar_month, stringResource(R.string.rhythms_timing), lines.joinToString("\n"))
         }
     }
 }
 
+/**
+ * What a card of this month's is about, which gives its colour: honey bees' nectar in wattle gold, stingless bees'
+ * flowers in leaf green, pollinators seen in banksia rust, and flowering earlier or later than usual on plain paper.
+ * Each card's icon and heading say the same.
+ */
+internal enum class FeedKind { HONEY, STINGLESS, VISITS, TIMING }
+
 @Composable
-private fun FeedCard(icon: Int, title: String, body: String) {
+private fun FeedKind.colours(): ToneColours {
+    val scheme = MaterialTheme.colorScheme
+    return when (this) {
+        FeedKind.HONEY -> ToneColours(scheme.secondaryContainer, scheme.onSecondaryContainer)
+        FeedKind.STINGLESS -> ToneColours(scheme.primaryContainer, scheme.onPrimaryContainer)
+        FeedKind.VISITS -> ToneColours(scheme.tertiaryContainer, scheme.onTertiaryContainer)
+        FeedKind.TIMING -> ToneColours(scheme.surfaceContainerHigh, scheme.onSurface)
+    }
+}
+
+/** One of this month's cards: its icon, its heading and what it says. */
+@Composable
+internal fun FeedCard(kind: FeedKind, icon: Int, title: String, body: String) {
+    val colours = kind.colours()
     Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        color = colours.container,
+        contentColor = colours.content,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.xs + Spacing.xxs),
     ) {
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
             Icon(painterResource(icon), contentDescription = null)
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(title, style = MaterialTheme.typography.titleSmall)
                 Text(body, style = MaterialTheme.typography.bodyMedium)
             }
@@ -283,13 +306,13 @@ private fun locale() = LocalConfiguration.current.locales[0]
 /** The three lanes, a month to a column, with the level shown by dots and by shade, and a key that says what each is. */
 @Composable
 private fun Calendar(state: RhythmsState) {
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(stringResource(R.string.rhythms_calendar), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
         MonthHeader(state.month)
         state.lanes.forEach { lane -> LaneRow(lane, state.month) }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = Spacing.xs)) {
             ForageLevel.entries.reversed().forEach { level ->
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
                     LevelCell(level, current = false, modifier = Modifier.size(width = 20.dp, height = 24.dp))
                     Text(stringResource(level.label), style = MaterialTheme.typography.bodySmall)
                 }
@@ -337,7 +360,7 @@ private fun LaneRow(lane: Lane, current: Month) {
         Month.entries.forEach { month -> LevelCell(lane.level(month), current = month == current, modifier = Modifier.weight(1f).height(32.dp).padding(1.dp)) }
     }
     if (largeText()) {
-        Column(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = summary }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = summary }, verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Text(group, style = MaterialTheme.typography.bodyMedium)
             Row(Modifier.fillMaxWidth(), content = cells)
         }
@@ -360,12 +383,12 @@ private fun LevelCell(level: ForageLevel, current: Boolean, modifier: Modifier) 
         ForageLevel.PLENTY -> colours.primary
     }
     val dot = if (level == ForageLevel.PLENTY) colours.onPrimary else colours.onSurface
-    val shape = RoundedCornerShape(6.dp)
+    val shape = MaterialTheme.shapes.extraSmall
     Box(
         modifier.background(background, shape).then(if (current) Modifier.border(2.dp, colours.tertiary, shape) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs), horizontalAlignment = Alignment.CenterHorizontally) {
             if (level == ForageLevel.NONE) {
                 Box(Modifier.size(width = 8.dp, height = 2.dp).background(colours.onSurfaceVariant))
             } else {
@@ -386,15 +409,15 @@ private fun PlantRow(plant: RhythmPlant, current: Month) {
     val cells: @Composable RowScope.() -> Unit = {
         Month.entries.forEach { month -> FloweringCell(month in plant.flowering, month in plant.peak, month in plant.seenFlowering, month == current) }
     }
-    val modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp).clearAndSetSemantics { contentDescription = summary }
+    val modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.xxs).clearAndSetSemantics { contentDescription = summary }
     if (largeText()) {
-        Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Text(plant.title, style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth(), content = cells)
         }
     } else {
         Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-            Text(plant.title, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(NAME_WIDTH).padding(end = 4.dp))
+            Text(plant.title, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(NAME_WIDTH).padding(end = Spacing.xs))
             cells()
         }
     }
@@ -408,7 +431,7 @@ private fun RowScope.FloweringCell(expected: Boolean, peak: Boolean, seen: Boole
         expected -> colours.primaryContainer
         else -> Color.Transparent
     }
-    val shape = RoundedCornerShape(4.dp)
+    val shape = MaterialTheme.shapes.extraSmall
     Box(
         Modifier.weight(1f).height(20.dp).padding(1.dp).background(background, shape).then(if (current) Modifier.border(1.dp, colours.tertiary, shape) else Modifier),
         contentAlignment = Alignment.Center,
@@ -421,16 +444,16 @@ private fun RowScope.FloweringCell(expected: Boolean, peak: Boolean, seen: Boole
 @Composable
 private fun PlantKey() {
     val colours = MaterialTheme.colorScheme
-    FlowRow(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(width = 20.dp, height = 16.dp).background(colours.primaryContainer, RoundedCornerShape(4.dp)))
+    FlowRow(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(width = 20.dp, height = 16.dp).background(colours.primaryContainer, MaterialTheme.shapes.extraSmall))
             Text(stringResource(R.string.rhythms_expected), style = MaterialTheme.typography.bodySmall)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(width = 20.dp, height = 16.dp).background(colours.primary, RoundedCornerShape(4.dp)))
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(width = 20.dp, height = 16.dp).background(colours.primary, MaterialTheme.shapes.extraSmall))
             Text(stringResource(R.string.rhythms_peak), style = MaterialTheme.typography.bodySmall)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(width = 20.dp, height = 16.dp), contentAlignment = Alignment.Center) { Box(Modifier.size(6.dp).background(colours.onSurface, CircleShape)) }
             Text(stringResource(R.string.rhythms_seen), style = MaterialTheme.typography.bodySmall)
         }

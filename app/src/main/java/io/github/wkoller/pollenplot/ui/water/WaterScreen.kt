@@ -2,7 +2,13 @@ package io.github.wkoller.pollenplot.ui.water
 
 import io.github.wkoller.pollenplot.ui.components.SwitchRow
 import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
-import io.github.wkoller.pollenplot.ui.components.readableSides
+import io.github.wkoller.pollenplot.ui.components.listPadding
+import io.github.wkoller.pollenplot.ui.theme.PollenTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.draw.clip
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import android.text.format.DateFormat
 import androidx.annotation.StringRes
@@ -16,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,7 +57,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalResources
 import io.github.wkoller.pollenplot.R
 import io.github.wkoller.pollenplot.ui.components.AddButton
-import androidx.compose.foundation.layout.PaddingValues
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
 import io.github.wkoller.pollenplot.data.WaterRepository
 import io.github.wkoller.pollenplot.data.WaterViews
@@ -81,6 +85,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 
 /**
  * Watering: the weather the plans are worked out from, each line's plan with a button to record watering and any
@@ -129,30 +134,48 @@ fun WaterScreen(
     ) { padding ->
         val loaded = state ?: return@TabScaffold
         // The list ends clear of the add button.
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = readableSides(), end = readableSides(), top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 88.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
             if (!loaded.hasPlants) {
                 item(key = "empty") {
                     Column {
                         EmptyState(icon = R.drawable.ic_water_drop, title = stringResource(R.string.water_empty_title), body = stringResource(R.string.water_empty_body))
-                        if (loaded.lines.isEmpty()) Button(onClick = onAddLine, modifier = Modifier.padding(horizontal = 16.dp)) { Text(stringResource(R.string.water_add_line)) }
+                        if (loaded.lines.isEmpty()) Button(onClick = onAddLine, modifier = Modifier.padding(horizontal = Spacing.l)) { Text(stringResource(R.string.water_add_line)) }
                     }
                 }
             }
             item(key = "weather") {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    when {
-                        !loaded.hasPlace -> Text(stringResource(R.string.water_no_place), style = MaterialTheme.typography.bodyLarge)
-                        loaded.et0TodayUm == null -> Text(stringResource(R.string.water_no_weather), style = MaterialTheme.typography.bodyLarge)
-                        else -> {
-                            Text(stringResource(R.string.water_et0, millimetres(loaded.et0TodayUm)), style = MaterialTheme.typography.bodyLarge)
-                            Text(stringResource(R.string.water_rain_week, millimetres(loaded.rainLastWeekUm)), style = MaterialTheme.typography.bodyLarge)
+                // The day's weather on a card in water's own colour, the figure that the plans below are worked from.
+                val water = PollenTheme.colors.water
+                Surface(
+                    color = water.container,
+                    contentColor = water.onContainer,
+                    shape = MaterialTheme.shapes.large,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s),
+                ) {
+                    Row(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                        Box(Modifier.size(40.dp).clip(CircleShape).background(water.colour), contentAlignment = Alignment.Center) {
+                            Icon(painterResource(R.drawable.ic_water_drop), contentDescription = null, tint = water.onColour)
+                        }
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                            when {
+                                !loaded.hasPlace -> Text(stringResource(R.string.water_no_place), style = MaterialTheme.typography.bodyLarge)
+                                loaded.et0TodayUm == null -> Text(stringResource(R.string.water_no_weather), style = MaterialTheme.typography.bodyLarge)
+                                else -> {
+                                    Text(stringResource(R.string.water_et0, millimetres(loaded.et0TodayUm)), style = MaterialTheme.typography.titleMedium)
+                                    Text(stringResource(R.string.water_rain_week, millimetres(loaded.rainLastWeekUm)), style = MaterialTheme.typography.bodyLarge)
+                                }
+                            }
+                            loaded.weatherFetchedAt?.let {
+                                Text(stringResource(R.string.water_weather_updated, UiFormat.time(Instant.ofEpochMilli(it))), style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.water_weather_credit), style = MaterialTheme.typography.bodySmall)
+                            }
+                            if (loaded.hasPlace) {
+                                TextButton(onClick = { refresh() }, colors = ButtonDefaults.textButtonColors(contentColor = water.onContainer)) {
+                                    Text(stringResource(R.string.water_update))
+                                }
+                            }
                         }
                     }
-                    loaded.weatherFetchedAt?.let {
-                        Text(stringResource(R.string.water_weather_updated, UiFormat.time(Instant.ofEpochMilli(it))), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(stringResource(R.string.water_weather_credit), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    if (loaded.hasPlace) TextButton(onClick = { refresh() }) { Text(stringResource(R.string.water_update)) }
                 }
             }
             loaded.potsBeforeHeat?.let { warning ->
@@ -250,10 +273,10 @@ private fun PlanCard(
     val words = listWords()
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(title, style = MaterialTheme.typography.titleMedium)
@@ -261,7 +284,7 @@ private fun PlanCard(
                 }
                 onEdit?.let { IconButton(onClick = it) { Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.water_edit_line)) } }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                 val due = plan.reason == PlanReason.DUE
                 Icon(painterResource(if (due) R.drawable.ic_water_drop else R.drawable.ic_calendar_month), contentDescription = null, tint = if (due) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(planText(plan, byHand, window), style = MaterialTheme.typography.bodyLarge)
@@ -282,9 +305,9 @@ private fun PlanCard(
             // Today's watering is in the sentence above, so the list starts tomorrow.
             val ahead = week.filter { it.date.isAfter(today) }
             if (ahead.isNotEmpty()) {
-                Text(stringResource(R.string.water_coming_up), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp).semantics { heading() })
+                Text(stringResource(R.string.water_coming_up), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = Spacing.xs).semantics { heading() })
                 for (watering in ahead) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                         Icon(painterResource(watering.icon()), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                         Text(aheadText(watering, byHand, window), style = MaterialTheme.typography.bodyMedium)
                     }
@@ -361,12 +384,12 @@ private fun aheadText(watering: PlannedWatering, byHand: Boolean, window: Wateri
 @Composable
 private fun PotsNotice(text: String) {
     Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s),
     ) {
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(R.drawable.ic_warning), contentDescription = null)
             Text(text, style = MaterialTheme.typography.bodyLarge)
         }
@@ -380,10 +403,10 @@ private fun WindowSetting(window: WateringWindow, onChange: (WateringWindow) -> 
     var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
     val from = UiFormat.timeOfDay(window.fromMinute)
     val to = UiFormat.timeOfDay(window.toMinute)
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(stringResource(R.string.water_window), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
         Text(stringResource(R.string.water_window_body, from, to), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             OutlinedButton(onClick = { picking = true }) { Text(stringResource(R.string.water_window_from, from)) }
             OutlinedButton(onClick = { picking = false }) { Text(stringResource(R.string.water_window_to, to)) }
         }

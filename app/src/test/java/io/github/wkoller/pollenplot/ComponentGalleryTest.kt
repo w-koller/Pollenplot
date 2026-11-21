@@ -16,7 +16,9 @@ import io.github.wkoller.pollenplot.ui.preview.ChoicesPreview
 import io.github.wkoller.pollenplot.ui.preview.EmptyStatePreview
 import io.github.wkoller.pollenplot.ui.preview.FactCardPreview
 import io.github.wkoller.pollenplot.ui.preview.NoticePreview
+import io.github.wkoller.pollenplot.ui.preview.RhythmsCardsPreview
 import io.github.wkoller.pollenplot.ui.preview.SegmentedPreview
+import io.github.wkoller.pollenplot.ui.preview.TodayCardPreview
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +33,7 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(application = Application::class, qualifiers = "en-rAU-w411dp-h2400dp-xhdpi")
+@Config(application = Application::class, qualifiers = "en-rAU-w411dp-h3600dp-xhdpi")
 class ComponentGalleryTest {
     @get:Rule
     val compose = createComposeRule()
@@ -40,11 +42,11 @@ class ComponentGalleryTest {
     fun light() = gallery("components")
 
     @Test
-    @Config(qualifiers = "en-rAU-w411dp-h2400dp-night-xhdpi")
+    @Config(qualifiers = "en-rAU-w411dp-h3600dp-night-xhdpi")
     fun dark() = gallery("components_dark")
 
     @Test
-    @Config(qualifiers = "en-rAU-w411dp-h4000dp-xhdpi", fontScale = 2.0f)
+    @Config(qualifiers = "en-rAU-w411dp-h6400dp-xhdpi", fontScale = 2.0f)
     fun largeText() = gallery("components_large")
 
     private fun gallery(name: String) {
@@ -57,6 +59,8 @@ class ComponentGalleryTest {
                 ChoicesPreview()
                 NoticePreview()
                 SegmentedPreview()
+                TodayCardPreview()
+                RhythmsCardsPreview()
             }
         }
         val context = ApplicationProvider.getApplicationContext<Application>()

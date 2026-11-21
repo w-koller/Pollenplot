@@ -125,7 +125,7 @@ val FaunaRole.icon: Int
     }
 
 val FaunaRole.tone: BadgeTone
-    get() = if (this == FaunaRole.PLANT_PEST) BadgeTone.WARNING else BadgeTone.WILDLIFE
+    get() = if (this == FaunaRole.PLANT_PEST) BadgeTone.WARNING else BadgeTone.ANIMAL
 
 /** An idea for bringing the group into the yard, for the groups [io.github.wkoller.pollenplot.domain.wildlife.GardenAdvice] suggests habitat for. */
 @get:StringRes

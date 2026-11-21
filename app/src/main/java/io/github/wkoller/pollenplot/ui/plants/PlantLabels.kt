@@ -20,7 +20,8 @@ import io.github.wkoller.pollenplot.domain.plants.Toxicity
 import io.github.wkoller.pollenplot.domain.plants.WaterNeed
 
 /** How a badge is coloured. Status is never shown by colour alone: every badge also has an icon and a word. */
-enum class BadgeTone { WARNING, WILDLIFE, PLANT, WATER }
+/** What a badge is about, which gives its colour: a warning, a plant's worth to wildlife, the plant itself, water, or animals. */
+enum class BadgeTone { WARNING, WILDLIFE, PLANT, WATER, ANIMAL }
 
 @get:StringRes
 val EcoRole.label: Int
@@ -92,7 +93,8 @@ val ZoneBadge.icon: Int
 val ZoneBadge.tone: BadgeTone
     get() = when (this) {
         ZoneBadge.WEED_FOUND, ZoneBadge.MIXED_THIRST -> BadgeTone.WARNING
-        ZoneBadge.POLLINATOR_HOTSPOT, ZoneBadge.LAYERED_HABITAT, ZoneBadge.FROGS_SEEN -> BadgeTone.WILDLIFE
+        ZoneBadge.POLLINATOR_HOTSPOT, ZoneBadge.LAYERED_HABITAT -> BadgeTone.WILDLIFE
+        ZoneBadge.FROGS_SEEN -> BadgeTone.ANIMAL
     }
 
 @get:DrawableRes

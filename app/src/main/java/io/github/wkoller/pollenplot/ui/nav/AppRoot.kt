@@ -29,6 +29,10 @@ import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailValue
+import androidx.compose.material3.rememberWideNavigationRailState
+import io.github.wkoller.pollenplot.ui.components.expandedWindow
+import io.github.wkoller.pollenplot.ui.components.mediumWindow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -43,7 +47,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -147,9 +150,6 @@ import io.github.wkoller.pollenplot.R
 import java.time.LocalDate
 import kotlinx.coroutines.launch
 
-/** Windows at least this wide get a navigation rail at the side instead of a bar along the bottom. */
-private val WIDE_WINDOW = 600.dp
-
 /** At most this many photos can be added at once, which keeps one batch to a few minutes of work. */
 private const val MAX_ADDED_PHOTOS = 30
 
@@ -170,7 +170,12 @@ fun AppRoot(
     val destination = entry?.destination
     val currentTab = TopLevelTab.entries.firstOrNull { tab -> destination?.hierarchy?.any { it.hasRoute(tab.route::class) } == true }
     val showTabs = currentTab != null
-    val wide = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() } >= WIDE_WINDOW
+    // A medium window has the tabs in a rail at the side, and an expanded one has room for their labels beside them.
+    val wide = mediumWindow()
+    val expanded = expandedWindow()
+    val railState = rememberWideNavigationRailState(if (expanded) WideNavigationRailValue.Expanded else WideNavigationRailValue.Collapsed)
+    LaunchedEffect(expanded) { if (expanded) railState.expand() else railState.collapse() }
+    val transitions = navTransitions()
 
     fun openTab(tab: TopLevelTab) = navController.navigate(tab.route) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -234,14 +239,14 @@ fun AppRoot(
 
     Row(Modifier.fillMaxSize()) {
         if (wide && showTabs) {
-            WideNavigationRail {
+            WideNavigationRail(state = railState) {
                 TopLevelTab.entries.forEach { tab ->
                     WideNavigationRailItem(
                         selected = tab == currentTab,
                         onClick = { openTab(tab) },
                         icon = { Icon(painterResource(if (tab == currentTab) tab.selectedIcon else tab.icon), contentDescription = null) },
                         label = { TabLabel(stringResource(tab.label)) },
-                        railExpanded = false,
+                        railExpanded = expanded,
                     )
                 }
             }
@@ -290,6 +295,10 @@ fun AppRoot(
                     navController = navController,
                     startDestination = if (setup) SetupRoute() else PlotRoute,
                     modifier = Modifier.padding(padding).consumeWindowInsets(padding).then(railInsets),
+                    enterTransition = transitions.enter,
+                    exitTransition = transitions.exit,
+                    popEnterTransition = transitions.popEnter,
+                    popExitTransition = transitions.popExit,
                 ) {
                     val openSettings = { navController.navigate(SettingsRoute) }
                     val back: () -> Unit = { navController.popBackStack() }

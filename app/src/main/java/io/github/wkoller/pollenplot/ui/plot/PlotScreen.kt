@@ -52,7 +52,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalResources
 import io.github.wkoller.pollenplot.ui.components.LocalNotices
@@ -269,7 +269,7 @@ fun PlotScreen(
                 Column(Modifier.fillMaxSize()) {
                     if (!editing) {
                         todayState?.let {
-                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), todayActions, cardLimit)
+                            TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), todayActions, cardLimit)
                         }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -331,9 +331,9 @@ fun PlotScreen(
                                 color = MaterialTheme.colorScheme.inverseSurface,
                                 contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                                 shape = MaterialTheme.shapes.medium,
-                                modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
+                                modifier = Modifier.align(Alignment.TopCenter).padding(Spacing.m),
                             ) {
-                                Text(stringResource(R.string.plot_edit_hint), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp))
+                                Text(stringResource(R.string.plot_edit_hint), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(Spacing.m))
                             }
                         }
                     }
@@ -342,7 +342,7 @@ fun PlotScreen(
             else -> PlotList(
                 loadedZones, loadedPlants, padding, onOpenZone, onOpenPlant, onAddZone = { addingZone = true }, onWeeds = onWeeds, water = waterState, fed = fed,
                 structures = structures, onOpenStructure = { structureDetails = it }, onGraveyard = onGraveyard,
-                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), todayActions) } },
+                header = { todayState?.let { TodayOnPlot(it, onOpenWater, onOpenBees, onOpenGuide, onReview, onWeeds, onOpenPlant, onOpenZone, { onAdd(AddAction.FEED) }, onOpenProblem, Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), todayActions) } },
             )
         }
     }
@@ -442,7 +442,7 @@ fun PlotScreen(
 
 @Composable
 private fun EmptyPlot(padding: PaddingValues, onAddZone: () -> Unit, onAddPlant: () -> Unit, onWeeds: () -> Unit) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = listPadding(padding)) {
         item {
             EmptyState(
                 icon = R.drawable.ic_yard,
@@ -451,7 +451,7 @@ private fun EmptyPlot(padding: PaddingValues, onAddZone: () -> Unit, onAddPlant:
             )
         }
         item {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.m), horizontalAlignment = Alignment.CenterHorizontally) {
                 Button(onClick = onAddZone) { Text(stringResource(R.string.plot_add_zone)) }
                 OutlinedButton(onClick = onAddPlant) { Text(stringResource(R.string.add_plant_by_name)) }
                 TextButton(onClick = onWeeds) { Text(stringResource(R.string.plot_weeds_near)) }
@@ -480,20 +480,20 @@ private fun PlotList(
     val weeds = plants.count { it.isGrowing && it.weed.isWeed }
     LazyColumn(
         Modifier.fillMaxSize(),
-        contentPadding = listPadding(padding, bottom = 96.dp),
+        contentPadding = listPadding(padding),
     ) {
         item(key = "today") { header() }
         if (zones.isEmpty()) {
             item {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     Text(stringResource(R.string.plot_zoned_empty_body), style = MaterialTheme.typography.bodyLarge)
                     Button(onClick = onAddZone) { Text(stringResource(R.string.plot_add_zone)) }
                 }
             }
         }
         items(zones, key = { it.zone.id }) { view ->
-            // Cards sit 12 dp apart; the rows after them touch as every other list's rows do.
-            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp), water = water, fed = fed[view.zone.id])
+            // Cards sit 16 dp apart; the rows after them touch as every other list's rows do.
+            ZoneCard(view, onClick = { onOpenZone(view.zone.id) }, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s), water = water, fed = fed[view.zone.id])
         }
         if (unzoned.isNotEmpty()) {
             item { SectionHeading(stringResource(R.string.plot_unzoned)) }
@@ -520,7 +520,7 @@ private fun PlotList(
             }
         }
         item(key = "more") {
-            SegmentedGroup(Modifier.padding(top = 16.dp)) {
+            SegmentedGroup(Modifier.padding(top = Spacing.l)) {
                 if (plants.any { !it.isGrowing }) {
                     row { segment ->
                         ListItem(
@@ -590,7 +590,7 @@ private fun EditToolbar(
             Icon(painterResource(R.drawable.ic_tune), contentDescription = stringResource(if (structure) R.string.structure_details else R.string.plot_details))
         }
         TextButton(onClick = onDone) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(R.drawable.ic_check), contentDescription = null)
                 Text(stringResource(R.string.plot_done))
             }

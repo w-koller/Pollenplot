@@ -50,7 +50,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -95,7 +94,11 @@ import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.plants.icon
 import io.github.wkoller.pollenplot.ui.plants.label
 import io.github.wkoller.pollenplot.ui.plants.tone
+import io.github.wkoller.pollenplot.ui.components.largeText
 import io.github.wkoller.pollenplot.ui.theme.PollenTheme
+import io.github.wkoller.pollenplot.ui.theme.Spacing
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.unit.sp
 import io.github.wkoller.pollenplot.ui.water.byHand
 import io.github.wkoller.pollenplot.ui.water.icon
 import io.github.wkoller.pollenplot.ui.water.nextWateringSentence
@@ -502,7 +505,7 @@ private fun DrawScope.drawExtent(bounds: ZoneRect, scale: Float, offsetX: Float,
 /** Zoom in, zoom out and the whole plot, for anyone who cannot pinch and for finding the zones again. */
 @Composable
 private fun CanvasControls(onFit: () -> Unit, onZoomIn: () -> Unit, onZoomOut: () -> Unit, modifier: Modifier) {
-    Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, tonalElevation = 2.dp, modifier = modifier) {
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh, tonalElevation = 2.dp, modifier = modifier) {
         Row {
             IconButton(onClick = onZoomOut) { Icon(painterResource(R.drawable.ic_zoom_out), contentDescription = stringResource(R.string.plot_zoom_out)) }
             IconButton(onClick = onZoomIn) { Icon(painterResource(R.drawable.ic_zoom_in), contentDescription = stringResource(R.string.plot_zoom_in)) }
@@ -618,7 +621,7 @@ private fun ZoneTile(
         stringResource(R.string.move_right) to (1 to 0),
     )
     val previewLabel = stringResource(R.string.zone_preview)
-    val shape = RoundedCornerShape(16.dp)
+    val shape = MaterialTheme.shapes.medium
     // The view pans under a drag near the edge, so the gesture reads where the tile is now rather than restarting.
     val corner by rememberUpdatedState(Offset(left, top))
     val dragTo by rememberUpdatedState(onDrag)
@@ -705,10 +708,13 @@ private fun ZoneTile(
  */
 @Composable
 private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due: Int, next: Pair<PlannedWatering, String>?, widthDp: Float, heightDp: Float, sun: Sun? = null, bloomLine: String? = null) {
-    Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (widthDp >= 72) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
-            Text(view.zone.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+    // With large text a name gets two lines and shrinks as far as its standard size to fit, so it is cut short only when
+    // even that cannot hold it; the zone kind's icon gives up its room first.
+    val large = largeText()
+    Column(Modifier.fillMaxSize().padding(Spacing.s), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            if (widthDp >= 72 && !large) Icon(painterResource(view.zone.kind.icon), contentDescription = null, modifier = Modifier.size(16.dp))
+            ZoneName(view.zone.name, large, Modifier.weight(1f, fill = false))
             // Hives and hotels stay in sight on a small tile, beside the name; the tile's description counts them.
             if (widthDp >= 96 && hives > 0) BeeHomeCount(R.drawable.ic_hive, hives)
             if (widthDp >= 96 && hotels > 0) BeeHomeCount(R.drawable.ic_cottage, hotels)
@@ -745,7 +751,14 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due
             Row(horizontalArrangement = Arrangement.spacedBy((-8).dp), verticalAlignment = Alignment.CenterVertically) {
                 // A light disc keeps each plant visible on any tile colour.
                 ordered.take(shown).forEach {
-                    PlantAvatar(it.species?.form, size.dp, thumbnail = it.plant.thumbnail, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, contentColor = MaterialTheme.colorScheme.onSurface)
+                    PlantAvatar(
+                        it.species?.form,
+                        size.dp,
+                        thumbnail = it.plant.thumbnail,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        inFlower = it.plant.id in view.flowering,
+                    )
                 }
                 if (more > 0 && fit >= 2) Text(stringResource(R.string.zone_tile_more, more), style = MaterialTheme.typography.labelLarge, maxLines = 1, modifier = Modifier.padding(start = 12.dp))
             }
@@ -760,6 +773,24 @@ private fun TileContent(view: ZoneView, kinds: Int, hives: Int, hotels: Int, due
             }
         }
     }
+}
+
+/**
+ * A zone's name on its tile: one line normally, and with large text up to two, shrinking from the phone's text size
+ * as far as the standard size so a short tile still shows whole words.
+ */
+@Composable
+private fun ZoneName(name: String, large: Boolean, modifier: Modifier = Modifier) {
+    val style = MaterialTheme.typography.titleSmall
+    val scale = LocalDensity.current.fontScale
+    Text(
+        name,
+        style = style,
+        maxLines = if (large) 2 else 1,
+        overflow = TextOverflow.Ellipsis,
+        autoSize = if (large) TextAutoSize.StepBased(minFontSize = (style.fontSize.value / scale).sp, maxFontSize = style.fontSize, stepSize = 0.5.sp) else null,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -822,7 +853,7 @@ private fun StructureTile(
     val top = offsetY + shown.yCm * scale
     val widthDp = with(density) { (shown.widthCm * scale).toDp() }
     val heightDp = with(density) { (shown.heightCm * scale).toDp() }
-    val shape = if (structure.shape == StructureShape.OVAL) CircleShape else RoundedCornerShape(4.dp)
+    val shape = if (structure.shape == StructureShape.OVAL) CircleShape else MaterialTheme.shapes.extraSmall
     val wet = structure.kind == StructureKind.POOL || structure.kind == StructureKind.WATER_TANK
     val colours = MaterialTheme.colorScheme
     val description = stringResource(
@@ -1048,7 +1079,7 @@ private fun DrawScope.drawUnrecordedOutline(colour: Color) {
 private fun LayerKey(layer: PlotLayer, laterMonth: Month?, modifier: Modifier) {
     val outline = MaterialTheme.colorScheme.outline
     val base = MaterialTheme.colorScheme.surfaceContainerHigh
-    Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f), shadowElevation = 1.dp, modifier = modifier) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f), shadowElevation = 1.dp, modifier = modifier) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val title = when (layer) {
                 PlotLayer.SUN -> stringResource(R.string.plot_sun_key)
@@ -1060,19 +1091,19 @@ private fun LayerKey(layer: PlotLayer, laterMonth: Month?, modifier: Modifier) {
                 Sun.entries.forEach { sun ->
                     val paint = sunLayer(sun)
                     KeyRow(stringResource(sun.label), sun.icon) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawLayer(paint) })
+                        Box(Modifier.size(16.dp).clip(MaterialTheme.shapes.extraSmall).background(base).drawBehind { drawLayer(paint) })
                     }
                 }
             } else {
                 BloomGrade.entries.reversed().forEach { grade ->
                     val paint = bloomLayer(grade)
                     KeyRow(stringResource(grade.label), null) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawLayer(paint) })
+                        Box(Modifier.size(16.dp).clip(MaterialTheme.shapes.extraSmall).background(base).drawBehind { drawLayer(paint) })
                     }
                 }
             }
             KeyRow(stringResource(if (layer == PlotLayer.SUN) R.string.plot_sun_unrecorded else R.string.plot_bloom_unrecorded), null) {
-                Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(base).drawBehind { drawUnrecordedOutline(outline) })
+                Box(Modifier.size(16.dp).clip(MaterialTheme.shapes.extraSmall).background(base).drawBehind { drawUnrecordedOutline(outline) })
             }
         }
     }
