@@ -17,7 +17,7 @@ sources:
 - Whenever you move bees or hives from where they are normally kept, you must make a movement record before you move them, and keep it for two years.
 - You have a general biosecurity obligation to make sure your beekeeping does not spread a pest, disease or contaminant, and you are responsible for the health of your bees at every apiary site. You must take all reasonable and practical steps to meet it, and not meeting it is an offence.
 
-> Please call Biosecurity Queensland on 13 25 23 straight away if you notice changes in your hives' health, such as scattered brood, chewed brood cells, crippled bees or fewer bees; if you have unexpected losses, such as a fall in production or a colony that suddenly collapses; or if you suspect a notifiable pest or disease, such as Varroa mite or American foulbrood.
+> Please call Biosecurity Queensland on 13 25 23 straight away if you notice changes in your hives' health, such as scattered brood, chewed brood cells, crippled bees or fewer bees. Please call too if you have unexpected losses, such as a fall in production or a colony that suddenly collapses, or if you suspect a notifiable pest or disease, such as Varroa mite or American foulbrood.
 
 ## Hives in a backyard
 

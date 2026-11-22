@@ -22,5 +22,5 @@ sources:
 
 Native solitary wasps very often share a bee hotel. Wasps catch insects to feed their young, such as caterpillars, aphids, cockroaches and spiders, where bees collect pollen. They can sting, but they are not generally aggressive.
 
-- **Clay plugs.** A hole sealed with a creamy clay plug, or with a delicate clay funnel sticking out of it, belongs to a potter wasp, which catches caterpillars for its young.
-- **Grass plugs.** A dense plug of long grass stems or grass seed heads belongs to a grass-carrying wasp, which catches crickets or grasshoppers for its young.
+- A hole sealed with a creamy clay plug, or with a delicate clay funnel sticking out of it, belongs to a potter wasp, which catches caterpillars for its young.
+- A dense plug of long grass stems or grass seed heads belongs to a grass-carrying wasp, which catches crickets or grasshoppers for its young.

@@ -1,6 +1,6 @@
 [
 { "name": "Malus domestica", "family": "Rosaceae", "common": ["Apple"], "form": "tree",
-    "description": "The common apple: a deciduous tree with pink and white blossom in spring and crisp fruit for eating fresh, cooking or making cider. Many varieties are sold.",
+    "description": "The common apple, a deciduous tree with pink and white blossom in spring and crisp fruit for eating fresh, cooking or making cider. Many varieties are sold.",
     "sun": ["full_sun", "part_shade"], "water": "moderate", "frost": 3, "soil": ["sand", "loam", "clay"],
     "wildlife": { "pollinator": 1 },
     "height": [4500, 9000], "width": [4500, 9000],
@@ -8,7 +8,7 @@
     "edible": "fruit",
     "care_note": "Pests and diseases are common, so the fruit often needs protecting." },
   { "name": "Pyrus communis", "family": "Rosaceae", "common": ["Pear", "European pear"], "form": "tree",
-    "description": "The common pear: a deciduous tree with white blossom in spring and sweet, fragrant, teardrop-shaped fruit. Many varieties are sold.",
+    "description": "The common pear, a deciduous tree with white blossom in spring and sweet, fragrant, teardrop-shaped fruit. Many varieties are sold.",
     "sun": ["full_sun"], "water": "moderate", "frost": 3, "soil": ["sand", "loam", "clay"],
     "wildlife": { "pollinator": 1, "butterflies": 1, "birds": 1 },
     "height": [12000, 15000], "width": [7600, 10700],
