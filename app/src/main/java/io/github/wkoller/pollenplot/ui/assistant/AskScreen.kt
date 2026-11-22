@@ -1,5 +1,13 @@
 package io.github.wkoller.pollenplot.ui.assistant
 
+import kotlinx.coroutines.CancellationException
+import androidx.compose.runtime.mutableIntStateOf
+import io.github.wkoller.pollenplot.domain.assistant.GardenAssistantGuard
+import io.github.wkoller.pollenplot.domain.assistant.MidSentence
+import io.github.wkoller.pollenplot.domain.assistant.Starter
+import io.github.wkoller.pollenplot.domain.assistant.AskFollowUps
+import io.github.wkoller.pollenplot.domain.assistant.AskStarters
+import io.github.wkoller.pollenplot.domain.assistant.GardenPulse
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
@@ -73,6 +81,8 @@ fun AskScreen(
     onBack: () -> Unit,
     onOpenModels: () -> Unit,
     onOpenRecord: (CitedRecord) -> Unit,
+    /** What the garden is doing now, for the greeting and the questions to start with. */
+    pulse: (suspend () -> GardenPulse)? = null,
 ) {
     val exchanges by model.exchanges.collectAsStateWithLifecycle()
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
@@ -82,7 +92,42 @@ fun AskScreen(
     val plant by plantFlow.collectAsStateWithLifecycle(initialValue = null)
     val weedStatus = plant?.let { view -> view.weed.takeIf { it.isWeed }?.let { weedHeadline(it, locality) } }
     var question by rememberSaveable { mutableStateOf("") }
-    val busy = exchanges.lastOrNull()?.reply.let { it is AssistantReply.Loading || it is AssistantReply.Streaming }
+    val busy = exchanges.lastOrNull()?.reply.let { it is AssistantReply.Reading || it is AssistantReply.Loading || it is AssistantReply.Streaming }
+    var now by remember { mutableStateOf<GardenPulse?>(null) }
+    LaunchedEffect(pulse) {
+        now = try {
+            pulse?.invoke()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            // Without it the screen still works; it only offers the season's questions.
+            null
+        }
+    }
+    var offset by rememberSaveable { mutableIntStateOf(0) }
+    val name = when (subject) {
+        is AskSubject.Plant -> plant?.title
+        is AskSubject.Animal -> fauna?.animal(subject.key)?.displayName ?: subject.key
+        AskSubject.Garden -> null
+    }
+    // A question about one plant or animal names it while the garden is read.
+    val readingAbout = when (subject) {
+        is AskSubject.Plant -> name?.let { stringResource(R.string.ask_reading_about, it) }
+        is AskSubject.Animal -> name?.let { stringResource(R.string.ask_reading_animal, MidSentence.name(it)) }
+        AskSubject.Garden -> null
+    }
+    val all = when (subject) {
+        AskSubject.Garden -> now?.let { AskStarters.forGarden(it) }
+        is AskSubject.Plant -> name?.let { AskStarters.forPlant(it) }
+        is AskSubject.Animal -> name?.let { AskStarters.forAnimal(it) }
+    }.orEmpty()
+    // A name the user chose could turn a question into one the app answers itself, so such a question is not offered.
+    val texts = all.associateWith { starterText(it) }.filterValues { GardenAssistantGuard.classify(it) == QuestionKind.GENERAL }
+    val safe = all.filter { it in texts }
+    val asked = exchanges.map { it.question }.toSet()
+    val ask = { starter: Starter, text: String ->
+        if (!busy) model.ask(text, weedStatus, starter.about)
+    }
     val list = rememberLazyListState()
     LaunchedEffect(exchanges.size) { if (exchanges.isNotEmpty()) list.animateScrollToItem(exchanges.size) }
     val send = {
@@ -97,11 +142,7 @@ fun AskScreen(
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list, contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
                 item(key = "intro") {
                     Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                        val name = when (subject) {
-                            is AskSubject.Plant -> plant?.title
-                            is AskSubject.Animal -> fauna?.animal(subject.key)?.displayName ?: subject.key
-                            AskSubject.Garden -> null
-                        }
+                        if (subject == AskSubject.Garden) now?.let { Greeting(it) }
                         Text(
                             when (subject) {
                                 is AskSubject.Plant -> stringResource(R.string.ask_intro_plant, name.orEmpty())
@@ -111,12 +152,24 @@ fun AskScreen(
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         if (!assistant.ready) NotReady(onOpenModels)
+                        // The questions to start with go once something has been asked; follow-ups take their place.
+                        if (exchanges.isEmpty() && safe.isNotEmpty()) {
+                            Starters(AskStarters.page(safe, offset), AskStarters.hasMore(safe), onAsk = { ask(it, texts.getValue(it)) }, onMore = { offset++ })
+                        }
                     }
                 }
-                itemsIndexed(exchanges, key = { i, _ -> "exchange-$i" }) { _, exchange ->
+                itemsIndexed(exchanges, key = { i, _ -> "exchange-$i" }) { i, exchange ->
                     Column(Modifier.readable(), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         Question(exchange.question)
-                        Reply(exchange.reply, locality.state, onOpenModels, onOpenRecord)
+                        Reply(exchange.reply, locality.state, readingAbout, onOpenModels, onOpenRecord)
+                        val done = exchange.reply as? AssistantReply.Done
+                        if (done != null && i == exchanges.lastIndex) {
+                            val next = if (subject == AskSubject.Garden) AskFollowUps.after(done.cited) else safe
+                            val nextTexts = next.associateWith { starterText(it) }
+                            val offered = next.filter { starter -> nextTexts.getValue(starter).let { it !in asked && GardenAssistantGuard.classify(it) == QuestionKind.GENERAL } }
+                                .take(AskFollowUps.SHOWN)
+                            FollowUps(offered) { ask(it, nextTexts.getValue(it)) }
+                        }
                     }
                 }
             }
@@ -154,8 +207,9 @@ private fun Question(text: String) {
 }
 
 @Composable
-private fun Reply(reply: AssistantReply, state: AuState?, onOpenModels: () -> Unit, onOpenRecord: (CitedRecord) -> Unit) {
+private fun Reply(reply: AssistantReply, state: AuState?, readingAbout: String?, onOpenModels: () -> Unit, onOpenRecord: (CitedRecord) -> Unit) {
     when (reply) {
+        is AssistantReply.Reading -> ReadingLine(reply, readingAbout)
         AssistantReply.Loading -> Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
             PollenLoadingIndicator(Modifier.size(32.dp))
             Text(stringResource(R.string.ask_loading), style = MaterialTheme.typography.bodyMedium)

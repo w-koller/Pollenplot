@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot
 
+import kotlinx.coroutines.CompletableDeferred
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -92,10 +93,20 @@ class FakeAssistant(
     /** The questions asked, with the official weed status the screen passed for each. */
     val asked = mutableListOf<Pair<String, String?>>()
 
+    /** The records each question was about, when the app offered it. */
+    val about = mutableListOf<List<String>>()
+
+    /** What it says it is reading before it answers, and, when set, what it waits for before going on. */
+    var reading = AssistantReply.Reading()
+    var hold: CompletableDeferred<Unit>? = null
+
     override val ready: Boolean = true
 
-    override fun ask(subject: AskSubject, question: String, history: List<Pair<String, String>>, weedStatus: String?): Flow<AssistantReply> = flow {
+    override fun ask(subject: AskSubject, question: String, history: List<Pair<String, String>>, weedStatus: String?, about: List<String>): Flow<AssistantReply> = flow {
         asked += question to weedStatus
+        this@FakeAssistant.about += about
+        emit(reading)
+        hold?.await()
         emit(AssistantReply.Loading)
         val words = answer.split(" ")
         for (i in 1 until words.size) emit(AssistantReply.Streaming(words.take(i).joinToString(" ")))

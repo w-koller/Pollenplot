@@ -18,7 +18,7 @@ import java.time.LocalDate
 data class ProblemView(val problem: PlantProblem, val name: String, val info: ProblemInfo?, val plantTitle: String?, val treatments: List<Treatment>)
 
 /** A treated problem due a second look. */
-data class FollowUpDue(val problemId: String, val name: String, val plantTitle: String?, val due: LocalDate) {
+data class FollowUpDue(val problemId: String, val name: String, val plantTitle: String?, val due: LocalDate, val plantId: String? = null) {
     val key: String get() = "$problemId:$due"
 }
 
@@ -45,13 +45,13 @@ class ProblemViews(
 
     val due: Flow<List<FollowUpDue>> = combine(problems.problems, problems.treatments, all) { list, treatments, shown ->
         val byId = shown.associateBy { it.problem.id }
-        ProblemTasks.due(list, treatments, today()).map { FollowUpDue(it.problem.id, byId[it.problem.id]?.name.orEmpty(), byId[it.problem.id]?.plantTitle, it.treatment.followUpOn!!) }
+        ProblemTasks.due(list, treatments, today()).map { FollowUpDue(it.problem.id, byId[it.problem.id]?.name.orEmpty(), byId[it.problem.id]?.plantTitle, it.treatment.followUpOn!!, it.problem.plantId) }
     }
 
     /** Every follow-up to come or due, for the calendar. */
     val upcoming: Flow<List<FollowUpDue>> = combine(problems.problems, problems.treatments, all) { list, treatments, shown ->
         val byId = shown.associateBy { it.problem.id }
-        ProblemTasks.upcoming(list, treatments).map { FollowUpDue(it.problem.id, byId[it.problem.id]?.name.orEmpty(), byId[it.problem.id]?.plantTitle, it.treatment.followUpOn!!) }
+        ProblemTasks.upcoming(list, treatments).map { FollowUpDue(it.problem.id, byId[it.problem.id]?.name.orEmpty(), byId[it.problem.id]?.plantTitle, it.treatment.followUpOn!!, it.problem.plantId) }
     }
 
     /** The plants likely in flower now in the zones of [plantId]'s plant, or the plant alone when it has no zone. */

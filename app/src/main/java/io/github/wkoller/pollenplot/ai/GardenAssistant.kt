@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot.ai
 
+import io.github.wkoller.pollenplot.domain.assistant.GardenPulse
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -35,6 +36,12 @@ import java.io.File
 
 /** What the assistant says back: progress, the answer as it arrives and when it is done, or one of the app's own answers. */
 sealed interface AssistantReply {
+    /**
+     * The garden's records are being read before the model answers: how many plants, zones and sightings the question
+     * seemed to be about, all none for a question about one plant or animal, or before they have been found.
+     */
+    data class Reading(val plants: Int = 0, val zones: Int = 0, val sightings: Int = 0) : AssistantReply
+
     /** Gemma 4 is being loaded, which takes a few seconds the first time. */
     data object Loading : AssistantReply
 
@@ -68,8 +75,16 @@ interface Assistant {
     /**
      * Answers [question] about [subject], after the earlier questions and answers in [history]. [weedStatus] is the
      * official weed status of a plant where the garden is, as the Weed card says it, which the model may only repeat.
+     * [about] are the garden's records a question offered by the app is about, which a question about the garden is
+     * given first.
      */
-    fun ask(subject: AskSubject, question: String, history: List<Pair<String, String>> = emptyList(), weedStatus: String? = null): Flow<AssistantReply>
+    fun ask(
+        subject: AskSubject,
+        question: String,
+        history: List<Pair<String, String>> = emptyList(),
+        weedStatus: String? = null,
+        about: List<String> = emptyList(),
+    ): Flow<AssistantReply>
 
     /**
      * Which of [suggestions] the cut-out at [thumbnail] shows, by index, or null for none of them. It fails if Gemma 4
@@ -99,6 +114,8 @@ class GardenAssistant(
     private val knowledge: KnowledgeRepository,
     private val meaning: MeaningSearch,
     private val settings: SettingsStore,
+    /** What the garden is doing now, which a question about the garden is told along with its summary. */
+    private val pulse: (suspend () -> GardenPulse)? = null,
     /** Keeps a failure in the problem report, so a model that will not load on someone's phone can be looked into. */
     private val onError: (Throwable) -> Unit = {},
 ) : Assistant {
@@ -107,7 +124,7 @@ class GardenAssistant(
 
     override val ready: Boolean get() = model.ready
 
-    override fun ask(subject: AskSubject, question: String, history: List<Pair<String, String>>, weedStatus: String?): Flow<AssistantReply> = channelFlow {
+    override fun ask(subject: AskSubject, question: String, history: List<Pair<String, String>>, weedStatus: String?, about: List<String>): Flow<AssistantReply> = channelFlow {
         val kind = GardenAssistantGuard.classify(question)
         if (kind != QuestionKind.GENERAL) {
             send(AssistantReply.Fixed(kind))
@@ -117,7 +134,8 @@ class GardenAssistant(
             send(AssistantReply.NotReady)
             return@channelFlow
         }
-        val prepared = prepare(subject, question, weedStatus)
+        val prepared = prepare(subject, question, weedStatus, about)
+        send(AssistantReply.Reading(prepared.records.count { it.kind == RecordKind.PLANT }, prepared.records.count { it.kind == RecordKind.ZONE }, prepared.records.count { it.kind == RecordKind.SIGHTING }))
         if (!model.isLoaded) send(AssistantReply.Loading)
         try {
             model.withEngine { engine ->
@@ -190,7 +208,7 @@ class GardenAssistant(
     /** What the model is sent for a question: the prompt with its facts, a photo when there is one, and the records it may cite. */
     private class Prepared(val prompt: String, val image: ByteArray?, val records: List<CitedRecord> = emptyList())
 
-    private suspend fun prepare(subject: AskSubject, question: String, weedStatus: String?): Prepared = when (subject) {
+    private suspend fun prepare(subject: AskSubject, question: String, weedStatus: String?, about: List<String>): Prepared = when (subject) {
         is AskSubject.Plant -> {
             val view = views.plant(subject.id).first()
             val facts = if (view == null) emptyList() else AssistantFacts.plant(view.title, view.species, view.care?.care, view.zoneName, view.plant.quantity, weedStatus, views.locality.first().hemisphere, view.care?.corrected.orEmpty())
@@ -205,21 +223,42 @@ class GardenAssistant(
             Prepared(GardenPrompts.about(facts, question), seen.firstNotNullOfOrNull { it.sighting.thumbnail }?.let { photo(it) })
         }
         AskSubject.Garden -> {
-            val records = records(question)
-            Prepared(GardenPrompts.garden(summary(), records, question), null, records)
+            val records = records(question, about)
+            Prepared(GardenPrompts.garden(summary(), records, question, facts(about)), null, records)
         }
+    }
+
+    /**
+     * What is known about the plants and animals a question offered by the app is about, so "Which bees visit the
+     * grevillea?" has the grevillea's forage to answer from.
+     */
+    private suspend fun facts(about: List<String>): List<String> {
+        if (about.isEmpty()) return emptyList()
+        val hemisphere = views.locality.first().hemisphere
+        val plants = views.plants.first().filter { it.plant.id in about }.flatMap { view ->
+            AssistantFacts.plant(view.title, view.species, view.care?.care, view.zoneName, view.plant.quantity, null, hemisphere, view.care?.corrected.orEmpty())
+        }
+        val fauna = knowledge.awaitFauna()
+        val animals = views.sightings.first().filter { it.sighting.id in about }.mapNotNull { seen ->
+            val key = Biodiversity.keyOf(seen.sighting, fauna)
+            val count = views.sightings.first().count { Biodiversity.keyOf(it.sighting, fauna) == key }
+            fauna.animal(key)?.let { AssistantFacts.animal(it, settings.current().gardenState, count) }
+        }.flatten()
+        return plants + animals
     }
 
     /**
      * The records a question about the garden is most likely about: those that match most of its words, then those
      * close to it in meaning when the text model is on the phone.
      */
-    internal suspend fun records(question: String): List<CitedRecord> {
+    internal suspend fun records(question: String, about: List<String> = emptyList()): List<CitedRecord> {
+        // The records a question offered by the app is about come first, whatever its words match.
+        val pinned = garden.searchHits(about)
         val counts = linkedMapOf<String, Pair<SearchHit, Int>>()
         for (word in GardenPrompts.searchWords(question)) {
             garden.search(word, PER_WORD).forEach { hit -> counts[hit.recordId] = hit to ((counts[hit.recordId]?.second ?: 0) + 1) }
         }
-        val byWords = counts.values.sortedByDescending { it.second }.map { it.first }.take(MAX_RECORDS)
+        val byWords = pinned + counts.values.sortedByDescending { it.second }.map { it.first }.filter { hit -> pinned.none { it.recordId == hit.recordId } }.take(MAX_RECORDS)
         val related = runCatching { meaning.related(question, byWords.map { it.recordId }.toSet()) }.getOrDefault(emptyList())
         return (byWords + related).take(MAX_RECORDS).mapNotNull { hit ->
             val kind = RecordKind.entries.firstOrNull { it.name == hit.kind } ?: return@mapNotNull null
@@ -227,13 +266,23 @@ class GardenAssistant(
         }
     }
 
-    /** The zones, how many plants grow in each, and how many sightings there are. */
+    /** The zones, how many plants grow in each, how many sightings there are, and what the garden is doing now. */
     private suspend fun summary(): String {
         val zones = views.zones.first()
         val plants = views.plants.first().count { it.isGrowing }
         val sightings = views.sightings.first().size
         val zoneList = zones.joinToString(", ") { "${it.zone.name} with ${it.plants.size} plants" }
-        return "${zones.size} zones ($zoneList), $plants plants growing and $sightings sightings of animals recorded."
+        // The summary still goes without what the garden is doing now, if that cannot be read.
+        val current = try {
+            pulse?.invoke()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            onError(error)
+            null
+        }
+        val now = current?.let { GardenPrompts.pulse(it) }.orEmpty()
+        return (listOf("${zones.size} zones ($zoneList), $plants plants growing and $sightings sightings of animals recorded.") + now).joinToString("\n")
     }
 
     /** A cut-out from the app's files, as JPEG, which the model reads; null if it has gone. */

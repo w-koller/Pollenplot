@@ -727,6 +727,7 @@ fun AppRoot(
                                     RecordKind.SIGHTING -> navController.navigate(SightingRoute(record.id))
                                 }
                             },
+                            pulse = container.askViews::current,
                         )
                     }
                     composable<SightingRoute> { entry ->

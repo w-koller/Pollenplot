@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot
 
+import io.github.wkoller.pollenplot.data.AskViews
 import io.github.wkoller.pollenplot.data.LibraryRepository
 import io.github.wkoller.pollenplot.library.LibraryPhotos
 import android.content.Context
@@ -298,7 +299,9 @@ class AppContainer(
     )
     val meaning = MeaningSearch(appContext, garden, scope, embedder)
     val gemma = GemmaModel(appContext)
-    val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore) { error ->
+    /** What the garden is doing now, for Ask your garden's questions and the summary the model is given. */
+    val askViews = AskViews(views, rhythms, knowledge, water, bees, nativeBees, problemViews, settingsStore, clock)
+    val assistant: Assistant = assistant ?: GardenAssistant(appContext, gemma, views, garden, knowledge, meaning, settingsStore, askViews::current) { error ->
         Log.w("GardenAssistant", "Gemma 4 could not answer", error)
     }
     val backups = BackupService(appContext, this.database, settingsStore, clock, ::exportJsonLd, ::afterRestore, scope)
