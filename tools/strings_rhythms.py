@@ -1,8 +1,7 @@
 # Copy for Pollen Rhythms: the forage calendar for each group of bees, its gaps and the plants that would fill them,
 # and what is flowering.
 STRINGS = {
-    "rhythms_intro": "This is what the flowers in your garden offer each group of bees through the year. Honey bees "
-    "count mass-flowering trees and shrubs most, and stingless and solitary bees count the variety of flowers.",
+    "rhythms_intro": "This shows what your garden's flowers offer each group of bees through the year.",
     "rhythms_calendar": "The year for your bees",
     "bee_group_honey": "Honey bees",
     "bee_group_stingless": "Stingless bees",
@@ -14,10 +13,14 @@ STRINGS = {
     "rhythms_lane_summary": "%1$s. %2$s.",
     "rhythms_level_in": "%1$s in %2$s",
     "rhythms_lane_unfed": "Nothing in your garden is known to feed them yet",
-    "rhythms_how": "Each plant that feeds honey bees adds its score while it flowers, doubled for a tree or shrub, for "
-    "up to three plants. For stingless and solitary bees, each kind of plant adds its score once, and a resin source or "
-    "flowers that need buzz pollination add one more. A month with no points has nothing, 1 to 3 points is a little, "
-    "4 to 7 is some, and 8 or more is plenty.",
+    # The points of "How it works" under the calendar, and the report's paragraphs about it, from RhythmsEngine.points.
+    "rhythms_how_honey": "Honey bees count mass-flowering trees and shrubs most. Each plant in flower adds its honey bee "
+    "score, from 0 to 3, doubled for a tree or shrub and counted for up to three of that plant.",
+    "rhythms_how_variety": "Stingless and solitary bees count variety. Each kind of plant in flower adds its score once.",
+    "rhythms_how_extra": "A resin source adds a point for stingless bees, and flowers that need buzz pollination add a "
+    "point for solitary bees.",
+    "rhythms_how_levels": "A month's points set its level: 0 is Nothing, 1 to 3 is A little, 4 to 7 is Some, and 8 or "
+    "more is Plenty.",
     "rhythms_gaps": "Gaps for %1$s",
     "rhythms_offers": "Nectar and pollen",
     "rhythms_offers_line": "%1$s find nectar %2$s, and pollen %3$s.",

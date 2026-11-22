@@ -164,7 +164,8 @@ fun AskScreen(
                         Reply(exchange.reply, locality.state, readingAbout, onOpenModels, onOpenRecord)
                         val done = exchange.reply as? AssistantReply.Done
                         if (done != null && i == exchanges.lastIndex) {
-                            val next = if (subject == AskSubject.Garden) AskFollowUps.after(done.cited) else safe
+                            // The records the answer drew on first, then the questions not asked yet, so there is always a next step.
+                            val next = if (subject == AskSubject.Garden) AskFollowUps.after(done.cited, done.considered, safe) else safe
                             val nextTexts = next.associateWith { starterText(it) }
                             val offered = next.filter { starter -> nextTexts.getValue(starter).let { it !in asked && GardenAssistantGuard.classify(it) == QuestionKind.GENERAL } }
                                 .take(AskFollowUps.SHOWN)

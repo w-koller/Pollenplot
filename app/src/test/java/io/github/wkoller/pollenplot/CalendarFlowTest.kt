@@ -1,5 +1,6 @@
 package io.github.wkoller.pollenplot
 
+import androidx.compose.ui.test.onNodeWithText
 import android.graphics.Bitmap
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -79,6 +80,9 @@ class CalendarFlowTest {
         waitFor(hasText("October 2026"))
         // Today says how many jobs it has in words, not only with its outline.
         waitFor(hasContentDescription("Today. ", substring = true))
+        // With a location set, the month has no footnote under it.
+        compose.onNodeWithText("The weather covers the week ahead", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Please set the garden's location in Settings", substring = true).assertDoesNotExist()
         shot("calendar_month")
         compose.pressWhenShown(hasContentDescription("Today. ", substring = true))
         waitFor(hasText("Please inspect Hive 1."))

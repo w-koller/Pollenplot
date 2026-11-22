@@ -100,6 +100,9 @@ class FakeAssistant(
     /** The records each question was about, when the app offered it. */
     val about = mutableListOf<List<String>>()
 
+    /** The records it says it was given, which the follow-ups use when [cited] is empty. */
+    var considered: List<CitedRecord> = emptyList()
+
     /** What it says it is reading before it answers, and, when set, what it waits for before going on. */
     var reading = AssistantReply.Reading()
     var hold: CompletableDeferred<Unit>? = null
@@ -114,7 +117,7 @@ class FakeAssistant(
         emit(AssistantReply.Loading)
         val words = answer.split(" ")
         for (i in 1 until words.size) emit(AssistantReply.Streaming(words.take(i).joinToString(" ")))
-        emit(AssistantReply.Done(answer, cited))
+        emit(AssistantReply.Done(answer, cited, considered))
     }
 
     override fun stop() = Unit

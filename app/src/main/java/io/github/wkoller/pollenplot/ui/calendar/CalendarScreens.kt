@@ -131,13 +131,16 @@ fun CalendarScreen(
                     MonthHeader(shownMonth, onPrevious = { month = shownMonth.minusMonths(1).toString() }, onNext = { month = shownMonth.plusMonths(1).toString() })
                 }
                 item { MonthGrid(shownMonth, loaded, today, onOpenDay) }
-                item {
-                    Text(
-                        stringResource(if (current?.gardenPlace == null) R.string.calendar_no_place else R.string.calendar_forecast_note),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(Spacing.l),
-                    )
+                // Without a location there is no weather to show, and the month says how to get it.
+                if (current?.gardenPlace == null) {
+                    item {
+                        Text(
+                            stringResource(R.string.calendar_no_place),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(Spacing.l),
+                        )
+                    }
                 }
             } else {
                 item {

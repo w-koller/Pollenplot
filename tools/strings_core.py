@@ -1,6 +1,7 @@
 # Core app copy, written to the product-UI rules in informed-trader/VOICE.md: say what the thing is, then
 # what the reader can do, then what happens next, in complete sentences with Australian spelling.
 STRINGS = {
+    "how_it_works": "How it works",
     "app_name": "Pollenplot",
     "app_tagline": "Ecosystem Management for Your Backyard",
 

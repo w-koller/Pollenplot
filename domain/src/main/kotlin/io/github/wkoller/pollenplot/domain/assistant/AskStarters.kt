@@ -117,15 +117,18 @@ object AskStarters {
 }
 
 /**
- * The questions offered after an answer about the garden: for each record the answer drew on, the next thing worth
- * asking about it, pinned to that record. A plant gets when it flowers and which bees visit it, a zone what to plant
- * there for bees, and a sighting what that animal needs.
+ * The questions offered after an answer. For each record the answer cited, then each other record the model was given
+ * ([considered]), comes the next thing worth asking about it, pinned to that record: a plant gets which bees visit it
+ * and when it flowers, a zone what to plant there for bees, and a sighting what that animal needs. The [fallback]
+ * questions, such as the starters not asked yet, follow, so an answer that cites nothing still ends with something to
+ * ask. The screen leaves out what was already asked and shows the first [SHOWN].
  */
 object AskFollowUps {
     const val SHOWN = 3
 
-    fun after(cited: List<CitedRecord>): List<Starter> {
-        val byRecord = cited.distinctBy { it.id }.map { record ->
+    fun after(cited: List<CitedRecord>, considered: List<CitedRecord> = emptyList(), fallback: List<Starter> = emptyList()): List<Starter> {
+        val records = (cited + considered).distinctBy { it.id }
+        val byRecord = records.map { record ->
             val pin = listOf(record.id)
             when (record.kind) {
                 RecordKind.PLANT -> listOf(Starter(StarterKind.PLANT_BEES, listOf(record.title), pin), Starter(StarterKind.PLANT_FLOWERING, listOf(record.title), pin))
@@ -135,6 +138,6 @@ object AskFollowUps {
         }
         // One question for each record first, so the follow-ups cover what the answer was about.
         val rounds = (0 until (byRecord.maxOfOrNull { it.size } ?: 0)).flatMap { round -> byRecord.mapNotNull { it.getOrNull(round) } }
-        return rounds.take(SHOWN)
+        return (rounds + fallback).distinctBy { it.kind to it.names }
     }
 }
