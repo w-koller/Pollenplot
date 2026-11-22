@@ -24,14 +24,20 @@ for a screen reader (read from the semantics tree, because Google's Accessibilit
 Compose under Robolectric), and with text at twice its size it saves each screen as `large_*.png`. Screen tests save
 pictures to `app/build/screenshots/`. Look at them after UI changes: there are light, dark and
 wide-window versions, and `PlotScreenFlowTest` drives a demo yard (`DemoGarden`) through the Plot, zones, plants and
-search. Screens fed by Room flows use the classic `createComposeRule`, because the v2 rule's standard test dispatcher
-did not pick up database emissions while a test waits. The classic rule's unconfined dispatcher has a cost of its own:
-a Room emission resumes the composition on Room's thread, and now and then lays out the screen while the test's main
-thread is doing so ("performMeasureAndLayout called during measure layout"). `AccessibilityFlowTest`, which waits for
-every screen it checks, runs on the v2 rule for that reason, and a test that fails that way can try it too. Even so, a screen whose first data came only from a Room flow
-now and then stayed on its loading state under Robolectric (about one run in ten, more while Gradle was busy), so the
-Identify results are published by `IdentifyModel` as soon as the analysis returns, and the Room flow only brings later
-changes. Prefer that shape when a screen opens on data the app has just written. Press what a press has just opened, such as a
+search. Screen tests use the v2 rule (`androidx.compose.ui.test.junit4.v2.createComposeRule`). Its standard test
+dispatcher queues the screen's coroutines and runs them on the main thread while the test waits through the rule
+(`waitUntil`, `waitForIdle` or a finder). The classic rule's unconfined dispatcher let a Room emission resume the
+composition on Room's thread and now and then lay out the screen while the test's main thread was doing so
+("performMeasureAndLayout called during measure layout"). The v2 rule has a cost of its own: a `runBlocking` in a test
+body stops the screen's coroutines, so one that needs a coroutine a press started never ends. DataStore runs an
+update's transform in the caller's context, so a settings update right after a press that saves settings waits forever
+behind the press's own update. Run such a block with `compose.offMain { … }` in `TestGarden.kt`, which runs it on
+another thread and waits through the rule. Reads of what is already stored, and anything before `setContent`, are fine
+in `runBlocking`. A test stuck this way hangs rather than fails, because the rule's timeout cannot interrupt a blocked
+thread, so run a suspect class under `timeout`. A screen whose first data came only from a Room flow also stayed on its
+loading state now and then under Robolectric (about one run in ten on the classic rule, more while Gradle was busy), so
+the Identify results are published by `IdentifyModel` as soon as the analysis returns, and the Room flow only brings
+later changes. Prefer that shape when a screen opens on data the app has just written. Press what a press has just opened, such as a
 menu item, with `pressWhenShown` or `addFromMenu` in `TestGarden.kt`, which wait for it first, and the Plot's top-bar
 buttons the same way, because they appear only once its zones have loaded. Robolectric also cannot load the native model interpreter, decode with `ImageDecoder` or settle a text field inside a
 dialog window, so screen tests use a fake `PlantIdentifier`, give Coil `imageDecoderEnabled(false)`, and searches open

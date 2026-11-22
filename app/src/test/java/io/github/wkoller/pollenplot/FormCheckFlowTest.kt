@@ -11,7 +11,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
@@ -46,7 +46,6 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(application = WildlifeTestApp::class, qualifiers = "en-rAU-w411dp-h1600dp-xhdpi")
 class FormCheckFlowTest {
-    @Suppress("DEPRECATION")
     @get:Rule
     val compose = createComposeRule()
 

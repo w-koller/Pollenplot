@@ -3,7 +3,7 @@ package io.github.wkoller.pollenplot
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -30,7 +30,6 @@ import org.robolectric.annotation.Config
 @RunWith(AndroidJUnit4::class)
 @Config(application = WildlifeTestApp::class, qualifiers = "en-rAU")
 class ExportTest {
-    @Suppress("DEPRECATION")
     @get:Rule
     val compose = createComposeRule()
 

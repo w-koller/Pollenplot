@@ -4,7 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.material3.Surface
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -33,7 +33,6 @@ import java.io.File
 @Config(application = WildlifeTestApp::class, qualifiers = "en-rAU")
 class ShareReportTest {
     // The classic rule runs coroutines at once, so the report is written while the test waits.
-    @Suppress("DEPRECATION")
     @get:Rule
     val compose = createComposeRule()
 

@@ -13,7 +13,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -60,7 +60,6 @@ import java.time.Month
 @Config(application = WildlifeTestApp::class, qualifiers = "en-rAU-w411dp-h891dp-xxhdpi")
 class HarvestFlowTest {
     // The classic rule runs coroutines at once, so flows from the database reach the screen while the test waits.
-    @Suppress("DEPRECATION")
     @get:Rule
     val compose = createComposeRule()
 
