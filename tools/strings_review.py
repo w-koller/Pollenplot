@@ -36,7 +36,7 @@ STRINGS = {
     "scan_albums": "Albums",
     "scan_albums_body": "Pollenplot scans the albums you tick. At first that is the camera's own album.",
     "scan_back": "Older photos",
-    "scan_back_body": "When scanning is turned on, Pollenplot also looks at photos taken this long before.",
+    "scan_back_body": "Pollenplot also looks at photos taken up to this long before scanning was turned on.",
     "scan_back_choice": "How far back",
     "scan_back_none": "None",
     "scan_back_week": "1 week",

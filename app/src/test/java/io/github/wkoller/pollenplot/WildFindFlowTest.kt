@@ -113,7 +113,7 @@ class WildFindFlowTest {
         val photoFile = File(app.filesDir, runBlocking { garden.photo(photoId) }!!.path)
         assertTrue(photoFile.isFile)
         compose.onNodeWithText("Not this one").performScrollTo().performClick()
-        waitFor(hasText("This find will not be saved, and the photo is deleted when you leave."))
+        waitFor(hasText("Pollenplot doesn't save this find, and deletes the photo when you leave."))
 
         model.takeAnother()
         // The photo is let go outside the screen's scope, which may already be gone, and its files after its record.

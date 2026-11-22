@@ -15,8 +15,7 @@ STRINGS = {
     "library_mine_hint_info": "These are the plants you have added or saved. Press one to see what it needs, or press "
     "Select to choose several.",
     "library_add_mode": "Add mode",
-    "library_add_mode_body": "A press adds the plant to your garden straight away. With add mode off, a press opens "
-    "the plant's details, where you can add it too.",
+    "library_add_mode_body": "A press adds the plant to your garden straight away. A press opens the plant's details instead when add mode is off, and you can add it from there too.",
     "library_page_add": "Add to garden",
     "library_page_save": "Save to my library",
     "library_family": "Family %1$s",

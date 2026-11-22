@@ -15,9 +15,7 @@ STRINGS = {
     "feed_choose_zone": "Please choose at least one zone.",
     "feed_saved": "Feed recorded.",
     "feed_phosphorus_title": "Too much phosphorus?",
-    "feed_phosphorus_body": "%1$s has %2$s%% phosphorus. Plants such as grevilleas and banksias are harmed by "
-    "phosphorus, and an Australian Native Plants Society article calls about 4%% safe for them. These plants are in "
-    "the zones you chose: %3$s.",
+    "feed_phosphorus_body": "%1$s has %2$s%% phosphorus. Phosphorus harms plants such as grevilleas and banksias, and an Australian Native Plants Society article calls about 4%% safe for them. The zones you chose hold %3$s.",
     "feed_phosphorus_save": "Record anyway",
     "feed_kind_conditioner": "Conditioner",
     "feed_kind_liquid": "Liquid fertiliser",
@@ -49,8 +47,7 @@ STRINGS = {
     "settings_feed_reminders": "Remind me about feeding",
     "settings_feed_reminders_body": "A notification says when a zone is due a feed.",
     "settings_conditioner": "Remind me about conditioner before hot days",
-    "settings_conditioner_body": "A notification says when a day of 35 °C or more is forecast within three days and "
-    "no conditioner such as seaweed was given in the last two weeks.",
+    "settings_conditioner_body": "Pollenplot sends a notification when a day of 35 °C or more is forecast within three days and no conditioner such as seaweed was given in the last two weeks.",
 }
 
 PLURALS = {

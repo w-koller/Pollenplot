@@ -74,7 +74,7 @@ STRINGS = {
     "hotel_pests": "Pests",
     "hotel_upkeep_kind": "What you did",
     "hotel_delete_title": "Delete this hotel?",
-    "hotel_delete_body": "The hotel and everything recorded for it will be removed.",
+    "hotel_delete_body": "This removes the hotel and everything recorded for it.",
 }
 
 PLURALS = {

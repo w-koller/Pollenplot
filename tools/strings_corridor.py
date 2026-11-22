@@ -20,8 +20,7 @@ STRINGS = {
     "habitat_present": "Present",
     "habitat_missing": "Missing",
     "habitat_row": "%1$s, %2$s",
-    "habitat_layers_from": "Each plant's growth form decides its layer: trees make the canopy, shrubs and climbers the "
-    "midstorey, and smaller plants the understorey. Lawn and vegetables make none.",
+    "habitat_layers_from": "Each plant's growth form decides its layer. Trees make the canopy, shrubs and climbers the midstorey, and smaller plants the understorey. Lawn and vegetables make none.",
     "habitat_source": "Source: Backyards for nature, NSW Environment",
     "habitat_open_source": "Open Backyards for nature",
     "habitat_water_here": "This zone has water for wildlife.",

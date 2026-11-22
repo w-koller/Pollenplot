@@ -39,8 +39,7 @@ STRINGS = {
     "compost_phase_ready_body": "It is ready when it is no warmer than the air, dark and crumbly, smells of earth and no "
     "scraps can be recognised. If it is not, please give it another two weeks and look again.",
     "compost_phase_emptied_body": "This fill is finished.",
-    "compost_phase_estimate": "Pollenplot estimates the phase from the days since the bin was filled. A thermometer "
-    "reading in the middle of the heap from the last three days comes first.",
+    "compost_phase_estimate": "Pollenplot estimates the phase from the days since the bin was filled. A thermometer reading from the middle of the heap in the last three days takes priority.",
     "compost_phase_description": "Compost bin, %1$s",
 
     "compost_start": "Start a fill",
@@ -78,11 +77,10 @@ STRINGS = {
     "essential. A fortnight is a good start.",
     "compost_delete": "Delete this bin",
     "compost_delete_title": "Delete %1$s?",
-    "compost_delete_body": "The bin and every fill recorded in it will be deleted.",
+    "compost_delete_body": "This deletes the bin and every fill recorded in it.",
     "compost_delete_confirm": "Delete",
     "compost_deleted": "Deleted %1$s.",
-    "compost_sources": "Sources: Cornell Waste Management Institute, University of Maryland Extension, Government of "
-    "South Australia and Brisbane City Council.",
+    "compost_sources": "These steps follow the Cornell Waste Management Institute, the University of Maryland Extension, the Government of South Australia and Brisbane City Council.",
 
     "today_compost_turn": "Please turn %1$s.",
     "today_compost_check": "Please look whether %1$s is ready to empty.",
@@ -92,8 +90,7 @@ STRINGS = {
     "notify_compost_turn_line": "Please turn %1$s.",
     "notify_compost_check_line": "%1$s may be ready to empty.",
     "settings_compost_reminders": "Remind me about compost",
-    "settings_compost_reminders_body": "A notification says when a compost bin is due a turn or a look whether it is "
-    "ready.",
+    "settings_compost_reminders_body": "Pollenplot sends a notification when a compost bin is due a turn, or a look to see whether it is ready.",
     "search_kind_compost": "Compost",
 }
 

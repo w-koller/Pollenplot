@@ -123,7 +123,7 @@ STRINGS = {
     "compare_family": "Family",
 
     "finder_title": "Weed finder",
-    "finder_body": "Please choose what the plant looks like. The weeds on %1$s's list that match are shown below.",
+    "finder_body": "Please choose what the plant looks like. The weeds on %1$s's list that match appear below.",
     "finder_any": "Any",
     "finder_flower_colour": "Flower colour",
     "finder_leaf_form": "Leaf form",
@@ -139,7 +139,7 @@ STRINGS = {
     "notify_weeds_body": "%1$s. If you see it in your yard, please take a photo to check it.",
 
     "identify_weed_title": "Check a weed",
-    "identify_weed_more": "If none of the suggestions is right, you can look for the plant by what it looks like.",
+    "identify_weed_more": "You can look for the plant by what it looks like if none of the suggestions is right.",
     "identify_weed_hint": "Please point the camera at the plant you want to check.",
 
     "about_sources": "Data sources",

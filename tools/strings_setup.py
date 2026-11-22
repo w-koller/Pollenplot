@@ -8,8 +8,7 @@ STRINGS = {
 
     # Welcome
     "setup_welcome_title": "Welcome to Pollenplot",
-    "setup_welcome_body": "Pollenplot keeps the plants, wildlife, bees and watering in your backyard, and explains how "
-    "they fit together. Plants and animals are identified on your phone, and your records stay on your phone.",
+    "setup_welcome_body": "Pollenplot keeps track of the plants, wildlife, bees and watering in your backyard, and explains how they fit together. It identifies plants and animals on your phone, and your records stay there.",
     "setup_welcome_steps": "Setup takes a few minutes, in four steps.",
     "setup_welcome_step_location": "Where your garden is",
     "setup_welcome_step_models": "The models that identify plants and animals",
@@ -59,7 +58,7 @@ STRINGS = {
 
     # Settings
     "settings_setup_again": "Set up again",
-    "settings_setup_again_body": "Go through the first-launch setup again: location, models, zones and permissions.",
+    "settings_setup_again_body": "Runs the first-launch setup again, for the location, models, zones and permissions.",
 }
 
 PLURALS = {

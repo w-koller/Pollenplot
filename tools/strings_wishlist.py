@@ -19,12 +19,11 @@ STRINGS = {
     "field_save": "Save to wishlist",
     "field_let_go_button": "Not this one",
     "field_let_go_title": "Not this one",
-    "field_let_go": "This find will not be saved, and the photo is deleted when you leave.",
+    "field_let_go": "Pollenplot doesn't save this find, and deletes the photo when you leave.",
     "field_saved": "Saved to your wishlist.",
     "field_open_wishlist": "Open the wishlist",
     "field_weed_confirm_title": "Save a weed?",
-    "field_weed_confirm_body": "%1$s is on a weed list for your area. Please grow one of the native alternatives "
-    "instead. If you save it, the wishlist will show it as a weed.",
+    "field_weed_confirm_body": "%1$s is on a weed list for your area. Please grow one of the native alternatives instead. The wishlist shows it as a weed if you save it.",
     "field_weed_confirm_save": "Save anyway",
     "identify_from_photos": "Choose from photos",
 
@@ -32,8 +31,7 @@ STRINGS = {
     "wishlist_title": "Wishlist",
     "wishlist_find": "Find a plant",
     "wishlist_empty_title": "Your wishlist is empty.",
-    "wishlist_empty_body": "Plants you photograph away from home, and native plants to grow instead of weeds, can be "
-    "saved here. Please tap Find a plant to identify one.",
+    "wishlist_empty_body": "You can save plants you photograph away from home here, and native plants to grow instead of weeds. Please tap Find a plant to identify one.",
     "wishlist_seen_at": "Seen at %1$s",
     "wishlist_for_zone": "For %1$s",
     "wishlist_weed_here": "Weed in your area",
@@ -50,11 +48,11 @@ STRINGS = {
     "wish_delete": "Delete",
     "wish_delete_icon": "Delete from the wishlist",
     "wish_delete_title": "Delete this plant from the wishlist?",
-    "wish_delete_body": "The plant and its notes will be removed from your wishlist.",
+    "wish_delete_body": "This removes the plant and its notes from your wishlist.",
 
     # Native alternatives to a weed
     "alternatives_title": "Native alternatives",
-    "alternatives_body": "These native plants are suggested instead of this weed for gardens in your state.",
+    "alternatives_body": "Pollenplot suggests these native plants instead of this weed for gardens in your state.",
     "alternatives_add": "Add to wishlist",
     "alternatives_on_wishlist": "On your wishlist",
     "alternatives_toxic_pets": "Toxic to pets",

@@ -12,9 +12,7 @@ STRINGS = {
     "pot_repot_due": "Time to look at repotting",
     "pot_flush_next": "Next flush around %1$s.",
     "pot_repot_next": "Look at repotting around %1$s.",
-    "pot_flush_why": "Pots are flushed about every four months to wash out the salts that fertiliser and tap water leave, "
-    "as the University of New Hampshire Extension advises. Please run water through the pot until it drains freely, "
-    "and empty the saucer.",
+    "pot_flush_why": "The University of New Hampshire Extension advises flushing pots about every four months, to wash out the salts that fertiliser and tap water leave. Please run water through the pot until it drains freely, and empty the saucer.",
     "pot_repot_why": "Potting mix breaks down over time, so a plant is worth repotting every two to three years, or sooner "
     "when its roots fill the pot. Topping up refreshes the surface but does not replace the mix.",
     "pot_edit_title": "Pot",
@@ -60,7 +58,7 @@ STRINGS = {
     "notify_pots_channel_description": "Reminders when a pot is due a flush or a look at repotting, or a zone is due a "
     "feed.",
     "settings_pot_reminders": "Remind me about pots",
-    "settings_pot_reminders_body": "A notification says when a pot is due a flush or a look at repotting.",
+    "settings_pot_reminders_body": "Pollenplot sends a notification when a pot is due a flush or a look at repotting.",
 }
 
 PLURALS = {
