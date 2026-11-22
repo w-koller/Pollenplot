@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
@@ -66,7 +66,6 @@ import java.time.LocalDate
 @Config(application = WildlifeTestApp::class, qualifiers = "en-rAU-w411dp-h891dp-xxhdpi")
 class ProblemFlowTest {
     // The classic rule runs coroutines at once, so flows from the database reach the screen while the test waits.
-    @Suppress("DEPRECATION")
     @get:Rule
     val compose = createComposeRule()
 

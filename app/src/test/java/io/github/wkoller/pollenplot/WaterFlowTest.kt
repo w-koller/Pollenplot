@@ -11,7 +11,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
@@ -54,7 +54,6 @@ import java.time.LocalDate
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(application = WaterTestApp::class, qualifiers = "en-rAU-w411dp-h3000dp-xhdpi")
 class WaterFlowTest {
-    @Suppress("DEPRECATION")
     @get:Rule
     val compose = createComposeRule()
 
@@ -183,9 +182,10 @@ class WaterFlowTest {
         compose.onNodeWithText("Start at 5:00 am").performClick()
         waitFor(hasText("Watering starts at"))
         compose.onNodeWithText("Set the time").performClick()
-        assertEquals(WateringWindow.DEFAULT, runBlocking { app.container.settingsStore.current().wateringWindow })
+        // The press saves the hours on the screen's own coroutine, so the test's update waits for it off the main thread.
+        assertEquals(WateringWindow.DEFAULT, compose.offMain { app.container.settingsStore.current().wateringWindow })
 
-        runBlocking { app.container.settingsStore.update { it.copy(wateringWindow = WateringWindow(18 * 60, 20 * 60)) } }
+        compose.offMain { app.container.settingsStore.update { it.copy(wateringWindow = WateringWindow(18 * 60, 20 * 60)) } }
         waitFor(hasText("Pollenplot plans watering between 6:00 pm and 8:00 pm", substring = true))
         compose.scrollTo(hasText("Please water today between 6:00 pm and 8:00 pm", substring = true))
         shot("water_week")

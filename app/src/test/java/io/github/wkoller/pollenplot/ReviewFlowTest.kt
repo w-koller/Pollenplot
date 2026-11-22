@@ -20,7 +20,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -74,7 +74,6 @@ import java.time.Instant
 @Config(application = TestApp::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class ReviewFlowTest {
     // The classic rule runs coroutines at once, so flows from the database reach the screen while the test waits.
-    @Suppress("DEPRECATION")
     @get:Rule
     val compose = createComposeRule()
 

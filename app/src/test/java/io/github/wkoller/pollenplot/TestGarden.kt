@@ -37,8 +37,12 @@ import io.github.wkoller.pollenplot.scan.GalleryPhoto
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 
 /**
@@ -326,6 +330,23 @@ fun ComposeContentTestRule.openSettingsTo(row: SemanticsMatcher) {
 fun ComposeContentTestRule.pressWhenShown(matcher: SemanticsMatcher) {
     waitUntil(WAIT_MS) { onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty() }
     onAllNodes(matcher).onFirst().performClick()
+}
+
+/**
+ * Runs [block] on another thread and waits for it while the screen's coroutines go on. The v2 rule runs the screen's
+ * coroutines on the main thread, and only while the test waits through the rule, so a `runBlocking` in the test body
+ * that needs one of them never ends. A settings update right after a press that saves settings is one: DataStore runs
+ * the press's transform in the screen's context, and the test's update waits behind it. Before `setContent`, and for
+ * reads of what is already stored, `runBlocking` is fine.
+ */
+fun <T> ComposeContentTestRule.offMain(block: suspend CoroutineScope.() -> T): T {
+    val result = CoroutineScope(Dispatchers.Default).async(block = block)
+    try {
+        waitUntil(WAIT_MS) { result.isCompleted }
+    } finally {
+        result.cancel()
+    }
+    return runBlocking { result.await() }
 }
 
 /** Opens a tab's More menu and presses its [item], each once it is on the screen. */
