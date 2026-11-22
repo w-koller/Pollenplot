@@ -9,7 +9,6 @@ STRINGS = {
     "calendar_todo_week": "This week",
     "calendar_todo_month": "This month",
     "calendar_todo_none": "Nothing is due in this time. Pollenplot adds jobs here as they come up.",
-    "calendar_forecast_note": "The weather covers the week ahead. Jobs further ahead assume you do each job on its day.",
     "calendar_no_place": "Please set the garden's location in Settings to see the weather here.",
     "calendar_today": "Today",
     "calendar_day_jobs": "%1$s. %2$s",

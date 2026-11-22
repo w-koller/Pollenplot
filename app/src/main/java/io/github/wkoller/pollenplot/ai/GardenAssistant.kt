@@ -47,8 +47,11 @@ sealed interface AssistantReply {
 
     data class Streaming(val text: String) : AssistantReply
 
-    /** The whole answer, with the garden's records it cites. */
-    data class Done(val text: String, val cited: List<CitedRecord> = emptyList()) : AssistantReply
+    /**
+     * The whole answer, with the garden's records it cites and every record the model was given ([considered]), which
+     * the follow-up questions are drawn from when the answer cites none.
+     */
+    data class Done(val text: String, val cited: List<CitedRecord> = emptyList(), val considered: List<CitedRecord> = emptyList()) : AssistantReply
 
     /** A question the app answers itself instead of the model. */
     data class Fixed(val kind: QuestionKind) : AssistantReply
@@ -161,7 +164,7 @@ class GardenAssistant(
                                 send(AssistantReply.Streaming(text.trim()))
                             }
                         }
-                    send(if (unsafe) AssistantReply.Fixed(QuestionKind.CHEMICAL_DOSE) else AssistantReply.Done(text.trim(), GardenPrompts.citations(text, prepared.records)))
+                    send(if (unsafe) AssistantReply.Fixed(QuestionKind.CHEMICAL_DOSE) else AssistantReply.Done(text.trim(), GardenPrompts.citations(text, prepared.records), prepared.records))
                 } finally {
                     current = null
                     conversation.close()

@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.ui.rhythms
 
 import androidx.compose.foundation.layout.PaddingValues
+import io.github.wkoller.pollenplot.ui.components.HowItWorks
 import io.github.wkoller.pollenplot.ui.components.readableSides
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
 import androidx.annotation.StringRes
@@ -89,14 +90,6 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
             }
             feed(loaded)
             item(key = "calendar") { Calendar(loaded) }
-            item(key = "how") {
-                Text(
-                    stringResource(R.string.rhythms_how),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
-                )
-            }
             if (loaded.lanes.any { it.fed }) {
                 item(key = "offers") {
                     val words = listWords()
@@ -318,8 +311,19 @@ private fun Calendar(state: RhythmsState) {
                 }
             }
         }
+        // How the levels are worked out, kept off the page until it is asked for.
+        HowItWorks(howItWorks())
     }
 }
+
+/** The points of "How it works" for the calendar, which the report gives as its paragraphs too. */
+@Composable
+private fun howItWorks(): List<String> = listOf(
+    stringResource(R.string.rhythms_how_honey),
+    stringResource(R.string.rhythms_how_variety),
+    stringResource(R.string.rhythms_how_extra),
+    stringResource(R.string.rhythms_how_levels),
+)
 
 private val NAME_WIDTH = 96.dp
 

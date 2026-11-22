@@ -97,11 +97,29 @@ class AskStartersTest {
         val plant = CitedRecord("p1", RecordKind.PLANT, "Lavender", "")
         val zone = CitedRecord("z1", RecordKind.ZONE, "Herb Spiral", "")
         val sighting = CitedRecord("s1", RecordKind.SIGHTING, "Blue-banded bee", "")
-        val all = AskFollowUps.after(listOf(plant, zone, sighting))
+        val all = AskFollowUps.after(listOf(plant, zone, sighting)).take(AskFollowUps.SHOWN)
         assertEquals(listOf(StarterKind.PLANT_BEES, StarterKind.ZONE_BEES, StarterKind.ANIMAL_NEEDS), all.map { it.kind })
         assertEquals(listOf(listOf("p1"), listOf("z1"), listOf("s1")), all.map { it.about })
         assertEquals(listOf(StarterKind.PLANT_BEES, StarterKind.PLANT_FLOWERING), AskFollowUps.after(listOf(plant, plant)).map { it.kind })
         assertTrue(AskFollowUps.after(emptyList()).isEmpty())
+    }
+
+    @Test
+    fun `an answer that cites nothing is followed by the records it was given, then the questions not asked yet`() {
+        val plant = CitedRecord("p1", RecordKind.PLANT, "Lavender", "")
+        val zone = CitedRecord("z1", RecordKind.ZONE, "Herb Spiral", "")
+        val frogs = Starter(StarterKind.FROGS)
+        val birds = Starter(StarterKind.SEASON_BIRDS, season = Season.SPRING)
+        val all = AskFollowUps.after(emptyList(), considered = listOf(plant, zone), fallback = listOf(frogs, birds))
+        assertEquals(
+            listOf(StarterKind.PLANT_BEES, StarterKind.ZONE_BEES, StarterKind.PLANT_FLOWERING, StarterKind.FROGS, StarterKind.SEASON_BIRDS),
+            all.map { it.kind },
+        )
+        // A record both cited and given is asked about once, the cited one first.
+        val cited = AskFollowUps.after(listOf(zone), considered = listOf(plant, zone))
+        assertEquals(listOf(StarterKind.ZONE_BEES, StarterKind.PLANT_BEES, StarterKind.PLANT_FLOWERING), cited.map { it.kind })
+        // With nothing given at all, the questions not asked yet still follow.
+        assertEquals(listOf(frogs, birds), AskFollowUps.after(emptyList(), fallback = listOf(frogs, birds, frogs)))
     }
 
     @Test

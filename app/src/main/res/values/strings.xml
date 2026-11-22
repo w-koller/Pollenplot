@@ -10,12 +10,12 @@
     <string name="ask_hint">Your question</string>
     <string name="ask_send">Ask</string>
     <string name="ask_stop">Stop</string>
-    <string name="ask_loading">Loading Gemma 4. This takes a few seconds the first time.</string>
+    <string name="ask_loading">Loading Gemma 4.</string>
     <string name="ask_failed">Gemma 4 couldn\'t answer this time. Please try again.</string>
     <string name="ask_not_ready_title">Gemma 4 isn\'t on this phone yet.</string>
     <string name="ask_not_ready_body">Please download it in Settings › Models to ask questions. It answers on your phone, and nothing you ask leaves it.</string>
     <string name="ask_open_models">Open Settings › Models</string>
-    <string name="ask_written_by">Written by Gemma 4. Please check anything important.</string>
+    <string name="ask_written_by">Written by Gemma 4.</string>
     <string name="ask_app_answer">Pollenplot\'s own answer</string>
     <string name="ask_sources">From your records</string>
     <string name="ask_intro_plant">Please ask anything about %1$s, such as how to look after it or what it attracts.</string>
@@ -138,7 +138,6 @@
     <string name="calendar_todo_week">This week</string>
     <string name="calendar_todo_month">This month</string>
     <string name="calendar_todo_none">Nothing is due in this time. Pollenplot adds jobs here as they come up.</string>
-    <string name="calendar_forecast_note">The weather covers the week ahead. Jobs further ahead assume you do each job on its day.</string>
     <string name="calendar_no_place">Please set the garden\'s location in Settings to see the weather here.</string>
     <string name="calendar_today">Today</string>
     <string name="calendar_day_jobs">%1$s. %2$s</string>
@@ -275,6 +274,7 @@
     <string name="settings_compost_reminders">Remind me about compost</string>
     <string name="settings_compost_reminders_body">Pollenplot sends a notification when a compost bin is due a turn, or a look to see whether it is ready.</string>
     <string name="search_kind_compost">Compost</string>
+    <string name="how_it_works">How it works</string>
     <string name="app_name">Pollenplot</string>
     <string name="app_tagline">Ecosystem Management for Your Backyard</string>
     <string name="back">Back</string>
@@ -1671,7 +1671,7 @@
     <string name="animal_photos_title">What kind of animal is in them?</string>
     <string name="animal_photos_body">Pollenplot looks for the kind of animal you choose in each photo. Photos of plants are added from the Plot.</string>
     <string name="animal_photos_choose">Choose photos</string>
-    <string name="rhythms_intro">This is what the flowers in your garden offer each group of bees through the year. Honey bees count mass-flowering trees and shrubs most, and stingless and solitary bees count the variety of flowers.</string>
+    <string name="rhythms_intro">This shows what your garden\'s flowers offer each group of bees through the year.</string>
     <string name="rhythms_calendar">The year for your bees</string>
     <string name="bee_group_honey">Honey bees</string>
     <string name="bee_group_stingless">Stingless bees</string>
@@ -1683,7 +1683,10 @@
     <string name="rhythms_lane_summary">%1$s. %2$s.</string>
     <string name="rhythms_level_in">%1$s in %2$s</string>
     <string name="rhythms_lane_unfed">Nothing in your garden is known to feed them yet</string>
-    <string name="rhythms_how">Each plant that feeds honey bees adds its score while it flowers, doubled for a tree or shrub, for up to three plants. For stingless and solitary bees, each kind of plant adds its score once, and a resin source or flowers that need buzz pollination add one more. A month with no points has nothing, 1 to 3 points is a little, 4 to 7 is some, and 8 or more is plenty.</string>
+    <string name="rhythms_how_honey">Honey bees count mass-flowering trees and shrubs most. Each plant in flower adds its honey bee score, from 0 to 3, doubled for a tree or shrub and counted for up to three of that plant.</string>
+    <string name="rhythms_how_variety">Stingless and solitary bees count variety. Each kind of plant in flower adds its score once.</string>
+    <string name="rhythms_how_extra">A resin source adds a point for stingless bees, and flowers that need buzz pollination add a point for solitary bees.</string>
+    <string name="rhythms_how_levels">A month\'s points set its level: 0 is Nothing, 1 to 3 is A little, 4 to 7 is Some, and 8 or more is Plenty.</string>
     <string name="rhythms_gaps">Gaps for %1$s</string>
     <string name="rhythms_offers">Nectar and pollen</string>
     <string name="rhythms_offers_line">%1$s find nectar %2$s, and pollen %3$s.</string>

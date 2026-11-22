@@ -123,7 +123,7 @@ class AskFlowTest {
         val opened = mutableListOf<CitedRecord>()
         show(app.assistant, AskSubject.Garden, onOpenRecord = { opened += it })
         ask("What feeds on the rosemary?")
-        waitFor(hasText("Written by Gemma 4. Please check anything important."))
+        waitFor(hasText("Written by Gemma 4."))
         compose.onNodeWithText("Rosemary").performClick()
         assertEquals(listOf(rosemary.id), opened.map { it.id })
         shot("ask_garden_answer")
@@ -219,6 +219,24 @@ class AskFlowTest {
         compose.waitUntil(WAIT_MS) { app.assistant.asked.size == 2 }
         assertEquals("Which bees visit the rosemary?", app.assistant.asked.last().first)
         assertEquals(listOf(rosemary), app.assistant.about.last())
+    }
+
+    @Test
+    fun anAnswerThatCitesNothingStillOffersWhatToAskNext() {
+        val (rosemary, miner) = rosemaryAndMiner()
+        app.assistant.answer = "Noisy miners feed on its flowers."
+        app.assistant.cited = emptyList()
+        app.assistant.considered = listOf(CitedRecord(rosemary, RecordKind.PLANT, "Rosemary", "Plant: Rosemary"))
+        show(app.assistant, AskSubject.Garden, pulse = { pulse(rosemary, miner) })
+        waitFor(hasText("Try asking"))
+        ask("What feeds on the rosemary?")
+        waitFor(hasText("Written by Gemma 4."))
+        // The record it was given comes first, then the garden's own questions not asked yet.
+        waitFor(hasText("Ask next"))
+        compose.onNodeWithText("Which bees visit the rosemary?").assertExists()
+        compose.onNodeWithText("When does the rosemary flower?").assertExists()
+        compose.onNodeWithText("What brings the noisy miner to my rosemary?").assertExists()
+        shot("ask_follow_ups_uncited")
     }
 
     @Test
