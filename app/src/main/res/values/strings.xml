@@ -1823,6 +1823,9 @@
     <string name="water_weather_credit">Weather data by Open-Meteo.com.</string>
     <string name="water_weather_updated">The weather was last updated at %1$s.</string>
     <string name="water_update">Update the weather</string>
+    <string name="water_updating">Updating the weather.</string>
+    <string name="water_updated_notice">The weather is up to date.</string>
+    <string name="water_update_failed">The weather could not be updated. Please check your internet connection and try again.</string>
     <string name="water_no_place">Please set your garden\'s location in Settings › Garden location to get a watering plan.</string>
     <string name="water_no_weather">There is no weather yet. Pollenplot will fetch it when the phone is online.</string>
     <string name="water_lines">Watering lines</string>
