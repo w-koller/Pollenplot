@@ -13,6 +13,8 @@ STRINGS = {
     "water_no_weather": "There is no weather yet. Pollenplot will fetch it when the phone is online.",
     "water_lines": "Watering lines",
     "water_add_line": "Add a watering line",
+    "line_name_needed": "Please give the line a name.",
+    "line_zones_needed": "Please choose at least one zone this line waters.",
     "water_by_hand": "Watered by hand",
     "water_due": "Please water today between %1$s and %2$s, about %3$s L in all.",
     "water_wait": "Watering is due, but %1$s mm of rain is likely tomorrow, so it can wait a day.",

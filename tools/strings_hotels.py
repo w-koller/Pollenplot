@@ -40,6 +40,7 @@ STRINGS = {
     "hotel_seal_guide_body": "The seal on a finished nest says who is likely inside, as Aussie Bee's Bee Hotel Guide "
     "describes. Wasps share bee hotels too.",
     "hotel_new": "New bee hotel",
+    "hotel_name_needed": "Please give the hotel a name.",
     "hotel": "Bee hotel",
     "hotel_edit": "Edit hotel",
     "hotel_height_cm": "Height off the ground in centimetres",
@@ -50,6 +51,7 @@ STRINGS = {
     "hotel_hole_mm": "Hole width in millimetres",
     "hotel_depth_mm": "Hole depth in millimetres",
     "hotel_holes": "Number of holes",
+    "hotel_holes_needed": "Please enter how many holes this section has.",
     "hotel_section_size": "%1$d mm wide",
     "hotel_section_depth": "%1$d mm deep",
     "hotel_faces": "Faces %1$s",

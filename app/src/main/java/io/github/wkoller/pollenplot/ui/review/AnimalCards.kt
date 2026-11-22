@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.runtime.saveable.listSaver
@@ -133,13 +136,17 @@ internal fun UndecidedAnimal(
         onBehaviours = { chosen -> behaviours = chosen.map { it.name } },
     )
 
+    val check = rememberFormCheck()
+    val choiceProblem = stringResource(R.string.review_choose_animal).takeIf { chosenName == null }
+    FieldProblem(check.shown(choiceProblem), Modifier.formField(check, CHOICE, choiceProblem, focus = false))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Button(
             onClick = {
+                if (!check.passes(CHOICE to choiceProblem)) return@Button
                 val pick = animalPick(detection, choice, fauna) ?: return@Button
                 callbacks.onAddSighting?.invoke(detection, pick.speciesName, pick.label, zoneId, plantIds, behavioursNamed(behaviours))
             },
-            enabled = chosenName != null && callbacks.onAddSighting != null,
+            enabled = callbacks.onAddSighting != null,
         ) { Text(stringResource(R.string.review_add_sighting)) }
         OutlinedButton(onClick = { callbacks.onReject(detection) }) { Text(stringResource(R.string.review_not_wildlife)) }
     }
@@ -163,3 +170,5 @@ val NamesSaver = listSaver<List<String>, String>(save = { it }, restore = { it }
 
 /** The behaviours with these enum names. */
 fun behavioursNamed(names: List<String>): Set<Behaviour> = Behaviour.entries.filter { it.name in names }.toSet()
+
+private const val CHOICE = "choice"

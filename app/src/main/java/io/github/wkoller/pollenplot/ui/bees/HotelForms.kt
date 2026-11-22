@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.FormCheck
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -99,6 +102,9 @@ fun HotelEditorScreen(hotels: HotelRepository, views: GardenViews, hotelId: Stri
     var depthMm by rememberSaveable { mutableStateOf("") }
     var holes by rememberSaveable { mutableStateOf("") }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    val check = rememberFormCheck()
+    // The section being added is checked on its own, when its button is pressed.
+    val sectionCheck = rememberFormCheck()
 
     LaunchedEffect(hotelId) {
         if (started || hotelId == null) return@LaunchedEffect
@@ -123,11 +129,21 @@ fun HotelEditorScreen(hotels: HotelRepository, views: GardenViews, hotelId: Stri
         },
     ) { padding ->
         if (!started) return@DetailScaffold
+        val nameProblem = stringResource(R.string.hotel_name_needed).takeIf { name.isBlank() }
+        val holesProblem = stringResource(R.string.hotel_holes_needed).takeIf { (holes.toIntOrNull() ?: 0) <= 0 }
         Column(
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.honey_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.honey_name)) },
+                singleLine = true,
+                isError = check.isError(nameProblem),
+                supportingText = check.supporting(nameProblem),
+                modifier = Modifier.fillMaxWidth().formField(check, NAME, nameProblem),
+            )
             ZoneChooser(zones, zoneId) { zoneId = it }
             ChipGroup(
                 stringResource(R.string.native_facing),
@@ -150,21 +166,22 @@ fun HotelEditorScreen(hotels: HotelRepository, views: GardenViews, hotelId: Stri
             ChipGroup(stringResource(R.string.hotel_material), HotelMaterial.entries, material, { stringResource(it.label) }) { material = it }
             NumberField(stringResource(R.string.hotel_hole_mm), holeMm) { holeMm = it }
             NumberField(stringResource(R.string.hotel_depth_mm), depthMm) { depthMm = it }
-            NumberField(stringResource(R.string.hotel_holes), holes) { holes = it }
+            NumberField(stringResource(R.string.hotel_holes), holes, sectionCheck, HOLES, holesProblem) { holes = it }
             OutlinedButton(
-                enabled = (holes.toIntOrNull() ?: 0) > 0,
-                onClick = {
+                onClick = add@{
+                    if (!sectionCheck.passes(HOLES to holesProblem)) return@add
                     sections = sections + HotelSection(material, holeMm.toIntOrNull(), depthMm.toIntOrNull(), holes.toInt())
                     holeMm = ""
                     depthMm = ""
                     holes = ""
+                    sectionCheck.reset()
                 },
             ) { Text(stringResource(R.string.hotel_section_add)) }
 
             OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.honey_notes)) }, minLines = 2, modifier = Modifier.fillMaxWidth())
             Button(
-                enabled = name.isNotBlank(),
-                onClick = {
+                onClick = save@{
+                    if (!check.passes(NAME to nameProblem)) return@save
                     scope.launch {
                         val hotel = BeeHotel(
                             id = hotelId ?: hotels.newRecordId(),
@@ -321,13 +338,18 @@ internal fun DateRow(date: LocalDate, onChange: () -> Unit) {
 }
 
 @Composable
-private fun NumberField(label: String, value: String, onChange: (String) -> Unit) {
+private fun NumberField(label: String, value: String, check: FormCheck? = null, key: String = "", problem: String? = null, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = { text -> onChange(text.filter(Char::isDigit).take(4)) },
         label = { Text(label) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier.fillMaxWidth(),
+        isError = check?.isError(problem) == true,
+        supportingText = check?.supporting(problem),
+        modifier = Modifier.fillMaxWidth().then(if (check != null) Modifier.formField(check, key, problem) else Modifier),
     )
 }
+
+private const val NAME = "name"
+private const val HOLES = "holes"

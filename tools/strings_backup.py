@@ -12,6 +12,8 @@ STRINGS = {
     "the password somewhere safe, because nobody can recover it.",
     "backup_password_repeat": "Type the password again",
     "backup_password_mismatch": "The two passwords are not the same. Please type them again.",
+    "backup_password_repeat_needed": "Please type the password again, so it can be checked.",
+    "backup_unlock_needed": "Please enter the backup's password.",
     "backup_show_password": "Show the password",
     "backup_hide_password": "Hide the password",
     "backup_save": "Save a backup",

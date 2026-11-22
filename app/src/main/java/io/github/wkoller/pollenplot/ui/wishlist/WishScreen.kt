@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.wishlist
 
+import io.github.wkoller.pollenplot.ui.components.ProblemLine
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.components.readable
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -82,6 +85,7 @@ fun WishScreen(
     val locality by views.locality.collectAsStateWithLifecycle(initialValue = Locality.NONE)
     val kb by knowledge.knowledge.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val check = rememberFormCheck()
     var loaded by rememberSaveable { mutableStateOf(false) }
     var place by rememberSaveable { mutableStateOf("") }
     var priceText by rememberSaveable { mutableStateOf("") }
@@ -135,6 +139,7 @@ fun WishScreen(
         }
         val price = Wishlist.parsePrice(priceText)
         val priceError = priceText.isNotBlank() && price == null
+        val priceProblem = stringResource(R.string.wish_price_error).takeIf { priceError }
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(scroll).padding(Spacing.l).readable(),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
@@ -176,13 +181,9 @@ fun WishScreen(
                 label = { Text(stringResource(R.string.wish_price)) },
                 singleLine = true,
                 isError = priceError,
-                supportingText = if (priceError) {
-                    { Text(stringResource(R.string.wish_price_error)) }
-                } else {
-                    null
-                },
+                supportingText = priceProblem?.let { { ProblemLine(it) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().formField(check, PRICE, priceProblem, live = true),
             )
             ZoneChooser(zones, zoneId, title = stringResource(R.string.field_zone)) { zoneId = it }
             ChipGroup(stringResource(R.string.wish_status), WishStatus.entries, status, { stringResource(it.label) }) { status = it }
@@ -195,12 +196,12 @@ fun WishScreen(
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Button(
-                    onClick = {
+                    onClick = save@{
+                        if (!check.passes(PRICE to priceProblem)) return@save
                         val updated = current.wish.copy(placeName = place, priceCents = price, notes = notes, targetZoneId = zoneId, status = status)
                         scope.launch { help.wishes.update(updated) }
                         onBack()
                     },
-                    enabled = !priceError,
                 ) { Text(stringResource(R.string.wish_save)) }
                 if (current.wish.status != WishStatus.PLANTED && (current.wish.speciesName != null || current.wish.customName != null)) {
                     OutlinedButton(onClick = { onPlant(current.wish.speciesName, zoneId) }) {
@@ -212,3 +213,5 @@ fun WishScreen(
         }
     }
 }
+
+private const val PRICE = "price"

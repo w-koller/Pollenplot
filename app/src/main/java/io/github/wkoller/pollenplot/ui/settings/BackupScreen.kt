@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.settings
 
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
@@ -232,6 +234,15 @@ fun BackupScreen(model: BackupModel, lastBackupAt: Long?, zone: ZoneId, onBack: 
             item {
                 Column(Modifier.padding(start = Spacing.l, end = Spacing.l, bottom = Spacing.s), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                     val saving = save is BackupModel.Save.Saving
+                    val check = rememberFormCheck()
+                    val repeatProblem = when {
+                        !model.sealed -> null
+                        model.repeat.isEmpty() -> stringResource(R.string.backup_password_repeat_needed)
+                        !model.passwordsMatch -> stringResource(R.string.backup_password_mismatch)
+                        else -> null
+                    }
+                    // Passwords that differ say so as they are typed; an empty second one says so when Save is pressed.
+                    val repeatShown = if (model.repeat.isNotEmpty()) repeatProblem else check.shown(repeatProblem)
                     PasswordField(
                         value = model.password,
                         onValueChange = { model.password = it },
@@ -245,12 +256,16 @@ fun BackupScreen(model: BackupModel, lastBackupAt: Long?, zone: ZoneId, onBack: 
                             onValueChange = { model.repeat = it },
                             label = stringResource(R.string.backup_password_repeat),
                             enabled = !saving,
-                            error = stringResource(R.string.backup_password_mismatch).takeIf { model.repeat.isNotEmpty() && !model.passwordsMatch },
+                            error = repeatShown,
+                            modifier = Modifier.formField(check, REPEAT, repeatShown, live = true),
                         )
                     }
                     Button(
-                        enabled = !saving && model.passwordsMatch,
-                        onClick = { (if (model.sealed) saveSealed else saveZip).launch(model.fileName()) },
+                        enabled = !saving,
+                        onClick = save@{
+                            if (!check.passes(REPEAT to repeatProblem)) return@save
+                            (if (model.sealed) saveSealed else saveZip).launch(model.fileName())
+                        },
                     ) { Text(stringResource(R.string.backup_save)) }
                     when (val state = save) {
                         is BackupModel.Save.Saving -> Working(stringResource(R.string.backup_saving), state.progress)
@@ -327,14 +342,19 @@ private fun Unlock(model: BackupModel, wrongPassword: Boolean) {
     } else {
         Text(stringResource(R.string.backup_needs_password), style = MaterialTheme.typography.bodyLarge)
     }
+    val check = rememberFormCheck()
+    val problem = stringResource(R.string.backup_unlock_needed).takeIf { model.unlockPassword.isEmpty() }
+    val open = { if (check.passes(PASSWORD to problem)) model.unlock() }
     PasswordField(
         value = model.unlockPassword,
         onValueChange = { model.unlockPassword = it },
         label = stringResource(R.string.backup_unlock_password),
-        onDone = { if (model.unlockPassword.isNotEmpty()) model.unlock() },
+        error = check.shown(problem),
+        onDone = open,
+        modifier = Modifier.formField(check, PASSWORD, problem),
     )
     FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
-        Button(enabled = model.unlockPassword.isNotEmpty(), onClick = model::unlock) { Text(stringResource(R.string.backup_open)) }
+        Button(onClick = open) { Text(stringResource(R.string.backup_open)) }
         TextButton(onClick = model::cancel) { Text(stringResource(R.string.cancel)) }
     }
 }
@@ -396,6 +416,7 @@ private fun PasswordField(
     supporting: String? = null,
     error: String? = null,
     onDone: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     var shown by rememberSaveable { mutableStateOf(false) }
     OutlinedTextField(
@@ -430,7 +451,7 @@ private fun PasswordField(
             }
             else -> null
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     )
 }
 
@@ -446,3 +467,6 @@ internal fun StatusLine(ok: Boolean, text: String) {
         Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
+
+private const val REPEAT = "repeat"
+private const val PASSWORD = "password"

@@ -1,5 +1,9 @@
 package io.github.wkoller.pollenplot.ui.plants
 
+import io.github.wkoller.pollenplot.ui.components.FormCheck
+import io.github.wkoller.pollenplot.ui.components.ProblemLine
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import io.github.wkoller.pollenplot.ui.components.readable
@@ -224,27 +228,30 @@ fun PotEditScreen(plantId: String, pots: PotRepository, onBack: () -> Unit) {
     val volumeMl = positive(volume, 3)
     val diameterError = diameter.isNotBlank() && diameterMm == null
     val volumeError = volume.isNotBlank() && volumeMl == null
+    val check = rememberFormCheck()
 
     DetailScaffold(title = stringResource(R.string.pot_edit_title), onBack = onBack) { padding ->
         if (!loaded) return@DetailScaffold
+        val diameterProblem = stringResource(R.string.pot_number_error).takeIf { diameterError }
+        val volumeProblem = stringResource(R.string.pot_number_error).takeIf { volumeError }
         Column(
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(Spacing.l).readable(),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            NumberText(stringResource(R.string.pot_diameter), diameter, diameterError) { diameter = it }
-            NumberText(stringResource(R.string.pot_volume), volume, volumeError) { volume = it }
+            NumberText(stringResource(R.string.pot_diameter), diameter, diameterProblem, check, DIAMETER) { diameter = it }
+            NumberText(stringResource(R.string.pot_volume), volume, volumeProblem, check, VOLUME) { volume = it }
             OptionalChips(stringResource(R.string.pot_material), PotMaterial.entries, material, { stringResource(it.label) }) { material = it }
             OptionalChips(stringResource(R.string.pot_mix), PotMix.entries, mix, { stringResource(it.label) }) { mix = it }
             OutlinedTextField(value = mixNote, onValueChange = { mixNote = it }, label = { Text(stringResource(R.string.pot_mix_note)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Button(
-                    onClick = {
+                    onClick = save@{
+                        if (!check.passes(DIAMETER to diameterProblem, VOLUME to volumeProblem)) return@save
                         scope.launch {
                             pots.savePot(PlantPot(pots.newId(), plantId, diameterMm, volumeMl, material, mix, mixNote))
                             withContext(Dispatchers.Main) { onBack() }
                         }
                     },
-                    enabled = !diameterError && !volumeError,
                 ) { Text(stringResource(R.string.honey_save)) }
                 if (existing) {
                     TextButton(onClick = {
@@ -271,23 +278,23 @@ private fun <T> OptionalChips(title: String, options: List<T>, selected: T?, lab
     }
 }
 
+/** A number field whose [problem] shows as it is typed, and which Save takes the reader to. */
 @Composable
-private fun NumberText(label: String, value: String, error: Boolean, onChange: (String) -> Unit) {
+private fun NumberText(label: String, value: String, problem: String?, check: FormCheck, key: String, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
         label = { Text(label) },
         singleLine = true,
-        isError = error,
-        supportingText = if (error) {
-            { Text(stringResource(R.string.pot_number_error)) }
-        } else {
-            null
-        },
+        isError = problem != null,
+        supportingText = problem?.let { { ProblemLine(it) } },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().formField(check, key, problem, live = true),
     )
 }
+
+private const val DIAMETER = "diameter"
+private const val VOLUME = "volume"
 
 /** A number the user typed, such as "30" or "12.5", with its point moved [places] to the right, or null. */
 private fun positive(text: String, places: Int): Long? {

@@ -1,5 +1,8 @@
 package io.github.wkoller.pollenplot.ui.review
 
+import io.github.wkoller.pollenplot.ui.components.FieldProblem
+import io.github.wkoller.pollenplot.ui.components.formField
+import io.github.wkoller.pollenplot.ui.components.rememberFormCheck
 import io.github.wkoller.pollenplot.ui.theme.IconSize
 import io.github.wkoller.pollenplot.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
@@ -92,12 +95,15 @@ internal fun FieldActions(canSave: Boolean, weed: Boolean, name: String?, onSave
             dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
+    val check = rememberFormCheck()
+    val choiceProblem = stringResource(R.string.review_choose_plant).takeIf { !canSave }
+    FieldProblem(check.shown(choiceProblem), Modifier.formField(check, CHOICE, choiceProblem, focus = false))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        val save = { if (weed) confirming = true else onSave() }
+        val save = { if (check.passes(CHOICE to choiceProblem)) { if (weed) confirming = true else onSave() } }
         if (weed) {
-            OutlinedButton(onClick = save, enabled = canSave) { Text(stringResource(R.string.field_save)) }
+            OutlinedButton(onClick = save) { Text(stringResource(R.string.field_save)) }
         } else {
-            Button(onClick = save, enabled = canSave) {
+            Button(onClick = save) {
                 Icon(painterResource(R.drawable.ic_bookmark), contentDescription = null, modifier = Modifier.size(IconSize.small))
                 Text(stringResource(R.string.field_save), modifier = Modifier.padding(start = Spacing.s))
             }
@@ -118,3 +124,5 @@ internal fun SavedFind(detection: DetectionRecord, kb: KnowledgeBase?, choice: R
     }
     callbacks.onOpenWishlist?.let { open -> FilledTonalButton(onClick = open) { Text(stringResource(R.string.field_open_wishlist)) } }
 }
+
+private const val CHOICE = "choice"
