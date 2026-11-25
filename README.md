@@ -2,9 +2,10 @@
 
 Ecosystem Management for Your Backyard.
 
-Pollenplot is an Android app for keeping a record of a backyard garden and seeing how it works as a whole. It
-identifies plants and animals on the phone, so your photos never leave it, and it shows how the garden's plants,
-wildlife, bees and watering fit together. It is written for Australian gardens first.
+Pollenplot is an Android app that helps you understand your backyard as an ecosystem. It identifies the plants and
+animals in your garden from a photo, keeps a record of your zones, plants, wildlife, bees and watering, and shows you
+how they all fit together. Your photos are identified on your phone and never leave it. The app is written for Australian
+gardens, with Australian native plants, Southern Hemisphere seasons and each state's rules.
 
 <p align="center">
   <img src="docs/screenshots/plot.png" width="250" alt="The Plot, with four zones of the yard on a grid, cut-outs of the plants photographed in each, and a Today card asking for the citrus patch to be fed">
@@ -12,102 +13,101 @@ wildlife, bees and watering fit together. It is written for Australian gardens f
   <img src="docs/screenshots/rhythms.png" width="250" alt="Pollen Rhythms, listing the plants flowering now with a cut-out from each one's photo, above a chart of when each plant flowers through the year">
 </p>
 
-Pollenplot needs Android 12 or newer. Test versions are published on the
-[Releases page](https://github.com/w-koller/Pollenplot/releases) with their SHA-256 checksums.
+Pollenplot requires Android 12 or newer, and you can download test versions from the
+[Releases page](https://github.com/w-koller/Pollenplot/releases), each with its SHA-256 checksum.
 
 ## What it does
 
-### Your yard on one screen
+### See your whole yard at a glance
 
-The Plot is a map of your yard's zones, such as a front native strip, a citrus patch or a hive corner. Each plant
-shows as its own cut-out photo, with badges for its role: pollinator magnet, high thirst or frog safe, for example. Layers
-colour the zones by sun and shade, or by what is in flower now and what flowers next. A Today card at the top says
-what needs doing, gathered from every part of the garden, and the calendar lays the same jobs out by day with the
-weather.
+The Plot is a map of your yard, divided into zones such as a front native strip, a citrus patch or a hive corner. Each
+plant appears as a cut-out from your own photo, so you can see what is growing where and which zones are in flower.
+The Today card lists the jobs due in the garden, such as feeding the citrus or checking a hive, and the calendar shows
+the jobs ahead alongside the weather.
 
-### Identification on the phone
+### Identify plants and animals
 
-Point the camera at a plant or an animal, or add photos from your gallery. Pollenplot finds each plant in a photo of a
-garden bed and suggests a name for each, with how sure it is. It can also look through new garden photos in the
-background. The quick models come with the app, and an accurate pack (BioCAP) can be downloaded for many more
-Australian plants, animals and fungi. Your own corrections teach it: a name you keep changing gives way to yours.
+Take a photo of a plant or an animal, or choose one from your gallery, and Pollenplot will suggest what it is and how
+sure it is. A photo of a garden bed can show several plants, and the app will find each one. You can download the
+accurate identification pack to recognise many more Australian plants, animals and fungi. The app also learns from
+your corrections, so a name you keep changing will give way to yours.
 
-### Every plant's needs
+### Know what each plant needs
 
 <p align="center">
   <img src="docs/screenshots/plant.png" width="250" alt="The Native rosella's page, with its cut-out, badges for local native and edible, and cards for problems, harvests and the days it was seen in flower">
   <img src="docs/screenshots/weeds.png" width="250" alt="The Weeds screen, with lantana in the garden marked as a restricted invasive plant in Queensland, and weeds recorded within 10 km">
 </p>
 
-Each plant has a page with its sun, water, soil, feeding, compost and wildlife value, and the companion plants that
-suit it. You can correct any of these facts for your own garden. The page also keeps the photos the plant was found
-in, the months it was seen in flower, its harvests and its pruning. A potted plant says when its pot is due a flush or
-a look at repotting.
+Each plant has its own page with its sun, water, soil, feeding and compost needs, its value to wildlife and the
+companion plants that suit it. You can correct any of these if your garden is different. The page also keeps the
+plant's photos, the months it was seen in flower, its harvests and its pruning, and a potted plant will tell you when it
+is due a flush or a repot.
 
-Other records follow from the plants:
+You can also keep track of:
 
-- feeding, with a warning before too much phosphorus goes on grevilleas and their relatives, and reminders when
-  citrus is due a feed;
-- pests and diseases, logged with a photo and their treatments, with a warning before spraying plants in flower;
+- feeding, with a warning before too much phosphorus goes on grevilleas and their relatives, and a reminder when
+  your citrus is due a feed;
+- pests and diseases, recorded with a photo and their treatments, and a warning before you spray plants that are in
+  flower;
 - harvests by season, and when to prune each plant;
 - compost bins, with the turns and checks each batch is due;
-- a wishlist of plants to grow, including plants identified away from home, with whether each is native or a weed
-  where you live;
-- a plant library of everything you have grown.
+- a wishlist of plants you would like to grow, including plants you identify away from home, with whether each is
+  native or a weed where you live;
+- a library of every plant you have grown.
 
-### Weeds checked against official lists
+### Keep weeds out of your garden
 
-The weed identifier checks a plant against official sources for your area: Brisbane City Council, Weeds Australia and
-the Atlas of Living Australia. It lists the weeds recorded near your garden and suggests native alternatives from the
-Grow Me Instead booklets.
+Your plants are checked against the official weed lists for your area, from Brisbane City Council, Weeds
+Australia and the Atlas of Living Australia. You can also see the weeds that have been recorded near your garden, and
+native plants to grow instead from the Grow Me Instead booklets.
 
-### Wildlife and bees
+### Get to know your wildlife
 
 <p align="center">
   <img src="docs/screenshots/wildlife.png" width="250" alt="The Wildlife tab, with five species seen this year, a bronze orange bug among the garden pests, and a galah among the birds, each with a cut-out from its photo">
   <img src="docs/screenshots/bees.png" width="250" alt="The Bees tab on native bees, with two sugarbag hives in the Hive Corner and the sugarbag bee seen this year, shown on a lime flower">
 </p>
 
-The Wildlife tab shows a year of animals seen in your yard: which are native, which were new this year, and when each
-was seen. It warns about animals that are venomous or that your state's law asks you to report, with a link to the
-official page.
+The Wildlife tab shows every animal seen in your yard over the year, which of them are native and which were seen for
+the first time. If an animal is venomous, or your state asks you to report it, the app tells you what to do and links
+to the official page.
 
-Bees get their own tab, with separate trackers for European honey bees, Australian stingless bees and bee hotels.
-Honey bee hives are due inspections, brood checks and mite checks on the schedule of the Australian Honey Bee Industry
-Biosecurity Code of Practice. Stingless bee hives get a warning before a hot day. Each section has guides, written from
-the sources listed on each page.
+Each zone also shows its habitat for wildlife: its canopy, midstorey and understorey, its shelter on the ground and its
+water, along with how well your whole yard works as a wildlife corridor.
 
-Pollen Rhythms is a nectar and pollen calendar for honey bees, stingless bees and solitary bees. It shows the months
-your garden has little to offer each group, and plants that would fill those gaps.
+### Look after your bees
 
-Each zone also has a habitat summary: its canopy, midstorey and understorey, the shelter on the ground and the water
-for wildlife, and how the whole yard works as a wildlife corridor.
+The Bees tab has separate records and guides for European honey bees, Australian stingless bees and bee hotels.
+You will be reminded when each honey bee hive is due an inspection, a brood check or a mite check under the
+Australian Honey Bee Industry Biosecurity Code of Practice, and warned before a hot day that could harm your
+stingless bee hives.
 
-### Watering from the weather
+Pollen Rhythms shows what your garden's flowers offer honey bees, stingless bees and solitary bees through the year,
+the months when there is little for each group, and plants that would fill those gaps.
+
+### Water at the right time
 
 <p align="center">
   <img src="docs/screenshots/water.png" width="250" alt="The Water tab, with today's reference evapotranspiration and rain, and when each zone is next due a watering">
   <img src="docs/screenshots/ask.png" width="250" alt="Ask your garden, answering what feeds on the rosemary from the garden's sightings, and offering questions to ask next">
 </p>
 
-The Water tab keeps a daily soil-water account for each zone from its plants, its soil and the weather forecast, and
-says when a watering is due and how much. It warns when a sprinkler runs faster than the soil can soak it up, and
-reminds you to water pots deeply before a very hot day.
+The Water tab works out when each zone needs watering, and how much, from its plants, its soil and the weather
+forecast. It will warn you if a sprinkler waters faster than your soil can soak it up, and remind you to water your pots
+deeply before a very hot day.
 
 ### Ask your garden
 
-With Gemma 4 downloaded, you can ask questions about your garden, such as which plants feed birds or where frogs were
-seen. The answers come from your own records, which are listed under each answer, and the app suggests what to ask
-next.
+You can ask questions about your garden, such as which plants feed birds or where frogs have been seen,
+once you have downloaded Gemma 4. Each answer is drawn from your own records, which are listed beneath it, along with
+suggestions for what to ask next.
 
-### Search and reports
+### Search, reports and backups
 
-Search works from every tab across zones, plants, sightings, hives, hotels, the wishlist, problems and water for
-wildlife, including the notes in your records. It searches by words, and by meaning once the optional text model is
-on the phone. Reports come as PDF or Excel files, opening with a summary and the tasks due. A backup saves the whole
-garden, with its photos, to one file that can be locked with a password.
-
-The screenshots come from the app's screen tests. The Plot, Identify, the plant page, Rhythms, Wildlife and Bees show real photos from a garden, put through the app's own photo analysis. The Weeds, Water and Ask screens use a demo yard.
+You can search all of your records from any tab, including the notes from your hive inspections, sightings and
+harvests. Reports can be saved as PDF or Excel files, starting with a summary of your garden and the tasks that are
+due. A backup saves your whole garden, including its photos, to a single file that you can protect with a password.
 
 ## Privacy
 
@@ -136,8 +136,8 @@ The garden's location is rounded to about 1 km before it is sent to any of these
 
 ## Optional downloads
 
-The quick identification models come with the app. These are downloaded only when you ask for them, and each file is
-checked against its published SHA-256 checksum:
+The quick identification models come with the app. The following are downloaded only when you ask for them, and each
+file is checked against its published SHA-256 checksum:
 
 - the accurate identification pack (BioCAP), about 142 MB, for better identification of plants, animals and fungi;
 - the text model (bge-small-en-v1.5), about 34 MB, for search by meaning;
