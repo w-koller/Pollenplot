@@ -22,9 +22,9 @@ class NativeBeesSeenTest {
 
     private var next = 0
 
-    private fun seen(animal: Animal, year: Int, month: Int) = Sighting(
+    private fun seen(animal: Animal, year: Int, month: Int, thumbnail: String? = null) = Sighting(
         id = "s${next++}", speciesName = animal.name, label = animal.displayName, group = animal.group, zoneId = null, plantIds = emptyList(), behaviours = emptySet(),
-        count = 1, photoId = null, thumbnail = null, seenAt = LocalDateTime.of(year, month, 10, 9, 0).atZone(brisbane).toInstant(), notes = "",
+        count = 1, photoId = null, thumbnail = thumbnail, seenAt = LocalDateTime.of(year, month, 10, 9, 0).atZone(brisbane).toInstant(), notes = "",
     ) to animal
 
     @Test
@@ -36,5 +36,16 @@ class NativeBeesSeenTest {
         val bees = NativeBeesSeen.of(sightings, 2026, brisbane)
         assertEquals(listOf("Amegilla cingulata" to 2, "Tetragonula carbonaria" to 1), bees.map { it.key to it.sightings })
         assertEquals(sightings[1].first.seenAt, bees.first().lastSeen)
+    }
+
+    @Test
+    fun `each bee shows the cut-out of its latest sighting that has one`() {
+        val sightings = listOf(
+            seen(sugarbag, 2026, 8, "thumbs/august.webp"), seen(sugarbag, 2026, 10, "thumbs/october.webp"), seen(sugarbag, 2026, 11),
+            seen(blueBanded, 2026, 10),
+        )
+        val bees = NativeBeesSeen.of(sightings, 2026, brisbane).associate { it.key to it.thumbnail }
+        assertEquals("thumbs/october.webp", bees["Tetragonula carbonaria"])
+        assertEquals(null, bees["Amegilla cingulata"])
     }
 }

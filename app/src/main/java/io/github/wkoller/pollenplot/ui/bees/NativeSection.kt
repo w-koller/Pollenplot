@@ -1,5 +1,7 @@
 package io.github.wkoller.pollenplot.ui.bees
 
+import io.github.wkoller.pollenplot.ui.components.PictureAvatar
+import androidx.compose.ui.unit.dp
 import io.github.wkoller.pollenplot.ui.components.SwitchRow
 import io.github.wkoller.pollenplot.ui.components.SegmentedGroup
 import io.github.wkoller.pollenplot.ui.components.ChipGroup
@@ -72,7 +74,7 @@ internal fun LazyListScope.nativeSection(
     items(seen, key = { "seen-" + it.key }) { bee ->
         ListItem(
             onClick = { onOpenAnimal(bee.key) },
-            leadingContent = { Icon(painterResource(R.drawable.ic_emoji_nature), contentDescription = null) },
+            leadingContent = { PictureAvatar(R.drawable.ic_emoji_nature, 40.dp, thumbnail = bee.thumbnail) },
             supportingContent = {
                 Text(pluralStringResource(R.plurals.native_seen_count, bee.sightings, bee.sightings) + "\n" + stringResource(R.string.native_seen_last, UiFormat.longDate(bee.lastSeen)))
             },

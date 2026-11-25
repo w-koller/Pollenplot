@@ -81,6 +81,7 @@ class RhythmsViews(
                 peak = care?.peakFlowering?.fromSouthern(hemisphere) ?: MonthSet.NONE,
                 seenFlowering = FloweringSeen.lastYear(seenDays[view.plant.id].orEmpty(), today),
                 forage = care?.forage,
+                thumbnail = view.plant.thumbnail,
             )
         }
         val lanes = RhythmsEngine.lanes(rows)

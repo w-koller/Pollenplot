@@ -28,6 +28,8 @@ data class RhythmPlant(
     val peak: MonthSet,
     val seenFlowering: MonthSet,
     val forage: Forage?,
+    /** Its cut-out from a photo, relative to the app's files folder, when it has one. */
+    val thumbnail: String? = null,
 ) {
     /** The months it flowers in, expected or seen. */
     val allFlowering: MonthSet get() = flowering + seenFlowering
