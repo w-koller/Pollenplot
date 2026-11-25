@@ -320,6 +320,7 @@ private fun Calendar(state: RhythmsState) {
 /** The points of "How it works" for the calendar, which the report gives as its paragraphs too. */
 @Composable
 private fun howItWorks(): List<String> = listOf(
+    stringResource(R.string.rhythms_how_points),
     stringResource(R.string.rhythms_how_honey),
     stringResource(R.string.rhythms_how_variety),
     stringResource(R.string.rhythms_how_extra),

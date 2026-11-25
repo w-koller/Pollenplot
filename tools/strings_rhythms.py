@@ -13,14 +13,20 @@ STRINGS = {
     "rhythms_lane_summary": "%1$s. %2$s.",
     "rhythms_level_in": "%1$s in %2$s",
     "rhythms_lane_unfed": "Nothing in your garden is known to feed them yet",
-    # The points of "How it works" under the calendar, and the report's paragraphs about it, from RhythmsEngine.points.
-    "rhythms_how_honey": "Honey bees count mass-flowering trees and shrubs most. Each plant in flower adds its honey bee "
-    "score, from 0 to 3, doubled for a tree or shrub and counted for up to three of that plant.",
-    "rhythms_how_variety": "Stingless and solitary bees count variety. Each kind of plant in flower adds its score once.",
-    "rhythms_how_extra": "A resin source adds a point for stingless bees, and flowers that need buzz pollination add a "
-    "point for solitary bees.",
-    "rhythms_how_levels": "A month's points set its level: 0 is Nothing, 1 to 3 is A little, 4 to 7 is Some, and 8 or "
-    "more is Plenty.",
+    # The points of "How it works" under the calendar, and the report's paragraphs about it. They describe
+    # RhythmsEngine.points and level, so a change to either needs a change here.
+    "rhythms_how_points": "Each month, a plant gives points to each group of bees if it is expected or seen to flower. "
+    "The points come from its nectar or pollen rating on its page, whichever is higher, from 0 for None to 3 for "
+    "Excellent.",
+    "rhythms_how_honey": "Honey bees fly kilometres to forage, so lots of flowers in one place matter most to them. A "
+    "tree or shrub gives double points. Two of the same plant give twice the points and three give three times, but "
+    "more than three still count as three.",
+    "rhythms_how_variety": "Stingless and solitary bees forage close to home, so many kinds of flowers matter most to "
+    "them. Each plant gives its points once, however many of it you grow.",
+    "rhythms_how_extra": "A plant with resin gives stingless bees one more point. Flowers that release pollen when "
+    "buzzed give solitary bees one more point.",
+    "rhythms_how_levels": "A month's points are added up to give its level in the calendar: 0 is Nothing, 1 to 3 is A "
+    "little, 4 to 7 is Some, and 8 or more is Plenty.",
     "rhythms_gaps": "Gaps for %1$s",
     "rhythms_offers": "Nectar and pollen",
     "rhythms_offers_line": "%1$s find nectar %2$s, and pollen %3$s.",
