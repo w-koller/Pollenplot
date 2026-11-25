@@ -22,7 +22,7 @@ export JAVA_HOME=~/.local/opt/jdk-17 ANDROID_HOME=~/Android/Sdk
 `AccessibilityFlowTest` walks the main screens of the demo yard. It fails when a pressable control has no words
 for a screen reader (read from the semantics tree, because Google's Accessibility Test Framework sees nothing of
 Compose under Robolectric), and with text at twice its size it saves each screen as `large_*.png`. `ReadmeScreensTest` makes the README's
-Plot, Identify, plant page and Wildlife screenshots from real garden photos in `app/src/test/resources/readme`, which go
+Plot, Identify, plant page, Rhythms, Wildlife and native bee screenshots from real garden photos in `app/src/test/resources/readme`, which go
 through the app's own photo analysis; copy them into `docs/screenshots/` after a change to those screens. Screen tests save
 pictures to `app/build/screenshots/`. Look at them after UI changes: there are light, dark and
 wide-window versions, and `PlotScreenFlowTest` drives a demo yard (`DemoGarden`) through the Plot, zones, plants and

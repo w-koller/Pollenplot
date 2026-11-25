@@ -9,7 +9,7 @@ wildlife, bees and watering fit together. It is written for Australian gardens f
 <p align="center">
   <img src="docs/screenshots/plot.png" width="250" alt="The Plot, with four zones of the yard on a grid, cut-outs of the plants photographed in each, and a Today card asking for the citrus patch to be fed">
   <img src="docs/screenshots/identify.png" width="250" alt="Identify, with a photo of a white flower with a red centre named as Native rosella, Hibiscus heterophyllus">
-  <img src="docs/screenshots/rhythms.png" width="250" alt="Pollen Rhythms, with this month's flowers for honey bees and stingless bees and a year of nectar and pollen for each group of bees">
+  <img src="docs/screenshots/rhythms.png" width="250" alt="Pollen Rhythms, listing the plants flowering now with a cut-out from each one's photo, above a chart of when each plant flowers through the year">
 </p>
 
 Pollenplot needs Android 12 or newer. Test versions are published on the
@@ -65,7 +65,7 @@ Grow Me Instead booklets.
 
 <p align="center">
   <img src="docs/screenshots/wildlife.png" width="250" alt="The Wildlife tab, with five species seen this year, a bronze orange bug among the garden pests, and a galah among the birds, each with a cut-out from its photo">
-  <img src="docs/screenshots/bees.png" width="250" alt="The Bees tab on native bees, with a sugarbag hive's weight and flight count, and guides to keeping stingless bees">
+  <img src="docs/screenshots/bees.png" width="250" alt="The Bees tab on native bees, with two sugarbag hives in the Hive Corner and the sugarbag bee seen this year, shown with its photo">
 </p>
 
 The Wildlife tab shows a year of animals seen in your yard: which are native, which were new this year, and when each
@@ -107,7 +107,7 @@ wildlife, including the notes in your records. It searches by words, and by mean
 on the phone. Reports come as PDF or Excel files, opening with a summary and the tasks due. A backup saves the whole
 garden, with its photos, to one file that can be locked with a password.
 
-The screenshots come from the app's screen tests. The Plot, Identify, the plant page and the Wildlife tab show real photos from a garden, put through the app's own photo analysis; the other screens use a demo yard.
+The screenshots come from the app's screen tests. The Plot, Identify, the plant page, Rhythms, Wildlife and Bees show real photos from a garden, put through the app's own photo analysis. The Weeds, Water and Ask screens use a demo yard.
 
 ## Privacy
 

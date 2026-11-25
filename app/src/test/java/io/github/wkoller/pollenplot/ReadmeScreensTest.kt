@@ -21,6 +21,10 @@ import coil3.annotation.DelicateCoilApi
 import coil3.imageDecoderEnabled
 import io.github.wkoller.pollenplot.data.PhotoAnalysis
 import io.github.wkoller.pollenplot.data.prefs.Settings
+import io.github.wkoller.pollenplot.domain.bees.stingless.Facing
+import io.github.wkoller.pollenplot.domain.bees.stingless.NativeBox
+import io.github.wkoller.pollenplot.domain.bees.stingless.NativeOrigin
+import io.github.wkoller.pollenplot.domain.bees.stingless.StinglessSpecies
 import io.github.wkoller.pollenplot.domain.garden.ZoneKind
 import io.github.wkoller.pollenplot.domain.garden.ZoneRect
 import io.github.wkoller.pollenplot.domain.id.BoxBp
@@ -108,6 +112,27 @@ class ReadmeScreensTest {
     }
 
     @Test
+    fun theRhythmsTab() {
+        seed()
+        showApp()
+        compose.pressWhenShown(hasText("Rhythms"))
+        // Scrolls until the heading after the plants in flower is in view, so the whole list of them shows.
+        compose.scrollTo(hasText("Flowering through the year"))
+        waitFor(hasText("Seen flowering in your garden"))
+        shot("readme_rhythms")
+    }
+
+    @Test
+    fun theNativeBees() {
+        seed()
+        showApp()
+        compose.pressWhenShown(hasText("Bees"))
+        compose.pressWhenShown(hasText("Native bees"))
+        waitFor(hasText("Sugarbag bee"))
+        shot("readme_bees")
+    }
+
+    @Test
     @Config(qualifiers = "en-rAU-w411dp-h2000dp-xhdpi")
     fun identifyingAPhoto() {
         ready()
@@ -172,6 +197,8 @@ class ReadmeScreensTest {
             addPlant("lilac-flower", null, "Plectranthus", hive.id, daysAgo(4))
             addPlant("blue-flower", "Convolvulus sabatius", null, hive.id, daysAgo(6))
             addPlant("red-lily", null, "Hippeastrum", hive.id, daysAgo(12))
+            app.container.nativeBees.addHive("Sugarbag 1", StinglessSpecies.TETRAGONULA_CARBONARIA, NativeBox.OATH, NativeOrigin.BOUGHT, hive.id, Facing.NE, LocalDate.of(2025, 9, 1))
+            app.container.nativeBees.addHive("Sugarbag 2", StinglessSpecies.TETRAGONULA_CARBONARIA, NativeBox.OATH, NativeOrigin.SPLIT, hive.id, Facing.NE, LocalDate.of(2026, 3, 14))
             addPlant("strawberry-flower", "Fragaria × ananassa", null, veg.id, daysAgo(7))
 
             addSighting("galah", LifeGroup.BIRD, IdSource.AIY_BIRDS, "Eolophus roseicapilla", "Galah", front.id, emptyList(), setOf(Behaviour.FEEDING), 2, daysAgo(1))
