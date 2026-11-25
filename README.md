@@ -65,7 +65,7 @@ Grow Me Instead booklets.
 
 <p align="center">
   <img src="docs/screenshots/wildlife.png" width="250" alt="The Wildlife tab, with five species seen this year, a bronze orange bug among the garden pests, and a galah among the birds, each with a cut-out from its photo">
-  <img src="docs/screenshots/bees.png" width="250" alt="The Bees tab on native bees, with two sugarbag hives in the Hive Corner and the sugarbag bee seen this year, shown with its photo">
+  <img src="docs/screenshots/bees.png" width="250" alt="The Bees tab on native bees, with two sugarbag hives in the Hive Corner and the sugarbag bee seen this year, shown on a lime flower">
 </p>
 
 The Wildlife tab shows a year of animals seen in your yard: which are native, which were new this year, and when each

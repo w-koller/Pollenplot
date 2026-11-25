@@ -192,8 +192,7 @@ class ReadmeScreensTest {
             addPlant("pink-spikes", "Ptilotus exaltatus", null, front.id, daysAgo(5))
             addPlant("white-hibiscus", "Hibiscus heterophyllus", null, front.id, daysAgo(2))
             addPlant("flowering-shrub", "Pavetta australiensis", null, front.id, daysAgo(9))
-            val lemon = garden.addPlant("Citrus × limon", "Mum's lemon", citrus.id)
-            garden.addPlant("Citrus reticulata", null, citrus.id)
+            val lime = addPlant("lime-tree", "Citrus × latifolia", null, citrus.id, daysAgo(1))
             addPlant("lilac-flower", null, "Plectranthus", hive.id, daysAgo(4))
             addPlant("blue-flower", "Convolvulus sabatius", null, hive.id, daysAgo(6))
             addPlant("red-lily", null, "Hippeastrum", hive.id, daysAgo(12))
@@ -204,15 +203,16 @@ class ReadmeScreensTest {
             addSighting("galah", LifeGroup.BIRD, IdSource.AIY_BIRDS, "Eolophus roseicapilla", "Galah", front.id, emptyList(), setOf(Behaviour.FEEDING), 2, daysAgo(1))
             addSighting("honey-bees", LifeGroup.INSECT, IdSource.AIY_INSECTS, "Apis mellifera", "European honey bee", hive.id, emptyList(), setOf(Behaviour.NESTING), 20, daysAgo(3))
             addSighting("stingless-hives", LifeGroup.INSECT, IdSource.AIY_INSECTS, "Tetragonula carbonaria", "Sugarbag bee", hive.id, emptyList(), setOf(Behaviour.NESTING), 40, daysAgo(8))
+            // The sugarbag bee in the lime's flowers, as a photo of the flower it is on.
+            addSighting("lime-tree", LifeGroup.INSECT, IdSource.AIY_INSECTS, "Tetragonula carbonaria", "Sugarbag bee", citrus.id, listOf(lime), setOf(Behaviour.POLLINATING), 2, daysAgo(1), BoxBp(3_400, 4_900, 5_900, 6_400))
             addSighting("tree-frog", LifeGroup.FROG, IdSource.AIY_INSECTS, "Litoria fallax", "Eastern dwarf tree frog", hive.id, emptyList(), setOf(Behaviour.RESTING), 1, daysAgo(10))
-            addSighting("citrus-bug", LifeGroup.INSECT, IdSource.AIY_INSECTS, "Musgraveia sulciventris", "Bronze orange bug", citrus.id, listOf(lemon.id), setOf(Behaviour.FEEDING), 1, daysAgo(15))
+            addSighting("citrus-bug", LifeGroup.INSECT, IdSource.AIY_INSECTS, "Musgraveia sulciventris", "Bronze orange bug", citrus.id, listOf(lime), setOf(Behaviour.FEEDING), 1, daysAgo(15))
         }
     }
 
-    private suspend fun analysed(name: String, group: LifeGroup, source: IdSource, label: String, takenAt: java.time.Instant): DetectionRecord {
+    private suspend fun analysed(name: String, group: LifeGroup, source: IdSource, label: String, takenAt: java.time.Instant, box: BoxBp = MOST): DetectionRecord {
         val photo = photo(name)
-        // Most of the frame, as the camera's square guide would hold it.
-        val region = { bitmap: Bitmap -> listOf(FastPlantIdentifier.region(bitmap, BoxBp(800, 800, 9_200, 9_200), mapOf(source to listOf(LabelScore(label, 7_000))), group)) }
+        val region = { bitmap: Bitmap -> listOf(FastPlantIdentifier.region(bitmap, box, mapOf(source to listOf(LabelScore(label, 7_000))), group)) }
         val identifier = ScriptedIdentifier(animalFor = { bitmap, _ -> region(bitmap) }) { region(it) }
         val container = app.container
         val analysis = PhotoAnalysis({ identifier }, container.photos, garden, container.knowledge, container.clock)
@@ -226,9 +226,9 @@ class ReadmeScreensTest {
 
     private suspend fun addSighting(
         photo: String, group: LifeGroup, source: IdSource, species: String, label: String, zoneId: String,
-        plantIds: List<String>, behaviours: Set<Behaviour>, count: Int, takenAt: java.time.Instant,
+        plantIds: List<String>, behaviours: Set<Behaviour>, count: Int, takenAt: java.time.Instant, box: BoxBp = MOST,
     ) {
-        val find = analysed(photo, group, source, species, takenAt)
+        val find = analysed(photo, group, source, species, takenAt, box)
         garden.confirmSighting(find.id, species, label, group, zoneId, plantIds, behaviours, count)
     }
 
@@ -250,5 +250,10 @@ class ReadmeScreensTest {
         val dir = File(System.getProperty("screenshots.dir") ?: "build/screenshots").apply { mkdirs() }
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    private companion object {
+        /** Most of the frame, as the camera's square guide would hold it. */
+        val MOST = BoxBp(800, 800, 9_200, 9_200)
     }
 }
