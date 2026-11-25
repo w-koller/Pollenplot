@@ -1,6 +1,18 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
+
+Pollenplot 1.0.0 is the first full release. It keeps a record of your garden's zones, plants, wildlife, bees, bee
+hotels, compost and watering, and shows how they fit together. It identifies plants and animals from a photo on the
+phone itself, and the photos never leave it. It is written for Australian gardens, with Southern Hemisphere seasons,
+Australian native plants and each state's rules.
+
+- A garden from 1.0.0-rc.5 opens in this version with all its records. A garden from an earlier release candidate,
+  including one that Android's backup restores, does not open, so the app starts afresh with setup. From this
+  version on, every later version opens the gardens and backups of the versions before it.
+
+Since 1.0.0-rc.5:
+
 
 - Pollenplot has a new look, Field Guide, made like a naturalist's notebook.
   - Leaf green on warm paper, with wattle gold beside it. Banksia rust marks wildlife, and water and flowers keep a

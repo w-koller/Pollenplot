@@ -13,8 +13,8 @@ gardens, with Australian native plants, Southern Hemisphere seasons and each sta
   <img src="docs/screenshots/rhythms.png" width="250" alt="Pollen Rhythms, listing the plants flowering now with a cut-out from each one's photo, above a chart of when each plant flowers through the year">
 </p>
 
-Pollenplot requires Android 12 or newer, and you can download test versions from the
-[Releases page](https://github.com/w-koller/Pollenplot/releases), each with its SHA-256 checksum.
+Pollenplot requires Android 12 or newer, and you can download it from the
+[Releases page](https://github.com/w-koller/Pollenplot/releases), each version with its SHA-256 checksum.
 
 ## What it does
 
