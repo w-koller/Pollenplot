@@ -2,20 +2,13 @@
 
 Ecosystem Management for Your Backyard.
 
-<p align="center">
-  <img src="docs/photos/grevillea.jpg" width="180" alt="A pink grevillea flower on a branch">
-  <img src="docs/photos/galah.jpg" width="180" alt="A galah, close up">
-  <img src="docs/photos/stingless-hives.jpg" width="180" alt="Two stingless bee hives on posts among the trees, with bees at the entrances">
-  <img src="docs/photos/tree-frog.jpg" width="180" alt="A small tree frog with a yellow belly sitting on a leaf">
-</p>
-
 Pollenplot is an Android app for keeping a record of a backyard garden and seeing how it works as a whole. It
 identifies plants and animals on the phone, so your photos never leave it, and it shows how the garden's plants,
 wildlife, bees and watering fit together. It is written for Australian gardens first.
 
 <p align="center">
-  <img src="docs/screenshots/plot.png" width="250" alt="The Plot, with four zones of the yard on a grid, the plants in flower in each, and a Today card asking for the citrus patch to be fed">
-  <img src="docs/screenshots/identify.png" width="250" alt="Identify, with three plants found in one photo of a garden bed and Crimson bottlebrush suggested for the first">
+  <img src="docs/screenshots/plot.png" width="250" alt="The Plot, with four zones of the yard on a grid, cut-outs of the plants photographed in each, and a Today card asking for the citrus patch to be fed">
+  <img src="docs/screenshots/identify.png" width="250" alt="Identify, with a photo of a white flower with a red centre named as Native rosella, Hibiscus heterophyllus">
   <img src="docs/screenshots/rhythms.png" width="250" alt="Pollen Rhythms, with this month's flowers for honey bees and stingless bees and a year of nectar and pollen for each group of bees">
 </p>
 
@@ -39,17 +32,10 @@ garden bed and suggests a name for each, with how sure it is. It can also look t
 background. The quick models come with the app, and an accurate pack (BioCAP) can be downloaded for many more
 Australian plants, animals and fungi. Your own corrections teach it: a name you keep changing gives way to yours.
 
-<p align="center">
-  <img src="docs/photos/pink-spikes.jpg" width="180" alt="A fluffy pink flower spike, with more behind it">
-  <img src="docs/photos/red-lily.jpg" width="180" alt="A red trumpet-shaped flower wet with rain">
-  <img src="docs/photos/blue-flower.jpg" width="180" alt="A pale blue open flower among green leaves">
-  <img src="docs/photos/white-hibiscus.jpg" width="180" alt="A white flower with a deep red centre">
-</p>
-
 ### Every plant's needs
 
 <p align="center">
-  <img src="docs/screenshots/plant.png" width="250" alt="A lemon tree's page, with badges for toxic to pets, pollinator magnet, butterfly host and edible, and cards for problems, harvests and pruning">
+  <img src="docs/screenshots/plant.png" width="250" alt="The Native rosella's page, with its cut-out, badges for local native and edible, and cards for problems, harvests and the days it was seen in flower">
   <img src="docs/screenshots/weeds.png" width="250" alt="The Weeds screen, with lantana in the garden marked as a restricted invasive plant in Queensland, and weeds recorded within 10 km">
 </p>
 
@@ -69,11 +55,6 @@ Other records follow from the plants:
   where you live;
 - a plant library of everything you have grown.
 
-<p align="center">
-  <img src="docs/photos/strawberry-flower.jpg" width="220" alt="A red strawberry flower with a young fruit forming in its centre">
-  <img src="docs/photos/citrus-bug.jpg" width="220" alt="A young orange bug climbing a citrus shoot">
-</p>
-
 ### Weeds checked against official lists
 
 The weed identifier checks a plant against official sources for your area: Brisbane City Council, Weeds Australia and
@@ -83,17 +64,13 @@ Grow Me Instead booklets.
 ### Wildlife and bees
 
 <p align="center">
-  <img src="docs/screenshots/wildlife.png" width="250" alt="The Wildlife tab, with nine species seen this year, a chart of sightings by month, and a notice about red imported fire ants">
+  <img src="docs/screenshots/wildlife.png" width="250" alt="The Wildlife tab, with five species seen this year, a bronze orange bug among the garden pests, and a galah among the birds, each with a cut-out from its photo">
   <img src="docs/screenshots/bees.png" width="250" alt="The Bees tab on native bees, with a sugarbag hive's weight and flight count, and guides to keeping stingless bees">
 </p>
 
 The Wildlife tab shows a year of animals seen in your yard: which are native, which were new this year, and when each
 was seen. It warns about animals that are venomous or that your state's law asks you to report, with a link to the
 official page.
-
-<p align="center">
-  <img src="docs/photos/honey-bees.jpg" width="760" alt="Honey bees crowding the entrance of a wooden hive, one carrying yellow pollen">
-</p>
 
 Bees get their own tab, with separate trackers for European honey bees, Australian stingless bees and bee hotels.
 Honey bee hives are due inspections, brood checks and mite checks on the schedule of the Australian Honey Bee Industry
@@ -102,11 +79,6 @@ the sources listed on each page.
 
 Pollen Rhythms is a nectar and pollen calendar for honey bees, stingless bees and solitary bees. It shows the months
 your garden has little to offer each group, and plants that would fill those gaps.
-
-<p align="center">
-  <img src="docs/photos/lilac-flower.jpg" width="220" alt="A spike of lilac flowers with long stamens">
-  <img src="docs/photos/flowering-shrub.jpg" width="220" alt="A tall shrub covered in clusters of small white flowers under the trees">
-</p>
 
 Each zone also has a habitat summary: its canopy, midstorey and understorey, the shelter on the ground and the water
 for wildlife, and how the whole yard works as a wildlife corridor.
@@ -135,7 +107,7 @@ wildlife, including the notes in your records. It searches by words, and by mean
 on the phone. Reports come as PDF or Excel files, opening with a summary and the tasks due. A backup saves the whole
 garden, with its photos, to one file that can be locked with a password.
 
-The photos are real garden photos. The screenshots come from the app's screen tests, which run on a demo yard.
+The screenshots come from the app's screen tests. The Plot, Identify, the plant page and the Wildlife tab show real photos from a garden, put through the app's own photo analysis; the other screens use a demo yard.
 
 ## Privacy
 
