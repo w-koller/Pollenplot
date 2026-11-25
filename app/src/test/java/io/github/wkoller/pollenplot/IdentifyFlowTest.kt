@@ -323,12 +323,13 @@ class IdentifyFlowTest {
         waitFor(hasText("Noisy miner"))
         compose.onNodeWithText("Red wattlebird").assertExists()
         shot("identify_bird")
-        compose.onNodeWithText("Hive Corner").performClick()
-        compose.onNodeWithText("Rosemary").performClick()
+        // The zones load after the card's name, and a zone's plants only once it is chosen, so each press waits.
+        compose.pressWhenShown(hasText("Hive Corner"))
+        compose.pressWhenShown(hasText("Rosemary"))
         // An animal may be on several plants and doing several things.
-        compose.onNodeWithText("French lavender").performClick()
-        compose.onNodeWithText("Feeding").performClick()
-        compose.onNodeWithText("Calling").performClick()
+        compose.pressWhenShown(hasText("French lavender"))
+        compose.pressWhenShown(hasText("Feeding"))
+        compose.pressWhenShown(hasText("Calling"))
         shot("identify_bird_chosen")
         compose.onNodeWithText("Add sighting").performClick()
         waitFor(hasText("Added to your sightings in Hive Corner."))
