@@ -234,7 +234,7 @@ class ReportBuilder(
             },
         )
         // The same points as the screen's "How it works", one to a paragraph.
-        val how = listOf(R.string.rhythms_how_honey, R.string.rhythms_how_variety, R.string.rhythms_how_extra, R.string.rhythms_how_levels).map { s(it) }
+        val how = listOf(R.string.rhythms_how_points, R.string.rhythms_how_honey, R.string.rhythms_how_variety, R.string.rhythms_how_extra, R.string.rhythms_how_levels).map { s(it) }
         return ReportSection(s(R.string.report_part_rhythms), how, listOf(calendar))
     }
 

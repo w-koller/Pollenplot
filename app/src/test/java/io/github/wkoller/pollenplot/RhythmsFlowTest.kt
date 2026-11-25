@@ -86,11 +86,11 @@ class RhythmsFlowTest {
         compose.onNodeWithText("Flowering now").assertExists()
         compose.onNodeWithText("Flowering through the year").assertExists()
         // How the levels are worked out waits behind How it works, off the page.
-        compose.onNodeWithText("adds its honey bee score", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("lots of flowers in one place", substring = true).assertDoesNotExist()
         shot("rhythms")
         compose.pressWhenShown(hasText("How it works"))
-        waitFor(hasText("Stingless and solitary bees count variety. Each kind of plant in flower adds its score once."))
-        waitFor(hasText("A month's points set its level", substring = true))
+        waitFor(hasText("Stingless and solitary bees forage close to home, so many kinds of flowers matter most to them. Each plant gives its points once, however many of it you grow."))
+        waitFor(hasText("added up to give its level", substring = true))
     }
 
     @Test
