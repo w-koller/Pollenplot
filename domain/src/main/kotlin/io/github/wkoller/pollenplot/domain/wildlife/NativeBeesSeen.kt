@@ -3,8 +3,11 @@ package io.github.wkoller.pollenplot.domain.wildlife
 import java.time.Instant
 import java.time.ZoneId
 
-/** A kind of native bee seen in the yard in a year: how many times, and when last. */
-data class SeenBee(val key: String, val animal: Animal, val sightings: Int, val lastSeen: Instant)
+/**
+ * A kind of native bee seen in the yard in a year: how many times, when last, and the cut-out of the latest sighting
+ * that has one.
+ */
+data class SeenBee(val key: String, val animal: Animal, val sightings: Int, val lastSeen: Instant, val thumbnail: String? = null)
 
 /**
  * The native bees seen in the yard, for the Native bees section. A native bee is a native insect of one of the seven
@@ -19,6 +22,9 @@ object NativeBeesSeen {
     fun of(sightings: List<Pair<Sighting, Animal?>>, year: Int, zone: ZoneId): List<SeenBee> =
         sightings.filter { (sighting, animal) -> animal != null && isNativeBee(animal) && sighting.seenAt.atZone(zone).year == year }
             .groupBy { (_, animal) -> animal!!.name }
-            .map { (key, seen) -> SeenBee(key, seen.first().second!!, seen.size, seen.maxOf { it.first.seenAt }) }
+            .map { (key, seen) ->
+                val latest = seen.map { it.first }.sortedByDescending { it.seenAt }
+                SeenBee(key, seen.first().second!!, seen.size, latest.first().seenAt, latest.firstNotNullOfOrNull { it.thumbnail })
+            }
             .sortedWith(compareByDescending<SeenBee> { it.sightings }.thenBy { it.animal.displayName })
 }

@@ -1,6 +1,7 @@
 package io.github.wkoller.pollenplot.ui.rhythms
 
 import androidx.compose.foundation.layout.PaddingValues
+import io.github.wkoller.pollenplot.ui.components.PlantAvatar
 import io.github.wkoller.pollenplot.ui.components.HowItWorks
 import io.github.wkoller.pollenplot.ui.components.readableSides
 import io.github.wkoller.pollenplot.ui.components.SectionHeading
@@ -156,14 +157,14 @@ fun RhythmsScreen(rhythms: RhythmsViews, onOpenSettings: () -> Unit, onOpenPlant
             items(loaded.nowFlowering, key = { "now-" + it.id }) { plant ->
                 ListItem(
                     onClick = { onOpenPlant(plant.id) },
-                    leadingContent = { Icon(painterResource(R.drawable.ic_local_florist), contentDescription = null) },
+                    leadingContent = { PlantAvatar(plant.form, 40.dp, thumbnail = plant.thumbnail, inFlower = true) },
                     supportingContent = { Text(stringResource(if (loaded.month in plant.seenFlowering) R.string.rhythms_seen else R.string.rhythms_expected)) },
                 ) { Text(plant.title) }
             }
             if (loaded.startingNextMonth.isNotEmpty()) {
                 item(key = "next") { SectionHeading(stringResource(R.string.rhythms_next)) }
                 items(loaded.startingNextMonth, key = { "next-" + it.id }) { plant ->
-                    ListItem(onClick = { onOpenPlant(plant.id) }, leadingContent = { Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = null) }) { Text(plant.title) }
+                    ListItem(onClick = { onOpenPlant(plant.id) }, leadingContent = { PlantAvatar(plant.form, 40.dp, thumbnail = plant.thumbnail) }) { Text(plant.title) }
                 }
             }
             item(key = "plants") { SectionHeading(stringResource(R.string.rhythms_plants)) }
