@@ -1,16 +1,18 @@
 package io.github.wkoller.pollenplot.data.db
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
-import io.github.wkoller.pollenplot.BuildConfig
+import java.io.File
 
 /**
- * The user's garden records. It stays at version 1, and its tables may still change, until 1.0.0, the first tag
- * without a pre-release suffix: the release candidates go to a few testers, who install a new one afresh. From 1.0.0
- * every change needs a migration and a schema committed in app/schemas, and there is no destructive fallback.
+ * The user's garden records. Version 1 is 1.0.0's tables; the release candidates before it changed them in place.
+ * Every change now needs a migration in [MIGRATIONS] and a schema committed in app/schemas, and there is no
+ * destructive fallback.
  */
 @Database(
     entities = [
@@ -64,27 +66,40 @@ abstract class PollenplotDatabase : RoomDatabase() {
          */
         val MIGRATIONS: Array<Migration> = emptyArray()
 
-        /** Whether this is a release candidate, whose tables may differ from another candidate's at version 1. */
-        val RELEASE_CANDIDATE: Boolean = BuildConfig.VERSION_NAME.removeSuffix("-debug").contains('-')
+        /**
+         * Room's identity hash of 1.0.0's tables, as in app/schemas/…/1.json. A database at version 1 with another
+         * hash can only be a release candidate's.
+         */
+        const val RELEASED_V1_IDENTITY_HASH = "aa31e89c1f6ce9d6e5468cca258ed52d"
 
         /**
          * The app's database. Android's own backup restores the database of the version backed up when the app is
-         * installed again, and in a release candidate that can be an earlier candidate's, whose tables at version 1
-         * Room refuses. That database is deleted, and [onDiscarded] is called, so the garden starts afresh as it would
-         * after a fresh install. From 1.0.0 an older database is brought up to date with [MIGRATIONS] instead.
+         * installed again, and that can be a release candidate's, whose tables at version 1 Room refuses. That
+         * database is deleted, and [onDiscarded] is called, so the garden starts afresh as it would after a fresh
+         * install. Any other older database is brought up to date with [MIGRATIONS].
          */
         fun create(context: Context, onDiscarded: () -> Unit = {}): PollenplotDatabase {
-            val database = Room.databaseBuilder(context, PollenplotDatabase::class.java, FILE_NAME).addMigrations(*MIGRATIONS).build()
-            if (!RELEASE_CANDIDATE) return database
-            try {
-                database.openHelper.writableDatabase
-                return database
-            } catch (e: IllegalStateException) {
-                database.close()
+            if (isCandidateDatabase(context.getDatabasePath(FILE_NAME))) {
                 context.deleteDatabase(FILE_NAME)
                 onDiscarded()
             }
             return Room.databaseBuilder(context, PollenplotDatabase::class.java, FILE_NAME).addMigrations(*MIGRATIONS).build()
+        }
+
+        /** Whether [file] is a release candidate's database: version 1, made by Room, with tables other than 1.0.0's. */
+        private fun isCandidateDatabase(file: File): Boolean {
+            if (!file.exists()) return false
+            return try {
+                SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+                    if (db.version != 1) return false
+                    val hash = db.rawQuery("SELECT identity_hash FROM room_master_table WHERE id = 42", null).use { c ->
+                        if (c.moveToFirst()) c.getString(0) else null
+                    }
+                    hash != null && hash != RELEASED_V1_IDENTITY_HASH
+                }
+            } catch (e: SQLiteException) {
+                false
+            }
         }
 
         /** A database in memory, for tests. */
