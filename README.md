@@ -1,40 +1,113 @@
 # Pollenplot
 
-**Ecosystem Management for Your Backyard.**
+Ecosystem Management for Your Backyard.
 
-Pollenplot is an Android app for recording everything about a backyard garden. It identifies plants and animals on
-the phone, so photos never leave it, and it shows how the garden's plants, wildlife, bees and watering fit together.
-It is written for Australian gardens first.
+Pollenplot is an Android app for keeping a record of a backyard garden and seeing how it works as a whole. It
+identifies plants and animals on the phone, so your photos never leave it, and it shows how the garden's plants,
+wildlife, bees and watering fit together. It is written for Australian gardens first.
 
-Version 1 includes:
+<p align="center">
+  <img src="docs/screenshots/plot.png" width="250" alt="The Plot, with four zones of the yard on a grid, cut-outs of the plants photographed in each, and a Today card asking for the citrus patch to be fed">
+  <img src="docs/screenshots/identify.png" width="250" alt="Identify, with a photo of a white flower with a red centre named as Native rosella, Hibiscus heterophyllus">
+  <img src="docs/screenshots/rhythms.png" width="250" alt="Pollen Rhythms, listing the plants flowering now with a cut-out from each one's photo, above a chart of when each plant flowers through the year">
+</p>
 
-- **Plant and wildlife identification** with on-device AI (AIY, BioCAP and Gemma 4), from the camera or from your
-  photos, which are scanned in the background.
-- **The Plot**, a canvas of your yard's zones with each plant's cut-out photo and badges for its role, such as
-  pollinator magnet, high thirst or frog safe.
-- **Plant requirements**: sun, water, fertiliser, compost, wildlife value, ground cover and companion plants, which
-  you can correct for your own garden. Each plant keeps the photos it was found in, the months it was seen in flower
-  and the care recorded for it, and a potted plant says when its pot is due a flush or a look at repotting.
-- **Feeding**: a record of what each zone was fed and when, with a warning before too much phosphorus goes on
-  grevilleas and their relatives, and reminders when citrus is due a feed.
-- **Problems**: pests logged with a photo and their treatments, with a warning before spraying plants in flower.
-- **Harvests and pruning**: what each plant gave by season, and when to prune it, with reminders.
-- **Habitat**: each zone's canopy, midstorey and understorey, its shelter on the ground and its water for wildlife,
-  with the hives and hotels kept in it and a summary of your yard as a wildlife corridor.
-- **A weed identifier** that checks plants against official weed sources for your area (Brisbane City Council,
-  Weeds Australia and the Atlas of Living Australia), with native alternatives from the Grow Me Instead booklets.
-- **A wishlist** of plants to grow, including plants identified away from home, with whether each is native or a
-  weed where you live.
-- **Pollen Rhythms**, a nectar and pollen calendar with forage gaps for honey bees and native bees.
-- **Bees**: separate guides and trackers for European honey bees and Australian native bees, and a logger for bee
-  and insect hotels.
-- **Water**: irrigation options, and watering times and amounts from your plants and the weather.
-- **Search** from every tab across your zones, plants, sightings, hives, hotels, wishlist, problems and water for
-  wildlife, including the notes of hive inspections, stingless hive logs, hotel observations and harvests, narrowed by
-  kind of record or zone. It searches by words, and by meaning once the optional text model is on the phone.
-- **Reports** as PDF or Excel, opening with a summary and listing the tasks due, saved or shared with another app.
+Pollenplot needs Android 12 or newer. Test versions are published on the
+[Releases page](https://github.com/w-koller/Pollenplot/releases) with their SHA-256 checksums.
 
-Pollenplot needs Android 12 or newer.
+## What it does
+
+### Your yard on one screen
+
+The Plot is a map of your yard's zones, such as a front native strip, a citrus patch or a hive corner. Each plant
+shows as its own cut-out photo, with badges for its role: pollinator magnet, high thirst or frog safe, for example. Layers
+colour the zones by sun and shade, or by what is in flower now and what flowers next. A Today card at the top says
+what needs doing, gathered from every part of the garden, and the calendar lays the same jobs out by day with the
+weather.
+
+### Identification on the phone
+
+Point the camera at a plant or an animal, or add photos from your gallery. Pollenplot finds each plant in a photo of a
+garden bed and suggests a name for each, with how sure it is. It can also look through new garden photos in the
+background. The quick models come with the app, and an accurate pack (BioCAP) can be downloaded for many more
+Australian plants, animals and fungi. Your own corrections teach it: a name you keep changing gives way to yours.
+
+### Every plant's needs
+
+<p align="center">
+  <img src="docs/screenshots/plant.png" width="250" alt="The Native rosella's page, with its cut-out, badges for local native and edible, and cards for problems, harvests and the days it was seen in flower">
+  <img src="docs/screenshots/weeds.png" width="250" alt="The Weeds screen, with lantana in the garden marked as a restricted invasive plant in Queensland, and weeds recorded within 10 km">
+</p>
+
+Each plant has a page with its sun, water, soil, feeding, compost and wildlife value, and the companion plants that
+suit it. You can correct any of these facts for your own garden. The page also keeps the photos the plant was found
+in, the months it was seen in flower, its harvests and its pruning. A potted plant says when its pot is due a flush or
+a look at repotting.
+
+Other records follow from the plants:
+
+- feeding, with a warning before too much phosphorus goes on grevilleas and their relatives, and reminders when
+  citrus is due a feed;
+- pests and diseases, logged with a photo and their treatments, with a warning before spraying plants in flower;
+- harvests by season, and when to prune each plant;
+- compost bins, with the turns and checks each batch is due;
+- a wishlist of plants to grow, including plants identified away from home, with whether each is native or a weed
+  where you live;
+- a plant library of everything you have grown.
+
+### Weeds checked against official lists
+
+The weed identifier checks a plant against official sources for your area: Brisbane City Council, Weeds Australia and
+the Atlas of Living Australia. It lists the weeds recorded near your garden and suggests native alternatives from the
+Grow Me Instead booklets.
+
+### Wildlife and bees
+
+<p align="center">
+  <img src="docs/screenshots/wildlife.png" width="250" alt="The Wildlife tab, with five species seen this year, a bronze orange bug among the garden pests, and a galah among the birds, each with a cut-out from its photo">
+  <img src="docs/screenshots/bees.png" width="250" alt="The Bees tab on native bees, with two sugarbag hives in the Hive Corner and the sugarbag bee seen this year, shown on a lime flower">
+</p>
+
+The Wildlife tab shows a year of animals seen in your yard: which are native, which were new this year, and when each
+was seen. It warns about animals that are venomous or that your state's law asks you to report, with a link to the
+official page.
+
+Bees get their own tab, with separate trackers for European honey bees, Australian stingless bees and bee hotels.
+Honey bee hives are due inspections, brood checks and mite checks on the schedule of the Australian Honey Bee Industry
+Biosecurity Code of Practice. Stingless bee hives get a warning before a hot day. Each section has guides, written from
+the sources listed on each page.
+
+Pollen Rhythms is a nectar and pollen calendar for honey bees, stingless bees and solitary bees. It shows the months
+your garden has little to offer each group, and plants that would fill those gaps.
+
+Each zone also has a habitat summary: its canopy, midstorey and understorey, the shelter on the ground and the water
+for wildlife, and how the whole yard works as a wildlife corridor.
+
+### Watering from the weather
+
+<p align="center">
+  <img src="docs/screenshots/water.png" width="250" alt="The Water tab, with today's reference evapotranspiration and rain, and when each zone is next due a watering">
+  <img src="docs/screenshots/ask.png" width="250" alt="Ask your garden, answering what feeds on the rosemary from the garden's sightings, and offering questions to ask next">
+</p>
+
+The Water tab keeps a daily soil-water account for each zone from its plants, its soil and the weather forecast, and
+says when a watering is due and how much. It warns when a sprinkler runs faster than the soil can soak it up, and
+reminds you to water pots deeply before a very hot day.
+
+### Ask your garden
+
+With Gemma 4 downloaded, you can ask questions about your garden, such as which plants feed birds or where frogs were
+seen. The answers come from your own records, which are listed under each answer, and the app suggests what to ask
+next.
+
+### Search and reports
+
+Search works from every tab across zones, plants, sightings, hives, hotels, the wishlist, problems and water for
+wildlife, including the notes in your records. It searches by words, and by meaning once the optional text model is
+on the phone. Reports come as PDF or Excel files, opening with a summary and the tasks due. A backup saves the whole
+garden, with its photos, to one file that can be locked with a password.
+
+The screenshots come from the app's screen tests. The Plot, Identify, the plant page, Rhythms, Wildlife and Bees show real photos from a garden, put through the app's own photo analysis. The Weeds, Water and Ask screens use a demo yard.
 
 ## Privacy
 
@@ -53,28 +126,28 @@ The garden's location is rounded to about 1 km before it is sent to any of these
 
 ## Permissions
 
-- **Camera**: to identify a plant or animal in front of you. Photos you add from the gallery come through the system
+- Camera, to identify a plant or animal in front of you. Photos you add from the gallery come through the system
   photo picker and need no permission.
-- **Photos and videos**: only when you turn on scanning the gallery in Settings, so new garden photos are looked at
-  in the background. You can allow all photos or only the ones you choose.
-- **Approximate location**: only when you ask the app to find the garden from where you are.
-- **Notifications**: for hive checks, hot days ahead of stingless bee hives, watering due and finished scans.
-- **Internet**: for the services listed under Privacy.
+- Photos and videos, only when you turn on gallery scanning in Settings, so new garden photos are looked at in the
+  background. You can allow all photos or only the ones you choose.
+- Approximate location, only when you ask the app to find the garden from where you are.
+- Notifications, for hive checks, hot days ahead of stingless bee hives, watering due and finished scans.
+- Internet, for the services listed under Privacy.
 
 ## Optional downloads
 
 The quick identification models come with the app. These are downloaded only when you ask for them, and each file is
 checked against its published SHA-256 checksum:
 
-- **Accurate identification pack** (BioCAP), about 142 MB, for better identification of plants, animals and fungi.
-- **Text model** (bge-small-en-v1.5), about 34 MB, for search by meaning.
-- **Gemma 4 E2B**, about 2.6 GB, for second opinions on unsure finds and for answering questions about your garden.
+- the accurate identification pack (BioCAP), about 142 MB, for better identification of plants, animals and fungi;
+- the text model (bge-small-en-v1.5), about 34 MB, for search by meaning;
+- Gemma 4 E2B, about 2.6 GB, for second opinions on unsure finds and for answering questions about your garden.
 
 ## Known limits
 
 - The knowledge base is written for Australia. Months follow the garden's hemisphere, but the plants, weed sources and
   state rules are Australian.
-- Weed lists for a council come from Brisbane City Council's open data; elsewhere the app uses the national lists and
+- Weed lists for a council come from Brisbane City Council's open data. Elsewhere the app uses the national lists and
   links to the state's pages.
 - Phone makers' battery savers can delay background scans and the morning reminders. Settings explains how to check
   this on your phone.
