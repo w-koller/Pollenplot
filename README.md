@@ -4,8 +4,8 @@ Ecosystem Management for Your Backyard.
 
 Pollenplot is an Android app that helps you understand your backyard as an ecosystem. It identifies the plants and
 animals in your garden from a photo, keeps a record of your zones, plants, wildlife, bees and watering, and shows you
-how they all fit together. Your photos are identified on your phone and never leave it. Pollenplot is written for
-Australian gardens, with Australian native plants, Southern Hemisphere seasons and each state's rules.
+how they all fit together. Your photos are identified on your phone and never leave it. The app is written for Australian
+gardens, with Australian native plants, Southern Hemisphere seasons and each state's rules.
 
 <p align="center">
   <img src="docs/screenshots/plot.png" width="250" alt="The Plot, with four zones of the yard on a grid, cut-outs of the plants photographed in each, and a Today card asking for the citrus patch to be fed">
@@ -13,7 +13,7 @@ Australian gardens, with Australian native plants, Southern Hemisphere seasons a
   <img src="docs/screenshots/rhythms.png" width="250" alt="Pollen Rhythms, listing the plants flowering now with a cut-out from each one's photo, above a chart of when each plant flowers through the year">
 </p>
 
-Pollenplot requires Android 12 or newer. You can download test versions from the
+Pollenplot requires Android 12 or newer, and you can download test versions from the
 [Releases page](https://github.com/w-koller/Pollenplot/releases), each with its SHA-256 checksum.
 
 ## What it does
@@ -22,14 +22,14 @@ Pollenplot requires Android 12 or newer. You can download test versions from the
 
 The Plot is a map of your yard, divided into zones such as a front native strip, a citrus patch or a hive corner. Each
 plant appears as a cut-out from your own photo, so you can see what is growing where and which zones are in flower.
-The Today card tells you what needs doing in the garden today, whether that is feeding the citrus, watering a bed or
-checking a hive, and the calendar shows the jobs ahead alongside the weather.
+The Today card lists the jobs due in the garden, such as feeding the citrus or checking a hive, and the calendar shows
+the jobs ahead alongside the weather.
 
 ### Identify plants and animals
 
 Take a photo of a plant or an animal, or choose one from your gallery, and Pollenplot will suggest what it is and how
-sure it is. A photo of a garden bed can show several plants, and Pollenplot will find each one. You can download the
-accurate identification pack to recognise many more Australian plants, animals and fungi. Pollenplot also learns from
+sure it is. A photo of a garden bed can show several plants, and the app will find each one. You can download the
+accurate identification pack to recognise many more Australian plants, animals and fungi. The app also learns from
 your corrections, so a name you keep changing will give way to yours.
 
 ### Know what each plant needs
@@ -44,9 +44,9 @@ companion plants that suit it. You can correct any of these if your garden is di
 plant's photos, the months it was seen in flower, its harvests and its pruning, and a potted plant will tell you when it
 is due a flush or a repot.
 
-Pollenplot also helps you look after your plants with:
+You can also keep track of:
 
-- feeding records, a warning before too much phosphorus goes on grevilleas and their relatives, and a reminder when
+- feeding, with a warning before too much phosphorus goes on grevilleas and their relatives, and a reminder when
   your citrus is due a feed;
 - pests and diseases, recorded with a photo and their treatments, and a warning before you spray plants that are in
   flower;
@@ -58,9 +58,9 @@ Pollenplot also helps you look after your plants with:
 
 ### Keep weeds out of your garden
 
-Pollenplot checks your plants against the official weed lists for your area, from Brisbane City Council, Weeds
-Australia and the Atlas of Living Australia. It also shows you the weeds that have been recorded near your garden, and
-suggests native plants to grow instead from the Grow Me Instead booklets.
+Your plants are checked against the official weed lists for your area, from Brisbane City Council, Weeds
+Australia and the Atlas of Living Australia. You can also see the weeds that have been recorded near your garden, and
+native plants to grow instead from the Grow Me Instead booklets.
 
 ### Get to know your wildlife
 
@@ -70,21 +70,21 @@ suggests native plants to grow instead from the Grow Me Instead booklets.
 </p>
 
 The Wildlife tab shows every animal seen in your yard over the year, which of them are native and which were seen for
-the first time. If an animal is venomous, or your state asks you to report it, Pollenplot will tell you what to do and
-link to the official page.
+the first time. If an animal is venomous, or your state asks you to report it, the app tells you what to do and links
+to the official page.
 
 Each zone also shows its habitat for wildlife: its canopy, midstorey and understorey, its shelter on the ground and its
-water. Pollenplot then shows how well your whole yard works as a wildlife corridor.
+water, along with how well your whole yard works as a wildlife corridor.
 
 ### Look after your bees
 
 The Bees tab has separate records and guides for European honey bees, Australian stingless bees and bee hotels.
-Pollenplot reminds you when each honey bee hive is due an inspection, a brood check or a mite check under the
-Australian Honey Bee Industry Biosecurity Code of Practice, and warns you before a hot day that could harm your
+You will be reminded when each honey bee hive is due an inspection, a brood check or a mite check under the
+Australian Honey Bee Industry Biosecurity Code of Practice, and warned before a hot day that could harm your
 stingless bee hives.
 
-Pollen Rhythms shows what your garden's flowers offer honey bees, stingless bees and solitary bees through the year. It
-also shows the months when your garden has little to offer each group, and suggests plants that would fill those gaps.
+Pollen Rhythms shows what your garden's flowers offer honey bees, stingless bees and solitary bees through the year,
+the months when there is little for each group, and plants that would fill those gaps.
 
 ### Water at the right time
 
@@ -99,7 +99,7 @@ deeply before a very hot day.
 
 ### Ask your garden
 
-You can ask Pollenplot questions about your garden, such as which plants feed birds or where frogs have been seen,
+You can ask questions about your garden, such as which plants feed birds or where frogs have been seen,
 once you have downloaded Gemma 4. Each answer is drawn from your own records, which are listed beneath it, along with
 suggestions for what to ask next.
 
@@ -136,8 +136,8 @@ The garden's location is rounded to about 1 km before it is sent to any of these
 
 ## Optional downloads
 
-The quick identification models come with the app. These are downloaded only when you ask for them, and each file is
-checked against its published SHA-256 checksum:
+The quick identification models come with the app. The following are downloaded only when you ask for them, and each
+file is checked against its published SHA-256 checksum:
 
 - the accurate identification pack (BioCAP), about 142 MB, for better identification of plants, animals and fungi;
 - the text model (bge-small-en-v1.5), about 34 MB, for search by meaning;
